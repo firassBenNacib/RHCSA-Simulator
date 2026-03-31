@@ -1,17 +1,25 @@
-# Mock Exam B: CoreMesh Service Review - Exam Solution
-Scenario ID: mock-exam-b
-Mode: Exam
-Time limit: 150 minutes
-Objectives: networking-and-firewall, users-sudo-ssh, storage-lvm, containers
+# Mock Exam B: CoreMesh Service Review
+
+## Exam Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `mock-exam-b` |
+| Mode | Exam |
+| Time limit | 150 minutes |
+| Objectives | networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
 
 A second 22 task RHCSA style mock exam with distinct variables and combined tasks.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
-- Use the exact scenario variables shown in each question.
-- Keep SELinux enforcing unless a question explicitly directs otherwise.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use the exact scenario variables shown in each question.
+3. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (clientvm)
+## Question 01 — Client Network
+**System:** clientvm
+
+#### Commands
 ```bash
 nmcli connection show
 nmcli connection modify "<active-connection>" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -20,13 +28,23 @@ nmcli connection up "<active-connection>"
 hostnamectl set-hostname clientvm.coremesh.lab
 ```
 
-## Question 02 - Host Entry (clientvm)
+---
+
+## Question 02 — Host Entry
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/hosts
 192.168.122.3 registry.coremesh.lab
 ```
 
-## Question 03 - Client Repositories (clientvm)
+---
+
+## Question 03 — Client Repositories
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/yum.repos.d/coremesh.repo
 [coremesh-baseos]
@@ -42,7 +60,12 @@ enabled=1
 gpgcheck=0
 ```
 
-## Question 04 - Server Repositories (servervm)
+---
+
+## Question 04 — Server Repositories
+**System:** servervm
+
+#### Commands
 ```bash
 ssh admin@servervm
 sudo -i
@@ -62,7 +85,12 @@ exit
 exit
 ```
 
-## Question 05 - Apache Firewall SELinux (clientvm)
+---
+
+## Question 05 — Apache Firewall SELinux
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/httpd/conf/httpd.conf
 Listen 8383
@@ -73,7 +101,12 @@ semanage port -a -t http_port_t -p tcp 8383
 systemctl restart httpd
 ```
 
-## Question 06 - Users And Group (clientvm)
+---
+
+## Question 06 — Users And Group
+**System:** clientvm
+
+#### Commands
 ```bash
 groupadd platformb
 useradd -m mira
@@ -83,7 +116,12 @@ usermod -aG platformb mira
 usermod -aG platformb jonas
 ```
 
-## Question 07 - User Passwords (clientvm)
+---
+
+## Question 07 — User Passwords
+**System:** clientvm
+
+#### Commands
 ```bash
 passwd mira
 # enter: redhat
@@ -93,7 +131,12 @@ passwd noel
 # enter: redhat
 ```
 
-## Question 08 - Delegated Sudo (clientvm)
+---
+
+## Question 08 — Delegated Sudo
+**System:** clientvm
+
+#### Commands
 ```bash
 visudo -f /etc/sudoers.d/platformb
 %platformb ALL=(root) /usr/sbin/useradd
@@ -101,20 +144,35 @@ visudo -f /etc/sudoers.d/mira-systemctl
 mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
 ```
 
-## Question 09 - Setgid Directory (clientvm)
+---
+
+## Question 09 — Setgid Directory
+**System:** clientvm
+
+#### Commands
 ```bash
 mkdir -p /srv/platformb
 chgrp platformb /srv/platformb
 chmod 2770 /srv/platformb
 ```
 
-## Question 10 - Cron Logger (clientvm)
+---
+
+## Question 10 — Cron Logger
+**System:** clientvm
+
+#### Commands
 ```bash
 crontab -e -u mira
 * * * * * logger "CoreMesh exam"
 ```
 
-## Question 11 - Chrony Client (clientvm)
+---
+
+## Question 11 — Chrony Client
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -122,7 +180,12 @@ server servervm iburst
 systemctl enable --now chronyd
 ```
 
-## Question 12 - Autofs Map (clientvm)
+---
+
+## Question 12 — Autofs Map
+**System:** clientvm
+
+#### Commands
 ```bash
 useradd -m meshremote
 passwd meshremote
@@ -134,29 +197,54 @@ vim /etc/auto.master.d/meshb.autofs
 systemctl enable --now autofs
 ```
 
-## Question 13 - Fixed UID User (clientvm)
+---
+
+## Question 13 — Fixed UID User
+**System:** clientvm
+
+#### Commands
 ```bash
 useradd -u 4421 cato421
 passwd cato421
 # enter: redhat
 ```
 
-## Question 14 - Find And Copy (clientvm)
+---
+
+## Question 14 — Find And Copy
+**System:** clientvm
+
+#### Commands
 ```bash
 find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \;
 ```
 
-## Question 15 - Grep Filter (clientvm)
+---
+
+## Question 15 — Grep Filter
+**System:** clientvm
+
+#### Commands
 ```bash
 grep proto /usr/share/dict/words > /root/proto-lines
 ```
 
-## Question 16 - Archive (clientvm)
+---
+
+## Question 16 — Archive
+**System:** clientvm
+
+#### Commands
 ```bash
 tar -cjf /root/usr-local-b.tar.bz2 /usr/local
 ```
 
-## Question 17 - Unit Status Script (clientvm)
+---
+
+## Question 17 — Unit Status Script
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /usr/local/bin/corecheck
 #!/usr/bin/env bash
@@ -167,7 +255,12 @@ chmod 755 /usr/local/bin/corecheck
 /usr/local/bin/corecheck
 ```
 
-## Question 18 - Swap Space (clientvm)
+---
+
+## Question 18 — Swap Space
+**System:** clientvm
+
+#### Commands
 ```bash
 fdisk /dev/sdb
 # create a 600M GPT partition and set the type to Linux swap
@@ -179,19 +272,34 @@ vim /etc/fstab
 UUID=<uuid-of-sdb1> swap swap defaults 0 0
 ```
 
-## Question 19 - Resize Existing LV (clientvm)
+---
+
+## Question 19 — Resize Existing LV
+**System:** clientvm
+
+#### Commands
 ```bash
 lvextend -L 300M /dev/reviewvgb/reviewb
 resize2fs /dev/reviewvgb/reviewb
 ```
 
-## Question 20 - Tuned Profile (clientvm)
+---
+
+## Question 20 — Tuned Profile
+**System:** clientvm
+
+#### Commands
 ```bash
 tuned-adm recommended
 tuned-adm profile <recommended-profile>
 ```
 
-## Question 21 - Rootless Container (clientvm)
+---
+
+## Question 21 — Rootless Container
+**System:** clientvm
+
+#### Commands
 ```bash
 su - lyrab
 cd /opt/rhcsa/workspaces/exam-b
@@ -200,7 +308,12 @@ podman run -d --name pdfb -v /opt/inb:/data/input:Z -v /opt/outb:/data/output:Z 
 exit
 ```
 
-## Question 22 - Container Autostart (clientvm)
+---
+
+## Question 22 — Container Autostart
+**System:** clientvm
+
+#### Commands
 ```bash
 su - lyrab
 mkdir -p ~/.config/systemd/user

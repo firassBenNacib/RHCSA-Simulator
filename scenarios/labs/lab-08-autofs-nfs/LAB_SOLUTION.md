@@ -1,15 +1,24 @@
-# Lab 08: Autofs With NFS - Lab Solution
-Scenario ID: lab-08-autofs-nfs
-Mode: Lab
-Time limit: 40 minutes
-Objectives: filesystems-and-autofs
+# Lab 08: Autofs With NFS
+
+## Lab Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `lab-08-autofs-nfs` |
+| Mode | Lab |
+| Time limit | 40 minutes |
+| Objectives | filesystems-and-autofs |
 
 Configure an indirect automount from servervm.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
 
-## Task 01 - Part 01 (clientvm)
+## Task 01 — Part 01
+**System:** clientvm
+
+#### Commands
 ```bash
 ssh admin@servervm
 sudo -i
@@ -24,7 +33,12 @@ passwd netuser8
 # enter: redhat
 ```
 
-## Task 02 - Part 02 (clientvm)
+---
+
+## Task 02 — Part 02
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/auto.lab8
 netuser8 -rw,sync servervm:/exports/netuser8
@@ -33,13 +47,20 @@ vim /etc/auto.master.d/lab8.autofs
 systemctl enable --now autofs
 ```
 
-## Task 03 - Part 03 (clientvm)
+---
+
+## Task 03 — Part 03
+**System:** clientvm
+
+#### Commands
 ```bash
 ls -l /netdir/netuser8
 cat /netdir/netuser8/welcome.txt
 ```
 
-Verification
+---
+
+### Verification
 ```bash
 showmount -e servervm
 ls -l /netdir/netuser8

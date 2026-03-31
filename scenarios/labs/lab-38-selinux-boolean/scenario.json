@@ -1,0 +1,51 @@
+{
+  "id": "lab-38-selinux-boolean",
+  "title": "Lab 38: SELinux Boolean",
+  "description": "Modify a SELinux boolean persistently without changing enforcing mode",
+  "objective_tags": [
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "On clientvm, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently.",
+        "SELinux must remain in enforcing mode."
+      ],
+      "hints": [
+        "Use a persistent SELinux boolean command."
+      ],
+      "checks": [
+        "getsebool httpd_can_network_connect | grep -q \"--> on\"",
+        "getenforce | grep -qx Enforcing"
+      ],
+      "solution_outline": [
+        "Do not change enforcing mode."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "setsebool -P httpd_can_network_connect on"
+        ],
+        [
+          "getenforce",
+          "getsebool httpd_can_network_connect"
+        ]
+      ]
+    }
+  }
+}

@@ -25,7 +25,7 @@
       "tasks": [
         "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
         "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.northstar.lab",
-        "Add a persistent hosts entry so vault.northstar.lab resolves to 192.168.122.3.",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
         "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8484.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Allow the port in SELinux.\n- Do not alter the existing site content.",
@@ -49,7 +49,7 @@
       "task_titles": [
         "Root Recovery",
         "Client Network",
-        "Host Entry",
+        "Bootloader Kernel Argument",
         "Client Repositories",
         "Server Repositories",
         "Apache Firewall SELinux",
@@ -90,8 +90,8 @@
           "hostnamectl set-hostname clientvm.northstar.lab"
         ],
         [
-          "vim /etc/hosts",
-          "192.168.122.3 vault.northstar.lab"
+          "grubby --update-kernel=ALL --args=\"audit=1\"",
+          "grubby --info=ALL | grep -E \"^kernel|^args\""
         ],
         [
           "vim /etc/yum.repos.d/northstar.repo",

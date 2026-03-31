@@ -1,15 +1,24 @@
-# Lab 28: SELinux Custom Document Root - Lab Solution
-Scenario ID: lab-28-selinux-custom-docroot
-Mode: Lab
-Time limit: 35 minutes
-Objectives: selinux-and-default-perms, networking-and-firewall
+# Lab 28: SELinux Custom Document Root
+
+## Lab Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `lab-28-selinux-custom-docroot` |
+| Mode | Lab |
+| Time limit | 35 minutes |
+| Objectives | selinux-and-default-perms, networking-and-firewall |
 
 Serve a custom document root on a nonstandard HTTP port while keeping SELinux enforcing.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
 
-## Task 01 - Part 01 (clientvm)
+## Task 01 — Part 01
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/httpd/conf.d/lab28.conf
 <VirtualHost *:8088>
@@ -20,7 +29,12 @@ vim /etc/httpd/conf.d/lab28.conf
 </VirtualHost>
 ```
 
-## Task 02 - Part 02 (clientvm)
+---
+
+## Task 02 — Part 02
+**System:** clientvm
+
+#### Commands
 ```bash
 semanage fcontext -a -t httpd_sys_content_t "/srv/lab28/site(/.*)?"
 restorecon -Rv /srv/lab28/site
@@ -30,12 +44,19 @@ firewall-cmd --reload
 systemctl enable --now httpd
 ```
 
-## Task 03 - Part 03 (clientvm)
+---
+
+## Task 03 — Part 03
+**System:** clientvm
+
+#### Commands
 ```bash
 curl -s http://localhost:8088
 ```
 
-Verification
+---
+
+### Verification
 ```bash
 curl -s http://localhost:8088
 semanage port -l | grep 8088

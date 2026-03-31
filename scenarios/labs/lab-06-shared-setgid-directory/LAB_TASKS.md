@@ -1,28 +1,44 @@
-# Lab 06: Shared Setgid Directory - Lab Tasks
-Scenario ID: lab-06-shared-setgid-directory
-Mode: Lab
-Time limit: 25 minutes
-Objectives: filesystems-and-autofs
+# Lab 06: Shared Setgid Directory
+
+## Lab Tasks
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `lab-06-shared-setgid-directory` |
+| Mode | Lab |
+| Time limit | 25 minutes |
+| Objectives | filesystems-and-autofs |
 
 Create a collaborative directory that preserves group ownership.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
 
-## Task 01 - Part 01 (clientvm)
+## Task 01 — Part 01
+**System:** clientvm
+
 Create /shared/analysts with group ownership of analystsx and allow access only to root and members of analystsx.
 
-## Task 02 - Part 02 (clientvm)
+---
+
+## Task 02 — Part 02
+**System:** clientvm
+
 Set the directory so new files inherit the analystsx group automatically.
 
-## Task 03 - Part 03 (clientvm)
+---
+
+## Task 03 — Part 03
+**System:** clientvm
+
 Verify the final directory permissions.
 
-Hints
-1. The group analystsx already exists for this lab.
-2. The directory must keep the setgid bit.
+### Hints
+- The group analystsx already exists for this lab.
+- The directory must keep the setgid bit.
 
-Checks
+### Checks
 ```bash
 ls -ld /shared/analysts
 ```

@@ -44,10 +44,11 @@ def code_block(lines: list[str]) -> str:
 
 
 def render_task_heading(index: int, title: str, system: str, points: int | None, label: str) -> str:
-    heading = f"## {label} {index:02d} - {title} ({system})"
+    heading = f"## {label} {index:02d} — {title}"
+    meta = [f"**System:** {system}"]
     if points is not None:
-        heading += f" - {points} pts"
-    return heading
+        meta.append(f"**Points:** {points}")
+    return heading + "\n" + "  \n".join(meta)
 
 
 def get_task_title(task_titles: list[str], index: int, task_text: str) -> str:
@@ -67,17 +68,23 @@ def render_tasks(tasks, task_titles, task_points, requires_servervm, label):
         title = get_task_title(task_titles, index - 1, task)
         points = get_task_points(task_points, index - 1)
         sections.append(render_task_heading(index, title, system, points, label))
+        sections.append("")
         sections.append(normalize_task_text(task))
         sections.append("")
+        sections.append("---")
+        sections.append("")
+    if sections and sections[-2:] == ["---", ""]:
+        sections = sections[:-2]
     return "\n".join(sections).rstrip()
 
 
 def render_hints(hints):
+    lines = ["### Hints"]
     if not hints:
-        return "Hints\nNo additional hints."
-    lines = ["Hints"]
-    for index, hint in enumerate(hints, start=1):
-        lines.append(f"{index}. {clean_text(hint).rstrip('.')}.")
+        lines.append("- No additional hints.")
+        return "\n".join(lines)
+    for hint in hints:
+        lines.append(f"- {clean_text(hint).rstrip('.') }.")
     return "\n".join(lines)
 
 
@@ -89,30 +96,47 @@ def render_solution(tasks, task_titles, task_points, solution_commands, checks, 
         points = get_task_points(task_points, index - 1)
         commands = solution_commands[index - 1] if index - 1 < len(solution_commands) else []
         sections.append(render_task_heading(index, title, system, points, label))
+        sections.append("")
+        sections.append("#### Commands")
         sections.append(code_block(commands))
         sections.append("")
+        sections.append("---")
+        sections.append("")
     if checks:
-        sections.append("Verification")
+        sections.append("### Verification")
         sections.append(code_block(checks))
+    elif sections and sections[-2:] == ["---", ""]:
+        sections = sections[:-2]
     return "\n".join(sections).rstrip()
 
 
+def summary_table(data, mode):
+    objectives = ", ".join(data.get("objective_tags", [])) or "n/a"
+    return "\n".join([
+        "| Field | Value |",
+        "|---|---|",
+        f"| Scenario ID | `{data['id']}` |",
+        f"| Mode | {mode} |",
+        f"| Time limit | {data['time_limit_minutes']} minutes |",
+        f"| Objectives | {objectives} |",
+    ])
+
+
 def metadata_lines(data, mode):
-    objectives = ", ".join(data.get("objective_tags", []))
     lines = [
-        f"Scenario ID: {data['id']}",
-        f"Mode: {mode}",
-        f"Time limit: {data['time_limit_minutes']} minutes",
-        f"Objectives: {objectives}",
+        "### Overview",
+        summary_table(data, mode),
         "",
         normalize_task_text(data["description"]),
         "",
-        "General notes",
-        "- Unless a task states otherwise, make all changes persistent across reboots.",
+        "### General Instructions",
+        "1. Unless a task states otherwise, make all changes persistent across reboots.",
     ]
     if mode == "Exam":
-        lines.append("- Use the exact scenario variables shown in each question.")
-        lines.append("- Keep SELinux enforcing unless a question explicitly directs otherwise.")
+        lines.append("2. Use the exact scenario variables shown in each question.")
+        lines.append("3. Keep SELinux enforcing unless a question explicitly directs otherwise.")
+    else:
+        lines.append("2. Use only persistent configuration methods.")
     lines.append("")
     return lines
 
@@ -132,17 +156,21 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
 
     if "lab" in supported_modes:
         lab_tasks_md = "\n".join([
-            f"# {data['title']} - Lab Tasks",
+            f"# {data['title']}",
+            "",
+            "## Lab Tasks",
             *metadata_lines(data, "Lab"),
             render_tasks(lab.get("tasks", []), lab.get("task_titles", []), lab.get("task_points", []), requires_servervm, "Task"),
             "",
             render_hints(lab.get("hints", [])),
             "",
-            "Checks",
+            "### Checks",
             code_block(lab.get("checks", [])),
         ])
         lab_solution_md = "\n".join([
-            f"# {data['title']} - Lab Solution",
+            f"# {data['title']}",
+            "",
+            "## Lab Solution",
             *metadata_lines(data, "Lab"),
             render_solution(lab.get("tasks", []), lab.get("task_titles", []), lab.get("task_points", []), lab.get("solution_commands", []), lab.get("checks", []), requires_servervm, "Task"),
         ])
@@ -154,12 +182,16 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
 
     if "exam" in supported_modes:
         exam_tasks_md = "\n".join([
-            f"# {data['title']} - Exam Tasks",
+            f"# {data['title']}",
+            "",
+            "## Exam Tasks",
             *metadata_lines(data, "Exam"),
             render_tasks(exam.get("tasks", []), exam.get("task_titles", []), exam.get("task_points", []), requires_servervm, "Question"),
         ])
         exam_solution_md = "\n".join([
-            f"# {data['title']} - Exam Solution",
+            f"# {data['title']}",
+            "",
+            "## Exam Solution",
             *metadata_lines(data, "Exam"),
             render_solution(exam.get("tasks", []), exam.get("task_titles", []), exam.get("task_points", []), exam.get("solution_commands", []), exam.get("checks", []), requires_servervm, "Question"),
         ])

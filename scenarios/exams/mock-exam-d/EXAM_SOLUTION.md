@@ -1,17 +1,25 @@
-# Mock Exam D: SummitLine Operations Review - Exam Solution
-Scenario ID: mock-exam-d
-Mode: Exam
-Time limit: 150 minutes
-Objectives: networking-and-firewall, storage-lvm, users-sudo-ssh, containers
+# Mock Exam D: SummitLine Operations Review
+
+## Exam Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `mock-exam-d` |
+| Mode | Exam |
+| Time limit | 150 minutes |
+| Objectives | networking-and-firewall, storage-lvm, users-sudo-ssh, containers |
 
 A 22 question RHCSA style mock exam for RHEL 9 that adds default ACLs, umask tuning, password aging, and a full create mount storage task.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
-- Use the exact scenario variables shown in each question.
-- Keep SELinux enforcing unless a question explicitly directs otherwise.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use the exact scenario variables shown in each question.
+3. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (clientvm)
+## Question 01 — Client Network
+**System:** clientvm
+
+#### Commands
 ```bash
 nmcli connection show
 nmcli connection modify "<active-connection>" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -20,13 +28,23 @@ nmcli connection up "<active-connection>"
 hostnamectl set-hostname clientvm.summit.lab
 ```
 
-## Question 02 - Static Host Entry (clientvm)
+---
+
+## Question 02 — Static Host Entry
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/hosts
 192.168.122.3 mirror.summit.lab
 ```
 
-## Question 03 - Client Repositories (clientvm)
+---
+
+## Question 03 — Client Repositories
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/yum.repos.d/summit.repo
 [BaseOS]
@@ -42,7 +60,12 @@ enabled=1
 gpgcheck=0
 ```
 
-## Question 04 - Server Repositories (servervm)
+---
+
+## Question 04 — Server Repositories
+**System:** servervm
+
+#### Commands
 ```bash
 # on servervm
 vim /etc/yum.repos.d/summit.repo
@@ -59,7 +82,12 @@ enabled=1
 gpgcheck=0
 ```
 
-## Question 05 - Apache Custom Docroot (clientvm)
+---
+
+## Question 05 — Apache Custom Docroot
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/httpd/conf.d/summit.conf
 <VirtualHost *:8085>
@@ -76,7 +104,12 @@ firewall-cmd --reload
 systemctl enable --now httpd
 ```
 
-## Question 06 - Users And Group (clientvm)
+---
+
+## Question 06 — Users And Group
+**System:** clientvm
+
+#### Commands
 ```bash
 groupadd summitops
 useradd -m kara
@@ -86,7 +119,12 @@ usermod -aG summitops kara
 usermod -aG summitops miles
 ```
 
-## Question 07 - User Passwords (clientvm)
+---
+
+## Question 07 — User Passwords
+**System:** clientvm
+
+#### Commands
 ```bash
 passwd kara
 # enter: redhat
@@ -96,7 +134,12 @@ passwd zero
 # enter: redhat
 ```
 
-## Question 08 - Delegated Sudo (clientvm)
+---
+
+## Question 08 — Delegated Sudo
+**System:** clientvm
+
+#### Commands
 ```bash
 visudo -f /etc/sudoers.d/summitops
 %summitops ALL=(root) /usr/sbin/useradd
@@ -104,7 +147,12 @@ visudo -f /etc/sudoers.d/kara-passwd
 kara ALL=(root) NOPASSWD: /usr/bin/passwd
 ```
 
-## Question 09 - Shared Directory With Default ACL (clientvm)
+---
+
+## Question 09 — Shared Directory With Default ACL
+**System:** clientvm
+
+#### Commands
 ```bash
 useradd -m auditord
 passwd auditord
@@ -115,14 +163,24 @@ chmod 2770 /projects/summit
 setfacl -m d:u:auditord:rwx /projects/summit
 ```
 
-## Question 10 - User Umask (clientvm)
+---
+
+## Question 10 — User Umask
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /home/miles/.bashrc
 umask 027
 chown miles:miles /home/miles/.bashrc
 ```
 
-## Question 11 - Password Aging Defaults (clientvm)
+---
+
+## Question 11 — Password Aging Defaults
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/login.defs
 PASS_MAX_DAYS   45
@@ -134,20 +192,35 @@ passwd trainee54
 chage -l trainee54
 ```
 
-## Question 12 - Cron Logger (clientvm)
+---
+
+## Question 12 — Cron Logger
+**System:** clientvm
+
+#### Commands
 ```bash
 crontab -e -u miles
 */15 * * * * logger "Summit exam"
 ```
 
-## Question 13 - Chrony Client (clientvm)
+---
+
+## Question 13 — Chrony Client
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
 systemctl enable --now chronyd
 ```
 
-## Question 14 - Autofs Map (clientvm)
+---
+
+## Question 14 — Autofs Map
+**System:** clientvm
+
+#### Commands
 ```bash
 useradd -m summitremote
 passwd summitremote
@@ -160,30 +233,55 @@ summitremote -rw servervm:/exports/summit-home
 systemctl enable --now autofs
 ```
 
-## Question 15 - Fixed UID User (clientvm)
+---
+
+## Question 15 — Fixed UID User
+**System:** clientvm
+
+#### Commands
 ```bash
 useradd -u 4540 -m cedar540
 passwd cedar540
 # enter: redhat
 ```
 
-## Question 16 - Find And Copy (clientvm)
+---
+
+## Question 16 — Find And Copy
+**System:** clientvm
+
+#### Commands
 ```bash
 mkdir -p /root/miles-files
 find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/miles-files \;
 ```
 
-## Question 17 - Grep Filter (clientvm)
+---
+
+## Question 17 — Grep Filter
+**System:** clientvm
+
+#### Commands
 ```bash
 grep alpha /usr/share/dict/words > /root/alpha-lines
 ```
 
-## Question 18 - Archive (clientvm)
+---
+
+## Question 18 — Archive
+**System:** clientvm
+
+#### Commands
 ```bash
 tar -czf /root/summit-etc.tar.gz /etc
 ```
 
-## Question 19 - Shell Script (clientvm)
+---
+
+## Question 19 — Shell Script
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /usr/local/bin/summit-scan
 #!/bin/bash
@@ -195,7 +293,12 @@ chmod +x /usr/local/bin/summit-scan
 /usr/local/bin/summit-scan
 ```
 
-## Question 20 - Swap Space (clientvm)
+---
+
+## Question 20 — Swap Space
+**System:** clientvm
+
+#### Commands
 ```bash
 fdisk /dev/sdb
 # create a 768 MiB partition and change the type to Linux swap
@@ -207,7 +310,12 @@ vim /etc/fstab
 UUID=<uuid> swap swap defaults 0 0
 ```
 
-## Question 21 - Create And Mount LV (clientvm)
+---
+
+## Question 21 — Create And Mount LV
+**System:** clientvm
+
+#### Commands
 ```bash
 fdisk /dev/sdc
 # create one Linux LVM partition that uses the disk
@@ -223,7 +331,12 @@ UUID=<uuid> /mnt/summitlv ext4 defaults 0 0
 mount -a
 ```
 
-## Question 22 - Rootless Container Autostart (clientvm)
+---
+
+## Question 22 — Rootless Container Autostart
+**System:** clientvm
+
+#### Commands
 ```bash
 runuser -l neriad -c "cd /opt/rhcsa/workspaces/exam-d && podman build -t localhost/summit-web:latest ."
 runuser -l neriad -c "podman run -d --name pdfd -v /opt/ind:/data/input:Z -v /opt/outd:/data/output:Z localhost/summit-web:latest"
@@ -234,7 +347,9 @@ runuser -l neriad -c "systemctl --user enable --now container-pdfd.service"
 loginctl enable-linger neriad
 ```
 
-Verification
+---
+
+### Verification
 ```bash
 getent hosts mirror.summit.lab
 curl -s http://localhost:8085

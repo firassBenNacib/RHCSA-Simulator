@@ -3,6 +3,7 @@ set -euo pipefail
 
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
+    grubby --update-kernel=ALL --remove-args="audit=1" >/dev/null 2>&1 || true
 
     rhcsa_configure_password_recovery disable
     rhcsa_configure_password_recovery enable

@@ -1,0 +1,61 @@
+{
+  "id": "lab-35-process-priority-tuned",
+  "title": "Lab 35: Process Priority and Tuned",
+  "description": "Tune the system with the requested profile and adjust process scheduling priority",
+  "objective_tags": [
+    "logging-and-processes",
+    "system-services-and-targets"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Install the tuned package if it is not already present and activate the tuned profile throughput-performance on clientvm.",
+        "Start the command sleep 3600 in the background and save its PID in /root/sleep35.pid.",
+        "Adjust the nice value of that process so it becomes 5."
+      ],
+      "hints": [
+        "Use a persistent tuned command.",
+        "Use ps to verify the final nice value of the target process."
+      ],
+      "checks": [
+        "tuned-adm active | grep -q throughput-performance",
+        "test -f /root/sleep35.pid",
+        "ps -o ni= -p \"$(cat /root/sleep35.pid)\" | tr -d \" \" | grep -qx 5"
+      ],
+      "solution_outline": [
+        "Use tuned-adm and renice."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "dnf install -y tuned",
+          "systemctl enable --now tuned",
+          "tuned-adm profile throughput-performance"
+        ],
+        [
+          "sleep 3600 &",
+          "echo $! > /root/sleep35.pid"
+        ],
+        [
+          "renice 5 -p \"$(cat /root/sleep35.pid)\""
+        ]
+      ]
+    }
+  }
+}

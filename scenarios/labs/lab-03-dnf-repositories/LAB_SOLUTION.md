@@ -1,15 +1,24 @@
-# Lab 03: DNF Repository Configuration - Lab Solution
-Scenario ID: lab-03-dnf-repositories
-Mode: Lab
-Time limit: 40 minutes
-Objectives: software-scheduling-time
+# Lab 03: DNF Repository Configuration
+
+## Lab Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `lab-03-dnf-repositories` |
+| Mode | Lab |
+| Time limit | 40 minutes |
+| Objectives | software-scheduling-time |
 
 Configure offline BaseOS and AppStream repositories on both systems.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
 
-## Task 01 - Part 01 (clientvm)
+## Task 01 — Part 01
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/yum.repos.d/rhcsa.repo
 [rhcsa-baseos]
@@ -26,7 +35,12 @@ gpgcheck=0
 dnf clean all
 ```
 
-## Task 02 - Part 02 (clientvm)
+---
+
+## Task 02 — Part 02
+**System:** clientvm
+
+#### Commands
 ```bash
 ssh admin@servervm
 sudo -i
@@ -47,13 +61,20 @@ exit
 exit
 ```
 
-## Task 03 - Part 03 (clientvm)
+---
+
+## Task 03 — Part 03
+**System:** clientvm
+
+#### Commands
 ```bash
 dnf repolist
 ssh admin@servervm sudo dnf repolist
 ```
 
-Verification
+---
+
+### Verification
 ```bash
 dnf repolist
 ssh admin@servervm sudo dnf repolist

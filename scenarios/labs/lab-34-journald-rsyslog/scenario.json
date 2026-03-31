@@ -1,0 +1,65 @@
+{
+  "id": "lab-34-journald-rsyslog",
+  "title": "Lab 34: Journald Persistence and Rsyslog",
+  "description": "Configure persistent journal storage and a custom rsyslog drop-in for authentication warnings",
+  "objective_tags": [
+    "system-services-and-targets",
+    "logging-and-processes"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure journald on clientvm so logs are stored persistently across reboots.",
+        "Create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
+        "Ensure the rsyslog service is active after your changes."
+      ],
+      "hints": [
+        "Persistent journald storage requires the correct directory.",
+        "Reload or restart the affected logging services after you update their configuration."
+      ],
+      "checks": [
+        "test -d /var/log/journal",
+        "test -f /etc/rsyslog.d/10-auth34.conf",
+        "systemctl is-active rsyslog | grep -qx active"
+      ],
+      "solution_outline": [
+        "Configure journald and rsyslog persistently."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "mkdir -p /var/log/journal",
+          "vim /etc/systemd/journald.conf",
+          "# Set: Storage=persistent",
+          ":wq",
+          "systemctl restart systemd-journald"
+        ],
+        [
+          "vim /etc/rsyslog.d/10-auth34.conf",
+          "authpriv.warning    /var/log/auth34.log",
+          ":wq"
+        ],
+        [
+          "systemctl restart rsyslog",
+          "systemctl enable rsyslog"
+        ]
+      ]
+    }
+  }
+}

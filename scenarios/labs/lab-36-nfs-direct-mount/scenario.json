@@ -1,0 +1,62 @@
+{
+  "id": "lab-36-nfs-direct-mount",
+  "title": "Lab 36: Persistent NFS Direct Mount",
+  "description": "Mount a remote NFS export persistently using /etc/fstab",
+  "objective_tags": [
+    "nfs-and-autofs",
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Persistently mount the NFS export 192.168.122.3:/exports/direct36 on clientvm at /mnt/direct36.",
+        "Use the mount options ro,sync.",
+        "Ensure the mount is available after a reboot and that the file nfs36.txt can be read from the mount point."
+      ],
+      "hints": [
+        "Use /etc/fstab for persistence.",
+        "Do not use autofs for this task."
+      ],
+      "checks": [
+        "grep -q \"/mnt/direct36\" /etc/fstab",
+        "mountpoint -q /mnt/direct36",
+        "test -f /mnt/direct36/nfs36.txt"
+      ],
+      "solution_outline": [
+        "Configure a direct persistent NFS mount."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "mkdir -p /mnt/direct36",
+          "vim /etc/fstab",
+          "192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0",
+          ":wq"
+        ],
+        [
+          "mount -a"
+        ],
+        [
+          "ls /mnt/direct36"
+        ]
+      ]
+    }
+  }
+}

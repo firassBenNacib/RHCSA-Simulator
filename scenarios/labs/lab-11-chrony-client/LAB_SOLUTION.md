@@ -1,15 +1,24 @@
-# Lab 11: Time Synchronization - Lab Solution
-Scenario ID: lab-11-chrony-client
-Mode: Lab
-Time limit: 20 minutes
-Objectives: software-scheduling-time
+# Lab 11: Time Synchronization
+
+## Lab Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `lab-11-chrony-client` |
+| Mode | Lab |
+| Time limit | 20 minutes |
+| Objectives | software-scheduling-time |
 
 Configure clientvm to synchronize time from servervm.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
 
-## Task 01 - Part 01 (clientvm)
+## Task 01 — Part 01
+**System:** clientvm
+
+#### Commands
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -18,7 +27,9 @@ systemctl enable --now chronyd
 chronyc sources -v
 ```
 
-Verification
+---
+
+### Verification
 ```bash
 chronyc sources -v
 systemctl status chronyd --no-pager

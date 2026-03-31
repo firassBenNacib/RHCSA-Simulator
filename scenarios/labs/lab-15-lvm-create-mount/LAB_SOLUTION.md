@@ -1,15 +1,24 @@
-# Lab 15: LVM Creation And Mount - Lab Solution
-Scenario ID: lab-15-lvm-create-mount
-Mode: Lab
-Time limit: 40 minutes
-Objectives: storage-lvm
+# Lab 15: LVM Creation And Mount
+
+## Lab Solution
+### Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `lab-15-lvm-create-mount` |
+| Mode | Lab |
+| Time limit | 40 minutes |
+| Objectives | storage-lvm |
 
 Create a new volume group and logical volume and mount it persistently.
 
-General notes
-- Unless a task states otherwise, make all changes persistent across reboots.
+### General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
 
-## Task 01 - Part 01 (clientvm)
+## Task 01 — Part 01
+**System:** clientvm
+
+#### Commands
 ```bash
 fdisk /dev/sdb
 # create a GPT LVM partition for the remaining disk space
@@ -19,7 +28,12 @@ vgcreate -s 8M wgroupx /dev/sdb1
 lvcreate -n wsharex -l 50 wgroupx
 ```
 
-## Task 02 - Part 02 (clientvm)
+---
+
+## Task 02 — Part 02
+**System:** clientvm
+
+#### Commands
 ```bash
 mkfs.ext4 /dev/wgroupx/wsharex
 mkdir -p /mnt/wsharex
@@ -29,7 +43,9 @@ UUID=<uuid-of-wsharex> /mnt/wsharex ext4 defaults 0 0
 mount -a
 ```
 
-Verification
+---
+
+### Verification
 ```bash
 pvs
 vgs
