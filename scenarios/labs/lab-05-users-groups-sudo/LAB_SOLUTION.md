@@ -11,14 +11,20 @@
 
 Create local users, a delegated admin group, and passwordless privileged access.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Create the group sysadmx and the users harryx,…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 groupadd sysadmx
 useradd -m harryx
@@ -30,10 +36,10 @@ usermod -aG sysadmx natashax
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Set the password of all three users to redhat
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 passwd harryx
 # enter: redhat
@@ -45,10 +51,10 @@ passwd sarahx
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Allow members of sysadmx to run useradd through sudo,…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/sysadmx
 %sysadmx ALL=(root) /usr/sbin/useradd

@@ -45,9 +45,7 @@ for line in p.read_text().splitlines():
     if line.strip().startswith('server ') or line.strip().startswith('pool '):
         continue
     lines.append(line)
-p.write_text('
-'.join(lines) + '
-')
+p.write_text('\n'.join(lines) + '\n')
 EOF
 id scoutte >/dev/null 2>&1 || useradd -m scoutte
 mkdir -p /opt/exam-e/find/a /opt/exam-e/find/z/sub

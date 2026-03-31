@@ -11,15 +11,22 @@
 
 A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at scheduling, tuned, and an existing logical volume resize.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
-2. Use the exact scenario variables shown in each question.
-3. Keep SELinux enforcing unless a question explicitly directs otherwise.
+2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
+3. Use the exact scenario variables shown in each question.
+4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 — Root Recovery
+### Question 01 — Root Recovery
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 # At the boot menu, edit the kernel line and append rd.break
 mount -o remount,rw /sysroot
@@ -33,24 +40,25 @@ exit
 
 ---
 
-## Question 02 — Client Network
+### Question 02 — Client Network
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
-nmcli connection show
-nmcli connection modify "<active-connection>" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "<active-connection>"
-nmcli connection up "<active-connection>"
+CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+nmcli connection show "$CONN"
+nmcli connection modify "$CONN" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "$CONN"
+nmcli connection up "$CONN"
 hostnamectl set-hostname clientvm.harbor.lab
 ```
 
 ---
 
-## Question 03 — Bootloader Kernel Argument
+### Question 03 — Bootloader Kernel Argument
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grubby --update-kernel=ALL --args="audit=1"
 grubby --info=ALL | grep -E "^kernel|^args"
@@ -58,10 +66,10 @@ grubby --info=ALL | grep -E "^kernel|^args"
 
 ---
 
-## Question 04 — Client Repositories
+### Question 04 — Client Repositories
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/yum.repos.d/harbor.repo
 [BaseOS]
@@ -79,11 +87,12 @@ gpgcheck=0
 
 ---
 
-## Question 05 — Server Repositories
+### Question 05 — Server Repositories
 **System:** servervm
 
-#### Commands
+#### Command Flow
 ```bash
+# Run on servervm
 # on servervm
 vim /etc/yum.repos.d/harbor.repo
 [BaseOS]
@@ -101,10 +110,10 @@ gpgcheck=0
 
 ---
 
-## Question 06 — Apache SELinux Port
+### Question 06 — Apache SELinux Port
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/httpd/conf/httpd.conf
 Listen 8181
@@ -116,10 +125,10 @@ systemctl enable --now httpd
 
 ---
 
-## Question 07 — Users And Group
+### Question 07 — Users And Group
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 groupadd harborops
 useradd -m lena
@@ -131,10 +140,10 @@ usermod -aG harborops ivor
 
 ---
 
-## Question 08 — User Passwords
+### Question 08 — User Passwords
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 passwd lena
 # enter: redhat
@@ -146,10 +155,10 @@ passwd hush
 
 ---
 
-## Question 09 — Delegated Sudo
+### Question 09 — Delegated Sudo
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/harborops
 %harborops ALL=(root) /usr/sbin/useradd
@@ -159,10 +168,10 @@ lena ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
 
 ---
 
-## Question 10 — Setgid Directory
+### Question 10 — Setgid Directory
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkdir -p /srv/harbor
 chown root:harborops /srv/harbor
@@ -171,10 +180,10 @@ chmod 2770 /srv/harbor
 
 ---
 
-## Question 11 — Pwquality Policy
+### Question 11 — Pwquality Policy
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkdir -p /etc/security/pwquality.conf.d
 vim /etc/security/pwquality.conf.d/exam-e.conf
@@ -184,22 +193,24 @@ minclass = 3
 
 ---
 
-## Question 12 — At Job
+### Question 12 — At Job
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 systemctl enable --now atd
-runuser -l ivor -c "echo "echo Harbor queued >> /home/ivor/at.log" | at now + 2 minutes"
+runuser -l ivor -c 'cat <<"EOF" | at now + 2 minutes
+echo Harbor queued >> /home/ivor/at.log
+EOF'
 atq
 ```
 
 ---
 
-## Question 13 — Chrony Client
+### Question 13 — Chrony Client
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -208,10 +219,10 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 14 — Autofs Map
+### Question 14 — Autofs Map
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m harborremote
 passwd harborremote
@@ -226,10 +237,10 @@ systemctl enable --now autofs
 
 ---
 
-## Question 15 — Fixed UID User
+### Question 15 — Fixed UID User
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -u 4551 -m maple551
 passwd maple551
@@ -238,10 +249,10 @@ passwd maple551
 
 ---
 
-## Question 16 — Find And Copy
+### Question 16 — Find And Copy
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkdir -p /root/scoutte-files
 find /opt/exam-e/find -user scoutte -mtime -1 -type f -exec cp --parents {} /root/scoutte-files \;
@@ -249,30 +260,30 @@ find /opt/exam-e/find -user scoutte -mtime -1 -type f -exec cp --parents {} /roo
 
 ---
 
-## Question 17 — Grep Filter
+### Question 17 — Grep Filter
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grep beacon /usr/share/dict/words > /root/beacon-lines
 ```
 
 ---
 
-## Question 18 — Archive
+### Question 18 — Archive
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 tar -cjf /root/var-tmp-harbor.tar.bz2 /var/tmp
 ```
 
 ---
 
-## Question 19 — Shell Script
+### Question 19 — Shell Script
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /usr/local/bin/harbor-check
 #!/bin/bash
@@ -286,10 +297,10 @@ chmod +x /usr/local/bin/harbor-check
 
 ---
 
-## Question 20 — Swap Space
+### Question 20 — Swap Space
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 fdisk /dev/sdb
 # create a 640 MiB partition and change the type to Linux swap
@@ -303,10 +314,10 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-## Question 21 — Resize Existing LV
+### Question 21 — Resize Existing LV
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 lvextend -L 360M /dev/reviewvge/reviewe
 resize2fs /dev/reviewvge/reviewe
@@ -314,10 +325,10 @@ resize2fs /dev/reviewvge/reviewe
 
 ---
 
-## Question 22 — Recommended Tuned Profile
+### Question 22 — Recommended Tuned Profile
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 tuned-adm recommended
 tuned-adm profile <recommended-profile>

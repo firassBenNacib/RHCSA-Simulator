@@ -11,24 +11,30 @@
 
 Locate recent files owned by a user and copy them while preserving directories.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Find all files owned by natfind and modified in the…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 find /opt/lab12/source -type f -user natfind -mtime -1 -exec cp --parents {} /root/natfind-files \;
 ```
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Copy them to /root/natfind-files and preserve the…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 find /root/natfind-files -type f | sort
 ```

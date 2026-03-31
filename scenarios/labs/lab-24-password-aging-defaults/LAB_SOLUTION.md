@@ -11,14 +11,20 @@
 
 Configure default password aging for newly created local users through login.defs.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Configure the system defaults for newly created local…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/login.defs
 PASS_MAX_DAYS   45
@@ -28,10 +34,10 @@ PASS_WARN_AGE   10
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Create the user aging24, set its password to redhat,…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m aging24
 passwd aging24

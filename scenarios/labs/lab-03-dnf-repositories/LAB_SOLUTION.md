@@ -11,14 +11,21 @@
 
 Configure offline BaseOS and AppStream repositories on both systems.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Client Repositories
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/yum.repos.d/rhcsa.repo
 [rhcsa-baseos]
@@ -32,18 +39,18 @@ name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
+:wq
 dnf clean all
 ```
 
 ---
 
-## Task 02 — Part 02
-**System:** clientvm
+### Task 02 — Server Repositories
+**System:** servervm
 
-#### Commands
+#### Command Flow
 ```bash
-ssh admin@servervm
-sudo -i
+# Run on servervm
 vim /etc/yum.repos.d/rhcsa.repo
 [rhcsa-baseos]
 name=RHCSA BaseOS
@@ -56,20 +63,20 @@ name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
+:wq
 dnf clean all
-exit
-exit
 ```
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Verify Repositories
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 dnf repolist
-ssh admin@servervm sudo dnf repolist
+# Run on servervm
+dnf repolist
 ```
 
 ---

@@ -19,9 +19,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "As user student22, run a container named mycontainer22 from localhost/text2pdf22:latest with /opt/file22 mounted to /data/input and /opt/processed22 mounted to /data/output.",
-        "Generate a systemd user unit for the container, enable it, and make it start automatically after reboot.",
-        "Enable lingering for student22."
+        "Create user student22 with password redhat if it does not already exist. Then, as that user, run a container named mycontainer22 from localhost/text2pdf22:latest with /opt/file22 mounted to /data/input and /opt/processed22 mounted to /data/output.",
+        "As user student22, generate a systemd user unit for that container and enable it.",
+        "Enable lingering for student22 so the user service starts automatically after reboot."
       ],
       "hints": [
         "Use podman generate systemd --files --new or podman generate systemd --new depending on the environment.",
@@ -35,9 +35,9 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Run The Container",
+        "Generate User Service",
+        "Enable Lingering"
       ],
       "task_points": [],
       "solution_commands": [
@@ -45,19 +45,16 @@
           "id student22 || useradd -m student22",
           "passwd student22",
           "# enter: redhat",
-          "su - student22",
-          "podman run -d --name mycontainer22 -v /opt/file22:/data/input:Z -v /opt/processed22:/data/output:Z localhost/text2pdf22:latest",
-          "mkdir -p ~/.config/systemd/user",
-          "cd ~/.config/systemd/user",
-          "podman generate systemd --name mycontainer22 --files --new",
-          "systemctl --user daemon-reload",
-          "systemctl --user enable --now container-mycontainer22.service",
-          "exit"
+          "runuser -l student22 -c \"podman run -d --name mycontainer22 -v /opt/file22:/data/input:Z -v /opt/processed22:/data/output:Z localhost/text2pdf22:latest\""
         ],
         [
-          "loginctl enable-linger student22"
+          "runuser -l student22 -c \"mkdir -p ~/.config/systemd/user\"",
+          "runuser -l student22 -c \"cd ~/.config/systemd/user && podman generate systemd --name mycontainer22 --files --new\"",
+          "runuser -l student22 -c \"systemctl --user daemon-reload\"",
+          "runuser -l student22 -c \"systemctl --user enable --now container-mycontainer22.service\""
         ],
         [
+          "loginctl enable-linger student22",
           "runuser -l student22 -c \"systemctl --user status container-mycontainer22.service --no-pager\""
         ]
       ]

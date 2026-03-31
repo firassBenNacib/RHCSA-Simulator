@@ -1,0 +1,56 @@
+{
+  "id": "lab-48-ssh-key-scp",
+  "title": "Lab 48: SSH Key Authentication And SCP",
+  "description": "Configure key-based SSH access and securely copy a file to the second system",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create user copy48 on both clientvm and servervm. Set the password on both systems to redhat.",
+        "As user copy48 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
+        "Configure passwordless SSH access for copy48 from clientvm to servervm using the public key.",
+        "Using scp over SSH, copy /home/copy48/payload.txt from clientvm to /home/copy48/inbox/ on servervm."
+      ],
+      "hints": [
+        "Use ssh-keygen, ssh-copy-id, and scp as the target user."
+      ],
+      "checks": [
+        "ssh -o BatchMode=yes -o StrictHostKeyChecking=no copy48@192.168.122.3 \"test -f /home/copy48/inbox/payload.txt\""
+      ],
+      "solution_outline": [],
+      "task_titles": [],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "# On both systems",
+          "useradd -m copy48",
+          "passwd copy48",
+          "# enter: redhat"
+        ],
+        [
+          "runuser -l copy48 -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\""
+        ],
+        [
+          "runuser -l copy48 -c \"ssh-copy-id -o StrictHostKeyChecking=no copy48@192.168.122.3\""
+        ],
+        [
+          "runuser -l copy48 -c \"scp -o StrictHostKeyChecking=no /home/copy48/payload.txt copy48@192.168.122.3:/home/copy48/inbox/\""
+        ]
+      ]
+    }
+  }
+}

@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "On clientvm and servervm, configure a persistent repository file that uses http://servervm/repo/BaseOS/ and http://servervm/repo/AppStream/.",
-        "Disable GPG checking in that file and leave both repositories enabled.",
-        "Verify that package metadata is available from both repositories on both systems."
+        "On clientvm, configure a persistent repository file with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "On servervm, configure the same repository file with the same settings.",
+        "Verify that both repositories are available on both systems."
       ],
       "hints": [
         "You can use one repo file per system.",
@@ -36,9 +36,9 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Client Repositories",
+        "Server Repositories",
+        "Verify Repositories"
       ],
       "task_points": [],
       "solution_commands": [
@@ -55,11 +55,11 @@
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
           "gpgcheck=0",
+          ":wq",
           "dnf clean all"
         ],
         [
-          "ssh admin@servervm",
-          "sudo -i",
+          "# Run on servervm",
           "vim /etc/yum.repos.d/rhcsa.repo",
           "[rhcsa-baseos]",
           "name=RHCSA BaseOS",
@@ -72,13 +72,13 @@
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
           "gpgcheck=0",
-          "dnf clean all",
-          "exit",
-          "exit"
+          ":wq",
+          "dnf clean all"
         ],
         [
           "dnf repolist",
-          "ssh admin@servervm sudo dnf repolist"
+          "# Run on servervm",
+          "dnf repolist"
         ]
       ]
     }

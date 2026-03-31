@@ -11,14 +11,20 @@
 
 Configure a persistent local password quality policy without editing PAM service files.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Create a persistent password quality policy in…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkdir -p /etc/security/pwquality.conf.d
 vim /etc/security/pwquality.conf.d/lab25.conf
@@ -28,10 +34,10 @@ minclass = 3
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Do not edit any PAM service file for this task
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grep -R "minlen\|minclass" /etc/security/pwquality.conf.d
 ```

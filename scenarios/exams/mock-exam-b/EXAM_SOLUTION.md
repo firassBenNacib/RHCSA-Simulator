@@ -11,29 +11,37 @@
 
 A second 22 task RHCSA style mock exam with distinct variables and combined tasks.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
-2. Use the exact scenario variables shown in each question.
-3. Keep SELinux enforcing unless a question explicitly directs otherwise.
+2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
+3. Use the exact scenario variables shown in each question.
+4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 — Client Network
+### Question 01 — Client Network
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
-nmcli connection show
-nmcli connection modify "<active-connection>" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "<active-connection>"
-nmcli connection up "<active-connection>"
+CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+nmcli connection show "$CONN"
+nmcli connection modify "$CONN" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "$CONN"
+nmcli connection up "$CONN"
 hostnamectl set-hostname clientvm.coremesh.lab
 ```
 
 ---
 
-## Question 02 — Host Entry
+### Question 02 — Host Entry
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/hosts
 192.168.122.3 registry.coremesh.lab
@@ -41,10 +49,10 @@ vim /etc/hosts
 
 ---
 
-## Question 03 — Client Repositories
+### Question 03 — Client Repositories
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/yum.repos.d/coremesh.repo
 [coremesh-baseos]
@@ -62,13 +70,12 @@ gpgcheck=0
 
 ---
 
-## Question 04 — Server Repositories
+### Question 04 — Server Repositories
 **System:** servervm
 
-#### Commands
+#### Command Flow
 ```bash
-ssh admin@servervm
-sudo -i
+# Run on servervm
 vim /etc/yum.repos.d/coremesh.repo
 [coremesh-baseos]
 name=CoreMesh BaseOS
@@ -81,16 +88,14 @@ name=CoreMesh AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
-exit
-exit
 ```
 
 ---
 
-## Question 05 — Apache Firewall SELinux
+### Question 05 — Apache Firewall SELinux
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/httpd/conf/httpd.conf
 Listen 8383
@@ -103,10 +108,10 @@ systemctl restart httpd
 
 ---
 
-## Question 06 — Users And Group
+### Question 06 — Users And Group
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 groupadd platformb
 useradd -m mira
@@ -118,10 +123,10 @@ usermod -aG platformb jonas
 
 ---
 
-## Question 07 — User Passwords
+### Question 07 — User Passwords
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 passwd mira
 # enter: redhat
@@ -133,10 +138,10 @@ passwd noel
 
 ---
 
-## Question 08 — Delegated Sudo
+### Question 08 — Delegated Sudo
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/platformb
 %platformb ALL=(root) /usr/sbin/useradd
@@ -146,10 +151,10 @@ mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
 
 ---
 
-## Question 09 — Setgid Directory
+### Question 09 — Setgid Directory
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkdir -p /srv/platformb
 chgrp platformb /srv/platformb
@@ -158,10 +163,10 @@ chmod 2770 /srv/platformb
 
 ---
 
-## Question 10 — Cron Logger
+### Question 10 — Cron Logger
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 crontab -e -u mira
 * * * * * logger "CoreMesh exam"
@@ -169,10 +174,10 @@ crontab -e -u mira
 
 ---
 
-## Question 11 — Chrony Client
+### Question 11 — Chrony Client
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -182,10 +187,10 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 12 — Autofs Map
+### Question 12 — Autofs Map
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m meshremote
 passwd meshremote
@@ -199,10 +204,10 @@ systemctl enable --now autofs
 
 ---
 
-## Question 13 — Fixed UID User
+### Question 13 — Fixed UID User
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -u 4421 cato421
 passwd cato421
@@ -211,40 +216,40 @@ passwd cato421
 
 ---
 
-## Question 14 — Find And Copy
+### Question 14 — Find And Copy
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \;
 ```
 
 ---
 
-## Question 15 — Grep Filter
+### Question 15 — Grep Filter
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grep proto /usr/share/dict/words > /root/proto-lines
 ```
 
 ---
 
-## Question 16 — Archive
+### Question 16 — Archive
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 tar -cjf /root/usr-local-b.tar.bz2 /usr/local
 ```
 
 ---
 
-## Question 17 — Unit Status Script
+### Question 17 — Unit Status Script
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /usr/local/bin/corecheck
 #!/usr/bin/env bash
@@ -257,10 +262,10 @@ chmod 755 /usr/local/bin/corecheck
 
 ---
 
-## Question 18 — Swap Space
+### Question 18 — Swap Space
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 fdisk /dev/sdb
 # create a 600M GPT partition and set the type to Linux swap
@@ -274,10 +279,10 @@ UUID=<uuid-of-sdb1> swap swap defaults 0 0
 
 ---
 
-## Question 19 — Resize Existing LV
+### Question 19 — Resize Existing LV
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 lvextend -L 300M /dev/reviewvgb/reviewb
 resize2fs /dev/reviewvgb/reviewb
@@ -285,10 +290,10 @@ resize2fs /dev/reviewvgb/reviewb
 
 ---
 
-## Question 20 — Tuned Profile
+### Question 20 — Tuned Profile
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 tuned-adm recommended
 tuned-adm profile <recommended-profile>
@@ -296,10 +301,10 @@ tuned-adm profile <recommended-profile>
 
 ---
 
-## Question 21 — Rootless Container
+### Question 21 — Rootless Container
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 su - lyrab
 cd /opt/rhcsa/workspaces/exam-b
@@ -310,10 +315,10 @@ exit
 
 ---
 
-## Question 22 — Container Autostart
+### Question 22 — Container Autostart
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 su - lyrab
 mkdir -p ~/.config/systemd/user

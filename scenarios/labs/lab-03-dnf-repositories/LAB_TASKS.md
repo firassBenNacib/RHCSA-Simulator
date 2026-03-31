@@ -11,34 +11,46 @@
 
 Configure offline BaseOS and AppStream repositories on both systems.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Client Repositories
 **System:** clientvm
 
-On clientvm and servervm, configure a persistent repository file that uses http://servervm/repo/BaseOS/ and http://servervm/repo/AppStream/.
+On clientvm, configure a persistent repository file with the following settings:
+
+BaseOS: http://servervm/repo/BaseOS/
+AppStream: http://servervm/repo/AppStream/
+gpgcheck: disabled
+Repositories: enabled
 
 ---
 
-## Task 02 — Part 02
-**System:** clientvm
+### Task 02 — Server Repositories
+**System:** servervm
 
-Disable GPG checking in that file and leave both repositories enabled.
+On servervm, configure the same repository file with the same settings.
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Verify Repositories
 **System:** clientvm
 
-Verify that package metadata is available from both repositories on both systems.
+Verify that both repositories are available on both systems.
 
 ### Hints
 - You can use one repo file per system.
 - Use vim to type the repository file manually.
 
-### Checks
+### Validation Commands
 ```bash
 dnf repolist
 ssh admin@servervm sudo dnf repolist

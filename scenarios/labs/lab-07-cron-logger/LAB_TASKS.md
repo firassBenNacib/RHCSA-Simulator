@@ -11,18 +11,24 @@
 
 Schedule a recurring task for a specific user.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Create user natcron if it does not exist and set its…
 **System:** clientvm
 
 Create user natcron if it does not exist and set its password to redhat.
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Configure a cron job for natcron that runs every 2…
 **System:** clientvm
 
 Configure a cron job for natcron that runs every 2 minutes and logs the message "Lab 07 running" with logger.
@@ -31,7 +37,7 @@ Configure a cron job for natcron that runs every 2 minutes and logs the message 
 - Use crontab -e -u natcron.
 - Leave crond enabled and running.
 
-### Checks
+### Validation Commands
 ```bash
 crontab -l -u natcron
 systemctl status crond --no-pager

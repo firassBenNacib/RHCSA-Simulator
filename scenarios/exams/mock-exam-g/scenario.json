@@ -1,0 +1,288 @@
+{
+  "id": "mock-exam-g",
+  "title": "Mock Exam G: DeltaForge Recovery Review",
+  "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, direct NFS mounting, secure copy, and process scheduling work.",
+  "objective_tags": [
+    "boot-and-recovery",
+    "networking-and-firewall",
+    "systemd-and-processes",
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "exam"
+  ],
+  "time_limit_minutes": 150,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": true,
+    "requires_servervm": true
+  },
+  "content": {
+    "exam": {
+      "tasks": [
+        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.46\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.deltaforge.lab",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
+        "On clientvm and servervm, configure a repository file with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the Apache HTTP server on clientvm so that it serves content from /srv/delta-web on TCP port 8086.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Configure the SELinux file context and SELinux port label required for the new location and port.",
+        "Create group deltaops and users gwen and pavel with deltaops as a supplementary group. Create user sable with /sbin/nologin and no deltaops membership.",
+        "Set the password of gwen, pavel, and sable to redhat.",
+        "Allow members of deltaops to run useradd through sudo, and allow gwen to run passwd for other users without a sudo password prompt.",
+        "Create user auditg with password redhat. Then create /projects/delta with group ownership deltaops, mode 2770, and a default ACL that gives auditg read write execute access to new content.",
+        "Configure user pavel so that new regular files are created with mode 0640 and new directories are created with mode 0750.",
+        "Create a one-time at job as user pavel that appends the text Delta queued to /home/pavel/at-g.log two minutes from now. Ensure the atd service is enabled and running.",
+        "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
+        "Mount the server export servervm:/exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.",
+        "Create user copyg on both systems with password redhat. Then configure key based SSH access for copyg from clientvm to servervm and copy /home/copyg/payload.txt to /home/copyg/inbox/ on servervm with scp.",
+        "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.",
+        "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.",
+        "Create /root/etc-g.tar.bz2 containing /etc.",
+        "Configure journald on clientvm so logs are stored persistently across reboots.",
+        "User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.",
+        "On /dev/sdb, create a 736 MiB swap partition and configure it persistently.",
+        "On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.",
+        "As user solg, build localhost/delta-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile. Run the container as pdfg with /opt/ing mounted to /data/input and /opt/outg mounted to /data/output. Generate and enable a systemd user service for that container and enable lingering for solg."
+      ],
+      "task_titles": [
+        "Root Recovery",
+        "Client Network",
+        "Bootloader Kernel Argument",
+        "Repositories On Both Systems",
+        "Apache Custom Docroot",
+        "Users And Group",
+        "User Passwords",
+        "Delegated Sudo",
+        "Shared Directory With Default ACL",
+        "User Umask",
+        "At Job",
+        "Chrony Client",
+        "Direct NFS Mount",
+        "SSH Key And Secure Copy",
+        "Find And Copy",
+        "Grep Filter",
+        "Archive",
+        "Persistent Journal",
+        "Process Renice And Kill",
+        "Swap Space",
+        "Create And Mount LV",
+        "Rootless Container Autostart"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "# At the boot menu, edit the kernel line and append rd.break",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "# enter: redhat",
+          "touch /.autorelabel",
+          "exit",
+          "exit"
+        ],
+        [
+          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
+          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.46/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"$CONN\"",
+          "nmcli connection up \"$CONN\"",
+          "hostnamectl set-hostname clientvm.deltaforge.lab"
+        ],
+        [
+          "grubby --update-kernel=ALL --args=\"audit=1\"",
+          "grubby --info=ALL | grep -E \"^kernel|^args\""
+        ],
+        [
+          "# On clientvm",
+          "vim /etc/yum.repos.d/delta.repo",
+          "[delta-baseos]",
+          "name=Delta BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[delta-appstream]",
+          "name=Delta AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          ":wq",
+          "dnf clean all",
+          "# On servervm",
+          "vim /etc/yum.repos.d/delta.repo",
+          "[delta-baseos]",
+          "name=Delta BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[delta-appstream]",
+          "name=Delta AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          ":wq",
+          "dnf clean all"
+        ],
+        [
+          "vim /etc/httpd/conf.d/delta.conf",
+          "Listen 8086",
+          "<VirtualHost *:8086>",
+          "DocumentRoot \"/srv/delta-web\"",
+          "<Directory \"/srv/delta-web\">",
+          "Require all granted",
+          "</Directory>",
+          "</VirtualHost>",
+          ":wq",
+          "semanage fcontext -a -t httpd_sys_content_t \"/srv/delta-web(/.*)?\"",
+          "restorecon -Rv /srv/delta-web",
+          "semanage port -a -t http_port_t -p tcp 8086",
+          "firewall-cmd --permanent --add-port=8086/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "groupadd deltaops",
+          "useradd -m gwen",
+          "useradd -m pavel",
+          "useradd -m -s /sbin/nologin sable",
+          "usermod -aG deltaops gwen",
+          "usermod -aG deltaops pavel"
+        ],
+        [
+          "passwd gwen",
+          "# enter: redhat",
+          "passwd pavel",
+          "# enter: redhat",
+          "passwd sable",
+          "# enter: redhat"
+        ],
+        [
+          "visudo -f /etc/sudoers.d/deltaops",
+          "%deltaops ALL=(ALL) /usr/sbin/useradd",
+          ":wq",
+          "visudo -f /etc/sudoers.d/gwen-passwd",
+          "gwen ALL=(ALL) NOPASSWD: /usr/bin/passwd",
+          ":wq"
+        ],
+        [
+          "useradd -m auditg",
+          "passwd auditg",
+          "# enter: redhat",
+          "mkdir -p /projects/delta",
+          "chgrp deltaops /projects/delta",
+          "chmod 2770 /projects/delta",
+          "setfacl -m u:auditg:rwx /projects/delta",
+          "setfacl -m d:u:auditg:rwx /projects/delta"
+        ],
+        [
+          "vim /home/pavel/.bashrc",
+          "umask 027",
+          ":wq"
+        ],
+        [
+          "systemctl enable --now atd",
+          "runuser -l pavel -c 'cat <<\"EOF\" | at now + 2 minutes\necho Delta queued >> /home/pavel/at-g.log\nEOF'",
+          "atq"
+        ],
+        [
+          "vim /etc/chrony.conf",
+          "# Comment any existing pool or server lines and add:",
+          "server servervm iburst",
+          ":wq",
+          "systemctl enable --now chronyd"
+        ],
+        [
+          "mkdir -p /mnt/delta-home",
+          "vim /etc/fstab",
+          "servervm:/exports/delta-home /mnt/delta-home nfs defaults 0 0",
+          ":wq",
+          "mount -a"
+        ],
+        [
+          "# On both systems",
+          "useradd -m copyg",
+          "passwd copyg",
+          "# enter: redhat",
+          "runuser -l copyg -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\"",
+          "runuser -l copyg -c \"ssh-copy-id -o StrictHostKeyChecking=no copyg@192.168.122.3\"",
+          "runuser -l copyg -c \"scp -o StrictHostKeyChecking=no /home/copyg/payload.txt copyg@192.168.122.3:/home/copyg/inbox/\""
+        ],
+        [
+          "mkdir -p /root/trackerg-files",
+          "find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /root/trackerg-files \\;"
+        ],
+        [
+          "grep ember /usr/share/dict/words > /root/ember-lines"
+        ],
+        [
+          "tar -cjf /root/etc-g.tar.bz2 /etc"
+        ],
+        [
+          "mkdir -p /var/log/journal",
+          "vim /etc/systemd/journald.conf",
+          "# Set: Storage=persistent",
+          ":wq",
+          "systemctl restart systemd-journald"
+        ],
+        [
+          "kill \"$(cat /home/workerg/cpu.pid)\"",
+          "renice 10 -p \"$(cat /home/workerg/sleep.pid)\""
+        ],
+        [
+          "fdisk /dev/sdb",
+          "# g",
+          "# n",
+          "# <Enter>",
+          "# <Enter>",
+          "# +736M",
+          "# t",
+          "# 19",
+          "# w",
+          "mkswap /dev/sdb1",
+          "vim /etc/fstab",
+          "blkid /dev/sdb1",
+          "vim /etc/fstab",
+          "# Add the swap entry with the UUID reported above",
+          ":wq",
+          ":wq",
+          "swapon -a"
+        ],
+        [
+          "fdisk /dev/sdc",
+          "# g",
+          "# n",
+          "# <Enter>",
+          "# <Enter>",
+          "# +700M",
+          "# t",
+          "# 31",
+          "# w",
+          "pvcreate /dev/sdc1",
+          "vgcreate -s 16M deltavg /dev/sdc1",
+          "lvcreate -n deltalv -l 40 deltavg",
+          "mkfs.ext4 /dev/deltavg/deltalv",
+          "mkdir -p /mnt/deltalv",
+          "vim /etc/fstab",
+          "blkid /dev/deltavg/deltalv",
+          "vim /etc/fstab",
+          "# Add the ext4 mount entry with the UUID reported above",
+          ":wq",
+          ":wq",
+          "mount -a"
+        ],
+        [
+          "runuser -l solg -c \"cd /opt/rhcsa/workspaces/exam-g && podman build -t localhost/delta-web:latest .\"",
+          "runuser -l solg -c \"podman run -d --name pdfg -v /opt/ing:/data/input:Z -v /opt/outg:/data/output:Z localhost/delta-web:latest\"",
+          "runuser -l solg -c \"mkdir -p ~/.config/systemd/user\"",
+          "runuser -l solg -c \"cd ~/.config/systemd/user && podman generate systemd --name pdfg --files --new\"",
+          "runuser -l solg -c \"systemctl --user daemon-reload\"",
+          "runuser -l solg -c \"systemctl --user enable --now container-pdfg.service\"",
+          "loginctl enable-linger solg"
+        ]
+      ],
+      "checks": []
+    }
+  }
+}

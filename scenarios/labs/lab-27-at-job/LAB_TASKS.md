@@ -11,25 +11,31 @@
 
 Schedule a one time task with at and verify that the at daemon is enabled.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Create the user atuser27 and set its password to…
 **System:** clientvm
 
 Create the user atuser27 and set its password to redhat.
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Enable and start the atd service
 **System:** clientvm
 
 Enable and start the atd service.
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — schedule a one-time at job that appends the text AT27…
 **System:** clientvm
 
 As user atuser27, schedule a one-time at job that appends the text AT27 OK to /home/atuser27/at27.log two minutes from now.
@@ -38,7 +44,7 @@ As user atuser27, schedule a one-time at job that appends the text AT27 OK to /h
 - You can submit the job to at with standard input.
 - Use atq to verify that the job is queued.
 
-### Checks
+### Validation Commands
 ```bash
 systemctl is-enabled atd
 systemctl is-active atd

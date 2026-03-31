@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 source /usr/local/lib/rhcsa-scenario-helpers.sh
-
-
-    mkdir -p /root/.repo-backup-server-exam-a
-    rhcsa_reset_repo_directory /root/.repo-backup-server-exam-a
-    mkdir -p /exports/researcha
-    printf 'exam a research
+mkdir -p /root/.repo-backup-server-scripts
+rhcsa_reset_repo_directory /root/.repo-backup-server-scripts
+mkdir -p /exports/researcha
+printf 'exam a research
 ' > /exports/researcha/brief.txt
-    exportfs -arv
+chown -R nobody:nobody /exports/researcha
+cat > /etc/exports.d/exam-a.exports <<'EOF'
+/exports/researcha 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server >/dev/null 2>&1 || true
+exportfs -arv >/dev/null 2>&1 || true

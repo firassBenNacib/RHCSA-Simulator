@@ -32,9 +32,7 @@ for p in [Path('/home/risa/.bashrc')]:
     if p.exists():
         text = p.read_text().splitlines()
         text = [line for line in text if 'umask 077' not in line]
-        p.write_text('
-'.join(text) + ('
-' if text else ''))
+        p.write_text('\n'.join(text) + ('\n' if text else ''))
 EOF
 automount -u >/dev/null 2>&1 || true
 rm -f /etc/auto.aurora /etc/auto.master.d/aurora.autofs
@@ -48,9 +46,7 @@ for line in p.read_text().splitlines():
     if line.strip().startswith('server ') or line.strip().startswith('pool '):
         continue
     lines.append(line)
-p.write_text('
-'.join(lines) + '
-')
+p.write_text('\n'.join(lines) + '\n')
 EOF
 id seekerf >/dev/null 2>&1 || useradd -m seekerf
 mkdir -p /opt/exam-f/find/a /opt/exam-f/find/c/sub

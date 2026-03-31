@@ -11,28 +11,35 @@
 
 Configure persistent networking and hostname settings on clientvm in RHCSA style.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Configure the active clientvm connection with the…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
-nmcli connection show
-nmcli connection modify "<active-connection>" ipv4.addresses 192.168.122.25/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "<active-connection>"
-nmcli connection up "<active-connection>"
+CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+nmcli connection show "$CONN"
+nmcli connection modify "$CONN" ipv4.addresses 192.168.122.25/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "$CONN"
+nmcli connection up "$CONN"
 hostnamectl set-hostname clientvm.netlab.local
 ```
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Add a persistent host entry so repo.netlab.local…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/hosts
 192.168.122.3 repo.netlab.local
@@ -40,12 +47,14 @@ vim /etc/hosts
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Verify that the active connection comes back with the…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
-nmcli connection show "<active-connection>"
+CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+nmcli connection show "$CONN"
+nmcli connection show "$CONN"
 hostnamectl status
 getent hosts repo.netlab.local
 ```

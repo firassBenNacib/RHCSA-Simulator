@@ -11,14 +11,21 @@
 
 Configure passwordless SSH login from clientvm to servervm using a key pair.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Create user ops32 on clientvm and user backup32 on…
 **System:** clientvm + servervm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m ops32
 passwd ops32
@@ -31,10 +38,10 @@ passwd backup32
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Configure key-based SSH authentication so that user…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 runuser -l ops32 -c "ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa"
 runuser -l ops32 -c "ssh-copy-id backup32@servervm"
@@ -42,10 +49,10 @@ runuser -l ops32 -c "ssh-copy-id backup32@servervm"
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Do not disable PasswordAuthentication globally for…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 runuser -l ops32 -c "ssh -o StrictHostKeyChecking=no backup32@servervm true"
 ```

@@ -11,29 +11,37 @@
 
 A 22 question RHCSA style mock exam for RHEL 9 that adds default ACLs, umask tuning, password aging, and a full create mount storage task.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
-2. Use the exact scenario variables shown in each question.
-3. Keep SELinux enforcing unless a question explicitly directs otherwise.
+2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
+3. Use the exact scenario variables shown in each question.
+4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 — Client Network
+### Question 01 — Client Network
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
-nmcli connection show
-nmcli connection modify "<active-connection>" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "<active-connection>"
-nmcli connection up "<active-connection>"
+CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+nmcli connection show "$CONN"
+nmcli connection modify "$CONN" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "$CONN"
+nmcli connection up "$CONN"
 hostnamectl set-hostname clientvm.summit.lab
 ```
 
 ---
 
-## Question 02 — Static Host Entry
+### Question 02 — Static Host Entry
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/hosts
 192.168.122.3 mirror.summit.lab
@@ -41,10 +49,10 @@ vim /etc/hosts
 
 ---
 
-## Question 03 — Client Repositories
+### Question 03 — Client Repositories
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/yum.repos.d/summit.repo
 [BaseOS]
@@ -62,11 +70,12 @@ gpgcheck=0
 
 ---
 
-## Question 04 — Server Repositories
+### Question 04 — Server Repositories
 **System:** servervm
 
-#### Commands
+#### Command Flow
 ```bash
+# Run on servervm
 # on servervm
 vim /etc/yum.repos.d/summit.repo
 [BaseOS]
@@ -84,10 +93,10 @@ gpgcheck=0
 
 ---
 
-## Question 05 — Apache Custom Docroot
+### Question 05 — Apache Custom Docroot
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/httpd/conf.d/summit.conf
 <VirtualHost *:8085>
@@ -106,10 +115,10 @@ systemctl enable --now httpd
 
 ---
 
-## Question 06 — Users And Group
+### Question 06 — Users And Group
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 groupadd summitops
 useradd -m kara
@@ -121,10 +130,10 @@ usermod -aG summitops miles
 
 ---
 
-## Question 07 — User Passwords
+### Question 07 — User Passwords
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 passwd kara
 # enter: redhat
@@ -136,10 +145,10 @@ passwd zero
 
 ---
 
-## Question 08 — Delegated Sudo
+### Question 08 — Delegated Sudo
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/summitops
 %summitops ALL=(root) /usr/sbin/useradd
@@ -149,10 +158,10 @@ kara ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-## Question 09 — Shared Directory With Default ACL
+### Question 09 — Shared Directory With Default ACL
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m auditord
 passwd auditord
@@ -165,10 +174,10 @@ setfacl -m d:u:auditord:rwx /projects/summit
 
 ---
 
-## Question 10 — User Umask
+### Question 10 — User Umask
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /home/miles/.bashrc
 umask 027
@@ -177,10 +186,10 @@ chown miles:miles /home/miles/.bashrc
 
 ---
 
-## Question 11 — Password Aging Defaults
+### Question 11 — Password Aging Defaults
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/login.defs
 PASS_MAX_DAYS   45
@@ -194,10 +203,10 @@ chage -l trainee54
 
 ---
 
-## Question 12 — Cron Logger
+### Question 12 — Cron Logger
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 crontab -e -u miles
 */15 * * * * logger "Summit exam"
@@ -205,10 +214,10 @@ crontab -e -u miles
 
 ---
 
-## Question 13 — Chrony Client
+### Question 13 — Chrony Client
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -217,10 +226,10 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 14 — Autofs Map
+### Question 14 — Autofs Map
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m summitremote
 passwd summitremote
@@ -235,10 +244,10 @@ systemctl enable --now autofs
 
 ---
 
-## Question 15 — Fixed UID User
+### Question 15 — Fixed UID User
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -u 4540 -m cedar540
 passwd cedar540
@@ -247,10 +256,10 @@ passwd cedar540
 
 ---
 
-## Question 16 — Find And Copy
+### Question 16 — Find And Copy
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkdir -p /root/miles-files
 find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/miles-files \;
@@ -258,30 +267,30 @@ find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-## Question 17 — Grep Filter
+### Question 17 — Grep Filter
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grep alpha /usr/share/dict/words > /root/alpha-lines
 ```
 
 ---
 
-## Question 18 — Archive
+### Question 18 — Archive
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 tar -czf /root/summit-etc.tar.gz /etc
 ```
 
 ---
 
-## Question 19 — Shell Script
+### Question 19 — Shell Script
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /usr/local/bin/summit-scan
 #!/bin/bash
@@ -295,10 +304,10 @@ chmod +x /usr/local/bin/summit-scan
 
 ---
 
-## Question 20 — Swap Space
+### Question 20 — Swap Space
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 fdisk /dev/sdb
 # create a 768 MiB partition and change the type to Linux swap
@@ -312,10 +321,10 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-## Question 21 — Create And Mount LV
+### Question 21 — Create And Mount LV
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 fdisk /dev/sdc
 # create one Linux LVM partition that uses the disk
@@ -333,10 +342,10 @@ mount -a
 
 ---
 
-## Question 22 — Rootless Container Autostart
+### Question 22 — Rootless Container Autostart
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 runuser -l neriad -c "cd /opt/rhcsa/workspaces/exam-d && podman build -t localhost/summit-web:latest ."
 runuser -l neriad -c "podman run -d --name pdfd -v /opt/ind:/data/input:Z -v /opt/outd:/data/output:Z localhost/summit-web:latest"

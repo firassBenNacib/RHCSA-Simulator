@@ -11,14 +11,20 @@
 
 Configure user specific and global shell greetings.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Configure a login message for user nico19 that says:…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 id nico19 || useradd -m nico19
 vim /home/nico19/.bash_profile
@@ -27,10 +33,10 @@ echo "Welcome to you, user Nico, you are amazing!"
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Configure a global login message so any user…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/profile.d/lab19-greeting.sh
 echo "Welcome ${USER}, you are logged in!"

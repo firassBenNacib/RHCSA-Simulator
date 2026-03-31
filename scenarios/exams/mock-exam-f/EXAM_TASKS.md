@@ -11,12 +11,19 @@
 
 A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a restrictive rich rule, an alternate umask, and another create mount container build workflow.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
-2. Use the exact scenario variables shown in each question.
-3. Keep SELinux enforcing unless a question explicitly directs otherwise.
+2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
+3. Use the exact scenario variables shown in each question.
+4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 — Client Network
+### Question 01 — Client Network
 **System:** clientvm
 
 Configure networking on clientvm with the following settings:
@@ -29,14 +36,14 @@ HOSTNAME: clientvm.aurora.lab
 
 ---
 
-## Question 02 — Static Host Entry
+### Question 02 — Static Host Entry
 **System:** clientvm
 
 Add a persistent hosts entry so db.aurora.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 03 — Client Repositories
+### Question 03 — Client Repositories
 **System:** clientvm
 
 Configure a repository file on clientvm with the following settings:
@@ -48,7 +55,7 @@ Repositories: enabled
 
 ---
 
-## Question 04 — Server Repositories
+### Question 04 — Server Repositories
 **System:** servervm
 
 Configure the same repository file on servervm.
@@ -60,7 +67,7 @@ Repositories: enabled
 
 ---
 
-## Question 05 — Apache Custom Docroot
+### Question 05 — Apache Custom Docroot
 **System:** clientvm
 
 Configure the Apache HTTP server on clientvm so that it serves content from /srv/aurora-web on TCP port 9090.
@@ -73,63 +80,63 @@ Requirements:
 
 ---
 
-## Question 06 — Users And Group
+### Question 06 — Users And Group
 **System:** clientvm
 
 Create group auroraops and users elio and risa with auroraops as a supplementary group. Create user nox with /sbin/nologin and no auroraops membership.
 
 ---
 
-## Question 07 — User Passwords
+### Question 07 — User Passwords
 **System:** clientvm
 
 Set the password of elio, risa, and nox to redhat.
 
 ---
 
-## Question 08 — Delegated Sudo
+### Question 08 — Delegated Sudo
 **System:** clientvm
 
 Allow members of auroraops to run useradd through sudo, and allow elio to run passwd for other users without a sudo password prompt.
 
 ---
 
-## Question 09 — Shared Directory With Default ACL
+### Question 09 — Shared Directory With Default ACL
 **System:** clientvm
 
 Create user auditf with password redhat. Then create /data/aurora with group ownership auroraops, permissions 2770, inherited group ownership for new files, and a default ACL that grants auditf rwx on new content.
 
 ---
 
-## Question 10 — User Umask
+### Question 10 — User Umask
 **System:** clientvm
 
 Configure user risa so that new regular files are created with mode 0600 and new directories are created with mode 0700 when the user logs in.
 
 ---
 
-## Question 11 — SSH Key Authentication
+### Question 11 — SSH Key Authentication
 **System:** clientvm + servervm
 
 Create user opsf on clientvm and user backupf on servervm. Set the password of both users to redhat. Then configure key-based SSH authentication so opsf on clientvm can log in to backupf@servervm without a password prompt.
 
 ---
 
-## Question 12 — Firewalld Rich Rule
+### Question 12 — Firewalld Rich Rule
 **System:** clientvm
 
 Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24. Reload firewalld and verify the rule is active.
 
 ---
 
-## Question 13 — Chrony Client
+### Question 13 — Chrony Client
 **System:** clientvm
 
 Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
 
 ---
 
-## Question 14 — Autofs Map
+### Question 14 — Autofs Map
 **System:** clientvm
 
 Create user aurorarem with password redhat and configure autofs so that the following mount becomes available on demand:
@@ -139,42 +146,42 @@ REMOTE EXPORT: servervm:/exports/aurorahome
 
 ---
 
-## Question 15 — Fixed UID User
+### Question 15 — Fixed UID User
 **System:** clientvm
 
 Create user pine560 with UID 4560 and set its password to redhat.
 
 ---
 
-## Question 16 — Find And Copy
+### Question 16 — Find And Copy
 **System:** clientvm
 
 Find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.
 
 ---
 
-## Question 17 — Grep Filter
+### Question 17 — Grep Filter
 **System:** clientvm
 
 Extract lines containing comet from /usr/share/dict/words into /root/comet-lines.
 
 ---
 
-## Question 18 — Archive
+### Question 18 — Archive
 **System:** clientvm
 
 Create /root/usr-local-f.tar.gz containing /usr/local.
 
 ---
 
-## Question 19 — Shell Script
+### Question 19 — Shell Script
 **System:** clientvm
 
 Create executable script /usr/local/bin/aurora-report that writes the active state of each unit listed in /usr/local/share/exam-f/units.lst to /root/aurora-units.txt.
 
 ---
 
-## Question 20 — Swap Space
+### Question 20 — Swap Space
 **System:** clientvm
 
 On /dev/sdb, create a 704 MiB swap partition.
@@ -185,14 +192,14 @@ Requirements:
 
 ---
 
-## Question 21 — Create And Mount LV
+### Question 21 — Create And Mount LV
 **System:** clientvm
 
 On /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB and a logical volume auroralv of 50 extents. Format it with xfs and mount it persistently on /mnt/auroralv.
 
 ---
 
-## Question 22 — Rootless Container Autostart
+### Question 22 — Rootless Container Autostart
 **System:** clientvm
 
 As user solf, build localhost/aurora-web:latest from /opt/rhcsa/workspaces/exam-f/Containerfile, run container pdff with /opt/inf mounted to /data/input and /opt/outf mounted to /data/output, then generate and enable the systemd user service so it starts after reboot. Enable lingering for solf.

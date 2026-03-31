@@ -11,12 +11,19 @@
 
 A third 22 task RHCSA style mock exam with another variable set and recovery workflow.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
-2. Use the exact scenario variables shown in each question.
-3. Keep SELinux enforcing unless a question explicitly directs otherwise.
+2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
+3. Use the exact scenario variables shown in each question.
+4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 — Root Recovery
+### Question 01 — Root Recovery
 **System:** clientvm
 
 Recover root access on clientvm from the console.
@@ -25,7 +32,7 @@ Set the root password to: redhat
 
 ---
 
-## Question 02 — Client Network
+### Question 02 — Client Network
 **System:** clientvm
 
 Configure networking on clientvm with the following settings:
@@ -38,7 +45,7 @@ HOSTNAME: clientvm.northstar.lab
 
 ---
 
-## Question 03 — Bootloader Kernel Argument
+### Question 03 — Bootloader Kernel Argument
 **System:** clientvm
 
 Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.
@@ -49,7 +56,7 @@ Requirements:
 
 ---
 
-## Question 04 — Client Repositories
+### Question 04 — Client Repositories
 **System:** clientvm
 
 Configure a repository file on clientvm with the following settings:
@@ -61,7 +68,7 @@ Repositories: enabled
 
 ---
 
-## Question 05 — Server Repositories
+### Question 05 — Server Repositories
 **System:** servervm
 
 Configure the same repository file on servervm.
@@ -73,7 +80,7 @@ Repositories: enabled
 
 ---
 
-## Question 06 — Apache Firewall SELinux
+### Question 06 — Apache Firewall SELinux
 **System:** clientvm
 
 Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8484.
@@ -86,49 +93,49 @@ Requirements:
 
 ---
 
-## Question 07 — Users And Group
+### Question 07 — Users And Group
 **System:** clientvm
 
 Create group infrac and users talia and ren with infrac as a supplementary group. Create user sage with /sbin/nologin and no infrac membership.
 
 ---
 
-## Question 08 — User Passwords
+### Question 08 — User Passwords
 **System:** clientvm
 
 Set the password of talia, ren, and sage to redhat.
 
 ---
 
-## Question 09 — Delegated Sudo
+### Question 09 — Delegated Sudo
 **System:** clientvm
 
 Allow members of infrac to run useradd with sudo, and allow talia to run passwd for other users without a sudo password prompt.
 
 ---
 
-## Question 10 — Setgid Directory
+### Question 10 — Setgid Directory
 **System:** clientvm
 
 Create /srv/infrac with group ownership infrac, mode 2770, and inherited group ownership for new files.
 
 ---
 
-## Question 11 — Cron Logger
+### Question 11 — Cron Logger
 **System:** clientvm
 
 Configure a cron job for ren that runs every 5 minutes and logs the message "NorthStar exam".
 
 ---
 
-## Question 12 — Chrony Client
+### Question 12 — Chrony Client
 **System:** clientvm
 
 Configure chrony on clientvm so it synchronizes only with servervm.
 
 ---
 
-## Question 13 — Autofs Map
+### Question 13 — Autofs Map
 **System:** clientvm
 
 Create user remote63 with password redhat and configure autofs so that the following mount becomes available on demand:
@@ -138,42 +145,42 @@ REMOTE EXPORT: servervm:/exports/bluec
 
 ---
 
-## Question 14 — Fixed UID User
+### Question 14 — Fixed UID User
 **System:** clientvm
 
 Create user kian431 with UID 4431 and set its password to redhat.
 
 ---
 
-## Question 15 — Find And Copy
+### Question 15 — Find And Copy
 **System:** clientvm
 
 Find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.
 
 ---
 
-## Question 16 — Grep Filter
+### Question 16 — Grep Filter
 **System:** clientvm
 
 Extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.
 
 ---
 
-## Question 17 — Archive
+### Question 17 — Archive
 **System:** clientvm
 
 Create /root/etc-c.tar.bz2 containing /etc.
 
 ---
 
-## Question 18 — Service Status Script
+### Question 18 — Service Status Script
 **System:** clientvm
 
 Create executable script /usr/local/bin/northcheck that writes the active state of each service listed in /usr/local/share/exam-c/check.lst to /root/north-services.txt.
 
 ---
 
-## Question 19 — Swap Space
+### Question 19 — Swap Space
 **System:** clientvm
 
 On /dev/sdb, create a 700 MiB swap partition.
@@ -184,21 +191,21 @@ Requirements:
 
 ---
 
-## Question 20 — Resize Existing LV
+### Question 20 — Resize Existing LV
 **System:** clientvm
 
 Resize /dev/reviewvgc/reviewc so the final size is 340 MiB without losing data.
 
 ---
 
-## Question 21 — Rootless Container
+### Question 21 — Rootless Container
 **System:** clientvm
 
 As user eirac, build localhost/northstar-web:latest from /opt/rhcsa/workspaces/exam-c/Containerfile, then run container pdfc with /opt/inc mounted to /data/input and /opt/outc mounted to /data/output.
 
 ---
 
-## Question 22 — Container Autostart
+### Question 22 — Container Autostart
 **System:** clientvm
 
 Generate and enable a systemd user service for pdfc and enable lingering for eirac.

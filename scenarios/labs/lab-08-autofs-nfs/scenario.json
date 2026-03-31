@@ -37,20 +37,18 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Seed Export And User",
+        "Configure Autofs Map",
+        "Verify Access"
       ],
       "task_points": [],
       "solution_commands": [
         [
-          "ssh admin@servervm",
-          "sudo -i",
+          "# On servervm",
           "mkdir -p /exports/netuser8",
-          "printf \"autofs lab 08\n\" > /exports/netuser8/welcome.txt",
+          "printf \"autofs lab 08\\n\" > /exports/netuser8/welcome.txt",
           "exportfs -arv",
-          "exit",
-          "exit",
+          "# On clientvm",
           "useradd -m netuser8",
           "passwd netuser8",
           "# enter: redhat"

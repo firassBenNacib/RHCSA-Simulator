@@ -11,24 +11,30 @@
 
 Modify the system bootloader so every installed kernel boots with the required persistent argument.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Configure the bootloader on clientvm so that every…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grubby --update-kernel=ALL --args="audit=1"
 ```
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — The change must persist across reboots and must not…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 grubby --info=ALL | grep -E "^kernel|^args"
 ```

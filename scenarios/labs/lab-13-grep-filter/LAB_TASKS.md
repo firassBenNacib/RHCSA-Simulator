@@ -11,11 +11,17 @@
 
 Extract matching lines from a seeded words file.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — From /usr/share/dict/words, extract the lines…
 **System:** clientvm
 
 From /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines.
@@ -23,7 +29,7 @@ From /usr/share/dict/words, extract the lines containing ich and save the result
 ### Hints
 - The words file for this lab is preseeded if it was not present before.
 
-### Checks
+### Validation Commands
 ```bash
 grep ich /root/lines
 ```

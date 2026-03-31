@@ -193,4 +193,4 @@ This project is licensed under the [MIT License](./LICENSE).
 Created and maintained by Firas Ben Nacib - [bennacibfiras@gmail.com](mailto:bennacibfiras@gmail.com)
 
 
-The scenario bank now includes additional focused labs for umask, password aging, pwquality, default ACLs, at jobs, SSH keys, shell loops, and extra full mock exams.
+The scenario bank now includes focused labs through Lab 48 and full mock exams through Mock Exam H, including coverage for umask, password aging, pwquality, IPv6, persistent journals, image inspection, process scheduling, direct NFS mounts, and extra integrated exams.

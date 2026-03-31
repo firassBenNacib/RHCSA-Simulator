@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import textwrap
 from pathlib import Path
 
@@ -27,15 +28,15 @@ def normalize_task_text(value: str) -> str:
 
 def infer_system(task_text: str, requires_servervm: bool) -> str:
     lowered = task_text.lower()
-    client_markers = (" on clientvm", " on the clientvm", " on clientvm.")
-    server_markers = (" on servervm", " on the servervm", " on servervm.")
-    has_client = any(marker in lowered for marker in client_markers)
-    has_server = any(marker in lowered for marker in server_markers)
+    if re.search(r"\bon\s+clientvm\s+and\s+servervm\b|\bon\s+servervm\s+and\s+clientvm\b", lowered):
+        return "clientvm + servervm"
+    has_client = bool(re.search(r"\bon\s+clientvm\b|\bas\s+user\s+[^,]+\s+on\s+clientvm\b", lowered))
+    has_server = bool(re.search(r"\bon\s+servervm\b|\bas\s+user\s+[^,]+\s+on\s+servervm\b", lowered))
     if has_client and has_server:
         return "clientvm + servervm"
     if has_server:
         return "servervm"
-    return "clientvm" if not requires_servervm else "clientvm"
+    return "clientvm"
 
 
 def code_block(lines: list[str]) -> str:
@@ -43,8 +44,20 @@ def code_block(lines: list[str]) -> str:
     return f"```bash\n{payload}\n```"
 
 
+def _generic_title(title: str) -> bool:
+    return bool(re.fullmatch(r"(?i)(part|task|question)\s+\d+", title.strip()))
+
+
+def infer_title_from_task(task_text: str) -> str:
+    line = normalize_task_text(task_text).splitlines()[0].strip()
+    line = re.sub(r"(?i)^on\s+(clientvm|servervm),\s*", "", line)
+    line = re.sub(r"(?i)^as\s+user\s+[^,]+,\s*", "", line)
+    line = line.rstrip('.')
+    return textwrap.shorten(line, width=54, placeholder='…')
+
+
 def render_task_heading(index: int, title: str, system: str, points: int | None, label: str) -> str:
-    heading = f"## {label} {index:02d} — {title}"
+    heading = f"### {label} {index:02d} — {title}"
     meta = [f"**System:** {system}"]
     if points is not None:
         meta.append(f"**Points:** {points}")
@@ -53,8 +66,10 @@ def render_task_heading(index: int, title: str, system: str, points: int | None,
 
 def get_task_title(task_titles: list[str], index: int, task_text: str) -> str:
     if index < len(task_titles):
-        return clean_text(task_titles[index]).rstrip('.')
-    return clean_text(task_text[:72]).rstrip('.')
+        candidate = clean_text(task_titles[index]).rstrip('.')
+        if candidate and not _generic_title(candidate):
+            return candidate
+    return infer_title_from_task(task_text)
 
 
 def get_task_points(task_points: list[int], index: int) -> int | None:
@@ -84,7 +99,7 @@ def render_hints(hints):
         lines.append("- No additional hints.")
         return "\n".join(lines)
     for hint in hints:
-        lines.append(f"- {clean_text(hint).rstrip('.') }.")
+        lines.append(f"- {clean_text(hint).rstrip('.')}.")
     return "\n".join(lines)
 
 
@@ -97,7 +112,7 @@ def render_solution(tasks, task_titles, task_points, solution_commands, checks, 
         commands = solution_commands[index - 1] if index - 1 < len(solution_commands) else []
         sections.append(render_task_heading(index, title, system, points, label))
         sections.append("")
-        sections.append("#### Commands")
+        sections.append("#### Command Flow")
         sections.append(code_block(commands))
         sections.append("")
         sections.append("---")
@@ -122,6 +137,25 @@ def summary_table(data, mode):
     ])
 
 
+def systems_table(requires_servervm: bool):
+    if not requires_servervm:
+        return "\n".join([
+            "### Systems",
+            "| System | Use |",
+            "|---|---|",
+            "| clientvm | Primary RHCSA workstation |",
+            "",
+        ])
+    return "\n".join([
+        "### Systems",
+        "| System | Use |",
+        "|---|---|",
+        "| clientvm | Primary RHCSA workstation |",
+        "| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |",
+        "",
+    ])
+
+
 def metadata_lines(data, mode):
     lines = [
         "### Overview",
@@ -129,14 +163,17 @@ def metadata_lines(data, mode):
         "",
         normalize_task_text(data["description"]),
         "",
+        systems_table(bool(data.get("flags", {}).get("requires_servervm", False))),
         "### General Instructions",
         "1. Unless a task states otherwise, make all changes persistent across reboots.",
     ]
     if mode == "Exam":
-        lines.append("2. Use the exact scenario variables shown in each question.")
-        lines.append("3. Keep SELinux enforcing unless a question explicitly directs otherwise.")
+        lines.append("2. Read the whole handout before you begin so you can sequence cross-system work efficiently.")
+        lines.append("3. Use the exact scenario variables shown in each question.")
+        lines.append("4. Keep SELinux enforcing unless a question explicitly directs otherwise.")
     else:
         lines.append("2. Use only persistent configuration methods.")
+        lines.append("3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.")
     lines.append("")
     return lines
 
@@ -164,7 +201,7 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
             "",
             render_hints(lab.get("hints", [])),
             "",
-            "### Checks",
+            "### Validation Commands",
             code_block(lab.get("checks", [])),
         ])
         lab_solution_md = "\n".join([

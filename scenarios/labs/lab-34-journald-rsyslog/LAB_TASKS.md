@@ -11,25 +11,31 @@
 
 Configure persistent journal storage and a custom rsyslog drop-in for authentication warnings.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Configure journald on clientvm so logs are stored…
 **System:** clientvm
 
 Configure journald on clientvm so logs are stored persistently across reboots.
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Create the drop-in file /etc/rsyslog.d/10-auth34.conf…
 **System:** clientvm
 
 Create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Ensure the rsyslog service is active after your…
 **System:** clientvm
 
 Ensure the rsyslog service is active after your changes.
@@ -38,7 +44,7 @@ Ensure the rsyslog service is active after your changes.
 - Persistent journald storage requires the correct directory.
 - Reload or restart the affected logging services after you update their configuration.
 
-### Checks
+### Validation Commands
 ```bash
 test -d /var/log/journal
 test -f /etc/rsyslog.d/10-auth34.conf

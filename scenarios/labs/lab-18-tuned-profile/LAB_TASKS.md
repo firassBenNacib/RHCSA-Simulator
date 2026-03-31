@@ -11,11 +11,17 @@
 
 Apply the system recommended tuned profile.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Apply the recommended tuned profile and leave it…
 **System:** clientvm
 
 Apply the recommended tuned profile and leave it active after reboot.
@@ -23,7 +29,7 @@ Apply the recommended tuned profile and leave it active after reboot.
 ### Hints
 - Use tuned-adm recommended to see the target profile.
 
-### Checks
+### Validation Commands
 ```bash
 tuned-adm active
 tuned-adm recommended

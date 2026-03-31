@@ -11,14 +11,20 @@
 
 Tune the system with the requested profile and adjust process scheduling priority.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Install the tuned package if it is not already…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 dnf install -y tuned
 systemctl enable --now tuned
@@ -27,10 +33,10 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Start the command sleep 3600 in the background and…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 sleep 3600 &
 echo $! > /root/sleep35.pid
@@ -38,10 +44,10 @@ echo $! > /root/sleep35.pid
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Adjust the nice value of that process so it becomes 5
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 renice 5 -p "$(cat /root/sleep35.pid)"
 ```

@@ -11,14 +11,21 @@
 
 Configure key-based SSH access and securely transfer files between systems.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Create the user key39 on both clientvm and servervm.…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 useradd -m key39
 passwd key39
@@ -27,30 +34,30 @@ passwd key39
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — generate an ED25519 SSH key pair with no passphrase
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 runuser -l key39 -c "ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519"
 ```
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Configure passwordless SSH access for key39 from…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 runuser -l key39 -c "ssh-copy-id -o StrictHostKeyChecking=no key39@192.168.122.3"
 ```
 
 ---
 
-## Task 04 — Part 04
+### Task 04 — Using rsync over SSH, copy the directory…
 **System:** servervm
 
-#### Commands
+#### Command Flow
 ```bash
 runuser -l key39 -c "rsync -av -e ssh /home/key39/client-data/ key39@192.168.122.3:/home/key39/server-data/"
 ```

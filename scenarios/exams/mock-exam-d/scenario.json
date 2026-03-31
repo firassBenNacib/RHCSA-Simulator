@@ -73,10 +73,11 @@
       "task_points": [],
       "solution_commands": [
         [
-          "nmcli connection show",
-          "nmcli connection modify \"<active-connection>\" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"<active-connection>\"",
-          "nmcli connection up \"<active-connection>\"",
+          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
+          "nmcli connection show \"$CONN\"",
+          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"$CONN\"",
+          "nmcli connection up \"$CONN\"",
           "hostnamectl set-hostname clientvm.summit.lab"
         ],
         [
@@ -98,6 +99,7 @@
           "gpgcheck=0"
         ],
         [
+          "# Run on servervm",
           "# on servervm",
           "vim /etc/yum.repos.d/summit.repo",
           "[BaseOS]",

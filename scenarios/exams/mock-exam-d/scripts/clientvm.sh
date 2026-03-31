@@ -67,9 +67,7 @@ for line in p.read_text().splitlines():
     if line.strip().startswith('server ') or line.strip().startswith('pool '):
         continue
     lines.append(line)
-p.write_text('
-'.join(lines) + '
-')
+p.write_text('\n'.join(lines) + '\n')
 EOF
 id foragerd >/dev/null 2>&1 || useradd -m foragerd
 mkdir -p /opt/exam-d/find/a /opt/exam-d/find/b/sub

@@ -11,14 +11,20 @@
 
 Recover root access through the bootloader and restore normal access on clientvm.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Recover root access on clientvm from the console and…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 # At the boot menu, edit the selected entry and append rd.break to the linux line.
 # Boot with Ctrl+x.
@@ -33,10 +39,10 @@ exit
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — After the system boots normally, confirm that SELinux…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 getenforce
 ls -Z /root | head
@@ -44,10 +50,10 @@ ls -Z /root | head
 
 ---
 
-## Task 03 — Part 03
+### Task 03 — Leave SSH password authentication working for root…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 vim /etc/ssh/sshd_config
 PasswordAuthentication yes

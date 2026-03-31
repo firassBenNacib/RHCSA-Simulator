@@ -83,10 +83,11 @@
           "exit"
         ],
         [
-          "nmcli connection show",
-          "nmcli connection modify \"<active-connection>\" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"<active-connection>\"",
-          "nmcli connection up \"<active-connection>\"",
+          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
+          "nmcli connection show \"$CONN\"",
+          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"$CONN\"",
+          "nmcli connection up \"$CONN\"",
           "hostnamectl set-hostname clientvm.northstar.lab"
         ],
         [
@@ -108,8 +109,7 @@
           "gpgcheck=0"
         ],
         [
-          "ssh admin@servervm",
-          "sudo -i",
+          "# Run on servervm",
           "vim /etc/yum.repos.d/northstar.repo",
           "[northstar-baseos]",
           "name=NorthStar BaseOS",
@@ -121,9 +121,7 @@
           "name=NorthStar AppStream",
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
-          "gpgcheck=0",
-          "exit",
-          "exit"
+          "gpgcheck=0"
         ],
         [
           "vim /etc/httpd/conf/httpd.conf",

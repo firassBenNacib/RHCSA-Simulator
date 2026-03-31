@@ -11,11 +11,17 @@
 
 Extend an existing logical volume without losing data.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — Resize logical volume /dev/reviewvg/reviewlv so the…
 **System:** clientvm
 
 Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot.
@@ -24,7 +30,7 @@ Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and th
 - The logical volume already exists and is mounted on /mnt/reviewlv.
 - Do not recreate the filesystem.
 
-### Checks
+### Validation Commands
 ```bash
 lvs
 df -hT /mnt/reviewlv

@@ -11,14 +11,20 @@
 
 Create a new volume group and logical volume and mount it persistently.
 
+### Systems
+| System | Use |
+|---|---|
+| clientvm | Primary RHCSA workstation |
+
 ### General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 — Part 01
+### Task 01 — On /dev/sdb, create an LVM partition, then create…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 fdisk /dev/sdb
 # create a GPT LVM partition for the remaining disk space
@@ -30,10 +36,10 @@ lvcreate -n wsharex -l 50 wgroupx
 
 ---
 
-## Task 02 — Part 02
+### Task 02 — Create logical volume wsharex with 50 extents, format…
 **System:** clientvm
 
-#### Commands
+#### Command Flow
 ```bash
 mkfs.ext4 /dev/wgroupx/wsharex
 mkdir -p /mnt/wsharex
