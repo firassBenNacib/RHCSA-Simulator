@@ -1,0 +1,72 @@
+{
+  "id": "lab-08-autofs-nfs",
+  "title": "Lab 08: Autofs With NFS",
+  "description": "Configure an indirect automount from servervm",
+  "objective_tags": [
+    "filesystems-and-autofs"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 40,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "On servervm, export /exports/netuser8. On clientvm, create user netuser8 with password redhat.",
+        "Configure autofs on clientvm so /netdir/netuser8 is mounted on demand from servervm:/exports/netuser8.",
+        "Leave the configuration persistent across reboot."
+      ],
+      "hints": [
+        "Use an indirect map.",
+        "The export already contains a file named welcome.txt."
+      ],
+      "checks": [
+        "showmount -e servervm",
+        "ls -l /netdir/netuser8",
+        "ls -l /netdir/netuser8/welcome.txt"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "ssh admin@servervm",
+          "sudo -i",
+          "mkdir -p /exports/netuser8",
+          "printf \"autofs lab 08\n\" > /exports/netuser8/welcome.txt",
+          "exportfs -arv",
+          "exit",
+          "exit",
+          "useradd -m netuser8",
+          "passwd netuser8",
+          "# enter: redhat"
+        ],
+        [
+          "vim /etc/auto.lab8",
+          "netuser8 -rw,sync servervm:/exports/netuser8",
+          "vim /etc/auto.master.d/lab8.autofs",
+          "/netdir /etc/auto.lab8",
+          "systemctl enable --now autofs"
+        ],
+        [
+          "ls -l /netdir/netuser8",
+          "cat /netdir/netuser8/welcome.txt"
+        ]
+      ]
+    }
+  }
+}

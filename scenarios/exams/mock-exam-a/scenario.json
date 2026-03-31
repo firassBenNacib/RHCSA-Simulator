@@ -1,189 +1,244 @@
 {
   "id": "mock-exam-a",
-  "title": "Mock Exam A: Access And Service Integration",
-  "description": "A redesigned RHCSA v9 mock exam focused on time sync, service networking, automounts, remote access, and delegated administration.",
+  "title": "Mock Exam A: OpsEdge Integrated Review",
+  "description": "A 22 task RHCSA style mock exam for RHEL 9 with recovery, repositories, SELinux, storage, and rootless containers",
   "objective_tags": [
+    "boot-and-recovery",
     "networking-and-firewall",
-    "software-scheduling-time",
-    "filesystems-and-autofs",
-    "users-sudo-ssh"
+    "storage-lvm",
+    "containers"
   ],
   "supported_modes": [
-    "lab",
     "exam"
   ],
-  "time_limit_minutes": 120,
+  "time_limit_minutes": 150,
   "vm_scripts": {
-    "servervm": "scripts/servervm.sh",
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
-    "password_recovery": false,
+    "password_recovery": true,
     "requires_servervm": true
   },
   "content": {
-    "lab": {
-      "tasks": [
-        "Configure chrony so clientvm synchronizes only with servervm and ensure chronyd is enabled.",
-        "Set the persistent hostname to clientvm.edge.lab, add a hostname-resolution entry so internal-api.edge.lab resolves to 192.168.122.3, configure Apache to listen on port 8088, open the firewall for 8088/tcp, and add a persistent route for 203.0.113.0/24 via 192.168.122.3.",
-        "Create a persistent NFS mount for servervm:/exports/direct at /srv/reference and configure autofs so /research/field-guide/brief.txt becomes available on demand from servervm.",
-        "Create group platformops and user orchid with platformops as the primary group, authorize admin's SSH public key for orchid, and allow members of platformops to run systemctl restart httpd with sudo and no password.",
-        "As admin on clientvm, copy /srv/rhcsa/objectives/README.txt from servervm to /home/orchid/edge-brief.txt using SSH-based file transfer and leave orchid owning the file."
-      ],
-      "task_titles": [
-        "Chrony Client",
-        "Edge Network And Apache",
-        "NFS Mount And Autofs Map",
-        "Orchid Delegated Administration",
-        "SSH File Transfer"
-      ],
-      "task_points": [
-        20,
-        20,
-        20,
-        20,
-        20
-      ],
-      "solution_commands": [
-        [
-          "sed -i '/^server /d;/^pool /d' /etc/chrony.conf",
-          "echo 'server servervm iburst' >> /etc/chrony.conf",
-          "systemctl enable --now chronyd"
-        ],
-        [
-          "hostnamectl set-hostname clientvm.edge.lab",
-          "grep -q 'internal-api.edge.lab' /etc/hosts || echo '192.168.122.3 internal-api.edge.lab' >> /etc/hosts",
-          "CONN=$(nmcli -t -f NAME,IP4.ADDRESS connection show --active | awk -F: '$2 ~ /^192\\.168\\.122\\./ {print $1; exit}')",
-          "nmcli connection modify \"$CONN\" +ipv4.routes \"203.0.113.0/24 192.168.122.3\"",
-          "nmcli connection up \"$CONN\"",
-          "sed -i 's/^Listen .*/Listen 8088/' /etc/httpd/conf/httpd.conf",
-          "systemctl enable --now httpd",
-          "firewall-cmd --permanent --add-port=8088/tcp",
-          "firewall-cmd --reload"
-        ],
-        [
-          "mkdir -p /srv/reference /research",
-          "grep -q '^servervm:/exports/direct /srv/reference ' /etc/fstab || echo 'servervm:/exports/direct /srv/reference nfs defaults,_netdev 0 0' >> /etc/fstab",
-          "mount /srv/reference",
-          "cat > /etc/auto.research <<'EOF'",
-          "field-guide -fstype=nfs servervm:/exports/autofs/field-guide",
-          "EOF",
-          "cat > /etc/auto.master.d/rhcsa.research.autofs <<'EOF'",
-          "/research /etc/auto.research",
-          "EOF",
-          "systemctl enable --now autofs",
-          "ls -l /research/field-guide/brief.txt"
-        ],
-        [
-          "groupadd platformops",
-          "useradd -m -g platformops orchid",
-          "install -d -m 700 -o orchid -g platformops /home/orchid/.ssh",
-          "cat /home/admin/.ssh/id_rsa.pub > /home/orchid/.ssh/authorized_keys",
-          "chown orchid:platformops /home/orchid/.ssh/authorized_keys",
-          "chmod 600 /home/orchid/.ssh/authorized_keys",
-          "echo '%platformops ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd' > /etc/sudoers.d/platformops-httpd",
-          "visudo -cf /etc/sudoers.d/platformops-httpd"
-        ],
-        [
-          "# Enter the password redhat when scp prompts.",
-          "runuser -l admin -c \"scp -o StrictHostKeyChecking=no admin@servervm:/srv/rhcsa/objectives/README.txt /home/admin/edge-brief.txt\"",
-          "install -o orchid -g platformops -m 0644 /home/admin/edge-brief.txt /home/orchid/edge-brief.txt",
-          "rm -f /home/admin/edge-brief.txt"
-        ]
-      ],
-      "hints": [
-        "chronyd should point only at servervm in this exam.",
-        "Use a persistent hostname-resolution method for internal-api.edge.lab.",
-        "The autofs path is an indirect map under /research, while /srv/reference is a normal persistent mount.",
-        "Use the existing admin SSH key as the key source for orchid.",
-        "servervm already accepts the baseline admin account over SSH, so scp is enough for the transfer task."
-      ],
-      "checks": [
-        "chronyc sources -v",
-        "hostnamectl status --static",
-        "getent hosts internal-api.edge.lab",
-        "ip route show",
-        "curl http://localhost:8088/",
-        "findmnt /srv/reference",
-        "ls -l /research/field-guide/brief.txt",
-        "sudo -l -U orchid",
-        "ls -l /home/orchid/edge-brief.txt"
-      ],
-      "solution_outline": [
-        "Configure chrony first, then use hostnamectl, a persistent host entry, nmcli, httpd, and firewalld together so the networking changes persist.",
-        "Create both the normal NFS mount and the autofs map from servervm before testing the on-demand path.",
-        "Finish by creating orchid, copying the admin public key, validating the sudoers drop-in with visudo, and transferring the server brief into orchid's home directory."
-      ]
-    },
     "exam": {
       "tasks": [
-        "Configure chrony to synchronize only with servervm and ensure chronyd is enabled.",
-        "Set the persistent hostname to clientvm.edge.lab, add a hostname-resolution entry for internal-api.edge.lab to 192.168.122.3, make Apache listen on port 8088, open 8088/tcp in the firewall, and add a persistent route for 203.0.113.0/24 via 192.168.122.3.",
-        "Create a persistent NFS mount for servervm:/exports/direct at /srv/reference and configure autofs so /research/field-guide/brief.txt is available on demand.",
-        "Create group platformops and user orchid, authorize admin's SSH public key for orchid, and allow platformops to run systemctl restart httpd with sudo and no password.",
-        "Copy /srv/rhcsa/objectives/README.txt from servervm to /home/orchid/edge-brief.txt using SSH-based file transfer and leave orchid owning the file."
+        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.26\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.opsedge.lab",
+        "Add a persistent hosts entry so api.opsedge.lab resolves to 192.168.122.3.",
+        "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8282.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Make the SELinux change required for the new port.\n- Do not move or relabel the existing document root content.",
+        "Create group sysopsa and users violet and amber with sysopsa as a supplementary group. Create user frost with /sbin/nologin and no sysopsa membership.",
+        "Set the password of violet, amber, and frost to redhat.",
+        "Allow members of sysopsa to run useradd through sudo, and allow violet to run passwd for other users without a sudo password prompt.",
+        "Create /srv/sysopsa with group ownership sysopsa, no access for other users, and automatic group inheritance for new files.",
+        "Configure a cron job for amber that runs every 2 minutes and logs the message \"OpsEdge tick\".",
+        "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
+        "Create user netopsa with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /researcha/netopsa\nREMOTE EXPORT: servervm:/exports/researcha",
+        "Create user ash420 with UID 4420 and set its password to redhat.",
+        "Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours, then copy them to /root/amber-files while preserving the source directory structure.",
+        "Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.",
+        "Create /root/etc-opsa.tar.bz2 containing /etc.",
+        "Create /usr/local/bin/opsa-report as an executable script that writes the status of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.",
+        "On /dev/sdb, create a 512 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing the existing filesystem data.",
+        "As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/ina mounted to /data/input and /opt/outa mounted to /data/output.",
+        "Generate and enable a systemd user service for container pdfa and enable lingering for oriona."
       ],
       "task_titles": [
+        "Root Recovery",
+        "Client Network",
+        "Static Host Entry",
+        "Client Repositories",
+        "Server Repositories",
+        "Apache SELinux Port",
+        "Users And Group",
+        "User Passwords",
+        "Delegated Sudo",
+        "Setgid Directory",
+        "Cron Logger",
         "Chrony Client",
-        "Edge Network And Apache",
-        "NFS Mount And Autofs Map",
-        "Orchid Delegated Administration",
-        "SSH File Transfer"
+        "Autofs Map",
+        "Fixed UID User",
+        "Find And Copy",
+        "Grep Filter",
+        "Archive",
+        "Service Audit Script",
+        "Swap Space",
+        "Resize Existing LV",
+        "Rootless Container",
+        "Container Autostart"
       ],
-      "task_points": [
-        20,
-        20,
-        20,
-        20,
-        20
-      ],
+      "task_points": [],
       "solution_commands": [
         [
-          "sed -i '/^server /d;/^pool /d' /etc/chrony.conf",
-          "echo 'server servervm iburst' >> /etc/chrony.conf",
+          "# At the boot menu, edit the kernel line and append rd.break",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "# enter: redhat",
+          "touch /.autorelabel",
+          "exit",
+          "exit"
+        ],
+        [
+          "nmcli connection show",
+          "nmcli connection modify \"<active-connection>\" ipv4.addresses 192.168.122.26/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"<active-connection>\"",
+          "nmcli connection up \"<active-connection>\"",
+          "hostnamectl set-hostname clientvm.opsedge.lab"
+        ],
+        [
+          "vim /etc/hosts",
+          "192.168.122.3 api.opsedge.lab"
+        ],
+        [
+          "vim /etc/yum.repos.d/opsa.repo",
+          "[opsa-baseos]",
+          "name=OpsA BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[opsa-appstream]",
+          "name=OpsA AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "dnf clean all"
+        ],
+        [
+          "ssh admin@servervm",
+          "sudo -i",
+          "vim /etc/yum.repos.d/opsa.repo",
+          "[opsa-baseos]",
+          "name=OpsA BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[opsa-appstream]",
+          "name=OpsA AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "dnf clean all",
+          "exit",
+          "exit"
+        ],
+        [
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8282",
+          "systemctl enable --now httpd",
+          "firewall-cmd --permanent --add-port=8282/tcp",
+          "firewall-cmd --reload",
+          "semanage port -a -t http_port_t -p tcp 8282",
+          "systemctl restart httpd"
+        ],
+        [
+          "groupadd sysopsa",
+          "useradd -m violet",
+          "useradd -m amber",
+          "useradd -m -s /sbin/nologin frost",
+          "usermod -aG sysopsa violet",
+          "usermod -aG sysopsa amber"
+        ],
+        [
+          "passwd violet",
+          "# enter: redhat",
+          "passwd amber",
+          "# enter: redhat",
+          "passwd frost",
+          "# enter: redhat"
+        ],
+        [
+          "visudo -f /etc/sudoers.d/sysopsa",
+          "%sysopsa ALL=(root) /usr/sbin/useradd",
+          "visudo -f /etc/sudoers.d/violet-passwd",
+          "violet ALL=(root) NOPASSWD: /usr/bin/passwd"
+        ],
+        [
+          "mkdir -p /srv/sysopsa",
+          "chgrp sysopsa /srv/sysopsa",
+          "chmod 2770 /srv/sysopsa"
+        ],
+        [
+          "crontab -e -u amber",
+          "*/2 * * * * logger \"OpsEdge tick\""
+        ],
+        [
+          "vim /etc/chrony.conf",
+          "server servervm iburst",
+          "# remove any other server or pool lines",
           "systemctl enable --now chronyd"
         ],
         [
-          "hostnamectl set-hostname clientvm.edge.lab",
-          "grep -q 'internal-api.edge.lab' /etc/hosts || echo '192.168.122.3 internal-api.edge.lab' >> /etc/hosts",
-          "CONN=$(nmcli -t -f NAME,IP4.ADDRESS connection show --active | awk -F: '$2 ~ /^192\\.168\\.122\\./ {print $1; exit}')",
-          "nmcli connection modify \"$CONN\" +ipv4.routes \"203.0.113.0/24 192.168.122.3\"",
-          "nmcli connection up \"$CONN\"",
-          "sed -i 's/^Listen .*/Listen 8088/' /etc/httpd/conf/httpd.conf",
-          "systemctl enable --now httpd",
-          "firewall-cmd --permanent --add-port=8088/tcp",
-          "firewall-cmd --reload"
+          "useradd -m netopsa",
+          "passwd netopsa",
+          "# enter: redhat",
+          "vim /etc/auto.opsa",
+          "netopsa -rw,sync servervm:/exports/researcha",
+          "vim /etc/auto.master.d/opsa.autofs",
+          "/researcha /etc/auto.opsa",
+          "systemctl enable --now autofs"
         ],
         [
-          "mkdir -p /srv/reference /research",
-          "grep -q '^servervm:/exports/direct /srv/reference ' /etc/fstab || echo 'servervm:/exports/direct /srv/reference nfs defaults,_netdev 0 0' >> /etc/fstab",
-          "mount /srv/reference",
-          "cat > /etc/auto.research <<'EOF'",
-          "field-guide -fstype=nfs servervm:/exports/autofs/field-guide",
-          "EOF",
-          "cat > /etc/auto.master.d/rhcsa.research.autofs <<'EOF'",
-          "/research /etc/auto.research",
-          "EOF",
-          "systemctl enable --now autofs",
-          "ls -l /research/field-guide/brief.txt"
+          "useradd -u 4420 ash420",
+          "passwd ash420",
+          "# enter: redhat"
         ],
         [
-          "groupadd platformops",
-          "useradd -m -g platformops orchid",
-          "install -d -m 700 -o orchid -g platformops /home/orchid/.ssh",
-          "cat /home/admin/.ssh/id_rsa.pub > /home/orchid/.ssh/authorized_keys",
-          "chown orchid:platformops /home/orchid/.ssh/authorized_keys",
-          "chmod 600 /home/orchid/.ssh/authorized_keys",
-          "echo '%platformops ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd' > /etc/sudoers.d/platformops-httpd",
-          "visudo -cf /etc/sudoers.d/platformops-httpd"
+          "find /opt/exam-a/find -type f -user amber -mtime -1 -exec cp --parents {} /root/amber-files \\;"
         ],
         [
-          "# Enter the password redhat when scp prompts.",
-          "runuser -l admin -c \"scp -o StrictHostKeyChecking=no admin@servervm:/srv/rhcsa/objectives/README.txt /home/admin/edge-brief.txt\"",
-          "install -o orchid -g platformops -m 0644 /home/admin/edge-brief.txt /home/orchid/edge-brief.txt",
-          "rm -f /home/admin/edge-brief.txt"
+          "grep delta /usr/share/dict/words > /root/delta-lines"
+        ],
+        [
+          "tar -cjf /root/etc-opsa.tar.bz2 /etc"
+        ],
+        [
+          "vim /usr/local/bin/opsa-report",
+          "#!/usr/bin/env bash",
+          "while read -r svc; do",
+          "  systemctl is-active \"$svc\" >> /root/opsa-services.txt",
+          "done < /usr/local/share/exam-a/services.lst",
+          "chmod 755 /usr/local/bin/opsa-report",
+          "/usr/local/bin/opsa-report"
+        ],
+        [
+          "fdisk /dev/sdb",
+          "# create a 512M GPT partition and set the type to Linux swap",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "blkid /dev/sdb1",
+          "vim /etc/fstab",
+          "UUID=<uuid-of-sdb1> swap swap defaults 0 0"
+        ],
+        [
+          "lvextend -L 320M /dev/reviewvga/reviewa",
+          "resize2fs /dev/reviewvga/reviewa"
+        ],
+        [
+          "su - oriona",
+          "cd /opt/rhcsa/workspaces/exam-a",
+          "podman build -t localhost/opsa-web:latest .",
+          "podman run -d --name pdfa -v /opt/ina:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest",
+          "exit"
+        ],
+        [
+          "su - oriona",
+          "mkdir -p ~/.config/systemd/user",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name pdfa --files --new",
+          "systemctl --user daemon-reload",
+          "systemctl --user enable --now container-pdfa.service",
+          "exit",
+          "loginctl enable-linger oriona"
         ]
-      ]
+      ],
+      "checks": []
     }
   }
 }

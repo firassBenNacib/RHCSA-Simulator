@@ -1,0 +1,61 @@
+{
+  "id": "lab-04-selinux-http-port",
+  "title": "Lab 04: SELinux Custom HTTP Port",
+  "description": "Fix Apache so it listens on a nonstandard port without disabling SELinux",
+  "objective_tags": [
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 35,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure Apache on clientvm so it listens on TCP port 9082 and starts automatically at boot.",
+        "Allow TCP port 9082 through the firewall permanently.",
+        "Make the SELinux changes needed so Apache serves the existing /var/www/html content on that port."
+      ],
+      "hints": [
+        "Do not disable SELinux.",
+        "Do not move the existing document root."
+      ],
+      "checks": [
+        "ss -ltnp | grep 9082",
+        "semanage port -l | grep http_port_t | grep 9082",
+        "curl -s http://localhost:9082"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 9082",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "firewall-cmd --permanent --add-port=9082/tcp",
+          "firewall-cmd --reload"
+        ],
+        [
+          "semanage port -a -t http_port_t -p tcp 9082",
+          "systemctl restart httpd"
+        ]
+      ]
+    }
+  }
+}

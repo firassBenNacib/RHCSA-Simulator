@@ -1,210 +1,236 @@
 {
   "id": "mock-exam-b",
-  "title": "Mock Exam B: System Review And Hardening",
-  "description": "A redesigned RHCSA v9 mock exam focused on local storage, default permissions, SELinux labeling and port control, process tuning, logging, and file workflows.",
+  "title": "Mock Exam B: CoreMesh Service Review",
+  "description": "A second 22 task RHCSA style mock exam with distinct variables and combined tasks",
   "objective_tags": [
+    "networking-and-firewall",
+    "users-sudo-ssh",
     "storage-lvm",
-    "processes-logs-tuning",
-    "selinux-and-default-perms",
-    "essential-tools"
+    "containers"
   ],
   "supported_modes": [
-    "lab",
     "exam"
   ],
-  "time_limit_minutes": 120,
+  "time_limit_minutes": 150,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_servervm": true
   },
   "content": {
-    "lab": {
-      "tasks": [
-        "Use the attached data disks to create volume group opsdata_vg, an XFS logical volume named records sized to 700 MiB mounted persistently at /srv/records, an ext4 logical volume named archive sized to 300 MiB mounted persistently at /mnt/archive, and a 256 MiB swap logical volume named reviewswap activated at boot.",
-        "Set the system-wide default umask to 027 and adjust /srv/reports so it is owned by root:reviewers, group writable, inaccessible to others, and setgid for new files.",
-        "Make Apache serve /srv/rhcsa/review-site/index.html successfully at http://localhost:8089/ while SELinux remains enforcing, using persistent file context and port-label changes, set httpd_can_network_connect persistently to on, and keep the service enabled at boot.",
-        "Lower the priority of the seeded CPU-intensive process without stopping it, configure persistent journaling, activate the throughput-performance tuned profile, and enable and start review-stamp.service.",
-        "Create /root/reports-bundle.tar.gz from /srv/reports and extract only the ALERT lines from /opt/rhcsa/workspaces/review-material/alerts.log into /root/alerts-only.log."
-      ],
-      "task_titles": [
-        "LVM Storage Layout",
-        "Default Permissions",
-        "Apache With SELinux",
-        "Processes Logs And Tuning",
-        "Archive And Log Filtering"
-      ],
-      "task_points": [
-        20,
-        20,
-        20,
-        20,
-        20
-      ],
-      "solution_commands": [
-        [
-          "pvcreate /dev/sdb /dev/sdc",
-          "vgcreate opsdata_vg /dev/sdb /dev/sdc",
-          "lvcreate -L 700M -n records opsdata_vg",
-          "mkfs.xfs /dev/opsdata_vg/records",
-          "mkdir -p /srv/records",
-          "echo '/dev/opsdata_vg/records /srv/records xfs defaults 0 0' >> /etc/fstab",
-          "mount /srv/records",
-          "lvcreate -L 300M -n archive opsdata_vg",
-          "mkfs.ext4 /dev/opsdata_vg/archive",
-          "mkdir -p /mnt/archive",
-          "echo '/dev/opsdata_vg/archive /mnt/archive ext4 defaults 0 0' >> /etc/fstab",
-          "mount /mnt/archive",
-          "lvcreate -L 256M -n reviewswap opsdata_vg",
-          "mkswap /dev/opsdata_vg/reviewswap",
-          "echo '/dev/opsdata_vg/reviewswap none swap defaults 0 0' >> /etc/fstab",
-          "swapon -a"
-        ],
-        [
-          "cat > /etc/profile.d/review-umask.sh <<'EOF'",
-          "umask 027",
-          "EOF",
-          "chmod 644 /etc/profile.d/review-umask.sh",
-          "chown root:reviewers /srv/reports",
-          "chmod 2770 /srv/reports"
-        ],
-        [
-          "sed -i 's/^Listen .*/Listen 8089/' /etc/httpd/conf/httpd.conf",
-          "sed -i 's#^DocumentRoot \".*\"#DocumentRoot \"/srv/rhcsa/review-site\"#' /etc/httpd/conf/httpd.conf",
-          "cat > /etc/httpd/conf.d/rhcsa-review.conf <<'EOF'",
-          "<Directory \"/srv/rhcsa/review-site\">",
-          "    Require all granted",
-          "</Directory>",
-          "EOF",
-          "semanage fcontext -a -t httpd_sys_content_t '/srv/rhcsa/review-site(/.*)?'",
-          "restorecon -Rv /srv/rhcsa/review-site",
-          "semanage port -a -t http_port_t -p tcp 8089",
-          "setsebool -P httpd_can_network_connect on",
-          "systemctl enable --now httpd"
-        ],
-        [
-          "PID=$(pgrep -n -f 'yes >/dev/null')",
-          "renice 10 -p \"$PID\"",
-          "mkdir -p /var/log/journal",
-          "sed -i '/^Storage=/d' /etc/systemd/journald.conf",
-          "echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald",
-          "tuned-adm profile throughput-performance",
-          "systemctl enable --now review-stamp.service"
-        ],
-        [
-          "tar -czf /root/reports-bundle.tar.gz -C /srv reports",
-          "grep 'ALERT' /opt/rhcsa/workspaces/review-material/alerts.log > /root/alerts-only.log"
-        ]
-      ],
-      "hints": [
-        "The storage work is local to clientvm and should survive reboot through fstab and swap configuration.",
-        "Serving content from /srv usually needs both Apache configuration changes and persistent SELinux labeling.",
-        "This exam also expects a custom SELinux http port label and a persistent SELinux boolean change.",
-        "The file-work task is separate from the storage task; use the seeded /srv/reports content."
-      ],
-      "checks": [
-        "vgs",
-        "lvs",
-        "findmnt /srv/records",
-        "findmnt /mnt/archive",
-        "swapon --show",
-        "ls -ld /srv/reports",
-        "getenforce",
-        "grep -R '^umask 027' /etc/profile /etc/profile.d 2>/dev/null",
-        "tuned-adm active",
-        "systemctl status review-stamp.service --no-pager",
-        "semanage port -l | grep http_port_t | grep 8089",
-        "getsebool httpd_can_network_connect",
-        "curl http://localhost:8089/",
-        "cat /root/alerts-only.log"
-      ],
-      "solution_outline": [
-        "Complete the LVM work first to establish the required filesystems and swap entries.",
-        "Persist the umask in a shell startup file, fix /srv/reports ownership and permissions, and then repair Apache plus SELinux for the custom site path and port.",
-        "Finish by renicing the busy process, making journald persistent, switching the tuned profile, enabling the custom service, and creating the archive and filtered log output."
-      ]
-    },
     "exam": {
       "tasks": [
-        "Create volume group opsdata_vg with an XFS logical volume records mounted at /srv/records, an ext4 logical volume archive mounted at /mnt/archive, and a 256 MiB swap logical volume named reviewswap activated persistently.",
-        "Set the system-wide default umask to 027 and make /srv/reports collaborative for group reviewers only, with setgid for new files.",
-        "Make Apache serve /srv/rhcsa/review-site/index.html at http://localhost:8089/ while SELinux remains enforcing, apply persistent file and port labeling, set httpd_can_network_connect persistently to on, and ensure the service starts at boot.",
-        "Lower the priority of the seeded busy process, persist the journal, activate throughput-performance, and enable and start review-stamp.service.",
-        "Create /root/reports-bundle.tar.gz from /srv/reports and write only the ALERT lines from /opt/rhcsa/workspaces/review-material/alerts.log to /root/alerts-only.log."
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.27\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.coremesh.lab",
+        "Add a persistent hosts entry so registry.coremesh.lab resolves to 192.168.122.3.",
+        "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8383.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Allow the port in SELinux.\n- Do not alter the existing site content.",
+        "Create group platformb and users mira and jonas with platformb as a supplementary group. Create user noel with /sbin/nologin and no platformb membership.",
+        "Set the password of mira, jonas, and noel to redhat.",
+        "Allow members of platformb to run useradd with sudo, and allow mira to restart httpd with sudo and no password prompt.",
+        "Create /srv/platformb with group ownership platformb, mode 2770, and inherited group ownership for new files.",
+        "Configure a cron job for mira that runs every minute and logs the message \"CoreMesh exam\".",
+        "Configure chrony on clientvm so it synchronizes only with servervm.",
+        "Create user meshremote with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /meshb/meshremote\nREMOTE EXPORT: servervm:/exports/meshb",
+        "Create user cato421 with UID 4421 and set its password to redhat.",
+        "Find all files under /opt/exam-b/find that are owned by mira and were modified in the last 24 hours, then copy them to /root/mira-files while preserving the directory structure.",
+        "Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.",
+        "Create /root/usr-local-b.tar.bz2 containing /usr/local.",
+        "Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.",
+        "On /dev/sdb, create a 600 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "Resize /dev/reviewvgb/reviewb so the final size is 300 MiB without losing data.",
+        "Apply the recommended tuned profile and leave it active.",
+        "As user lyrab, build localhost/coremesh-web:latest from /opt/rhcsa/workspaces/exam-b/Containerfile, then run container pdfb with /opt/inb mounted to /data/input and /opt/outb mounted to /data/output.",
+        "Generate and enable a systemd user service for pdfb and enable lingering for lyrab."
       ],
       "task_titles": [
-        "LVM Storage Layout",
-        "Default Permissions",
-        "Apache With SELinux",
-        "Processes Logs And Tuning",
-        "Archive And Log Filtering"
+        "Client Network",
+        "Host Entry",
+        "Client Repositories",
+        "Server Repositories",
+        "Apache Firewall SELinux",
+        "Users And Group",
+        "User Passwords",
+        "Delegated Sudo",
+        "Setgid Directory",
+        "Cron Logger",
+        "Chrony Client",
+        "Autofs Map",
+        "Fixed UID User",
+        "Find And Copy",
+        "Grep Filter",
+        "Archive",
+        "Unit Status Script",
+        "Swap Space",
+        "Resize Existing LV",
+        "Tuned Profile",
+        "Rootless Container",
+        "Container Autostart"
       ],
-      "task_points": [
-        20,
-        20,
-        20,
-        20,
-        20
-      ],
+      "task_points": [],
       "solution_commands": [
         [
-          "pvcreate /dev/sdb /dev/sdc",
-          "vgcreate opsdata_vg /dev/sdb /dev/sdc",
-          "lvcreate -L 700M -n records opsdata_vg",
-          "mkfs.xfs /dev/opsdata_vg/records",
-          "mkdir -p /srv/records",
-          "echo '/dev/opsdata_vg/records /srv/records xfs defaults 0 0' >> /etc/fstab",
-          "mount /srv/records",
-          "lvcreate -L 300M -n archive opsdata_vg",
-          "mkfs.ext4 /dev/opsdata_vg/archive",
-          "mkdir -p /mnt/archive",
-          "echo '/dev/opsdata_vg/archive /mnt/archive ext4 defaults 0 0' >> /etc/fstab",
-          "mount /mnt/archive",
-          "lvcreate -L 256M -n reviewswap opsdata_vg",
-          "mkswap /dev/opsdata_vg/reviewswap",
-          "echo '/dev/opsdata_vg/reviewswap none swap defaults 0 0' >> /etc/fstab",
-          "swapon -a"
+          "nmcli connection show",
+          "nmcli connection modify \"<active-connection>\" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"<active-connection>\"",
+          "nmcli connection up \"<active-connection>\"",
+          "hostnamectl set-hostname clientvm.coremesh.lab"
         ],
         [
-          "cat > /etc/profile.d/review-umask.sh <<'EOF'",
-          "umask 027",
-          "EOF",
-          "chmod 644 /etc/profile.d/review-umask.sh",
-          "chown root:reviewers /srv/reports",
-          "chmod 2770 /srv/reports"
+          "vim /etc/hosts",
+          "192.168.122.3 registry.coremesh.lab"
         ],
         [
-          "sed -i 's/^Listen .*/Listen 8089/' /etc/httpd/conf/httpd.conf",
-          "sed -i 's#^DocumentRoot \".*\"#DocumentRoot \"/srv/rhcsa/review-site\"#' /etc/httpd/conf/httpd.conf",
-          "cat > /etc/httpd/conf.d/rhcsa-review.conf <<'EOF'",
-          "<Directory \"/srv/rhcsa/review-site\">",
-          "    Require all granted",
-          "</Directory>",
-          "EOF",
-          "semanage fcontext -a -t httpd_sys_content_t '/srv/rhcsa/review-site(/.*)?'",
-          "restorecon -Rv /srv/rhcsa/review-site",
-          "semanage port -a -t http_port_t -p tcp 8089",
-          "setsebool -P httpd_can_network_connect on",
-          "systemctl enable --now httpd"
+          "vim /etc/yum.repos.d/coremesh.repo",
+          "[coremesh-baseos]",
+          "name=CoreMesh BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[coremesh-appstream]",
+          "name=CoreMesh AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0"
         ],
         [
-          "PID=$(pgrep -n -f 'yes >/dev/null')",
-          "renice 10 -p \"$PID\"",
-          "mkdir -p /var/log/journal",
-          "sed -i '/^Storage=/d' /etc/systemd/journald.conf",
-          "echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald",
-          "tuned-adm profile throughput-performance",
-          "systemctl enable --now review-stamp.service"
+          "ssh admin@servervm",
+          "sudo -i",
+          "vim /etc/yum.repos.d/coremesh.repo",
+          "[coremesh-baseos]",
+          "name=CoreMesh BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[coremesh-appstream]",
+          "name=CoreMesh AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "exit",
+          "exit"
         ],
         [
-          "tar -czf /root/reports-bundle.tar.gz -C /srv reports",
-          "grep 'ALERT' /opt/rhcsa/workspaces/review-material/alerts.log > /root/alerts-only.log"
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8383",
+          "systemctl enable --now httpd",
+          "firewall-cmd --permanent --add-port=8383/tcp",
+          "firewall-cmd --reload",
+          "semanage port -a -t http_port_t -p tcp 8383",
+          "systemctl restart httpd"
+        ],
+        [
+          "groupadd platformb",
+          "useradd -m mira",
+          "useradd -m jonas",
+          "useradd -m -s /sbin/nologin noel",
+          "usermod -aG platformb mira",
+          "usermod -aG platformb jonas"
+        ],
+        [
+          "passwd mira",
+          "# enter: redhat",
+          "passwd jonas",
+          "# enter: redhat",
+          "passwd noel",
+          "# enter: redhat"
+        ],
+        [
+          "visudo -f /etc/sudoers.d/platformb",
+          "%platformb ALL=(root) /usr/sbin/useradd",
+          "visudo -f /etc/sudoers.d/mira-systemctl",
+          "mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd"
+        ],
+        [
+          "mkdir -p /srv/platformb",
+          "chgrp platformb /srv/platformb",
+          "chmod 2770 /srv/platformb"
+        ],
+        [
+          "crontab -e -u mira",
+          "* * * * * logger \"CoreMesh exam\""
+        ],
+        [
+          "vim /etc/chrony.conf",
+          "server servervm iburst",
+          "# remove any other server or pool lines",
+          "systemctl enable --now chronyd"
+        ],
+        [
+          "useradd -m meshremote",
+          "passwd meshremote",
+          "# enter: redhat",
+          "vim /etc/auto.meshb",
+          "meshremote -rw,sync servervm:/exports/meshb",
+          "vim /etc/auto.master.d/meshb.autofs",
+          "/meshb /etc/auto.meshb",
+          "systemctl enable --now autofs"
+        ],
+        [
+          "useradd -u 4421 cato421",
+          "passwd cato421",
+          "# enter: redhat"
+        ],
+        [
+          "find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \\;"
+        ],
+        [
+          "grep proto /usr/share/dict/words > /root/proto-lines"
+        ],
+        [
+          "tar -cjf /root/usr-local-b.tar.bz2 /usr/local"
+        ],
+        [
+          "vim /usr/local/bin/corecheck",
+          "#!/usr/bin/env bash",
+          "while read -r unit; do",
+          "  systemctl is-active \"$unit\" >> /root/coremesh-units.txt",
+          "done < /usr/local/share/exam-b/units.lst",
+          "chmod 755 /usr/local/bin/corecheck",
+          "/usr/local/bin/corecheck"
+        ],
+        [
+          "fdisk /dev/sdb",
+          "# create a 600M GPT partition and set the type to Linux swap",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "blkid /dev/sdb1",
+          "vim /etc/fstab",
+          "UUID=<uuid-of-sdb1> swap swap defaults 0 0"
+        ],
+        [
+          "lvextend -L 300M /dev/reviewvgb/reviewb",
+          "resize2fs /dev/reviewvgb/reviewb"
+        ],
+        [
+          "tuned-adm recommended",
+          "tuned-adm profile <recommended-profile>"
+        ],
+        [
+          "su - lyrab",
+          "cd /opt/rhcsa/workspaces/exam-b",
+          "podman build -t localhost/coremesh-web:latest .",
+          "podman run -d --name pdfb -v /opt/inb:/data/input:Z -v /opt/outb:/data/output:Z localhost/coremesh-web:latest",
+          "exit"
+        ],
+        [
+          "su - lyrab",
+          "mkdir -p ~/.config/systemd/user",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name pdfb --files --new",
+          "systemctl --user daemon-reload",
+          "systemctl --user enable --now container-pdfb.service",
+          "exit",
+          "loginctl enable-linger lyrab"
         ]
-      ]
+      ],
+      "checks": []
     }
   }
 }

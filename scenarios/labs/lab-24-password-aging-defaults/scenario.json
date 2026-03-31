@@ -1,0 +1,57 @@
+{
+  "id": "lab-24-password-aging-defaults",
+  "title": "Lab 24: Password Aging Defaults",
+  "description": "Configure default password aging for newly created local users through login.defs",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure the system defaults for newly created local users with the following values:\n\nPASS_MAX_DAYS: 45\nPASS_MIN_DAYS: 2\nPASS_WARN_AGE: 10",
+        "Create the user aging24, set its password to redhat, and ensure the user inherits the default password aging policy."
+      ],
+      "hints": [
+        "Edit /etc/login.defs directly.",
+        "Use chage -l to verify the new account settings."
+      ],
+      "checks": [
+        "grep -E '^PASS_(MAX_DAYS|MIN_DAYS|WARN_AGE)' /etc/login.defs",
+        "chage -l aging24"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "vim /etc/login.defs",
+          "PASS_MAX_DAYS   45",
+          "PASS_MIN_DAYS   2",
+          "PASS_WARN_AGE   10"
+        ],
+        [
+          "useradd -m aging24",
+          "passwd aging24",
+          "# enter: redhat",
+          "chage -l aging24"
+        ]
+      ]
+    }
+  }
+}

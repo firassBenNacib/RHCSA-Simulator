@@ -1,0 +1,54 @@
+{
+  "id": "lab-17-resize-logical-volume",
+  "title": "Lab 17: Resize A Logical Volume",
+  "description": "Extend an existing logical volume without losing data",
+  "objective_tags": [
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot."
+      ],
+      "hints": [
+        "The logical volume already exists and is mounted on /mnt/reviewlv.",
+        "Do not recreate the filesystem."
+      ],
+      "checks": [
+        "lvs",
+        "df -hT /mnt/reviewlv"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "lsblk -f",
+          "lvs",
+          "lvextend -L 320M /dev/reviewvg/reviewlv",
+          "blkid /dev/reviewvg/reviewlv",
+          "# if the filesystem is ext4, run resize2fs /dev/reviewvg/reviewlv",
+          "# if the filesystem is xfs, run xfs_growfs /mnt/reviewlv"
+        ],
+        [
+          "df -hT /mnt/reviewlv"
+        ]
+      ]
+    }
+  }
+}

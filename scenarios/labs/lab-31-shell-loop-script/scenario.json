@@ -1,0 +1,57 @@
+{
+  "id": "lab-31-shell-loop-script",
+  "title": "Lab 31: Shell Loop Script",
+  "description": "Create a simple shell script that uses a loop to filter files by name",
+  "objective_tags": [
+    "shell-scripting"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create an executable script /usr/local/bin/listlogs31 that loops over the files in /opt/lab31 and writes the absolute path of each file ending in .log to /root/listlogs31.out.",
+        "Run the script once."
+      ],
+      "hints": [
+        "A for loop is sufficient for this task.",
+        "Write one path per line."
+      ],
+      "checks": [
+        "cat /root/listlogs31.out"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "vim /usr/local/bin/listlogs31",
+          "#!/bin/bash",
+          "for item in /opt/lab31/*; do",
+          "    if [[ \"$item\" == *.log ]]; then",
+          "        echo \"$item\" >> /root/listlogs31.out",
+          "    fi",
+          "done",
+          "chmod +x /usr/local/bin/listlogs31"
+        ],
+        [
+          "/usr/local/bin/listlogs31"
+        ]
+      ]
+    }
+  }
+}

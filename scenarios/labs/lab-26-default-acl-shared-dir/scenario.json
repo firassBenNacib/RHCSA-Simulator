@@ -1,0 +1,61 @@
+{
+  "id": "lab-26-default-acl-shared-dir",
+  "title": "Lab 26: Default ACL Shared Directory",
+  "description": "Create a collaborative directory that combines setgid permissions with a default ACL",
+  "objective_tags": [
+    "filesystems-and-autofs",
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create the group collab26 and the user qa26. Set the password of qa26 to redhat.",
+        "Create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.",
+        "Configure a default ACL so that user qa26 receives rwx permissions on new files and directories created under /shared/collab26."
+      ],
+      "hints": [
+        "Use getfacl to confirm the effective and default entries."
+      ],
+      "checks": [
+        "getfacl /shared/collab26"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "groupadd collab26",
+          "useradd -m qa26",
+          "passwd qa26",
+          "# enter: redhat"
+        ],
+        [
+          "mkdir -p /shared/collab26",
+          "chown root:collab26 /shared/collab26",
+          "chmod 2770 /shared/collab26"
+        ],
+        [
+          "setfacl -m d:u:qa26:rwx /shared/collab26",
+          "getfacl /shared/collab26"
+        ]
+      ]
+    }
+  }
+}

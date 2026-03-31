@@ -1,0 +1,58 @@
+{
+  "id": "lab-16-swap-space",
+  "title": "Lab 16: Additional Swap Space",
+  "description": "Add a persistent swap partition on an extra disk",
+  "objective_tags": [
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create a 400 MiB swap partition on /dev/sdb, enable it, and make it persistent."
+      ],
+      "hints": [
+        "Use GPT partition type 19 for swap.",
+        "Use a UUID entry in /etc/fstab."
+      ],
+      "checks": [
+        "swapon --show",
+        "lsblk -f /dev/sdb"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "fdisk /dev/sdb",
+          "# create a 400M partition and change the type to Linux swap",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1"
+        ],
+        [
+          "blkid /dev/sdb1",
+          "vim /etc/fstab",
+          "UUID=<uuid-of-sdb1> swap swap defaults 0 0"
+        ],
+        [
+          "swapon --show"
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "id": "lab-03-dnf-repositories",
+  "title": "Lab 03: DNF Repository Configuration",
+  "description": "Configure offline BaseOS and AppStream repositories on both systems",
+  "objective_tags": [
+    "software-scheduling-time"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 40,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "On clientvm and servervm, configure a persistent repository file that uses http://servervm/repo/BaseOS/ and http://servervm/repo/AppStream/.",
+        "Disable GPG checking in that file and leave both repositories enabled.",
+        "Verify that package metadata is available from both repositories on both systems."
+      ],
+      "hints": [
+        "You can use one repo file per system.",
+        "Use vim to type the repository file manually."
+      ],
+      "checks": [
+        "dnf repolist",
+        "ssh admin@servervm sudo dnf repolist"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "vim /etc/yum.repos.d/rhcsa.repo",
+          "[rhcsa-baseos]",
+          "name=RHCSA BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[rhcsa-appstream]",
+          "name=RHCSA AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "dnf clean all"
+        ],
+        [
+          "ssh admin@servervm",
+          "sudo -i",
+          "vim /etc/yum.repos.d/rhcsa.repo",
+          "[rhcsa-baseos]",
+          "name=RHCSA BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[rhcsa-appstream]",
+          "name=RHCSA AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "dnf clean all",
+          "exit",
+          "exit"
+        ],
+        [
+          "dnf repolist",
+          "ssh admin@servervm sudo dnf repolist"
+        ]
+      ]
+    }
+  }
+}

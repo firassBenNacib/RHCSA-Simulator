@@ -1,0 +1,69 @@
+{
+  "id": "lab-02-root-recovery",
+  "title": "Lab 02: Root Password Recovery",
+  "description": "Recover root access through the bootloader and restore normal access on clientvm",
+  "objective_tags": [
+    "boot-and-recovery"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 40,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": true,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Recover root access on clientvm from the console and set the root password to redhat.",
+        "After the system boots normally, confirm that SELinux relabeling completed and root can log in again.",
+        "Leave SSH password authentication working for root and admin."
+      ],
+      "hints": [
+        "Use the rescue edit path with rd.break.",
+        "Remember to touch /.autorelabel before exiting the chroot."
+      ],
+      "checks": [
+        "getenforce",
+        "ls -Z /root | head",
+        "ssh -o StrictHostKeyChecking=no root@clientvm true"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "# At the boot menu, edit the selected entry and append rd.break to the linux line.",
+          "# Boot with Ctrl+x.",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "# enter: redhat",
+          "touch /.autorelabel",
+          "exit",
+          "exit"
+        ],
+        [
+          "getenforce",
+          "ls -Z /root | head"
+        ],
+        [
+          "vim /etc/ssh/sshd_config",
+          "PasswordAuthentication yes",
+          "PermitRootLogin yes",
+          "systemctl restart sshd"
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "lab-15-lvm-create-mount",
+  "title": "Lab 15: LVM Creation And Mount",
+  "description": "Create a new volume group and logical volume and mount it persistently",
+  "objective_tags": [
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 40,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "On /dev/sdb, create an LVM partition, then create volume group wgroupx with physical extent size 8 MiB.",
+        "Create logical volume wsharex with 50 extents, format it as ext4, and mount it persistently on /mnt/wsharex."
+      ],
+      "hints": [
+        "Use GPT on /dev/sdb.",
+        "Use a UUID entry in /etc/fstab."
+      ],
+      "checks": [
+        "pvs",
+        "vgs",
+        "lvs",
+        "lsblk -f /dev/sdb",
+        "findmnt /mnt/wsharex"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "fdisk /dev/sdb",
+          "# create a GPT LVM partition for the remaining disk space",
+          "partprobe /dev/sdb",
+          "pvcreate /dev/sdb1",
+          "vgcreate -s 8M wgroupx /dev/sdb1",
+          "lvcreate -n wsharex -l 50 wgroupx"
+        ],
+        [
+          "mkfs.ext4 /dev/wgroupx/wsharex",
+          "mkdir -p /mnt/wsharex",
+          "blkid /dev/wgroupx/wsharex",
+          "vim /etc/fstab",
+          "UUID=<uuid-of-wsharex> /mnt/wsharex ext4 defaults 0 0",
+          "mount -a"
+        ],
+        [
+          "findmnt /mnt/wsharex"
+        ]
+      ]
+    }
+  }
+}

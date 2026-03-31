@@ -1,0 +1,63 @@
+{
+  "id": "lab-32-ssh-key-auth",
+  "title": "Lab 32: SSH Key Authentication",
+  "description": "Configure passwordless SSH login from clientvm to servervm using a key pair",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 35,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create user ops32 on clientvm and user backup32 on servervm. Set the password of both users to redhat.",
+        "Configure key-based SSH authentication so that user ops32 on clientvm can log in to backup32@servervm without a password prompt.",
+        "Do not disable PasswordAuthentication globally for this task."
+      ],
+      "hints": [
+        "Generate the key as the source user.",
+        "Populate authorized_keys for the target user."
+      ],
+      "checks": [
+        "runuser -l ops32 -c \"ssh -o StrictHostKeyChecking=no -o BatchMode=yes backup32@servervm true\""
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "useradd -m ops32",
+          "passwd ops32",
+          "# enter: redhat",
+          "# on servervm",
+          "useradd -m backup32",
+          "passwd backup32",
+          "# enter: redhat"
+        ],
+        [
+          "runuser -l ops32 -c \"ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa\"",
+          "runuser -l ops32 -c \"ssh-copy-id backup32@servervm\""
+        ],
+        [
+          "runuser -l ops32 -c \"ssh -o StrictHostKeyChecking=no backup32@servervm true\""
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "lab-11-chrony-client",
+  "title": "Lab 11: Time Synchronization",
+  "description": "Configure clientvm to synchronize time from servervm",
+  "objective_tags": [
+    "software-scheduling-time"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot."
+      ],
+      "hints": [
+        "Remove any other server or pool lines.",
+        "Use iburst on the server line."
+      ],
+      "checks": [
+        "chronyc sources -v",
+        "systemctl status chronyd --no-pager"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "vim /etc/chrony.conf",
+          "server servervm iburst",
+          "# remove any other server or pool lines",
+          "systemctl enable --now chronyd",
+          "chronyc sources -v"
+        ]
+      ]
+    }
+  }
+}

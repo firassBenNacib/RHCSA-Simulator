@@ -1,0 +1,53 @@
+{
+  "id": "lab-25-pwquality-policy",
+  "title": "Lab 25: Pwquality Policy",
+  "description": "Configure a persistent local password quality policy without editing PAM service files",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords must meet the following requirements:\n\nMINIMUM LENGTH: 12\nMINIMUM CHARACTER CLASSES: 3",
+        "Do not edit any PAM service file for this task."
+      ],
+      "hints": [
+        "Use a dedicated drop-in file.",
+        "Keep the configuration minimal."
+      ],
+      "checks": [
+        "grep -R \"minlen\\|minclass\" /etc/security/pwquality.conf.d"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "mkdir -p /etc/security/pwquality.conf.d",
+          "vim /etc/security/pwquality.conf.d/lab25.conf",
+          "minlen = 12",
+          "minclass = 3"
+        ],
+        [
+          "grep -R \"minlen\\|minclass\" /etc/security/pwquality.conf.d"
+        ]
+      ]
+    }
+  }
+}

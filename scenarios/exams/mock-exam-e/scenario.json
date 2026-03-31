@@ -1,0 +1,240 @@
+{
+  "id": "mock-exam-e",
+  "title": "Mock Exam E: HarborGrid Recovery Review",
+  "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at scheduling, tuned, and an existing logical volume resize.",
+  "objective_tags": [
+    "boot-and-recovery",
+    "software-scheduling-time",
+    "storage-lvm",
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "exam"
+  ],
+  "time_limit_minutes": 150,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
+  },
+  "flags": {
+    "password_recovery": true,
+    "requires_servervm": true
+  },
+  "content": {
+    "exam": {
+      "tasks": [
+        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.harbor.lab",
+        "Add a persistent hosts entry so registry.harbor.lab resolves to 192.168.122.3.",
+        "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8181.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Make the SELinux change required for the new port.\n- Do not alter the existing site content.",
+        "Create group harborops and users lena and ivor with harborops as a supplementary group. Create user hush with /sbin/nologin and no harborops membership.",
+        "Set the password of lena, ivor, and hush to redhat.",
+        "Allow members of harborops to run useradd through sudo, and allow lena to restart httpd through sudo without a password prompt.",
+        "Create /srv/harbor with group ownership harborops, permissions 2770, and inherited group ownership for new files.",
+        "Configure a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12 and at least 3 character classes.",
+        "Create a one-time at job as user ivor that appends the text Harbor queued to /home/ivor/at.log two minutes from now. Ensure the atd service is enabled and running.",
+        "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
+        "Create user harborremote with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /harbor/home/harborremote\nREMOTE EXPORT: servervm:/exports/harborhome",
+        "Create user maple551 with UID 4551 and set its password to redhat.",
+        "Find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.",
+        "Extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.",
+        "Create /root/var-tmp-harbor.tar.bz2 containing /var/tmp.",
+        "Create executable script /usr/local/bin/harbor-check that writes the active state of each service listed in /usr/local/share/exam-e/services.lst to /root/harbor-services.txt.",
+        "On /dev/sdb, create a 640 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "Resize /dev/reviewvge/reviewe so the final size is 360 MiB without losing the existing filesystem data.",
+        "Apply the recommended tuned profile and leave it active."
+      ],
+      "task_titles": [
+        "Root Recovery",
+        "Client Network",
+        "Static Host Entry",
+        "Client Repositories",
+        "Server Repositories",
+        "Apache SELinux Port",
+        "Users And Group",
+        "User Passwords",
+        "Delegated Sudo",
+        "Setgid Directory",
+        "Pwquality Policy",
+        "At Job",
+        "Chrony Client",
+        "Autofs Map",
+        "Fixed UID User",
+        "Find And Copy",
+        "Grep Filter",
+        "Archive",
+        "Shell Script",
+        "Swap Space",
+        "Resize Existing LV",
+        "Recommended Tuned Profile"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "# At the boot menu, edit the kernel line and append rd.break",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "# enter: redhat",
+          "touch /.autorelabel",
+          "exit",
+          "exit"
+        ],
+        [
+          "nmcli connection show",
+          "nmcli connection modify \"<active-connection>\" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"<active-connection>\"",
+          "nmcli connection up \"<active-connection>\"",
+          "hostnamectl set-hostname clientvm.harbor.lab"
+        ],
+        [
+          "vim /etc/hosts",
+          "192.168.122.3 registry.harbor.lab"
+        ],
+        [
+          "vim /etc/yum.repos.d/harbor.repo",
+          "[BaseOS]",
+          "name=BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[AppStream]",
+          "name=AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0"
+        ],
+        [
+          "# on servervm",
+          "vim /etc/yum.repos.d/harbor.repo",
+          "[BaseOS]",
+          "name=BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[AppStream]",
+          "name=AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0"
+        ],
+        [
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8181",
+          "semanage port -a -t http_port_t -p tcp 8181",
+          "firewall-cmd --permanent --add-port=8181/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "groupadd harborops",
+          "useradd -m lena",
+          "useradd -m ivor",
+          "useradd -m -s /sbin/nologin hush",
+          "usermod -aG harborops lena",
+          "usermod -aG harborops ivor"
+        ],
+        [
+          "passwd lena",
+          "# enter: redhat",
+          "passwd ivor",
+          "# enter: redhat",
+          "passwd hush",
+          "# enter: redhat"
+        ],
+        [
+          "visudo -f /etc/sudoers.d/harborops",
+          "%harborops ALL=(root) /usr/sbin/useradd",
+          "visudo -f /etc/sudoers.d/lena-httpd",
+          "lena ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd"
+        ],
+        [
+          "mkdir -p /srv/harbor",
+          "chown root:harborops /srv/harbor",
+          "chmod 2770 /srv/harbor"
+        ],
+        [
+          "mkdir -p /etc/security/pwquality.conf.d",
+          "vim /etc/security/pwquality.conf.d/exam-e.conf",
+          "minlen = 12",
+          "minclass = 3"
+        ],
+        [
+          "systemctl enable --now atd",
+          "runuser -l ivor -c \"echo \"echo Harbor queued >> /home/ivor/at.log\" | at now + 2 minutes\"",
+          "atq"
+        ],
+        [
+          "vim /etc/chrony.conf",
+          "server servervm iburst",
+          "systemctl enable --now chronyd"
+        ],
+        [
+          "useradd -m harborremote",
+          "passwd harborremote",
+          "# enter: redhat",
+          "dnf -y install autofs",
+          "vim /etc/auto.master.d/harbor.autofs",
+          "/harbor/home /etc/auto.harbor",
+          "vim /etc/auto.harbor",
+          "harborremote -rw servervm:/exports/harborhome",
+          "systemctl enable --now autofs"
+        ],
+        [
+          "useradd -u 4551 -m maple551",
+          "passwd maple551",
+          "# enter: redhat"
+        ],
+        [
+          "mkdir -p /root/scoutte-files",
+          "find /opt/exam-e/find -user scoutte -mtime -1 -type f -exec cp --parents {} /root/scoutte-files \\;"
+        ],
+        [
+          "grep beacon /usr/share/dict/words > /root/beacon-lines"
+        ],
+        [
+          "tar -cjf /root/var-tmp-harbor.tar.bz2 /var/tmp"
+        ],
+        [
+          "vim /usr/local/bin/harbor-check",
+          "#!/bin/bash",
+          "> /root/harbor-services.txt",
+          "for svc in $(cat /usr/local/share/exam-e/services.lst); do",
+          "    systemctl is-active \"$svc\" >> /root/harbor-services.txt",
+          "done",
+          "chmod +x /usr/local/bin/harbor-check",
+          "/usr/local/bin/harbor-check"
+        ],
+        [
+          "fdisk /dev/sdb",
+          "# create a 640 MiB partition and change the type to Linux swap",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "blkid /dev/sdb1",
+          "vim /etc/fstab",
+          "UUID=<uuid> swap swap defaults 0 0"
+        ],
+        [
+          "lvextend -L 360M /dev/reviewvge/reviewe",
+          "resize2fs /dev/reviewvge/reviewe"
+        ],
+        [
+          "tuned-adm recommended",
+          "tuned-adm profile <recommended-profile>"
+        ]
+      ],
+      "checks": [
+        "getent hosts registry.harbor.lab",
+        "grep -R \"minlen\\|minclass\" /etc/security/pwquality.conf.d",
+        "atq",
+        "findmnt /mnt/reviewe",
+        "tuned-adm active"
+      ]
+    }
+  }
+}

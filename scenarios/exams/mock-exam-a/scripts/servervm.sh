@@ -3,7 +3,10 @@ set -euo pipefail
 
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
-mkdir -p /exports/direct /exports/autofs/field-guide
-echo "Reference bundle for Mock Exam A" > /exports/direct/README.txt
-echo "On-demand research notes" > /exports/autofs/field-guide/brief.txt
-exportfs -arv
+
+    mkdir -p /root/.repo-backup-server-exam-a
+    rhcsa_reset_repo_directory /root/.repo-backup-server-exam-a
+    mkdir -p /exports/researcha
+    printf 'exam a research
+' > /exports/researcha/brief.txt
+    exportfs -arv

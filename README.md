@@ -48,17 +48,12 @@ The project uses a fixed two-VM layout:
 
 The baseline preinstalls the RHCSA v9 toolchain broadly so labs and exams focus on execution rather than dependency setup. Scenarios are split into:
 
-* `scenarios/labs/<id>` for objective-focused labs
-* `scenarios/exams/<id>` for mock exams
+* `scenarios/labs/<id>` for focused practice labs
+* `scenarios/exams/<id>` for full mock exams
 
 Every run is reset from the `base-clean` snapshot, and each run generates one trainee-facing file under `.lab-state/runs/<run-id>/run-brief.txt`.
 
-Each scenario directory also includes:
-
-* `LAB_TASKS.md` with the lab task list, hints, and checks
-* `LAB_SOLUTION.md` with the lab command workflow and verification commands
-* `EXAM_TASKS.md` with the exam task list only
-* `EXAM_SOLUTION.md` with the exam command workflow and verification commands
+Lab directories now contain only `LAB_TASKS.md` and `LAB_SOLUTION.md`. Exam directories now contain only `EXAM_TASKS.md` and `EXAM_SOLUTION.md`.
 
 ### Quick start
 
@@ -77,7 +72,7 @@ Each scenario directory also includes:
 **3) Start an objective lab**
 
 ```powershell
-.\RHCSA.ps1 scenario start -Id essential-tools -Mode Lab
+.\RHCSA.ps1 scenario start -Id lab-01-networking-hostname -Mode Lab
 ```
 
 **4) Start a mock exam**
@@ -134,7 +129,7 @@ vagrant ssh-config servervm
 .\RHCSA.ps1 baseline up -NoProvision
 ```
 
-**Run a recovery-focused mock exam**
+**Run a 22-question recovery-focused mock exam**
 
 ```powershell
 .\RHCSA.ps1 scenario start -Id mock-exam-c -Mode Exam
@@ -196,3 +191,6 @@ This project is licensed under the [MIT License](./LICENSE).
 ## Author
 
 Created and maintained by Firas Ben Nacib - [bennacibfiras@gmail.com](mailto:bennacibfiras@gmail.com)
+
+
+The scenario bank now includes additional focused labs for umask, password aging, pwquality, default ACLs, at jobs, SSH keys, shell loops, and extra full mock exams.

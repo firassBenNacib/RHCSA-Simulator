@@ -1,22 +1,107 @@
-# Mock Exam B: System Review And Hardening - Exam Tasks
+# Mock Exam B: CoreMesh Service Review - Exam Tasks
 Scenario ID: mock-exam-b
 Mode: Exam
-Time limit: 120 minutes
-Objectives: storage-lvm, processes-logs-tuning, selinux-and-default-perms, essential-tools
+Time limit: 150 minutes
+Objectives: networking-and-firewall, users-sudo-ssh, storage-lvm, containers
 
-A redesigned RHCSA v9 mock exam focused on local storage, default permissions, SELinux labeling and port control, process tuning, logging, and file workflows.
+A second 22 task RHCSA style mock exam with distinct variables and combined tasks.
 
-## Task 01 - LVM Storage Layout (clientvm) - 20 pts
-Create volume group opsdata_vg with an XFS logical volume records mounted at /srv/records, an ext4 logical volume archive mounted at /mnt/archive, and a 256 MiB swap logical volume named reviewswap activated persistently.
+General notes
+- Unless a task states otherwise, make all changes persistent across reboots.
+- Use the exact scenario variables shown in each question.
+- Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Task 02 - Default Permissions (clientvm) - 20 pts
-Set the system-wide default umask to 027 and make /srv/reports collaborative for group reviewers only, with setgid for new files.
+## Question 01 - Client Network (clientvm)
+Configure networking on clientvm with the following settings:
 
-## Task 03 - Apache With SELinux (clientvm) - 20 pts
-Make Apache serve /srv/rhcsa/review-site/index.html at http://localhost:8089/ while SELinux remains enforcing, apply persistent file and port labeling, set httpd_can_network_connect persistently to on, and ensure the service starts at boot.
+IP ADDRESS: 192.168.122.27
+NETMASK: 255.255.255.0
+GATEWAY: 192.168.122.1
+DNS SERVER: 192.168.122.3
+HOSTNAME: clientvm.coremesh.lab
 
-## Task 04 - Processes Logs And Tuning (clientvm) - 20 pts
-Lower the priority of the seeded busy process, persist the journal, activate throughput-performance, and enable and start review-stamp.service.
+## Question 02 - Host Entry (clientvm)
+Add a persistent hosts entry so registry.coremesh.lab resolves to 192.168.122.3.
 
-## Task 05 - Archive And Log Filtering (clientvm) - 20 pts
-Create /root/reports-bundle.tar.gz from /srv/reports and write only the ALERT lines from /opt/rhcsa/workspaces/review-material/alerts.log to /root/alerts-only.log.
+## Question 03 - Client Repositories (clientvm)
+Configure a repository file on clientvm with the following settings:
+
+BaseOS: http://servervm/repo/BaseOS/
+AppStream: http://servervm/repo/AppStream/
+gpgcheck: disabled
+Repositories: enabled
+
+## Question 04 - Server Repositories (servervm)
+Configure the same repository file on servervm.
+
+BaseOS: http://servervm/repo/BaseOS/
+AppStream: http://servervm/repo/AppStream/
+gpgcheck: disabled
+Repositories: enabled
+
+## Question 05 - Apache Firewall SELinux (clientvm)
+Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8383.
+
+Requirements:
+- Start the service automatically at boot.
+- Open the port permanently in the firewall.
+- Allow the port in SELinux.
+- Do not alter the existing site content.
+
+## Question 06 - Users And Group (clientvm)
+Create group platformb and users mira and jonas with platformb as a supplementary group. Create user noel with /sbin/nologin and no platformb membership.
+
+## Question 07 - User Passwords (clientvm)
+Set the password of mira, jonas, and noel to redhat.
+
+## Question 08 - Delegated Sudo (clientvm)
+Allow members of platformb to run useradd with sudo, and allow mira to restart httpd with sudo and no password prompt.
+
+## Question 09 - Setgid Directory (clientvm)
+Create /srv/platformb with group ownership platformb, mode 2770, and inherited group ownership for new files.
+
+## Question 10 - Cron Logger (clientvm)
+Configure a cron job for mira that runs every minute and logs the message "CoreMesh exam".
+
+## Question 11 - Chrony Client (clientvm)
+Configure chrony on clientvm so it synchronizes only with servervm.
+
+## Question 12 - Autofs Map (clientvm)
+Create user meshremote with password redhat and configure autofs so that the following mount becomes available on demand:
+
+LOCAL PATH: /meshb/meshremote
+REMOTE EXPORT: servervm:/exports/meshb
+
+## Question 13 - Fixed UID User (clientvm)
+Create user cato421 with UID 4421 and set its password to redhat.
+
+## Question 14 - Find And Copy (clientvm)
+Find all files under /opt/exam-b/find that are owned by mira and were modified in the last 24 hours, then copy them to /root/mira-files while preserving the directory structure.
+
+## Question 15 - Grep Filter (clientvm)
+Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.
+
+## Question 16 - Archive (clientvm)
+Create /root/usr-local-b.tar.bz2 containing /usr/local.
+
+## Question 17 - Unit Status Script (clientvm)
+Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.
+
+## Question 18 - Swap Space (clientvm)
+On /dev/sdb, create a 600 MiB swap partition.
+
+Requirements:
+- Enable it immediately.
+- Configure it persistently.
+
+## Question 19 - Resize Existing LV (clientvm)
+Resize /dev/reviewvgb/reviewb so the final size is 300 MiB without losing data.
+
+## Question 20 - Tuned Profile (clientvm)
+Apply the recommended tuned profile and leave it active.
+
+## Question 21 - Rootless Container (clientvm)
+As user lyrab, build localhost/coremesh-web:latest from /opt/rhcsa/workspaces/exam-b/Containerfile, then run container pdfb with /opt/inb mounted to /data/input and /opt/outb mounted to /data/output.
+
+## Question 22 - Container Autostart (clientvm)
+Generate and enable a systemd user service for pdfb and enable lingering for lyrab.

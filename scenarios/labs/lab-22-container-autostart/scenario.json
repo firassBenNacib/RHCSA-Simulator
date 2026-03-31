@@ -1,0 +1,66 @@
+{
+  "id": "lab-22-container-autostart",
+  "title": "Lab 22: Container Autostart With Systemd",
+  "description": "Run a rootless container as a persistent user service",
+  "objective_tags": [
+    "containers"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 35,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "As user student22, run a container named mycontainer22 from localhost/text2pdf22:latest with /opt/file22 mounted to /data/input and /opt/processed22 mounted to /data/output.",
+        "Generate a systemd user unit for the container, enable it, and make it start automatically after reboot.",
+        "Enable lingering for student22."
+      ],
+      "hints": [
+        "Use podman generate systemd --files --new or podman generate systemd --new depending on the environment.",
+        "The user service must run without an active login session."
+      ],
+      "checks": [
+        "loginctl show-user student22 | grep Linger",
+        "runuser -l student22 -c \"systemctl --user status container-mycontainer22.service --no-pager\""
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "id student22 || useradd -m student22",
+          "passwd student22",
+          "# enter: redhat",
+          "su - student22",
+          "podman run -d --name mycontainer22 -v /opt/file22:/data/input:Z -v /opt/processed22:/data/output:Z localhost/text2pdf22:latest",
+          "mkdir -p ~/.config/systemd/user",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name mycontainer22 --files --new",
+          "systemctl --user daemon-reload",
+          "systemctl --user enable --now container-mycontainer22.service",
+          "exit"
+        ],
+        [
+          "loginctl enable-linger student22"
+        ],
+        [
+          "runuser -l student22 -c \"systemctl --user status container-mycontainer22.service --no-pager\""
+        ]
+      ]
+    }
+  }
+}

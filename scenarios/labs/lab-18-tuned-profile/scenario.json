@@ -1,0 +1,47 @@
+{
+  "id": "lab-18-tuned-profile",
+  "title": "Lab 18: Tuned Recommended Profile",
+  "description": "Apply the system recommended tuned profile",
+  "objective_tags": [
+    "processes-logs-tuning"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Apply the recommended tuned profile and leave it active after reboot."
+      ],
+      "hints": [
+        "Use tuned-adm recommended to see the target profile."
+      ],
+      "checks": [
+        "tuned-adm active",
+        "tuned-adm recommended"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "tuned-adm recommended",
+          "tuned-adm profile <recommended-profile>",
+          "tuned-adm active"
+        ]
+      ]
+    }
+  }
+}

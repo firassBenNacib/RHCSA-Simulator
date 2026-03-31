@@ -1,0 +1,69 @@
+{
+  "id": "lab-28-selinux-custom-docroot",
+  "title": "Lab 28: SELinux Custom Document Root",
+  "description": "Serve a custom document root on a nonstandard HTTP port while keeping SELinux enforcing",
+  "objective_tags": [
+    "selinux-and-default-perms",
+    "networking-and-firewall"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 35,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure Apache to serve content from /srv/lab28/site on TCP port 8088.",
+        "Keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.",
+        "Do not edit or remove /srv/lab28/site/index.html."
+      ],
+      "hints": [
+        "Create a dedicated configuration file in /etc/httpd/conf.d.",
+        "Use semanage fcontext and semanage port."
+      ],
+      "checks": [
+        "curl -s http://localhost:8088",
+        "semanage port -l | grep 8088",
+        "ls -Zd /srv/lab28/site"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02",
+        "Part 03"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "vim /etc/httpd/conf.d/lab28.conf",
+          "<VirtualHost *:8088>",
+          "    DocumentRoot /srv/lab28/site",
+          "    <Directory /srv/lab28/site>",
+          "        Require all granted",
+          "    </Directory>",
+          "</VirtualHost>"
+        ],
+        [
+          "semanage fcontext -a -t httpd_sys_content_t \"/srv/lab28/site(/.*)?\"",
+          "restorecon -Rv /srv/lab28/site",
+          "semanage port -a -t http_port_t -p tcp 8088",
+          "firewall-cmd --permanent --add-port=8088/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "curl -s http://localhost:8088"
+        ]
+      ]
+    }
+  }
+}

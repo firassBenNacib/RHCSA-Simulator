@@ -1,0 +1,42 @@
+{
+  "id": "lab-09-archive-bzip2",
+  "title": "Lab 09: Tar Archive With Bzip2",
+  "description": "Create a compressed archive in bzip2 format",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "vm_scripts": {},
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /root/myetcbackup.tar.bz2 containing the /etc directory."
+      ],
+      "hints": [
+        "Use tar with bzip2 compression directly."
+      ],
+      "checks": [
+        "tar -tjf /root/myetcbackup.tar.bz2 | head"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "tar -cjf /root/myetcbackup.tar.bz2 /etc"
+        ]
+      ]
+    }
+  }
+}

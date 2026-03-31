@@ -3,78 +3,109 @@ set -euo pipefail
 
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
-umount /srv/records >/dev/null 2>&1 || true
-umount /mnt/archive >/dev/null 2>&1 || true
-swapoff /dev/mapper/opsdata_vg-reviewswap >/dev/null 2>&1 || true
 
-sed -i '\#/srv/records#d' /etc/fstab
-sed -i '\#/mnt/archive#d' /etc/fstab
-sed -i '\#reviewswap#d' /etc/fstab
-
-lvremove -fy /dev/opsdata_vg/records >/dev/null 2>&1 || true
-lvremove -fy /dev/opsdata_vg/archive >/dev/null 2>&1 || true
-lvremove -fy /dev/opsdata_vg/reviewswap >/dev/null 2>&1 || true
-vgremove -fy opsdata_vg >/dev/null 2>&1 || true
-pvremove -ffy /dev/sdb /dev/sdc >/dev/null 2>&1 || true
-
-mkdir -p /srv/records /mnt/archive
-
-groupadd -f reviewers
-rm -f /root/reports-bundle.tar.gz /root/alerts-only.log
-rm -f /etc/profile.d/rhcsa-default-umask.sh /etc/profile.d/review-umask.sh
-
-mkdir -p /srv/reports /srv/rhcsa/review-site /opt/rhcsa/workspaces/review-material
-cat > /srv/reports/shift-summary.txt <<'EOF'
-Night review summary
+    mkdir -p /root/.repo-backup-client-exam-b
+    rhcsa_reset_repo_directory /root/.repo-backup-client-exam-b
+    hostnamectl set-hostname clientvm
+    rhcsa_remove_matching_lines 'registry.coremesh.lab' /etc/hosts
+    connection_name="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+    if [[ -n "${connection_name:-}" ]]; then
+      nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes >/dev/null 2>&1 || true
+      nmcli connection down "$connection_name" >/dev/null 2>&1 || true
+      nmcli connection up "$connection_name" >/dev/null 2>&1 || true
+    fi
+    python - <<'EOF'
+from pathlib import Path
+p = Path('/etc/httpd/conf/httpd.conf')
+text = p.read_text() if p.exists() else ''
+if text:
+    text = text.replace('Listen 8383', 'Listen 80')
+    p.write_text(text)
 EOF
-cat > /srv/reports/system-notes.conf <<'EOF'
-mode=review
+    systemctl disable --now httpd >/dev/null 2>&1 || true
+    firewall-cmd --permanent --remove-port=8383/tcp >/dev/null 2>&1 || true
+    firewall-cmd --reload >/dev/null 2>&1 || true
+    semanage port -d -t http_port_t -p tcp 8383 >/dev/null 2>&1 || true
+    for u in mira jonas noel cato421; do userdel -r "$u" >/dev/null 2>&1 || true; done
+    groupdel platformb >/dev/null 2>&1 || true
+    rm -f /etc/sudoers.d/platformb /etc/sudoers.d/mira-systemctl
+    rm -rf /srv/platformb /root/mira-files /opt/exam-b /meshb
+    rm -f /etc/auto.meshb /etc/auto.master.d/meshb.autofs /root/proto-lines /root/usr-local-b.tar.bz2 /usr/local/bin/corecheck
+    automount -u >/dev/null 2>&1 || true
+    systemctl disable --now autofs >/dev/null 2>&1 || true
+    userdel -r meshremote >/dev/null 2>&1 || true
+    id mira >/dev/null 2>&1 || useradd -m mira
+    mkdir -p /opt/exam-b/find/a /opt/exam-b/find/b/sub
+    printf 'b1
+' > /opt/exam-b/find/a/file1.txt
+    printf 'b2
+' > /opt/exam-b/find/b/sub/file2.txt
+    chown -R mira:mira /opt/exam-b/find
+    mkdir -p /usr/share/dict
+    cat > /usr/share/dict/words <<'EOF'
+protocol
+proton
+alpha
+prototype
 EOF
-cat > /srv/rhcsa/review-site/index.html <<'EOF'
-Operations review landing page
+    mkdir -p /usr/local/share/exam-b
+    cat > /usr/local/share/exam-b/units.lst <<'EOF'
+sshd.service
+firewalld.service
+chronyd.service
 EOF
-cat > /opt/rhcsa/workspaces/review-material/alerts.log <<'EOF'
-INFO baseline collected
-ALERT storage threshold warning
-INFO review package staged
-ALERT journal verification pending
+    crontab -r -u mira >/dev/null 2>&1 || true
+    systemctl disable --now chronyd >/dev/null 2>&1 || true
+    python - <<'EOF'
+from pathlib import Path
+p = Path('/etc/chrony.conf')
+lines = []
+for line in p.read_text().splitlines():
+    if line.strip().startswith('server ') or line.strip().startswith('pool '):
+        continue
+    lines.append(line)
+p.write_text('
+'.join(lines) + '
+')
 EOF
+    wipefs -a /dev/sdb >/dev/null 2>&1 || true
+    sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+umount /mnt/reviewb >/dev/null 2>&1 || true
+        sed -i '\#/mnt/reviewb#d' /etc/fstab
+        lvremove -fy /dev/reviewvgb/reviewb >/dev/null 2>&1 || true
+        vgremove -fy reviewvgb >/dev/null 2>&1 || true
+        pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
+        wipefs -a /dev/sdc >/dev/null 2>&1 || true
+        sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+        printf 'label: gpt
+,700M,L
+' | sfdisk /dev/sdc >/dev/null 2>&1
+        partprobe /dev/sdc >/dev/null 2>&1 || true
+        pvcreate -ff -y /dev/sdc1 >/dev/null 2>&1
+        vgcreate reviewvgb /dev/sdc1 >/dev/null 2>&1
+        lvcreate -n reviewb -L 160M reviewvgb >/dev/null 2>&1
+        mkfs.ext4 -F /dev/reviewvgb/reviewb >/dev/null 2>&1
+        mkdir -p /mnt/reviewb
+        mount /dev/reviewvgb/reviewb /mnt/reviewb
+        printf 'exam-b seed data
+' > /mnt/reviewb/keep.txt
+        uuid="$(blkid -s UUID -o value /dev/reviewvgb/reviewb)"
+        printf 'UUID=%s /mnt/reviewb ext4 defaults 0 0
+' "$uuid" >> /etc/fstab
 
-chown root:root /srv/reports
-chmod 0755 /srv/reports
-
-chcon -R -t user_home_t /srv/rhcsa/review-site >/dev/null 2>&1 || true
-semanage port -d -t http_port_t -p tcp 8089 >/dev/null 2>&1 || true
-setsebool -P httpd_can_network_connect off >/dev/null 2>&1 || true
-sed -i 's/^Listen .*/Listen 80/' /etc/httpd/conf/httpd.conf
-sed -i 's#^DocumentRoot ".*"#DocumentRoot "/var/www/html"#' /etc/httpd/conf/httpd.conf
-cat > /etc/httpd/conf.d/rhcsa-review.conf <<'EOF'
-<Directory "/var/www/html">
-    Require all granted
-</Directory>
+    podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
+    id lyrab >/dev/null 2>&1 || useradd -m lyrab
+runuser -l lyrab -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+    mkdir -p /opt/inb /opt/outb /opt/rhcsa/workspaces/exam-b/site-content
+    cat > /opt/rhcsa/workspaces/exam-b/site-content/index.html <<'EOF'
+exam b container
 EOF
-systemctl disable --now httpd >/dev/null 2>&1 || true
-
-rm -f /etc/systemd/system/review-stamp.service
-cat > /etc/systemd/system/review-stamp.service <<'EOF'
-[Unit]
-Description=Write the review readiness stamp
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/touch /var/tmp/review-ready.stamp
-
-[Install]
-WantedBy=multi-user.target
+    cat > /opt/rhcsa/workspaces/exam-b/Containerfile <<'EOF'
+FROM localhost/rhcsa-httpd-base:latest
+COPY site-content/ /var/www/html/
 EOF
-
-systemctl daemon-reload
-systemctl disable --now review-stamp.service >/dev/null 2>&1 || true
-rm -f /var/tmp/review-ready.stamp
-
-pkill -f 'yes >/dev/null' >/dev/null 2>&1 || true
-nohup bash -c 'yes >/dev/null' >/opt/rhcsa/workspaces/review-material/busy.log 2>&1 &
-
-rm -rf /var/log/journal
-sed -i '/^Storage=/d' /etc/systemd/journald.conf
-tuned-adm profile balanced >/dev/null 2>&1 || true
+    chown -R lyrab:lyrab /opt/rhcsa/workspaces/exam-b /opt/inb /opt/outb
+    runuser -l lyrab -c 'podman rm -f pdfb >/dev/null 2>&1 || true'
+    runuser -l lyrab -c 'podman rmi -f localhost/coremesh-web:latest >/dev/null 2>&1 || true'
+    rm -rf /home/lyrab/.config/systemd/user
+    loginctl disable-linger lyrab >/dev/null 2>&1 || true

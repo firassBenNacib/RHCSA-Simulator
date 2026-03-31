@@ -1,0 +1,59 @@
+{
+  "id": "lab-10-acl-permissions",
+  "title": "Lab 10: ACL And Permissions",
+  "description": "Apply fine grained access with POSIX ACLs",
+  "objective_tags": [
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Copy /etc/fstab to /var/tmp/fstab-acl.",
+        "Set owner and group to root:root, remove all execute bits, give natacl read-write, deny haracl all access, and allow others read only."
+      ],
+      "hints": [
+        "Create the users natacl and haracl if they are missing.",
+        "Use setfacl for the named user entries."
+      ],
+      "checks": [
+        "getfacl /var/tmp/fstab-acl",
+        "ls -l /var/tmp/fstab-acl"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "id natacl || useradd -m natacl",
+          "id haracl || useradd -m haracl",
+          "cp /etc/fstab /var/tmp/fstab-acl",
+          "chown root:root /var/tmp/fstab-acl",
+          "chmod 644 /var/tmp/fstab-acl"
+        ],
+        [
+          "setfacl -m u:natacl:rw- /var/tmp/fstab-acl",
+          "setfacl -m u:haracl:--- /var/tmp/fstab-acl"
+        ],
+        [
+          "getfacl /var/tmp/fstab-acl"
+        ]
+      ]
+    }
+  }
+}

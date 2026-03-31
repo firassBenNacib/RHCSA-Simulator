@@ -1,0 +1,50 @@
+{
+  "id": "lab-12-find-copy-preserve",
+  "title": "Lab 12: Find And Copy With Structure",
+  "description": "Locate recent files owned by a user and copy them while preserving directories",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Find all files owned by natfind and modified in the last 24 hours under /opt/lab12/source.",
+        "Copy them to /root/natfind-files and preserve the original directory structure."
+      ],
+      "hints": [
+        "Use find with a time test and --parents or an equivalent method.",
+        "Only copy regular files."
+      ],
+      "checks": [
+        "find /root/natfind-files -type f | sort"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "find /opt/lab12/source -type f -user natfind -mtime -1 -exec cp --parents {} /root/natfind-files \\;"
+        ],
+        [
+          "find /root/natfind-files -type f | sort"
+        ]
+      ]
+    }
+  }
+}

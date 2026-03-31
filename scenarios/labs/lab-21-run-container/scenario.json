@@ -1,0 +1,53 @@
+{
+  "id": "lab-21-run-container",
+  "title": "Lab 21: Run A Container",
+  "description": "Run a container from a prepared local image with bind mounts",
+  "objective_tags": [
+    "containers"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest.",
+        "Bind mount /opt/file21 to /data/input and /opt/processed21 to /data/output."
+      ],
+      "hints": [
+        "The local image for this lab is prebuilt.",
+        "Use podman run with two bind mounts."
+      ],
+      "checks": [
+        "runuser -l runner21 -c \"podman ps --format \"{{.Names}}\"\""
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "id runner21 || useradd -m runner21",
+          "passwd runner21",
+          "# enter: redhat",
+          "su - runner21",
+          "podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest",
+          "podman ps",
+          "exit"
+        ]
+      ]
+    }
+  }
+}

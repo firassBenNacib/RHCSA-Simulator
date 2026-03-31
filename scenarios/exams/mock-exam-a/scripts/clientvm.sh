@@ -3,42 +3,117 @@ set -euo pipefail
 
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
-systemctl disable --now chronyd >/dev/null 2>&1 || true
-sed -i '/^server /d;/^pool /d' /etc/chrony.conf
 
-umount /srv/reference >/dev/null 2>&1 || true
-automount -u >/dev/null 2>&1 || true
-rm -rf /research /srv/reference
-mkdir -p /research /srv/reference
-rhcsa_remove_matching_lines '/srv/reference' /etc/fstab
-rm -f /etc/auto.master.d/rhcsa.research.autofs /etc/auto.research
-systemctl disable --now autofs >/dev/null 2>&1 || true
+    rhcsa_configure_password_recovery disable
+    rhcsa_configure_password_recovery enable
+    mkdir -p /root/.repo-backup-client-exam-a
+    rhcsa_reset_repo_directory /root/.repo-backup-client-exam-a
+    hostnamectl set-hostname clientvm
+    rhcsa_remove_matching_lines 'api.opsedge.lab' /etc/hosts
+    connection_name="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
+    if [[ -n "${connection_name:-}" ]]; then
+      nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.2/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes >/dev/null 2>&1 || true
+      nmcli connection down "$connection_name" >/dev/null 2>&1 || true
+      nmcli connection up "$connection_name" >/dev/null 2>&1 || true
+    fi
+    python - <<'EOF'
+from pathlib import Path
+p = Path('/etc/httpd/conf/httpd.conf')
+text = p.read_text() if p.exists() else ''
+for old in ['Listen 8282','Listen 80']:
+    pass
+if text:
+    text = text.replace('Listen 8282', 'Listen 80')
+    p.write_text(text)
+EOF
+    systemctl disable --now httpd >/dev/null 2>&1 || true
+    firewall-cmd --permanent --remove-port=8282/tcp >/dev/null 2>&1 || true
+    firewall-cmd --reload >/dev/null 2>&1 || true
+    semanage port -d -t http_port_t -p tcp 8282 >/dev/null 2>&1 || true
+    for u in violet amber frost ash420; do userdel -r "$u" >/dev/null 2>&1 || true; done
+    groupdel sysopsa >/dev/null 2>&1 || true
+    rm -f /etc/sudoers.d/sysopsa /etc/sudoers.d/violet-passwd
+    rm -rf /srv/sysopsa /root/amber-files /opt/exam-a /researcha
+    rm -f /etc/auto.opsa /etc/auto.master.d/opsa.autofs /root/delta-lines /root/etc-opsa.tar.bz2 /usr/local/bin/opsa-report
+    automount -u >/dev/null 2>&1 || true
+    systemctl disable --now autofs >/dev/null 2>&1 || true
+    userdel -r netopsa >/dev/null 2>&1 || true
+    id amber >/dev/null 2>&1 || useradd -m amber
+    id violet >/dev/null 2>&1 || useradd -m violet
+    id frost >/dev/null 2>&1 || useradd -m -s /sbin/nologin frost
+    mkdir -p /opt/exam-a/find/a /opt/exam-a/find/b/sub
+    printf 'a1
+' > /opt/exam-a/find/a/file1.txt
+    printf 'a2
+' > /opt/exam-a/find/b/sub/file2.txt
+    chown -R amber:amber /opt/exam-a/find
+    mkdir -p /usr/share/dict
+    cat > /usr/share/dict/words <<'EOF'
+which
+richter
+delta
+redlich
+EOF
+    rm -f /root/delta-lines
+    mkdir -p /usr/local/share/exam-a
+    cat > /usr/local/share/exam-a/services.lst <<'EOF'
+sshd
+firewalld
+chronyd
+EOF
+    rm -f /usr/local/bin/opsa-report /root/opsa-services.txt
+    crontab -r -u amber >/dev/null 2>&1 || true
+    systemctl disable --now chronyd >/dev/null 2>&1 || true
+    python - <<'EOF'
+from pathlib import Path
+p = Path('/etc/chrony.conf')
+lines = []
+for line in p.read_text().splitlines():
+    if line.strip().startswith('server ') or line.strip().startswith('pool '):
+        continue
+    lines.append(line)
+p.write_text('
+'.join(lines) + '
+')
+EOF
+    wipefs -a /dev/sdb >/dev/null 2>&1 || true
+    sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+umount /mnt/reviewa >/dev/null 2>&1 || true
+        sed -i '\#/mnt/reviewa#d' /etc/fstab
+        lvremove -fy /dev/reviewvga/reviewa >/dev/null 2>&1 || true
+        vgremove -fy reviewvga >/dev/null 2>&1 || true
+        pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
+        wipefs -a /dev/sdc >/dev/null 2>&1 || true
+        sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+        printf 'label: gpt
+,700M,L
+' | sfdisk /dev/sdc >/dev/null 2>&1
+        partprobe /dev/sdc >/dev/null 2>&1 || true
+        pvcreate -ff -y /dev/sdc1 >/dev/null 2>&1
+        vgcreate reviewvga /dev/sdc1 >/dev/null 2>&1
+        lvcreate -n reviewa -L 160M reviewvga >/dev/null 2>&1
+        mkfs.ext4 -F /dev/reviewvga/reviewa >/dev/null 2>&1
+        mkdir -p /mnt/reviewa
+        mount /dev/reviewvga/reviewa /mnt/reviewa
+        printf 'exam-a seed data
+' > /mnt/reviewa/keep.txt
+        uuid="$(blkid -s UUID -o value /dev/reviewvga/reviewa)"
+        printf 'UUID=%s /mnt/reviewa ext4 defaults 0 0
+' "$uuid" >> /etc/fstab
 
-userdel -r orchid >/dev/null 2>&1 || true
-groupdel platformops >/dev/null 2>&1 || true
-rm -f /etc/sudoers.d/platformops-httpd
-rm -rf /home/orchid
-rhcsa_remove_matching_lines 'internal-api.edge.lab' /etc/hosts
-rm -f /home/orchid/edge-brief.txt
-
-mkdir -p /home/admin/.ssh
-if [[ ! -f /home/admin/.ssh/id_rsa ]]; then
-  ssh-keygen -q -t rsa -N '' -f /home/admin/.ssh/id_rsa
-fi
-chown -R admin:admin /home/admin/.ssh
-chmod 700 /home/admin/.ssh
-
-hostnamectl set-hostname clientvm
-mkdir -p /var/www/html
-echo "Edge practice portal" > /var/www/html/index.html
-if [[ -f /etc/httpd/conf/httpd.conf ]]; then
-  sed -i 's/^Listen .*/Listen 80/' /etc/httpd/conf/httpd.conf
-fi
-systemctl disable --now httpd >/dev/null 2>&1 || true
-firewall-cmd --permanent --remove-port=8088/tcp >/dev/null 2>&1 || true
-firewall-cmd --reload >/dev/null 2>&1 || true
-
-connection_name="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-if [[ -n "${connection_name:-}" ]]; then
-  nmcli connection modify "$connection_name" -ipv4.routes "203.0.113.0/24 192.168.122.3" >/dev/null 2>&1 || true
-fi
+    podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
+    id oriona >/dev/null 2>&1 || useradd -m oriona
+runuser -l oriona -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+    mkdir -p /opt/ina /opt/outa /opt/rhcsa/workspaces/exam-a/site-content
+    cat > /opt/rhcsa/workspaces/exam-a/site-content/index.html <<'EOF'
+exam a container
+EOF
+    cat > /opt/rhcsa/workspaces/exam-a/Containerfile <<'EOF'
+FROM localhost/rhcsa-httpd-base:latest
+COPY site-content/ /var/www/html/
+EOF
+    chown -R oriona:oriona /opt/rhcsa/workspaces/exam-a /opt/ina /opt/outa
+    runuser -l oriona -c 'podman rm -f pdfa >/dev/null 2>&1 || true'
+    runuser -l oriona -c 'podman rmi -f localhost/opsa-web:latest >/dev/null 2>&1 || true'
+    rm -rf /home/oriona/.config/systemd/user
+    loginctl disable-linger oriona >/dev/null 2>&1 || true

@@ -1,0 +1,55 @@
+{
+  "id": "lab-07-cron-logger",
+  "title": "Lab 07: Cron Scheduling",
+  "description": "Schedule a recurring task for a specific user",
+  "objective_tags": [
+    "software-scheduling-time"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create user natcron if it does not exist and set its password to redhat.",
+        "Configure a cron job for natcron that runs every 2 minutes and logs the message \"Lab 07 running\" with logger."
+      ],
+      "hints": [
+        "Use crontab -e -u natcron.",
+        "Leave crond enabled and running."
+      ],
+      "checks": [
+        "crontab -l -u natcron",
+        "systemctl status crond --no-pager"
+      ],
+      "solution_outline": [
+        "Use persistent configuration only."
+      ],
+      "task_titles": [
+        "Part 01",
+        "Part 02"
+      ],
+      "task_points": [],
+      "solution_commands": [
+        [
+          "id natcron || useradd -m natcron",
+          "passwd natcron",
+          "# enter: redhat"
+        ],
+        [
+          "crontab -e -u natcron",
+          "*/2 * * * * logger \"Lab 07 running\"",
+          "systemctl enable --now crond"
+        ]
+      ]
+    }
+  }
+}

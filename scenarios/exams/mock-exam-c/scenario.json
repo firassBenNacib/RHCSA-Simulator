@@ -1,196 +1,242 @@
 {
   "id": "mock-exam-c",
-  "title": "Mock Exam C: Recovery And Automation",
-  "description": "A redesigned RHCSA v9 mock exam focused on password recovery, shell scripting, scheduling, and rootless container management.",
+  "title": "Mock Exam C: NorthStar Recovery Review",
+  "description": "A third 22 task RHCSA style mock exam with another variable set and recovery workflow",
   "objective_tags": [
     "boot-and-recovery",
-    "software-scheduling-time",
-    "shell-scripting",
+    "selinux-and-default-perms",
+    "storage-lvm",
     "containers"
   ],
   "supported_modes": [
-    "lab",
     "exam"
   ],
-  "time_limit_minutes": 120,
+  "time_limit_minutes": 150,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
     "password_recovery": true,
     "requires_servervm": true
   },
   "content": {
-    "lab": {
-      "tasks": [
-        "Recover root access on clientvm through the bootloader recovery path, return the system to a normal boot state, and leave Vagrant SSH access working again after the reboot.",
-        "Enable atd and schedule a one-time job that writes automation window ready to /root/automation-at.txt.",
-        "Create an executable script /usr/local/bin/service-audit that reads /opt/rhcsa/workspaces/automation/services.lst and writes /root/service-audit.txt with one line per service in the format service_name:state where state is active, inactive, or missing. Run it successfully.",
-        "Schedule root cron to run /usr/local/bin/service-audit hourly at minute 12 and append the output to /var/log/service-audit.log.",
-        "As user admin, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into the rootless image store if localhost/rhcsa-httpd-base:latest is missing, build a rootless image named localhost/briefing-web:latest from /opt/rhcsa/workspaces/automation-container/Containerfile, run container briefing-web on host port 8090 with the provided site-content bind mount using correct SELinux handling, generate a user systemd unit, and configure it to start automatically after reboot."
-      ],
-      "task_titles": [
-        "Boot Recovery",
-        "One-Time At Job",
-        "Service Audit Script",
-        "Root Cron Automation",
-        "Rootless Container Service"
-      ],
-      "task_points": [
-        20,
-        15,
-        20,
-        15,
-        30
-      ],
-      "solution_commands": [
-        [
-          "# Reboot clientvm and stop at the GRUB menu.",
-          "# Edit the active kernel entry, append rd.break, then boot with Ctrl+x.",
-          "mount -o remount,rw /sysroot",
-          "chroot /sysroot",
-          "passwd root",
-          "touch /.autorelabel",
-          "exit",
-          "exit",
-          "# Let the relabel complete and log in normally as root with the new password.",
-          "systemctl get-default"
-        ],
-        [
-          "systemctl enable --now atd",
-          "echo 'echo automation window ready > /root/automation-at.txt' | at now + 5 minutes",
-          "atq"
-        ],
-        [
-          "cat > /usr/local/bin/service-audit <<'EOF'",
-          "#!/usr/bin/env bash",
-          "set -euo pipefail",
-          "input=/opt/rhcsa/workspaces/automation/services.lst",
-          ": > /root/service-audit.txt",
-          "while IFS= read -r service; do",
-          "  [[ -z \"$service\" ]] && continue",
-          "  if systemctl list-unit-files --type=service --all | awk \"{print \\$1}\" | grep -qx \"${service}.service\"; then",
-          "    state=$(systemctl is-active \"$service\" 2>/dev/null || true)",
-          "    [[ \"$state\" == \"active\" ]] || state=inactive",
-          "  else",
-          "    state=missing",
-          "  fi",
-          "  printf '%s:%s\n' \"$service\" \"$state\" >> /root/service-audit.txt",
-          "done < \"$input\"",
-          "EOF",
-          "chmod +x /usr/local/bin/service-audit",
-          "/usr/local/bin/service-audit"
-        ],
-        [
-          "(crontab -l 2>/dev/null | grep -v '/usr/local/bin/service-audit'; echo '12 * * * * /usr/local/bin/service-audit >> /var/log/service-audit.log') | crontab -"
-        ],
-        [
-          "loginctl enable-linger admin",
-          "runuser -l admin -c 'podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'",
-          "runuser -l admin -c 'podman build -t localhost/briefing-web:latest /opt/rhcsa/workspaces/automation-container'",
-          "runuser -l admin -c 'podman rm -f briefing-web >/dev/null 2>&1 || true'",
-          "runuser -l admin -c 'podman run -d --name briefing-web -p 8090:80 -v /opt/rhcsa/workspaces/automation-container/site-content:/var/www/html:Z localhost/briefing-web:latest'",
-          "runuser -l admin -c 'mkdir -p ~/.config/systemd/user && cd ~/.config/systemd/user && podman generate systemd --name briefing-web --files --new'",
-          "runuser -l admin -c 'systemctl --user daemon-reload'",
-          "runuser -l admin -c 'systemctl --user enable --now container-briefing-web.service'"
-        ]
-      ],
-      "hints": [
-        "Complete the recovery first so normal host-side SSH returns before you finish the automation tasks.",
-        "at is already installed in the clean baseline; you only need to enable atd and submit the job.",
-        "The shell script should use a loop and a conditional branch so missing services are reported cleanly.",
-        "For the rootless container task, load the local base image as admin first if it is not already present, and remember both the user service and user lingering requirement."
-      ],
-      "checks": [
-        "vagrant ssh clientvm",
-        "systemctl status atd --no-pager",
-        "cat /root/service-audit.txt",
-        "crontab -l",
-        "runuser -l admin -c 'podman ps --all'",
-        "runuser -l admin -c 'systemctl --user status container-briefing-web.service --no-pager'",
-        "curl http://localhost:8090/"
-      ],
-      "solution_outline": [
-        "Use the full bootloader recovery flow, then reboot normally so the SSH key restoration hook can run.",
-        "Enable atd, then schedule the one-time at job before moving on to the script work.",
-        "Implement the shell script with a loop around service names and use systemctl is-active or equivalent logic to distinguish active, inactive, and missing services.",
-        "Create the cron entry for root, then load the local base image as admin if needed, build and run the rootless container, generate the unit, reload the user daemon, enable lingering, and start the service."
-      ]
-    },
     "exam": {
       "tasks": [
-        "Recover root access on clientvm through the bootloader recovery path and return the system to a normal boot with host-side Vagrant SSH working again.",
-        "Enable atd and schedule a one-time job that writes automation window ready to /root/automation-at.txt.",
-        "Create /usr/local/bin/service-audit to read /opt/rhcsa/workspaces/automation/services.lst and write /root/service-audit.txt with lines in the format service_name:state where state is active, inactive, or missing. Run it successfully.",
-        "Schedule root cron to run /usr/local/bin/service-audit hourly at minute 12 and append the output to /var/log/service-audit.log.",
-        "As user admin, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar if localhost/rhcsa-httpd-base:latest is missing, build localhost/briefing-web:latest from /opt/rhcsa/workspaces/automation-container/Containerfile, run rootless container briefing-web on port 8090 with the provided bind mount, generate a user systemd unit, and configure it to start after reboot."
+        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.northstar.lab",
+        "Add a persistent hosts entry so vault.northstar.lab resolves to 192.168.122.3.",
+        "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8484.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Allow the port in SELinux.\n- Do not alter the existing site content.",
+        "Create group infrac and users talia and ren with infrac as a supplementary group. Create user sage with /sbin/nologin and no infrac membership.",
+        "Set the password of talia, ren, and sage to redhat.",
+        "Allow members of infrac to run useradd with sudo, and allow talia to run passwd for other users without a sudo password prompt.",
+        "Create /srv/infrac with group ownership infrac, mode 2770, and inherited group ownership for new files.",
+        "Configure a cron job for ren that runs every 5 minutes and logs the message \"NorthStar exam\".",
+        "Configure chrony on clientvm so it synchronizes only with servervm.",
+        "Create user remote63 with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /bluec/remote63\nREMOTE EXPORT: servervm:/exports/bluec",
+        "Create user kian431 with UID 4431 and set its password to redhat.",
+        "Find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.",
+        "Extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.",
+        "Create /root/etc-c.tar.bz2 containing /etc.",
+        "Create executable script /usr/local/bin/northcheck that writes the active state of each service listed in /usr/local/share/exam-c/check.lst to /root/north-services.txt.",
+        "On /dev/sdb, create a 700 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "Resize /dev/reviewvgc/reviewc so the final size is 340 MiB without losing data.",
+        "As user eirac, build localhost/northstar-web:latest from /opt/rhcsa/workspaces/exam-c/Containerfile, then run container pdfc with /opt/inc mounted to /data/input and /opt/outc mounted to /data/output.",
+        "Generate and enable a systemd user service for pdfc and enable lingering for eirac."
       ],
       "task_titles": [
-        "Boot Recovery",
-        "One-Time At Job",
-        "Service Audit Script",
-        "Root Cron Automation",
-        "Rootless Container Service"
+        "Root Recovery",
+        "Client Network",
+        "Host Entry",
+        "Client Repositories",
+        "Server Repositories",
+        "Apache Firewall SELinux",
+        "Users And Group",
+        "User Passwords",
+        "Delegated Sudo",
+        "Setgid Directory",
+        "Cron Logger",
+        "Chrony Client",
+        "Autofs Map",
+        "Fixed UID User",
+        "Find And Copy",
+        "Grep Filter",
+        "Archive",
+        "Service Status Script",
+        "Swap Space",
+        "Resize Existing LV",
+        "Rootless Container",
+        "Container Autostart"
       ],
-      "task_points": [
-        20,
-        15,
-        20,
-        15,
-        30
-      ],
+      "task_points": [],
       "solution_commands": [
         [
-          "# Reboot clientvm and stop at the GRUB menu.",
-          "# Edit the active kernel entry, append rd.break, then boot with Ctrl+x.",
+          "# At the boot menu, edit the kernel line and append rd.break",
           "mount -o remount,rw /sysroot",
           "chroot /sysroot",
           "passwd root",
+          "# enter: redhat",
           "touch /.autorelabel",
           "exit",
+          "exit"
+        ],
+        [
+          "nmcli connection show",
+          "nmcli connection modify \"<active-connection>\" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"<active-connection>\"",
+          "nmcli connection up \"<active-connection>\"",
+          "hostnamectl set-hostname clientvm.northstar.lab"
+        ],
+        [
+          "vim /etc/hosts",
+          "192.168.122.3 vault.northstar.lab"
+        ],
+        [
+          "vim /etc/yum.repos.d/northstar.repo",
+          "[northstar-baseos]",
+          "name=NorthStar BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[northstar-appstream]",
+          "name=NorthStar AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0"
+        ],
+        [
+          "ssh admin@servervm",
+          "sudo -i",
+          "vim /etc/yum.repos.d/northstar.repo",
+          "[northstar-baseos]",
+          "name=NorthStar BaseOS",
+          "baseurl=http://servervm/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[northstar-appstream]",
+          "name=NorthStar AppStream",
+          "baseurl=http://servervm/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
           "exit",
-          "# Let the relabel complete and log in normally as root with the new password.",
-          "systemctl get-default"
+          "exit"
         ],
         [
-          "systemctl enable --now atd",
-          "echo 'echo automation window ready > /root/automation-at.txt' | at now + 5 minutes",
-          "atq"
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8484",
+          "systemctl enable --now httpd",
+          "firewall-cmd --permanent --add-port=8484/tcp",
+          "firewall-cmd --reload",
+          "semanage port -a -t http_port_t -p tcp 8484",
+          "systemctl restart httpd"
         ],
         [
-          "cat > /usr/local/bin/service-audit <<'EOF'",
+          "groupadd infrac",
+          "useradd -m talia",
+          "useradd -m ren",
+          "useradd -m -s /sbin/nologin sage",
+          "usermod -aG infrac talia",
+          "usermod -aG infrac ren"
+        ],
+        [
+          "passwd talia",
+          "# enter: redhat",
+          "passwd ren",
+          "# enter: redhat",
+          "passwd sage",
+          "# enter: redhat"
+        ],
+        [
+          "visudo -f /etc/sudoers.d/infrac",
+          "%infrac ALL=(root) /usr/sbin/useradd",
+          "visudo -f /etc/sudoers.d/talia-passwd",
+          "talia ALL=(root) NOPASSWD: /usr/bin/passwd"
+        ],
+        [
+          "mkdir -p /srv/infrac",
+          "chgrp infrac /srv/infrac",
+          "chmod 2770 /srv/infrac"
+        ],
+        [
+          "crontab -e -u ren",
+          "*/5 * * * * logger \"NorthStar exam\""
+        ],
+        [
+          "vim /etc/chrony.conf",
+          "server servervm iburst",
+          "# remove any other server or pool lines",
+          "systemctl enable --now chronyd"
+        ],
+        [
+          "useradd -m remote63",
+          "passwd remote63",
+          "# enter: redhat",
+          "vim /etc/auto.bluec",
+          "remote63 -rw,sync servervm:/exports/bluec",
+          "vim /etc/auto.master.d/bluec.autofs",
+          "/bluec /etc/auto.bluec",
+          "systemctl enable --now autofs"
+        ],
+        [
+          "useradd -u 4431 kian431",
+          "passwd kian431",
+          "# enter: redhat"
+        ],
+        [
+          "find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/ren-files \\;"
+        ],
+        [
+          "grep orbit /usr/share/dict/words > /root/orbit-lines"
+        ],
+        [
+          "tar -cjf /root/etc-c.tar.bz2 /etc"
+        ],
+        [
+          "vim /usr/local/bin/northcheck",
           "#!/usr/bin/env bash",
-          "set -euo pipefail",
-          "input=/opt/rhcsa/workspaces/automation/services.lst",
-          ": > /root/service-audit.txt",
-          "while IFS= read -r service; do",
-          "  [[ -z \"$service\" ]] && continue",
-          "  if systemctl list-unit-files --type=service --all | awk \"{print \\$1}\" | grep -qx \"${service}.service\"; then",
-          "    state=$(systemctl is-active \"$service\" 2>/dev/null || true)",
-          "    [[ \"$state\" == \"active\" ]] || state=inactive",
-          "  else",
-          "    state=missing",
-          "  fi",
-          "  printf '%s:%s\n' \"$service\" \"$state\" >> /root/service-audit.txt",
-          "done < \"$input\"",
-          "EOF",
-          "chmod +x /usr/local/bin/service-audit",
-          "/usr/local/bin/service-audit"
+          "while read -r svc; do",
+          "  systemctl is-active \"$svc\" >> /root/north-services.txt",
+          "done < /usr/local/share/exam-c/check.lst",
+          "chmod 755 /usr/local/bin/northcheck",
+          "/usr/local/bin/northcheck"
         ],
         [
-          "(crontab -l 2>/dev/null | grep -v '/usr/local/bin/service-audit'; echo '12 * * * * /usr/local/bin/service-audit >> /var/log/service-audit.log') | crontab -"
+          "fdisk /dev/sdb",
+          "# create a 700M GPT partition and set the type to Linux swap",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "blkid /dev/sdb1",
+          "vim /etc/fstab",
+          "UUID=<uuid-of-sdb1> swap swap defaults 0 0"
         ],
         [
-          "loginctl enable-linger admin",
-          "runuser -l admin -c 'podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'",
-          "runuser -l admin -c 'podman build -t localhost/briefing-web:latest /opt/rhcsa/workspaces/automation-container'",
-          "runuser -l admin -c 'podman rm -f briefing-web >/dev/null 2>&1 || true'",
-          "runuser -l admin -c 'podman run -d --name briefing-web -p 8090:80 -v /opt/rhcsa/workspaces/automation-container/site-content:/var/www/html:Z localhost/briefing-web:latest'",
-          "runuser -l admin -c 'mkdir -p ~/.config/systemd/user && cd ~/.config/systemd/user && podman generate systemd --name briefing-web --files --new'",
-          "runuser -l admin -c 'systemctl --user daemon-reload'",
-          "runuser -l admin -c 'systemctl --user enable --now container-briefing-web.service'"
+          "lvextend -L 340M /dev/reviewvgc/reviewc",
+          "resize2fs /dev/reviewvgc/reviewc"
+        ],
+        [
+          "su - eirac",
+          "cd /opt/rhcsa/workspaces/exam-c",
+          "podman build -t localhost/northstar-web:latest .",
+          "podman run -d --name pdfc -v /opt/inc:/data/input:Z -v /opt/outc:/data/output:Z localhost/northstar-web:latest",
+          "exit"
+        ],
+        [
+          "su - eirac",
+          "mkdir -p ~/.config/systemd/user",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name pdfc --files --new",
+          "systemctl --user daemon-reload",
+          "systemctl --user enable --now container-pdfc.service",
+          "exit",
+          "loginctl enable-linger eirac"
         ]
-      ]
+      ],
+      "checks": []
     }
   }
 }
