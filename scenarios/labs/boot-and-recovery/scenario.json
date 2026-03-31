@@ -1,0 +1,110 @@
+{
+  "id": "boot-and-recovery",
+  "title": "Boot Targets And Root Recovery",
+  "description": "Practice RHCSA v9 boot target changes and root password recovery from the bootloader path.",
+  "objective_tags": [
+    "boot-and-recovery"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 45,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": true,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Recover administrative access to clientvm by resetting the root password from the GRUB recovery path.",
+        "Return the system to a normal boot state and confirm the default target is still multi-user.target or graphical.target.",
+        "Confirm Vagrant SSH access to clientvm works again after the successful normal reboot."
+      ],
+      "task_titles": [
+        "Root Password Reset",
+        "Normal Boot State",
+        "Host SSH Access"
+      ],
+      "task_points": [
+        20,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "# Reboot clientvm and stop at the GRUB menu.",
+          "# Edit the active kernel entry, append rd.break, then boot with Ctrl+x.",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "touch /.autorelabel",
+          "exit",
+          "exit"
+        ],
+        [
+          "# Let the relabel complete and log in normally as root with the new password.",
+          "systemctl get-default"
+        ],
+        [
+          "# Run this from the host after the normal reboot finishes.",
+          "vagrant ssh clientvm"
+        ]
+      ],
+      "hints": [
+        "A standard RHCSA flow uses rd.break and a writable sysroot.",
+        "If you change the root password from the emergency path, remember the SELinux relabel step if your method requires it."
+      ],
+      "checks": [
+        "From the host: vagrant ssh clientvm",
+        "Inside clientvm: passwd -S root",
+        "Inside clientvm: systemctl get-default"
+      ],
+      "solution_outline": [
+        "Interrupt GRUB, boot into the break environment, remount the sysroot writable, and chroot.",
+        "Set a new root password, create /.autorelabel when needed, then reboot normally.",
+        "After the normal boot, the simulator restores the Vagrant SSH key automatically."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Reset the root password on clientvm using the bootloader recovery path.",
+        "Return the system to a normal boot.",
+        "Leave the machine in a state where host-side Vagrant SSH access works again."
+      ],
+      "task_titles": [
+        "Root Password Reset",
+        "Normal Boot State",
+        "Host SSH Access"
+      ],
+      "task_points": [
+        20,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "# Reboot clientvm and stop at the GRUB menu.",
+          "# Edit the active kernel entry, append rd.break, then boot with Ctrl+x.",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "touch /.autorelabel",
+          "exit",
+          "exit"
+        ],
+        [
+          "# Let the relabel complete and log in normally as root with the new password.",
+          "systemctl get-default"
+        ],
+        [
+          "# Run this from the host after the normal reboot finishes.",
+          "vagrant ssh clientvm"
+        ]
+      ]
+    }
+  }
+}

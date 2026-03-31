@@ -1,0 +1,189 @@
+{
+  "id": "mock-exam-a",
+  "title": "Mock Exam A: Access And Service Integration",
+  "description": "A redesigned RHCSA v9 mock exam focused on time sync, service networking, automounts, remote access, and delegated administration.",
+  "objective_tags": [
+    "networking-and-firewall",
+    "software-scheduling-time",
+    "filesystems-and-autofs",
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 120,
+  "vm_scripts": {
+    "servervm": "scripts/servervm.sh",
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure chrony so clientvm synchronizes only with servervm and ensure chronyd is enabled.",
+        "Set the persistent hostname to clientvm.edge.lab, add a hostname-resolution entry so internal-api.edge.lab resolves to 192.168.122.3, configure Apache to listen on port 8088, open the firewall for 8088/tcp, and add a persistent route for 203.0.113.0/24 via 192.168.122.3.",
+        "Create a persistent NFS mount for servervm:/exports/direct at /srv/reference and configure autofs so /research/field-guide/brief.txt becomes available on demand from servervm.",
+        "Create group platformops and user orchid with platformops as the primary group, authorize admin's SSH public key for orchid, and allow members of platformops to run systemctl restart httpd with sudo and no password.",
+        "As admin on clientvm, copy /srv/rhcsa/objectives/README.txt from servervm to /home/orchid/edge-brief.txt using SSH-based file transfer and leave orchid owning the file."
+      ],
+      "task_titles": [
+        "Chrony Client",
+        "Edge Network And Apache",
+        "NFS Mount And Autofs Map",
+        "Orchid Delegated Administration",
+        "SSH File Transfer"
+      ],
+      "task_points": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "solution_commands": [
+        [
+          "sed -i '/^server /d;/^pool /d' /etc/chrony.conf",
+          "echo 'server servervm iburst' >> /etc/chrony.conf",
+          "systemctl enable --now chronyd"
+        ],
+        [
+          "hostnamectl set-hostname clientvm.edge.lab",
+          "grep -q 'internal-api.edge.lab' /etc/hosts || echo '192.168.122.3 internal-api.edge.lab' >> /etc/hosts",
+          "CONN=$(nmcli -t -f NAME,IP4.ADDRESS connection show --active | awk -F: '$2 ~ /^192\\.168\\.122\\./ {print $1; exit}')",
+          "nmcli connection modify \"$CONN\" +ipv4.routes \"203.0.113.0/24 192.168.122.3\"",
+          "nmcli connection up \"$CONN\"",
+          "sed -i 's/^Listen .*/Listen 8088/' /etc/httpd/conf/httpd.conf",
+          "systemctl enable --now httpd",
+          "firewall-cmd --permanent --add-port=8088/tcp",
+          "firewall-cmd --reload"
+        ],
+        [
+          "mkdir -p /srv/reference /research",
+          "grep -q '^servervm:/exports/direct /srv/reference ' /etc/fstab || echo 'servervm:/exports/direct /srv/reference nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "mount /srv/reference",
+          "cat > /etc/auto.research <<'EOF'",
+          "field-guide -fstype=nfs servervm:/exports/autofs/field-guide",
+          "EOF",
+          "cat > /etc/auto.master.d/rhcsa.research.autofs <<'EOF'",
+          "/research /etc/auto.research",
+          "EOF",
+          "systemctl enable --now autofs",
+          "ls -l /research/field-guide/brief.txt"
+        ],
+        [
+          "groupadd platformops",
+          "useradd -m -g platformops orchid",
+          "install -d -m 700 -o orchid -g platformops /home/orchid/.ssh",
+          "cat /home/admin/.ssh/id_rsa.pub > /home/orchid/.ssh/authorized_keys",
+          "chown orchid:platformops /home/orchid/.ssh/authorized_keys",
+          "chmod 600 /home/orchid/.ssh/authorized_keys",
+          "echo '%platformops ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd' > /etc/sudoers.d/platformops-httpd",
+          "visudo -cf /etc/sudoers.d/platformops-httpd"
+        ],
+        [
+          "# Enter the password redhat when scp prompts.",
+          "runuser -l admin -c \"scp -o StrictHostKeyChecking=no admin@servervm:/srv/rhcsa/objectives/README.txt /home/admin/edge-brief.txt\"",
+          "install -o orchid -g platformops -m 0644 /home/admin/edge-brief.txt /home/orchid/edge-brief.txt",
+          "rm -f /home/admin/edge-brief.txt"
+        ]
+      ],
+      "hints": [
+        "chronyd should point only at servervm in this exam.",
+        "Use a persistent hostname-resolution method for internal-api.edge.lab.",
+        "The autofs path is an indirect map under /research, while /srv/reference is a normal persistent mount.",
+        "Use the existing admin SSH key as the key source for orchid.",
+        "servervm already accepts the baseline admin account over SSH, so scp is enough for the transfer task."
+      ],
+      "checks": [
+        "chronyc sources -v",
+        "hostnamectl status --static",
+        "getent hosts internal-api.edge.lab",
+        "ip route show",
+        "curl http://localhost:8088/",
+        "findmnt /srv/reference",
+        "ls -l /research/field-guide/brief.txt",
+        "sudo -l -U orchid",
+        "ls -l /home/orchid/edge-brief.txt"
+      ],
+      "solution_outline": [
+        "Configure chrony first, then use hostnamectl, a persistent host entry, nmcli, httpd, and firewalld together so the networking changes persist.",
+        "Create both the normal NFS mount and the autofs map from servervm before testing the on-demand path.",
+        "Finish by creating orchid, copying the admin public key, validating the sudoers drop-in with visudo, and transferring the server brief into orchid's home directory."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Configure chrony to synchronize only with servervm and ensure chronyd is enabled.",
+        "Set the persistent hostname to clientvm.edge.lab, add a hostname-resolution entry for internal-api.edge.lab to 192.168.122.3, make Apache listen on port 8088, open 8088/tcp in the firewall, and add a persistent route for 203.0.113.0/24 via 192.168.122.3.",
+        "Create a persistent NFS mount for servervm:/exports/direct at /srv/reference and configure autofs so /research/field-guide/brief.txt is available on demand.",
+        "Create group platformops and user orchid, authorize admin's SSH public key for orchid, and allow platformops to run systemctl restart httpd with sudo and no password.",
+        "Copy /srv/rhcsa/objectives/README.txt from servervm to /home/orchid/edge-brief.txt using SSH-based file transfer and leave orchid owning the file."
+      ],
+      "task_titles": [
+        "Chrony Client",
+        "Edge Network And Apache",
+        "NFS Mount And Autofs Map",
+        "Orchid Delegated Administration",
+        "SSH File Transfer"
+      ],
+      "task_points": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "solution_commands": [
+        [
+          "sed -i '/^server /d;/^pool /d' /etc/chrony.conf",
+          "echo 'server servervm iburst' >> /etc/chrony.conf",
+          "systemctl enable --now chronyd"
+        ],
+        [
+          "hostnamectl set-hostname clientvm.edge.lab",
+          "grep -q 'internal-api.edge.lab' /etc/hosts || echo '192.168.122.3 internal-api.edge.lab' >> /etc/hosts",
+          "CONN=$(nmcli -t -f NAME,IP4.ADDRESS connection show --active | awk -F: '$2 ~ /^192\\.168\\.122\\./ {print $1; exit}')",
+          "nmcli connection modify \"$CONN\" +ipv4.routes \"203.0.113.0/24 192.168.122.3\"",
+          "nmcli connection up \"$CONN\"",
+          "sed -i 's/^Listen .*/Listen 8088/' /etc/httpd/conf/httpd.conf",
+          "systemctl enable --now httpd",
+          "firewall-cmd --permanent --add-port=8088/tcp",
+          "firewall-cmd --reload"
+        ],
+        [
+          "mkdir -p /srv/reference /research",
+          "grep -q '^servervm:/exports/direct /srv/reference ' /etc/fstab || echo 'servervm:/exports/direct /srv/reference nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "mount /srv/reference",
+          "cat > /etc/auto.research <<'EOF'",
+          "field-guide -fstype=nfs servervm:/exports/autofs/field-guide",
+          "EOF",
+          "cat > /etc/auto.master.d/rhcsa.research.autofs <<'EOF'",
+          "/research /etc/auto.research",
+          "EOF",
+          "systemctl enable --now autofs",
+          "ls -l /research/field-guide/brief.txt"
+        ],
+        [
+          "groupadd platformops",
+          "useradd -m -g platformops orchid",
+          "install -d -m 700 -o orchid -g platformops /home/orchid/.ssh",
+          "cat /home/admin/.ssh/id_rsa.pub > /home/orchid/.ssh/authorized_keys",
+          "chown orchid:platformops /home/orchid/.ssh/authorized_keys",
+          "chmod 600 /home/orchid/.ssh/authorized_keys",
+          "echo '%platformops ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd' > /etc/sudoers.d/platformops-httpd",
+          "visudo -cf /etc/sudoers.d/platformops-httpd"
+        ],
+        [
+          "# Enter the password redhat when scp prompts.",
+          "runuser -l admin -c \"scp -o StrictHostKeyChecking=no admin@servervm:/srv/rhcsa/objectives/README.txt /home/admin/edge-brief.txt\"",
+          "install -o orchid -g platformops -m 0644 /home/admin/edge-brief.txt /home/orchid/edge-brief.txt",
+          "rm -f /home/admin/edge-brief.txt"
+        ]
+      ]
+    }
+  }
+}

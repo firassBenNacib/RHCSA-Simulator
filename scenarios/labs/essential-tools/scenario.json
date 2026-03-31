@@ -1,0 +1,151 @@
+{
+  "id": "essential-tools",
+  "title": "Essential Tools And File Workflows",
+  "description": "Practice core RHCSA v9 command-line file operations, archives, links, permissions, and text processing.",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 45,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Work in /opt/rhcsa/workspaces/essential-tools and create a tar.gz archive of the source tree named /root/essential-tools-backup.tar.gz.",
+        "Create one hard link and one symbolic link to the file data/report.txt and demonstrate that both resolve correctly.",
+        "Use shell redirection and grep to create /root/errors-only.log containing only the lines with the word ERROR from logs/app.log.",
+        "Set permissions so the directory secure is accessible by root and members of the adm group only, with group collaboration enabled on new files.",
+        "Use one command-line text-processing workflow to count how many files under data end with .conf and save the numeric result to /root/conf-count.txt.",
+        "Use system documentation to identify the tar long option for gzip compression and write only that option to /root/tar-doc-answer.txt."
+      ],
+      "task_titles": [
+        "Backup Archive",
+        "Hard And Symbolic Links",
+        "Error Log Extraction",
+        "Secure Directory Permissions",
+        "Configuration File Count",
+        "Tar Gzip Long Option"
+      ],
+      "task_points": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cd /opt/rhcsa/workspaces",
+          "tar -czf /root/essential-tools-backup.tar.gz essential-tools"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "ln data/report.txt report.hardlink",
+          "ln -s data/report.txt report.symlink",
+          "ls -li data/report.txt report.hardlink report.symlink"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "grep 'ERROR' logs/app.log > /root/errors-only.log"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "chgrp adm secure",
+          "chmod 2770 secure"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "find data -type f -name '*.conf' | wc -l | tr -d ' ' > /root/conf-count.txt"
+        ],
+        [
+          "man tar | col -b | grep -m1 -o -- '--gzip' > /root/tar-doc-answer.txt"
+        ]
+      ],
+      "hints": [
+        "The workspace is already seeded for you. Focus on command-line operations, not package installs.",
+        "The secure directory task is about ownership, permissions, and the setgid bit.",
+        "A pipeline using grep, find, wc, sort, or awk is acceptable for the count task.",
+        "You can use man, info, or files under /usr/share/doc for the documentation task."
+      ],
+      "checks": [
+        "ls -l /root/essential-tools-backup.tar.gz /opt/rhcsa/workspaces/essential-tools/data/report.txt",
+        "ls -ld /opt/rhcsa/workspaces/essential-tools/secure",
+        "cat /root/errors-only.log",
+        "cat /root/conf-count.txt",
+        "cat /root/tar-doc-answer.txt"
+      ],
+      "solution_outline": [
+        "Use tar with gzip compression for the backup artifact.",
+        "Use ln for the hard link and ln -s for the symbolic link.",
+        "Use grep with output redirection for the log extraction.",
+        "Set group ownership to adm and apply chmod with setgid on the secure directory.",
+        "Use find plus wc or grep plus wc to derive the .conf file count.",
+        "Look up tar documentation and record the long gzip option exactly once in /root/tar-doc-answer.txt."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Create /root/essential-tools-backup.tar.gz from /opt/rhcsa/workspaces/essential-tools.",
+        "Create one hard link and one symbolic link for data/report.txt in the workspace.",
+        "Extract only ERROR lines from logs/app.log into /root/errors-only.log.",
+        "Restrict the secure directory to root and adm group access with collaborative group ownership behavior.",
+        "Write the count of .conf files under data to /root/conf-count.txt.",
+        "Write the tar long option for gzip compression to /root/tar-doc-answer.txt."
+      ],
+      "task_titles": [
+        "Backup Archive",
+        "Hard And Symbolic Links",
+        "Error Log Extraction",
+        "Secure Directory Permissions",
+        "Configuration File Count",
+        "Tar Gzip Long Option"
+      ],
+      "task_points": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cd /opt/rhcsa/workspaces",
+          "tar -czf /root/essential-tools-backup.tar.gz essential-tools"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "ln data/report.txt report.hardlink",
+          "ln -s data/report.txt report.symlink",
+          "ls -li data/report.txt report.hardlink report.symlink"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "grep 'ERROR' logs/app.log > /root/errors-only.log"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "chgrp adm secure",
+          "chmod 2770 secure"
+        ],
+        [
+          "cd /opt/rhcsa/workspaces/essential-tools",
+          "find data -type f -name '*.conf' | wc -l | tr -d ' ' > /root/conf-count.txt"
+        ],
+        [
+          "man tar | col -b | grep -m1 -o -- '--gzip' > /root/tar-doc-answer.txt"
+        ]
+      ]
+    }
+  }
+}

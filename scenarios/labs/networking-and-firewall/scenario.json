@@ -1,0 +1,134 @@
+{
+  "id": "networking-and-firewall",
+  "title": "Networking And Firewall Configuration",
+  "description": "Practice RHCSA v9 hostname management, hostname resolution, persistent routes, service networking, and firewall access control.",
+  "objective_tags": [
+    "networking-and-firewall"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 60,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Set the persistent hostname of clientvm to clientvm.lab.example.com.",
+        "Add a persistent hostname-resolution entry so registry.lab.example.com resolves to 192.168.122.3.",
+        "Add a persistent static route for 192.168.50.0/24 via 192.168.122.3 on the active non-NAT connection.",
+        "Configure httpd to listen on port 8080 and serve a simple page from /var/www/html/index.html.",
+        "Open the firewall for TCP port 8080 and verify the service is reachable locally."
+      ],
+      "task_titles": [
+        "Persistent Hostname",
+        "Local Name Resolution",
+        "Persistent Static Route",
+        "Apache On Port 8080",
+        "Firewall Access"
+      ],
+      "task_points": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "hostnamectl set-hostname clientvm.lab.example.com"
+        ],
+        [
+          "grep -q 'registry.lab.example.com' /etc/hosts || echo '192.168.122.3 registry.lab.example.com' >> /etc/hosts"
+        ],
+        [
+          "CONN=$(nmcli -t -f NAME,IP4.ADDRESS connection show --active | awk -F: '$2 ~ /^192\\.168\\.122\\./ {print $1; exit}')",
+          "nmcli connection modify \"$CONN\" +ipv4.routes \"192.168.50.0/24 192.168.122.3\"",
+          "nmcli connection up \"$CONN\""
+        ],
+        [
+          "sed -i 's/^Listen .*/Listen 8080/' /etc/httpd/conf/httpd.conf",
+          "echo 'RHCSA networking lab' > /var/www/html/index.html",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8080/tcp",
+          "firewall-cmd --reload",
+          "curl http://localhost:8080/"
+        ]
+      ],
+      "hints": [
+        "Use hostnamectl for the hostname task.",
+        "Use a persistent local hostname-resolution method that survives reboot.",
+        "Use nmcli to inspect the active private-network connection before changing routes.",
+        "For the web task, adjust both the service configuration and the firewall."
+      ],
+      "checks": [
+        "hostnamectl status --static",
+        "getent hosts registry.lab.example.com",
+        "ip route show",
+        "ss -tlnp | grep 8080",
+        "firewall-cmd --list-ports",
+        "curl http://localhost:8080/"
+      ],
+      "solution_outline": [
+        "Persist the hostname with hostnamectl.",
+        "Add a static hostname-resolution entry for registry.lab.example.com.",
+        "Apply the route via nmcli so it survives reboot.",
+        "Change Apache to listen on 8080, start it, and open the port in firewalld."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Persist the hostname clientvm.lab.example.com.",
+        "Add a persistent hostname-resolution entry for registry.lab.example.com to 192.168.122.3.",
+        "Add a persistent route for 192.168.50.0/24 via 192.168.122.3.",
+        "Configure httpd to listen on port 8080 and serve /var/www/html/index.html.",
+        "Open firewall access for TCP port 8080 and verify the local curl succeeds."
+      ],
+      "task_titles": [
+        "Persistent Hostname",
+        "Local Name Resolution",
+        "Persistent Static Route",
+        "Apache On Port 8080",
+        "Firewall Access"
+      ],
+      "task_points": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "hostnamectl set-hostname clientvm.lab.example.com"
+        ],
+        [
+          "grep -q 'registry.lab.example.com' /etc/hosts || echo '192.168.122.3 registry.lab.example.com' >> /etc/hosts"
+        ],
+        [
+          "CONN=$(nmcli -t -f NAME,IP4.ADDRESS connection show --active | awk -F: '$2 ~ /^192\\.168\\.122\\./ {print $1; exit}')",
+          "nmcli connection modify \"$CONN\" +ipv4.routes \"192.168.50.0/24 192.168.122.3\"",
+          "nmcli connection up \"$CONN\""
+        ],
+        [
+          "sed -i 's/^Listen .*/Listen 8080/' /etc/httpd/conf/httpd.conf",
+          "echo 'RHCSA networking lab' > /var/www/html/index.html",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8080/tcp",
+          "firewall-cmd --reload",
+          "curl http://localhost:8080/"
+        ]
+      ]
+    }
+  }
+}

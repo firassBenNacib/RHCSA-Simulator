@@ -1,0 +1,143 @@
+{
+  "id": "selinux-and-default-perms",
+  "title": "SELinux And Default File Permissions",
+  "description": "Practice RHCSA v9 SELinux troubleshooting together with default permissions, SELinux port labels, and booleans.",
+  "objective_tags": [
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 60,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Set the system-wide default umask to 027 for interactive shells.",
+        "Update Apache so /srv/rhcsa/selinux-site/index.html is served at http://localhost:8089/ while SELinux remains enforcing.",
+        "Apply persistent SELinux file-context and port-label changes so the site path and TCP port 8089 continue to work after relabel or reboot.",
+        "Set the SELinux boolean httpd_can_network_connect to on persistently.",
+        "Keep SELinux in enforcing mode throughout the task."
+      ],
+      "task_titles": [
+        "Default Umask",
+        "Apache Site On 8089",
+        "Persistent SELinux Labels",
+        "Persistent SELinux Boolean",
+        "Enforcing Mode"
+      ],
+      "task_points": [
+        10,
+        15,
+        15,
+        10,
+        5
+      ],
+      "solution_commands": [
+        [
+          "cat > /etc/profile.d/rhcsa-default-umask.sh <<'EOF'",
+          "umask 027",
+          "EOF",
+          "chmod 644 /etc/profile.d/rhcsa-default-umask.sh"
+        ],
+        [
+          "sed -i 's/^Listen .*/Listen 8089/' /etc/httpd/conf/httpd.conf",
+          "sed -i 's#^DocumentRoot \".*\"#DocumentRoot \"/srv/rhcsa/selinux-site\"#' /etc/httpd/conf/httpd.conf",
+          "cat > /etc/httpd/conf.d/rhcsa-selinux-site.conf <<'EOF'",
+          "<Directory \"/srv/rhcsa/selinux-site\">",
+          "    Require all granted",
+          "</Directory>",
+          "EOF",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "semanage fcontext -a -t httpd_sys_content_t '/srv/rhcsa/selinux-site(/.*)?'",
+          "restorecon -Rv /srv/rhcsa/selinux-site",
+          "semanage port -a -t http_port_t -p tcp 8089",
+          "systemctl restart httpd"
+        ],
+        [
+          "setsebool -P httpd_can_network_connect on"
+        ],
+        [
+          "getenforce",
+          "curl http://localhost:8089/"
+        ]
+      ],
+      "hints": [
+        "A profile.d script is acceptable for the umask task.",
+        "Use semanage fcontext and restorecon for persistent labeling.",
+        "Apache must be pointed to the custom content directory before curl will work.",
+        "Use semanage port for the custom TCP port and getsebool or setsebool for the boolean."
+      ],
+      "checks": [
+        "grep -R '^umask 027' /etc/profile /etc/profile.d 2>/dev/null",
+        "getenforce",
+        "ls -Zd /srv/rhcsa/selinux-site /srv/rhcsa/selinux-site/index.html",
+        "semanage port -l | grep http_port_t | grep 8089",
+        "getsebool httpd_can_network_connect",
+        "curl http://localhost:8089/"
+      ],
+      "solution_outline": [
+        "Create a profile.d file that sets umask 027.",
+        "Update Apache to use the custom directory and listen on TCP port 8089.",
+        "Persistently label the custom site directory with the correct httpd content type and assign port 8089 to http_port_t.",
+        "Set the required SELinux boolean persistently and confirm the page works while SELinux stays enforcing."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Set the default shell umask to 027 system-wide.",
+        "Serve /srv/rhcsa/selinux-site/index.html with Apache on TCP port 8089 while SELinux remains enforcing.",
+        "Apply persistent SELinux labeling and port labeling so the content continues to work.",
+        "Set the SELinux boolean httpd_can_network_connect persistently to on."
+      ],
+      "task_titles": [
+        "Default Umask",
+        "Apache Site On 8089",
+        "Persistent SELinux Labels",
+        "Persistent SELinux Boolean"
+      ],
+      "task_points": [
+        15,
+        30,
+        30,
+        25
+      ],
+      "solution_commands": [
+        [
+          "cat > /etc/profile.d/rhcsa-default-umask.sh <<'EOF'",
+          "umask 027",
+          "EOF",
+          "chmod 644 /etc/profile.d/rhcsa-default-umask.sh"
+        ],
+        [
+          "sed -i 's/^Listen .*/Listen 8089/' /etc/httpd/conf/httpd.conf",
+          "sed -i 's#^DocumentRoot \".*\"#DocumentRoot \"/srv/rhcsa/selinux-site\"#' /etc/httpd/conf/httpd.conf",
+          "cat > /etc/httpd/conf.d/rhcsa-selinux-site.conf <<'EOF'",
+          "<Directory \"/srv/rhcsa/selinux-site\">",
+          "    Require all granted",
+          "</Directory>",
+          "EOF",
+          "systemctl enable --now httpd"
+        ],
+        [
+          "semanage fcontext -a -t httpd_sys_content_t '/srv/rhcsa/selinux-site(/.*)?'",
+          "restorecon -Rv /srv/rhcsa/selinux-site",
+          "semanage port -a -t http_port_t -p tcp 8089",
+          "systemctl restart httpd"
+        ],
+        [
+          "setsebool -P httpd_can_network_connect on"
+        ]
+      ]
+    }
+  }
+}

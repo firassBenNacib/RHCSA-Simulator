@@ -1,0 +1,168 @@
+{
+  "id": "shell-scripting",
+  "title": "Shell Scripting Basics",
+  "description": "Practice RHCSA v9 shell scripting with loops, conditionals, command substitution, and executable scripts.",
+  "objective_tags": [
+    "shell-scripting"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 45,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": false,
+    "requires_servervm": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create an executable script at /usr/local/bin/rhcsa-user-summary that reads /opt/rhcsa/workspaces/shell-scripting/users.csv and creates local users only if they do not already exist.",
+        "The script must create /root/user-summary.txt listing how many users were created and how many already existed.",
+        "Create another executable script at /usr/local/bin/rhcsa-service-check that reads services.txt and writes the active or inactive state of each listed service to /root/service-status.txt.",
+        "Run both scripts successfully and leave the output files in place."
+      ],
+      "task_titles": [
+        "User Creation Script",
+        "User Summary Output",
+        "Service Check Script",
+        "Execute The Scripts"
+      ],
+      "task_points": [
+        15,
+        10,
+        15,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cat > /usr/local/bin/rhcsa-user-summary <<'EOF'",
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "input=/opt/rhcsa/workspaces/shell-scripting/users.csv",
+          "created=0",
+          "existing=0",
+          "while IFS= read -r user; do",
+          "  [[ -z \"$user\" ]] && continue",
+          "  if id \"$user\" >/dev/null 2>&1; then",
+          "    existing=$((existing + 1))",
+          "  else",
+          "    useradd \"$user\"",
+          "    created=$((created + 1))",
+          "  fi",
+          "done < \"$input\"",
+          "printf 'created=%s\nexisting=%s\n' \"$created\" \"$existing\" > /root/user-summary.txt",
+          "EOF",
+          "chmod +x /usr/local/bin/rhcsa-user-summary"
+        ],
+        [
+          "/usr/local/bin/rhcsa-user-summary",
+          "cat /root/user-summary.txt"
+        ],
+        [
+          "cat > /usr/local/bin/rhcsa-service-check <<'EOF'",
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "input=/opt/rhcsa/workspaces/shell-scripting/services.txt",
+          ": > /root/service-status.txt",
+          "while IFS= read -r service; do",
+          "  [[ -z \"$service\" ]] && continue",
+          "  state=$(systemctl is-active \"$service\" 2>/dev/null || true)",
+          "  [[ \"$state\" == \"active\" ]] || state=inactive",
+          "  printf '%s:%s\n' \"$service\" \"$state\" >> /root/service-status.txt",
+          "done < \"$input\"",
+          "EOF",
+          "chmod +x /usr/local/bin/rhcsa-service-check"
+        ],
+        [
+          "/usr/local/bin/rhcsa-user-summary",
+          "/usr/local/bin/rhcsa-service-check"
+        ]
+      ],
+      "hints": [
+        "A while-read loop is enough for both scripts.",
+        "Use id or getent to decide whether a user already exists.",
+        "systemctl is-active is enough for the service status script."
+      ],
+      "checks": [
+        "ls -l /usr/local/bin/rhcsa-user-summary /usr/local/bin/rhcsa-service-check",
+        "cat /root/user-summary.txt",
+        "cat /root/service-status.txt",
+        "getent passwd training1 training2 training3"
+      ],
+      "solution_outline": [
+        "Use bash with a shebang, loops, if tests, and chmod +x.",
+        "Track counters for created and existing users, then write them to /root/user-summary.txt.",
+        "Read service names from services.txt and record each state into /root/service-status.txt."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Create /usr/local/bin/rhcsa-user-summary to process users.csv and create missing users.",
+        "Write a creation/existing summary to /root/user-summary.txt.",
+        "Create /usr/local/bin/rhcsa-service-check to report service states from services.txt into /root/service-status.txt.",
+        "Execute both scripts successfully."
+      ],
+      "task_titles": [
+        "User Creation Script",
+        "User Summary Output",
+        "Service Check Script",
+        "Execute The Scripts"
+      ],
+      "task_points": [
+        15,
+        10,
+        15,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cat > /usr/local/bin/rhcsa-user-summary <<'EOF'",
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "input=/opt/rhcsa/workspaces/shell-scripting/users.csv",
+          "created=0",
+          "existing=0",
+          "while IFS= read -r user; do",
+          "  [[ -z \"$user\" ]] && continue",
+          "  if id \"$user\" >/dev/null 2>&1; then",
+          "    existing=$((existing + 1))",
+          "  else",
+          "    useradd \"$user\"",
+          "    created=$((created + 1))",
+          "  fi",
+          "done < \"$input\"",
+          "printf 'created=%s\nexisting=%s\n' \"$created\" \"$existing\" > /root/user-summary.txt",
+          "EOF",
+          "chmod +x /usr/local/bin/rhcsa-user-summary"
+        ],
+        [
+          "/usr/local/bin/rhcsa-user-summary",
+          "cat /root/user-summary.txt"
+        ],
+        [
+          "cat > /usr/local/bin/rhcsa-service-check <<'EOF'",
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "input=/opt/rhcsa/workspaces/shell-scripting/services.txt",
+          ": > /root/service-status.txt",
+          "while IFS= read -r service; do",
+          "  [[ -z \"$service\" ]] && continue",
+          "  state=$(systemctl is-active \"$service\" 2>/dev/null || true)",
+          "  [[ \"$state\" == \"active\" ]] || state=inactive",
+          "  printf '%s:%s\n' \"$service\" \"$state\" >> /root/service-status.txt",
+          "done < \"$input\"",
+          "EOF",
+          "chmod +x /usr/local/bin/rhcsa-service-check"
+        ],
+        [
+          "/usr/local/bin/rhcsa-user-summary",
+          "/usr/local/bin/rhcsa-service-check"
+        ]
+      ]
+    }
+  }
+}

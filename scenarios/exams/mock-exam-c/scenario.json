@@ -1,0 +1,196 @@
+{
+  "id": "mock-exam-c",
+  "title": "Mock Exam C: Recovery And Automation",
+  "description": "A redesigned RHCSA v9 mock exam focused on password recovery, shell scripting, scheduling, and rootless container management.",
+  "objective_tags": [
+    "boot-and-recovery",
+    "software-scheduling-time",
+    "shell-scripting",
+    "containers"
+  ],
+  "supported_modes": [
+    "lab",
+    "exam"
+  ],
+  "time_limit_minutes": 120,
+  "vm_scripts": {
+    "clientvm": "scripts/clientvm.sh"
+  },
+  "flags": {
+    "password_recovery": true,
+    "requires_servervm": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Recover root access on clientvm through the bootloader recovery path, return the system to a normal boot state, and leave Vagrant SSH access working again after the reboot.",
+        "Enable atd and schedule a one-time job that writes automation window ready to /root/automation-at.txt.",
+        "Create an executable script /usr/local/bin/service-audit that reads /opt/rhcsa/workspaces/automation/services.lst and writes /root/service-audit.txt with one line per service in the format service_name:state where state is active, inactive, or missing. Run it successfully.",
+        "Schedule root cron to run /usr/local/bin/service-audit hourly at minute 12 and append the output to /var/log/service-audit.log.",
+        "As user admin, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into the rootless image store if localhost/rhcsa-httpd-base:latest is missing, build a rootless image named localhost/briefing-web:latest from /opt/rhcsa/workspaces/automation-container/Containerfile, run container briefing-web on host port 8090 with the provided site-content bind mount using correct SELinux handling, generate a user systemd unit, and configure it to start automatically after reboot."
+      ],
+      "task_titles": [
+        "Boot Recovery",
+        "One-Time At Job",
+        "Service Audit Script",
+        "Root Cron Automation",
+        "Rootless Container Service"
+      ],
+      "task_points": [
+        20,
+        15,
+        20,
+        15,
+        30
+      ],
+      "solution_commands": [
+        [
+          "# Reboot clientvm and stop at the GRUB menu.",
+          "# Edit the active kernel entry, append rd.break, then boot with Ctrl+x.",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "touch /.autorelabel",
+          "exit",
+          "exit",
+          "# Let the relabel complete and log in normally as root with the new password.",
+          "systemctl get-default"
+        ],
+        [
+          "systemctl enable --now atd",
+          "echo 'echo automation window ready > /root/automation-at.txt' | at now + 5 minutes",
+          "atq"
+        ],
+        [
+          "cat > /usr/local/bin/service-audit <<'EOF'",
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "input=/opt/rhcsa/workspaces/automation/services.lst",
+          ": > /root/service-audit.txt",
+          "while IFS= read -r service; do",
+          "  [[ -z \"$service\" ]] && continue",
+          "  if systemctl list-unit-files --type=service --all | awk \"{print \\$1}\" | grep -qx \"${service}.service\"; then",
+          "    state=$(systemctl is-active \"$service\" 2>/dev/null || true)",
+          "    [[ \"$state\" == \"active\" ]] || state=inactive",
+          "  else",
+          "    state=missing",
+          "  fi",
+          "  printf '%s:%s\n' \"$service\" \"$state\" >> /root/service-audit.txt",
+          "done < \"$input\"",
+          "EOF",
+          "chmod +x /usr/local/bin/service-audit",
+          "/usr/local/bin/service-audit"
+        ],
+        [
+          "(crontab -l 2>/dev/null | grep -v '/usr/local/bin/service-audit'; echo '12 * * * * /usr/local/bin/service-audit >> /var/log/service-audit.log') | crontab -"
+        ],
+        [
+          "loginctl enable-linger admin",
+          "runuser -l admin -c 'podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'",
+          "runuser -l admin -c 'podman build -t localhost/briefing-web:latest /opt/rhcsa/workspaces/automation-container'",
+          "runuser -l admin -c 'podman rm -f briefing-web >/dev/null 2>&1 || true'",
+          "runuser -l admin -c 'podman run -d --name briefing-web -p 8090:80 -v /opt/rhcsa/workspaces/automation-container/site-content:/var/www/html:Z localhost/briefing-web:latest'",
+          "runuser -l admin -c 'mkdir -p ~/.config/systemd/user && cd ~/.config/systemd/user && podman generate systemd --name briefing-web --files --new'",
+          "runuser -l admin -c 'systemctl --user daemon-reload'",
+          "runuser -l admin -c 'systemctl --user enable --now container-briefing-web.service'"
+        ]
+      ],
+      "hints": [
+        "Complete the recovery first so normal host-side SSH returns before you finish the automation tasks.",
+        "at is already installed in the clean baseline; you only need to enable atd and submit the job.",
+        "The shell script should use a loop and a conditional branch so missing services are reported cleanly.",
+        "For the rootless container task, load the local base image as admin first if it is not already present, and remember both the user service and user lingering requirement."
+      ],
+      "checks": [
+        "vagrant ssh clientvm",
+        "systemctl status atd --no-pager",
+        "cat /root/service-audit.txt",
+        "crontab -l",
+        "runuser -l admin -c 'podman ps --all'",
+        "runuser -l admin -c 'systemctl --user status container-briefing-web.service --no-pager'",
+        "curl http://localhost:8090/"
+      ],
+      "solution_outline": [
+        "Use the full bootloader recovery flow, then reboot normally so the SSH key restoration hook can run.",
+        "Enable atd, then schedule the one-time at job before moving on to the script work.",
+        "Implement the shell script with a loop around service names and use systemctl is-active or equivalent logic to distinguish active, inactive, and missing services.",
+        "Create the cron entry for root, then load the local base image as admin if needed, build and run the rootless container, generate the unit, reload the user daemon, enable lingering, and start the service."
+      ]
+    },
+    "exam": {
+      "tasks": [
+        "Recover root access on clientvm through the bootloader recovery path and return the system to a normal boot with host-side Vagrant SSH working again.",
+        "Enable atd and schedule a one-time job that writes automation window ready to /root/automation-at.txt.",
+        "Create /usr/local/bin/service-audit to read /opt/rhcsa/workspaces/automation/services.lst and write /root/service-audit.txt with lines in the format service_name:state where state is active, inactive, or missing. Run it successfully.",
+        "Schedule root cron to run /usr/local/bin/service-audit hourly at minute 12 and append the output to /var/log/service-audit.log.",
+        "As user admin, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar if localhost/rhcsa-httpd-base:latest is missing, build localhost/briefing-web:latest from /opt/rhcsa/workspaces/automation-container/Containerfile, run rootless container briefing-web on port 8090 with the provided bind mount, generate a user systemd unit, and configure it to start after reboot."
+      ],
+      "task_titles": [
+        "Boot Recovery",
+        "One-Time At Job",
+        "Service Audit Script",
+        "Root Cron Automation",
+        "Rootless Container Service"
+      ],
+      "task_points": [
+        20,
+        15,
+        20,
+        15,
+        30
+      ],
+      "solution_commands": [
+        [
+          "# Reboot clientvm and stop at the GRUB menu.",
+          "# Edit the active kernel entry, append rd.break, then boot with Ctrl+x.",
+          "mount -o remount,rw /sysroot",
+          "chroot /sysroot",
+          "passwd root",
+          "touch /.autorelabel",
+          "exit",
+          "exit",
+          "# Let the relabel complete and log in normally as root with the new password.",
+          "systemctl get-default"
+        ],
+        [
+          "systemctl enable --now atd",
+          "echo 'echo automation window ready > /root/automation-at.txt' | at now + 5 minutes",
+          "atq"
+        ],
+        [
+          "cat > /usr/local/bin/service-audit <<'EOF'",
+          "#!/usr/bin/env bash",
+          "set -euo pipefail",
+          "input=/opt/rhcsa/workspaces/automation/services.lst",
+          ": > /root/service-audit.txt",
+          "while IFS= read -r service; do",
+          "  [[ -z \"$service\" ]] && continue",
+          "  if systemctl list-unit-files --type=service --all | awk \"{print \\$1}\" | grep -qx \"${service}.service\"; then",
+          "    state=$(systemctl is-active \"$service\" 2>/dev/null || true)",
+          "    [[ \"$state\" == \"active\" ]] || state=inactive",
+          "  else",
+          "    state=missing",
+          "  fi",
+          "  printf '%s:%s\n' \"$service\" \"$state\" >> /root/service-audit.txt",
+          "done < \"$input\"",
+          "EOF",
+          "chmod +x /usr/local/bin/service-audit",
+          "/usr/local/bin/service-audit"
+        ],
+        [
+          "(crontab -l 2>/dev/null | grep -v '/usr/local/bin/service-audit'; echo '12 * * * * /usr/local/bin/service-audit >> /var/log/service-audit.log') | crontab -"
+        ],
+        [
+          "loginctl enable-linger admin",
+          "runuser -l admin -c 'podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'",
+          "runuser -l admin -c 'podman build -t localhost/briefing-web:latest /opt/rhcsa/workspaces/automation-container'",
+          "runuser -l admin -c 'podman rm -f briefing-web >/dev/null 2>&1 || true'",
+          "runuser -l admin -c 'podman run -d --name briefing-web -p 8090:80 -v /opt/rhcsa/workspaces/automation-container/site-content:/var/www/html:Z localhost/briefing-web:latest'",
+          "runuser -l admin -c 'mkdir -p ~/.config/systemd/user && cd ~/.config/systemd/user && podman generate systemd --name briefing-web --files --new'",
+          "runuser -l admin -c 'systemctl --user daemon-reload'",
+          "runuser -l admin -c 'systemctl --user enable --now container-briefing-web.service'"
+        ]
+      ]
+    }
+  }
+}
