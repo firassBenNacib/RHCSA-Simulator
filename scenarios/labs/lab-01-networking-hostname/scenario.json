@@ -19,8 +19,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the active clientvm connection with the IPv4 address 192.168.122.25/24, gateway 192.168.122.1, DNS server 192.168.122.3, and set the persistent hostname to clientvm.netlab.local.",
-        "Add a persistent host entry so repo.netlab.local resolves to 192.168.122.3.",
+        "Configure the active clientvm connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS Server: 192.168.122.3\nHostname: clientvm.netlab.local",
+        "Add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3",
         "Verify that the active connection comes back with the same values after reconnecting it."
       ],
       "hints": [
@@ -36,9 +36,9 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Client Network Configuration",
+        "Static Host Entry",
+        "Reconnect Verification"
       ],
       "task_points": [],
       "solution_commands": [

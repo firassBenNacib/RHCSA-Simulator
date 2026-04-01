@@ -21,7 +21,7 @@ Configure persistent networking and hostname settings on clientvm in RHCSA style
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Configure the active clientvm connection with the…
+### Task 01 - Client Network Configuration
 **System:** clientvm
 
 #### Command Flow
@@ -36,7 +36,7 @@ hostnamectl set-hostname clientvm.netlab.local
 
 ---
 
-### Task 02 - Add a persistent host entry so repo.netlab.local…
+### Task 02 - Static Host Entry
 **System:** clientvm
 
 #### Command Flow
@@ -47,7 +47,7 @@ vim /etc/hosts
 
 ---
 
-### Task 03 - Verify that the active connection comes back with the…
+### Task 03 - Reconnect Verification
 **System:** clientvm
 
 #### Command Flow

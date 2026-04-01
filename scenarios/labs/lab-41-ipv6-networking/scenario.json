@@ -19,8 +19,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the active clientvm connection with the following persistent IPv6 settings:\n\nIPV6 ADDRESS: fd00:122:41::25/64\nIPV6 GATEWAY: fd00:122:41::1\nDNS SERVER: fd00:122:41::53",
-        "Set the persistent hostname to clientvm.ipv6lab.local and add a persistent hosts entry so servervm.ipv6lab.local resolves to fd00:122:41::3.",
+        "Configure the active clientvm connection with the following persistent IPv6 settings:\n\nIPv6 Address: fd00:122:41::25/64\nIPv6 Gateway: fd00:122:41::1\nDNS Server: fd00:122:41::53",
+        "Set the following persistent identity and resolution settings on clientvm:\n\nHostname: clientvm.ipv6lab.local\nStatic host entry: servervm.ipv6lab.local\nAddress: fd00:122:41::3",
         "Leave the existing IPv4 configuration unchanged."
       ],
       "hints": [
@@ -32,7 +32,11 @@
         "getent hosts servervm.ipv6lab.local"
       ],
       "solution_outline": [],
-      "task_titles": [],
+      "task_titles": [
+        "IPv6 Address Configuration",
+        "Hostname And IPv6 Host Entry",
+        "Preserve Existing IPv4 Settings"
+      ],
       "task_points": [],
       "solution_commands": [
         [

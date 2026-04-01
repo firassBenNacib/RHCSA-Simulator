@@ -72,6 +72,8 @@ def _title_case_label(label: str) -> str:
     cleaned = re.sub(r"\s+", " ", label.strip())
     replacements = {
         "Ip ": "IP ",
+        "Ipv4": "IPv4",
+        "Ipv6": "IPv6",
         "Dns ": "DNS ",
         "Url": "URL",
         "Uid": "UID",
@@ -80,6 +82,7 @@ def _title_case_label(label: str) -> str:
         "Baseos": "BaseOS",
         "Appstream": "AppStream",
         "Gpgcheck": "gpgcheck",
+        "Host Name": "Hostname",
     }
     if cleaned.isupper() or cleaned.islower():
         cleaned = cleaned.title()
