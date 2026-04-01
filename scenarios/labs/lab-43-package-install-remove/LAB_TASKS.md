@@ -7,7 +7,7 @@
 | Scenario ID | `lab-43-package-install-remove` |
 | Mode | Lab |
 | Time limit | 25 minutes |
-| Objectives | repositories-and-packages |
+| Objectives | software-scheduling-time |
 
 Install packages from the prepared local repositories and remove the one that is no longer needed.
 

@@ -7,7 +7,7 @@
 | Scenario ID | `lab-34-journald-rsyslog` |
 | Mode | Lab |
 | Time limit | 25 minutes |
-| Objectives | system-services-and-targets, logging-and-processes |
+| Objectives | processes-logs-tuning, software-scheduling-time |
 
 Configure persistent journal storage and a custom rsyslog drop-in for authentication warnings.
 

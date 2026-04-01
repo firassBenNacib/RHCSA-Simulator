@@ -3,8 +3,7 @@
   "title": "Lab 35: Process Priority and Tuned",
   "description": "Tune the system with the requested profile and adjust process scheduling priority",
   "objective_tags": [
-    "logging-and-processes",
-    "system-services-and-targets"
+    "processes-logs-tuning"
   ],
   "supported_modes": [
     "lab"

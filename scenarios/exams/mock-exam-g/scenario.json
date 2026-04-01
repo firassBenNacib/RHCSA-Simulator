@@ -5,7 +5,7 @@
   "objective_tags": [
     "boot-and-recovery",
     "networking-and-firewall",
-    "systemd-and-processes",
+    "processes-logs-tuning",
     "storage-lvm"
   ],
   "supported_modes": [

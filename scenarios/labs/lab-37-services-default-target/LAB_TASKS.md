@@ -7,7 +7,7 @@
 | Scenario ID | `lab-37-services-default-target` |
 | Mode | Lab |
 | Time limit | 20 minutes |
-| Objectives | system-services-and-targets, boot-and-recovery |
+| Objectives | software-scheduling-time, boot-and-recovery |
 
 Control the default boot target and manage system services in a persistent way.
 

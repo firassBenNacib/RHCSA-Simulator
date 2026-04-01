@@ -7,7 +7,7 @@
 | Scenario ID | `lab-39-ssh-key-rsync` |
 | Mode | Lab |
 | Time limit | 30 minutes |
-| Objectives | users-sudo-ssh, nfs-and-autofs |
+| Objectives | users-sudo-ssh, essential-tools |
 
 Configure key-based SSH access and securely transfer files between systems.
 

@@ -3,8 +3,8 @@
   "title": "Lab 34: Journald Persistence and Rsyslog",
   "description": "Configure persistent journal storage and a custom rsyslog drop-in for authentication warnings",
   "objective_tags": [
-    "system-services-and-targets",
-    "logging-and-processes"
+    "processes-logs-tuning",
+    "software-scheduling-time"
   ],
   "supported_modes": [
     "lab"

@@ -3,7 +3,7 @@
   "title": "Lab 37: Services and Default Target",
   "description": "Control the default boot target and manage system services in a persistent way",
   "objective_tags": [
-    "system-services-and-targets",
+    "software-scheduling-time",
     "boot-and-recovery"
   ],
   "supported_modes": [

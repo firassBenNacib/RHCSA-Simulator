@@ -3,7 +3,7 @@
   "title": "Lab 36: Persistent NFS Direct Mount",
   "description": "Mount a remote NFS export persistently using /etc/fstab",
   "objective_tags": [
-    "nfs-and-autofs",
+    "filesystems-and-autofs",
     "storage-lvm"
   ],
   "supported_modes": [

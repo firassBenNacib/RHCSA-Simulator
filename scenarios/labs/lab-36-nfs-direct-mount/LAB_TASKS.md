@@ -7,7 +7,7 @@
 | Scenario ID | `lab-36-nfs-direct-mount` |
 | Mode | Lab |
 | Time limit | 25 minutes |
-| Objectives | nfs-and-autofs, storage-lvm |
+| Objectives | filesystems-and-autofs, storage-lvm |
 
 Mount a remote NFS export persistently using /etc/fstab.
 

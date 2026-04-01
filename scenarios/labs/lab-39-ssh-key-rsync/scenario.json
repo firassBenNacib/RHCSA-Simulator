@@ -4,7 +4,7 @@
   "description": "Configure key-based SSH access and securely transfer files between systems",
   "objective_tags": [
     "users-sudo-ssh",
-    "nfs-and-autofs"
+    "essential-tools"
   ],
   "supported_modes": [
     "lab"

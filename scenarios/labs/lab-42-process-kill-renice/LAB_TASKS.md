@@ -7,7 +7,7 @@
 | Scenario ID | `lab-42-process-kill-renice` |
 | Mode | Lab |
 | Time limit | 25 minutes |
-| Objectives | systemd-and-processes |
+| Objectives | processes-logs-tuning |
 
 Identify a running process, terminate it, and adjust the scheduling priority of another one.
 

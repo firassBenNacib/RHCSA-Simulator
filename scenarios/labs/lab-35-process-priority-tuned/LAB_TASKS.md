@@ -7,7 +7,7 @@
 | Scenario ID | `lab-35-process-priority-tuned` |
 | Mode | Lab |
 | Time limit | 25 minutes |
-| Objectives | logging-and-processes, system-services-and-targets |
+| Objectives | processes-logs-tuning |
 
 Tune the system with the requested profile and adjust process scheduling priority.
 

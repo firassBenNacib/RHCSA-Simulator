@@ -3,7 +3,7 @@
   "title": "Lab 42: Process Kill And Renice",
   "description": "Identify a running process, terminate it, and adjust the scheduling priority of another one",
   "objective_tags": [
-    "systemd-and-processes"
+    "processes-logs-tuning"
   ],
   "supported_modes": [
     "lab"

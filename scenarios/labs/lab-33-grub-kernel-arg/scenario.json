@@ -3,8 +3,7 @@
   "title": "Lab 33: Bootloader Kernel Argument",
   "description": "Modify the system bootloader so every installed kernel boots with the required persistent argument",
   "objective_tags": [
-    "boot-and-recovery",
-    "system-services-and-targets"
+    "boot-and-recovery"
   ],
   "supported_modes": [
     "lab"

@@ -3,7 +3,7 @@
   "title": "Lab 43: Package Install And Remove",
   "description": "Install packages from the prepared local repositories and remove the one that is no longer needed",
   "objective_tags": [
-    "repositories-and-packages"
+    "software-scheduling-time"
   ],
   "supported_modes": [
     "lab"

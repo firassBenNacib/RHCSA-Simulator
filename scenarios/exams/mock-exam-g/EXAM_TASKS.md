@@ -7,7 +7,7 @@
 | Scenario ID | `mock-exam-g` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, networking-and-firewall, systemd-and-processes, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, processes-logs-tuning, storage-lvm |
 
 A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, direct NFS mounting, secure copy, and process scheduling work.
 

@@ -7,7 +7,7 @@
 | Scenario ID | `lab-33-grub-kernel-arg` |
 | Mode | Lab |
 | Time limit | 20 minutes |
-| Objectives | boot-and-recovery, system-services-and-targets |
+| Objectives | boot-and-recovery |
 
 Modify the system bootloader so every installed kernel boots with the required persistent argument.
 
