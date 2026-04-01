@@ -21,7 +21,7 @@ Configure a persistent local password quality policy without editing PAM service
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create a persistent password quality policy in…
+### Task 01 - Create a persistent password quality policy in…
 **System:** clientvm
 
 #### Command Flow
@@ -34,7 +34,7 @@ minclass = 3
 
 ---
 
-### Task 02 — Do not edit any PAM service file for this task
+### Task 02 - Do not edit any PAM service file for this task
 **System:** clientvm
 
 #### Command Flow

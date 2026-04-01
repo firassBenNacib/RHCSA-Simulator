@@ -19,13 +19,13 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user choubix with UID 4111 and set its password to redhat."
+        "Create user tavric with UID 4111 and set its password to cinder9."
       ],
       "hints": [
         "Use passwd interactively."
       ],
       "checks": [
-        "id choubix"
+        "id tavric"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -36,10 +36,10 @@
       "task_points": [],
       "solution_commands": [
         [
-          "useradd -u 4111 choubix",
-          "passwd choubix",
-          "# enter: redhat",
-          "id choubix"
+          "useradd -u 4111 tavric",
+          "passwd tavric",
+          "# enter: cinder9",
+          "id tavric"
         ]
       ]
     }

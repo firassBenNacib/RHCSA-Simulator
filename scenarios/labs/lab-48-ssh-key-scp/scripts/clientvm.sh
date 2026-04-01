@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
-id copy48 >/dev/null 2>&1 || useradd -m copy48
-printf 'copy48:redhat
+id bridge48 >/dev/null 2>&1 || useradd -m bridge48
+printf 'bridge48:cinder9
 ' | chpasswd
-rm -rf /home/copy48/.ssh /home/copy48/inbox
-printf 'copy48 payload
-' > /home/copy48/payload.txt
-chown -R copy48:copy48 /home/copy48
+rm -rf /home/bridge48/.ssh /home/bridge48/inbox
+printf 'bridge48 payload
+' > /home/bridge48/payload.txt
+chown -R bridge48:bridge48 /home/bridge48

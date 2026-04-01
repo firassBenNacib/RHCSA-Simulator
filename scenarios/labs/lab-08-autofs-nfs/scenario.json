@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "On servervm, export /exports/netuser8. On clientvm, create user netuser8 with password redhat.",
-        "Configure autofs on clientvm so /netdir/netuser8 is mounted on demand from servervm:/exports/netuser8.",
+        "On servervm, export /exports/vault8. On clientvm, create user vault8 with password cinder9.",
+        "Configure autofs on clientvm so /netdir/vault8 is mounted on demand from servervm:/exports/vault8.",
         "Leave the configuration persistent across reboot."
       ],
       "hints": [
@@ -30,8 +30,8 @@
       ],
       "checks": [
         "showmount -e servervm",
-        "ls -l /netdir/netuser8",
-        "ls -l /netdir/netuser8/welcome.txt"
+        "ls -l /netdir/vault8",
+        "ls -l /netdir/vault8/welcome.txt"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -45,24 +45,24 @@
       "solution_commands": [
         [
           "# On servervm",
-          "mkdir -p /exports/netuser8",
-          "printf \"autofs lab 08\\n\" > /exports/netuser8/welcome.txt",
+          "mkdir -p /exports/vault8",
+          "printf \"autofs lab 08\\n\" > /exports/vault8/welcome.txt",
           "exportfs -arv",
           "# On clientvm",
-          "useradd -m netuser8",
-          "passwd netuser8",
-          "# enter: redhat"
+          "useradd -m vault8",
+          "passwd vault8",
+          "# enter: cinder9"
         ],
         [
           "vim /etc/auto.lab8",
-          "netuser8 -rw,sync servervm:/exports/netuser8",
+          "vault8 -rw,sync servervm:/exports/vault8",
           "vim /etc/auto.master.d/lab8.autofs",
           "/netdir /etc/auto.lab8",
           "systemctl enable --now autofs"
         ],
         [
-          "ls -l /netdir/netuser8",
-          "cat /netdir/netuser8/welcome.txt"
+          "ls -l /netdir/vault8",
+          "cat /netdir/vault8/welcome.txt"
         ]
       ]
     }

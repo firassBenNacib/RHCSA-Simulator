@@ -21,7 +21,7 @@ Apply the system recommended tuned profile.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Apply the recommended tuned profile and leave it…
+### Task 01 - Apply the recommended tuned profile and leave it…
 **System:** clientvm
 
 #### Command Flow

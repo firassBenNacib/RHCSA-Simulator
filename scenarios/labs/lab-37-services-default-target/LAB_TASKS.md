@@ -21,21 +21,21 @@ Control the default boot target and manage system services in a persistent way.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure clientvm to boot into multi-user.target by…
+### Task 01 - Configure clientvm to boot into multi-user.target by…
 **System:** clientvm
 
 Configure clientvm to boot into multi-user.target by default.
 
 ---
 
-### Task 02 — Ensure the rsyslog service is enabled and running
+### Task 02 - Ensure the rsyslog service is enabled and running
 **System:** clientvm
 
 Ensure the rsyslog service is enabled and running.
 
 ---
 
-### Task 03 — If postfix is installed, disable it and stop it
+### Task 03 - If postfix is installed, disable it and stop it
 **System:** clientvm
 
 If postfix is installed, disable it and stop it.

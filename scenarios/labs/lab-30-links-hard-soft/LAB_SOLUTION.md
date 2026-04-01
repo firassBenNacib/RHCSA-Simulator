@@ -21,7 +21,7 @@ Create and verify both a hard link and a symbolic link to the same source file.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create the file /root/linksource30 containing the…
+### Task 01 - Create the file /root/linksource30 containing the…
 **System:** clientvm
 
 #### Command Flow
@@ -32,7 +32,7 @@ printf 'link-test
 
 ---
 
-### Task 02 — Create the hard link /root/linkhard30 and the…
+### Task 02 - Create the hard link /root/linkhard30 and the…
 **System:** clientvm
 
 #### Command Flow

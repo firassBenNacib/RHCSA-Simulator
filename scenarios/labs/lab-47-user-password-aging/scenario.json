@@ -19,31 +19,31 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user aging47 with password redhat if it does not already exist.",
-        "Configure aging47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.",
-        "Force aging47 to change the password at the next login."
+        "Create user cycle47 with password cinder9 if it does not already exist.",
+        "Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.",
+        "Force cycle47 to change the password at the next login."
       ],
       "hints": [
         "Use chage, not manual edits to /etc/shadow."
       ],
       "checks": [
-        "chage -l aging47"
+        "chage -l cycle47"
       ],
       "solution_outline": [],
       "task_titles": [],
       "task_points": [],
       "solution_commands": [
         [
-          "id aging47 || useradd -m aging47",
-          "passwd aging47",
-          "# enter: redhat"
+          "id cycle47 || useradd -m cycle47",
+          "passwd cycle47",
+          "# enter: cinder9"
         ],
         [
-          "chage -M 30 -m 2 -W 7 aging47"
+          "chage -M 30 -m 2 -W 7 cycle47"
         ],
         [
-          "chage -d 0 aging47",
-          "chage -l aging47"
+          "chage -d 0 cycle47",
+          "chage -l cycle47"
         ]
       ]
     }

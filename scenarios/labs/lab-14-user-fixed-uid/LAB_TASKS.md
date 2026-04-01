@@ -21,15 +21,15 @@ Create a local user with a specific UID.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create user choubix with UID 4111 and set its…
+### Task 01 - Create user tavric with UID 4111 and set its password…
 **System:** clientvm
 
-Create user choubix with UID 4111 and set its password to redhat.
+Create user tavric with UID 4111 and set its password to cinder9.
 
 ### Hints
 - Use passwd interactively.
 
 ### Validation Commands
 ```bash
-id choubix
+id tavric
 ```

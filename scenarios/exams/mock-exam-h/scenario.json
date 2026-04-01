@@ -28,13 +28,13 @@
         "On clientvm and servervm, configure a repository file with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8181.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Make the SELinux port label change required for the new port.\n- Do not move or relabel the existing document root content.",
         "Create group silverops and users iris and daren with silverops as a supplementary group. Create user hush with /sbin/nologin and no silverops membership.",
-        "Set the password of iris, daren, and hush to redhat.",
+        "Set the password of iris, daren, and hush to cinder9.",
         "Allow members of silverops to run useradd through sudo, and allow iris to run passwd for other users without a sudo password prompt.",
         "Create /srv/silver with group ownership silverops, permissions 2770, and inherited group ownership for new files.",
         "Configure a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12 and at least 3 character classes.",
-        "Create user agingh with password redhat and configure the account with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days. Force the user to change the password at the next login.",
+        "Create user agingh with password cinder9 and configure the account with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days. Force the user to change the password at the next login.",
         "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
-        "Create user silverremote with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /silver/home/silverremote\nREMOTE EXPORT: servervm:/exports/silverhome",
+        "Create user silverremote with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /silver/home/silverremote\nREMOTE EXPORT: servervm:/exports/silverhome",
         "Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24.",
         "Find all files under /opt/exam-h/find that are owned by watcherh and were modified within the last 24 hours, then copy them to /root/watcherh-files while preserving the source directory structure.",
         "Extract lines containing silver from /usr/share/dict/words into /root/silver-lines.",
@@ -43,7 +43,7 @@
         "Resize /dev/reviewvgh/reviewh so the final size is 320 MiB without losing the existing file system or data.",
         "Configure clientvm to boot into multi-user.target by default. Ensure rsyslog is enabled and running. If postfix is installed, disable it and stop it.",
         "Use the prepared local repositories to install the packages tree and dos2unix on clientvm. Remove dos2unix and leave tree installed.",
-        "Create user inspecth with password redhat if it does not already exist. As that user, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage and write the configured working directory of localhost/rhcsa-httpd-base:latest to /home/inspecth/workdir.txt.",
+        "Create user inspecth with password cinder9 if it does not already exist. As that user, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage and write the configured working directory of localhost/rhcsa-httpd-base:latest to /home/inspecth/workdir.txt.",
         "Apply the recommended tuned profile and leave it active."
       ],
       "task_titles": [
@@ -136,11 +136,11 @@
         ],
         [
           "passwd iris",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd daren",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd hush",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/silverops",
@@ -165,7 +165,7 @@
         [
           "useradd -m agingh",
           "passwd agingh",
-          "# enter: redhat",
+          "# enter: cinder9",
           "chage -M 30 -m 2 -W 7 agingh",
           "chage -d 0 agingh"
         ],
@@ -179,7 +179,7 @@
         [
           "useradd -m silverremote",
           "passwd silverremote",
-          "# enter: redhat",
+          "# enter: cinder9",
           "vim /etc/auto.silver",
           "silverremote -rw servervm:/exports/silverhome",
           ":wq",
@@ -238,7 +238,7 @@
         [
           "id inspecth || useradd -m inspecth",
           "passwd inspecth",
-          "# enter: redhat",
+          "# enter: cinder9",
           "runuser -l inspecth -c \"podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar\"",
           "runuser -l inspecth -c \"podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt\""
         ],

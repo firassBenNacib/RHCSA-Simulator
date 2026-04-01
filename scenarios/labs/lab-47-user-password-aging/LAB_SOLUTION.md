@@ -21,40 +21,40 @@ Adjust password aging for an existing user account with chage.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create user aging47 with password redhat if it does…
+### Task 01 - Create user cycle47 with password cinder9 if it does…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-id aging47 || useradd -m aging47
-passwd aging47
-# enter: redhat
+id cycle47 || useradd -m cycle47
+passwd cycle47
+# enter: cinder9
 ```
 
 ---
 
-### Task 02 — Configure aging47 with a maximum password age of 30…
+### Task 02 - Configure cycle47 with a maximum password age of 30…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-chage -M 30 -m 2 -W 7 aging47
+chage -M 30 -m 2 -W 7 cycle47
 ```
 
 ---
 
-### Task 03 — Force aging47 to change the password at the next login
+### Task 03 - Force cycle47 to change the password at the next login
 **System:** clientvm
 
 #### Command Flow
 ```bash
-chage -d 0 aging47
-chage -l aging47
+chage -d 0 cycle47
+chage -l cycle47
 ```
 
 ---
 
 ### Verification
 ```bash
-chage -l aging47
+chage -l cycle47
 ```

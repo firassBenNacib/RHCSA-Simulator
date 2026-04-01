@@ -4,5 +4,5 @@ set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
 
-userdel -r natcron >/dev/null 2>&1 || true
-crontab -r -u natcron >/dev/null 2>&1 || true
+userdel -r ferro >/dev/null 2>&1 || true
+crontab -r -u ferro >/dev/null 2>&1 || true

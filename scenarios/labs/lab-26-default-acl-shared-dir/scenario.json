@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the group collab26 and the user qa26. Set the password of qa26 to redhat.",
+        "Create the group collab26 and the user probe26. Set the password of probe26 to cinder9.",
         "Create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.",
-        "Configure a default ACL so that user qa26 receives rwx permissions on new files and directories created under /shared/collab26."
+        "Configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26."
       ],
       "hints": [
         "Use getfacl to confirm the effective and default entries."
@@ -42,9 +42,9 @@
       "solution_commands": [
         [
           "groupadd collab26",
-          "useradd -m qa26",
-          "passwd qa26",
-          "# enter: redhat"
+          "useradd -m probe26",
+          "passwd probe26",
+          "# enter: cinder9"
         ],
         [
           "mkdir -p /shared/collab26",
@@ -52,7 +52,7 @@
           "chmod 2770 /shared/collab26"
         ],
         [
-          "setfacl -m d:u:qa26:rwx /shared/collab26",
+          "setfacl -m d:u:probe26:rwx /shared/collab26",
           "getfacl /shared/collab26"
         ]
       ]

@@ -21,24 +21,24 @@ Create local users, a delegated admin group, and passwordless privileged access.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create the group sysadmx and the users harryx,…
+### Task 01 - Create the group opsrune and the users brenor,…
 **System:** clientvm
 
-Create the group sysadmx and the users harryx, natashax, and sarahx. Put harryx and natashax in sysadmx as a supplementary group. Sarahx must have /sbin/nologin and must not be in sysadmx.
+Create the group opsrune and the users brenor, lyessa, and quillan. Put brenor and lyessa in opsrune as a supplementary group. Sarahx must have /sbin/nologin and must not be in opsrune.
 
 ---
 
-### Task 02 — Set the password of all three users to redhat
+### Task 02 - Set the password of all three users to cinder9
 **System:** clientvm
 
-Set the password of all three users to redhat.
+Set the password of all three users to cinder9.
 
 ---
 
-### Task 03 — Allow members of sysadmx to run useradd through sudo,…
+### Task 03 - Allow members of opsrune to run useradd through sudo,…
 **System:** clientvm
 
-Allow members of sysadmx to run useradd through sudo, and allow harryx to run passwd for other users without a sudo password prompt.
+Allow members of opsrune to run useradd through sudo, and allow brenor to run passwd for other users without a sudo password prompt.
 
 ### Hints
 - Use useradd and usermod only.
@@ -46,9 +46,9 @@ Allow members of sysadmx to run useradd through sudo, and allow harryx to run pa
 
 ### Validation Commands
 ```bash
-id harryx
-id natashax
-getent passwd sarahx
-visudo -cf /etc/sudoers.d/sysadmx
-visudo -cf /etc/sudoers.d/harryx-passwd
+id brenor
+id lyessa
+getent passwd quillan
+visudo -cf /etc/sudoers.d/opsrune
+visudo -cf /etc/sudoers.d/brenor-passwd
 ```

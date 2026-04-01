@@ -104,7 +104,7 @@ EOF
 dnf clean all >/dev/null 2>&1 || true
 dnf remove -y tree dos2unix >/dev/null 2>&1 || true
 id inspecth >/dev/null 2>&1 || useradd -m inspecth
-printf 'inspecth:redhat
+printf 'inspecth:cinder9
 ' | chpasswd
 runuser -l inspecth -c 'podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true'
 rm -f /home/inspecth/workdir.txt

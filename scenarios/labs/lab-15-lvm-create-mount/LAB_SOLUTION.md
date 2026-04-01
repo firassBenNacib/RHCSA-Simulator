@@ -21,7 +21,7 @@ Create a new volume group and logical volume and mount it persistently.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — On /dev/sdb, create an LVM partition, then create…
+### Task 01 - On /dev/sdb, create an LVM partition, then create…
 **System:** clientvm
 
 #### Command Flow
@@ -36,7 +36,7 @@ lvcreate -n wsharex -l 50 wgroupx
 
 ---
 
-### Task 02 — Create logical volume wsharex with 50 extents, format…
+### Task 02 - Create logical volume wsharex with 50 extents, format…
 **System:** clientvm
 
 #### Command Flow

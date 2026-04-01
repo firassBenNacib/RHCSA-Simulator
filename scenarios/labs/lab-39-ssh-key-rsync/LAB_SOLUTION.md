@@ -22,49 +22,49 @@ Configure key-based SSH access and securely transfer files between systems.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create the user key39 on both clientvm and servervm.…
+### Task 01 - Create the user mesh39 on both clientvm and servervm.…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-useradd -m key39
-passwd key39
+useradd -m mesh39
+passwd mesh39
 # repeat on servervm
 ```
 
 ---
 
-### Task 02 — generate an ED25519 SSH key pair with no passphrase
+### Task 02 - generate an ED25519 SSH key pair with no passphrase
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l key39 -c "ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519"
+runuser -l mesh39 -c "ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519"
 ```
 
 ---
 
-### Task 03 — Configure passwordless SSH access for key39 from…
+### Task 03 - Configure passwordless SSH access for mesh39 from…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l key39 -c "ssh-copy-id -o StrictHostKeyChecking=no key39@192.168.122.3"
+runuser -l mesh39 -c "ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3"
 ```
 
 ---
 
-### Task 04 — Using rsync over SSH, copy the directory…
+### Task 04 - Using rsync over SSH, copy the directory…
 **System:** servervm
 
 #### Command Flow
 ```bash
-runuser -l key39 -c "rsync -av -e ssh /home/key39/client-data/ key39@192.168.122.3:/home/key39/server-data/"
+runuser -l mesh39 -c "rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/"
 ```
 
 ---
 
 ### Verification
 ```bash
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no key39@192.168.122.3 "test -f /home/key39/server-data/file1.txt"
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 "test -f /home/mesh39/server-data/file1.txt"
 ```

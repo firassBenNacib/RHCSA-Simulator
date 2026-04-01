@@ -21,14 +21,14 @@ Use a persistent rich rule to restrict access to a custom port by source network
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure a persistent firewalld rich rule that…
+### Task 01 - Configure a persistent firewalld rich rule that…
 **System:** clientvm
 
 Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24.
 
 ---
 
-### Task 02 — Reload firewalld and verify that the rule is active
+### Task 02 - Reload firewalld and verify that the rule is active
 **System:** clientvm
 
 Reload firewalld and verify that the rule is active.

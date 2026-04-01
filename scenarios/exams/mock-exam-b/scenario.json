@@ -29,13 +29,13 @@
         "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8383.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Allow the port in SELinux.\n- Do not alter the existing site content.",
         "Create group platformb and users mira and jonas with platformb as a supplementary group. Create user noel with /sbin/nologin and no platformb membership.",
-        "Set the password of mira, jonas, and noel to redhat.",
+        "Set the password of mira, jonas, and noel to cinder9.",
         "Allow members of platformb to run useradd with sudo, and allow mira to restart httpd with sudo and no password prompt.",
         "Create /srv/platformb with group ownership platformb, mode 2770, and inherited group ownership for new files.",
         "Configure a cron job for mira that runs every minute and logs the message \"CoreMesh exam\".",
         "Configure chrony on clientvm so it synchronizes only with servervm.",
-        "Create user meshremote with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /meshb/meshremote\nREMOTE EXPORT: servervm:/exports/meshb",
-        "Create user cato421 with UID 4421 and set its password to redhat.",
+        "Create user meshremote with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /meshb/meshremote\nREMOTE EXPORT: servervm:/exports/meshb",
+        "Create user cato421 with UID 4421 and set its password to cinder9.",
         "Find all files under /opt/exam-b/find that are owned by mira and were modified in the last 24 hours, then copy them to /root/mira-files while preserving the directory structure.",
         "Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.",
         "Create /root/usr-local-b.tar.bz2 containing /usr/local.",
@@ -132,11 +132,11 @@
         ],
         [
           "passwd mira",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd jonas",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd noel",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/platformb",
@@ -162,7 +162,7 @@
         [
           "useradd -m meshremote",
           "passwd meshremote",
-          "# enter: redhat",
+          "# enter: cinder9",
           "vim /etc/auto.meshb",
           "meshremote -rw,sync servervm:/exports/meshb",
           "vim /etc/auto.master.d/meshb.autofs",
@@ -172,7 +172,7 @@
         [
           "useradd -u 4421 cato421",
           "passwd cato421",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \\;"

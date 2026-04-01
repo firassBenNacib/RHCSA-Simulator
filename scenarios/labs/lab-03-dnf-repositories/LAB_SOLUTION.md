@@ -22,7 +22,7 @@ Configure offline BaseOS and AppStream repositories on both systems.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Client Repositories
+### Task 01 - Client Repositories
 **System:** clientvm
 
 #### Command Flow
@@ -45,7 +45,7 @@ dnf clean all
 
 ---
 
-### Task 02 — Server Repositories
+### Task 02 - Server Repositories
 **System:** servervm
 
 #### Command Flow
@@ -69,7 +69,7 @@ dnf clean all
 
 ---
 
-### Task 03 — Verify Repositories
+### Task 03 - Verify Repositories
 **System:** clientvm
 
 #### Command Flow

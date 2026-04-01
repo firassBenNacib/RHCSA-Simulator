@@ -22,26 +22,26 @@ Configure offline BaseOS and AppStream repositories on both systems.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Client Repositories
+### Task 01 - Client Repositories
 **System:** clientvm
 
 On clientvm, configure a persistent repository file with the following settings:
 
-BaseOS: http://servervm/repo/BaseOS/
-AppStream: http://servervm/repo/AppStream/
-gpgcheck: disabled
-Repositories: enabled
+- **BaseOS:** http://servervm/repo/BaseOS/
+- **AppStream:** http://servervm/repo/AppStream/
+- **gpgcheck:** disabled
+- **Repositories:** enabled
 
 ---
 
-### Task 02 — Server Repositories
+### Task 02 - Server Repositories
 **System:** servervm
 
 On servervm, configure the same repository file with the same settings.
 
 ---
 
-### Task 03 — Verify Repositories
+### Task 03 - Verify Repositories
 **System:** clientvm
 
 Verify that both repositories are available on both systems.

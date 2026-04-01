@@ -21,14 +21,14 @@ Configure user specific and global shell greetings.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure a login message for user nico19 that says:…
+### Task 01 - Configure a login message for user orien19 that says:…
 **System:** clientvm
 
-Configure a login message for user nico19 that says: Welcome to you, user Nico, you are amazing!
+Configure a login message for user orien19 that says: Welcome to you, user Orien, you are amazing!
 
 ---
 
-### Task 02 — Configure a global login message so any user…
+### Task 02 - Configure a global login message so any user…
 **System:** clientvm
 
 Configure a global login message so any user receives: Welcome [username], you are logged in! with the actual login name.
@@ -39,6 +39,6 @@ Configure a global login message so any user receives: Welcome [username], you a
 
 ### Validation Commands
 ```bash
-su - nico19 -c true
+su - orien19 -c true
 su - admin -c true
 ```

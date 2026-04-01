@@ -23,7 +23,7 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds default ACLs, umask tun
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Client Network
+### Question 01 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -38,7 +38,7 @@ hostnamectl set-hostname clientvm.summit.lab
 
 ---
 
-### Question 02 — Static Host Entry
+### Question 02 - Static Host Entry
 **System:** clientvm
 
 #### Command Flow
@@ -49,7 +49,7 @@ vim /etc/hosts
 
 ---
 
-### Question 03 — Client Repositories
+### Question 03 - Client Repositories
 **System:** clientvm
 
 #### Command Flow
@@ -70,7 +70,7 @@ gpgcheck=0
 
 ---
 
-### Question 04 — Server Repositories
+### Question 04 - Server Repositories
 **System:** servervm
 
 #### Command Flow
@@ -93,7 +93,7 @@ gpgcheck=0
 
 ---
 
-### Question 05 — Apache Custom Docroot
+### Question 05 - Apache Custom Docroot
 **System:** clientvm
 
 #### Command Flow
@@ -115,7 +115,7 @@ systemctl enable --now httpd
 
 ---
 
-### Question 06 — Users And Group
+### Question 06 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -130,22 +130,22 @@ usermod -aG summitops miles
 
 ---
 
-### Question 07 — User Passwords
+### Question 07 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd kara
-# enter: redhat
+# enter: cinder9
 passwd miles
-# enter: redhat
+# enter: cinder9
 passwd zero
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 08 — Delegated Sudo
+### Question 08 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -158,14 +158,14 @@ kara ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 09 — Shared Directory With Default ACL
+### Question 09 - Shared Directory With Default ACL
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m auditord
 passwd auditord
-# enter: redhat
+# enter: cinder9
 mkdir -p /projects/summit
 chown root:summitops /projects/summit
 chmod 2770 /projects/summit
@@ -174,7 +174,7 @@ setfacl -m d:u:auditord:rwx /projects/summit
 
 ---
 
-### Question 10 — User Umask
+### Question 10 - User Umask
 **System:** clientvm
 
 #### Command Flow
@@ -186,7 +186,7 @@ chown miles:miles /home/miles/.bashrc
 
 ---
 
-### Question 11 — Password Aging Defaults
+### Question 11 - Password Aging Defaults
 **System:** clientvm
 
 #### Command Flow
@@ -197,13 +197,13 @@ PASS_MIN_DAYS   2
 PASS_WARN_AGE   10
 useradd -m trainee54
 passwd trainee54
-# enter: redhat
+# enter: cinder9
 chage -l trainee54
 ```
 
 ---
 
-### Question 12 — Cron Logger
+### Question 12 - Cron Logger
 **System:** clientvm
 
 #### Command Flow
@@ -214,7 +214,7 @@ crontab -e -u miles
 
 ---
 
-### Question 13 — Chrony Client
+### Question 13 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -226,14 +226,14 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 14 — Autofs Map
+### Question 14 - Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m summitremote
 passwd summitremote
-# enter: redhat
+# enter: cinder9
 dnf -y install autofs
 vim /etc/auto.master.d/summit.autofs
 /summit-home /etc/auto.summit
@@ -244,19 +244,19 @@ systemctl enable --now autofs
 
 ---
 
-### Question 15 — Fixed UID User
+### Question 15 - Fixed UID User
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -u 4540 -m cedar540
 passwd cedar540
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 16 — Find And Copy
+### Question 16 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -267,7 +267,7 @@ find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-### Question 17 — Grep Filter
+### Question 17 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -277,7 +277,7 @@ grep alpha /usr/share/dict/words > /root/alpha-lines
 
 ---
 
-### Question 18 — Archive
+### Question 18 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -287,7 +287,7 @@ tar -czf /root/summit-etc.tar.gz /etc
 
 ---
 
-### Question 19 — Shell Script
+### Question 19 - Shell Script
 **System:** clientvm
 
 #### Command Flow
@@ -304,7 +304,7 @@ chmod +x /usr/local/bin/summit-scan
 
 ---
 
-### Question 20 — Swap Space
+### Question 20 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -321,7 +321,7 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-### Question 21 — Create And Mount LV
+### Question 21 - Create And Mount LV
 **System:** clientvm
 
 #### Command Flow
@@ -342,7 +342,7 @@ mount -a
 
 ---
 
-### Question 22 — Rootless Container Autostart
+### Question 22 - Rootless Container Autostart
 **System:** clientvm
 
 #### Command Flow

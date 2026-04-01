@@ -21,7 +21,7 @@ Configure clientvm to synchronize time from servervm.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure chrony on clientvm so it synchronizes only…
+### Task 01 - Configure chrony on clientvm so it synchronizes only…
 **System:** clientvm
 
 #### Command Flow

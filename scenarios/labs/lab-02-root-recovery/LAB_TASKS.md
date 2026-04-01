@@ -21,28 +21,28 @@ Recover root access through the bootloader and restore normal access on clientvm
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Recover root access on clientvm from the console and…
+### Task 01 - Recover root access on clientvm from the console and…
 **System:** clientvm
 
-Recover root access on clientvm from the console and set the root password to redhat.
+Recover root access on clientvm from the console and set the root password to cinder9.
 
 ---
 
-### Task 02 — After the system boots normally, confirm that SELinux…
+### Task 02 - After the system boots normally, confirm that SELinux…
 **System:** clientvm
 
 After the system boots normally, confirm that SELinux relabeling completed and root can log in again.
 
 ---
 
-### Task 03 — Leave SSH password authentication working for root…
+### Task 03 - Leave SSH password authentication working for root…
 **System:** clientvm
 
 Leave SSH password authentication working for root and admin.
 
 ### Hints
-- Use the rescue edit path with rd.break.
-- Remember to touch /.autorelabel before exiting the chroot.
+- Use the boot menu edit path with rw init=/bin/bash.
+- Remember to touch /.autorelabel before starting the normal init process.
 
 ### Validation Commands
 ```bash

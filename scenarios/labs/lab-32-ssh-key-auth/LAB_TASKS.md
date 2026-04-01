@@ -22,21 +22,21 @@ Configure passwordless SSH login from clientvm to servervm using a key pair.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create user ops32 on clientvm and user backup32 on…
+### Task 01 - Create user relay32 on clientvm and user vault32 on…
 **System:** clientvm + servervm
 
-Create user ops32 on clientvm and user backup32 on servervm. Set the password of both users to redhat.
+Create user relay32 on clientvm and user vault32 on servervm. Set the password of both users to cinder9.
 
 ---
 
-### Task 02 — Configure key-based SSH authentication so that user…
+### Task 02 - Configure key-based SSH authentication so that user…
 **System:** clientvm
 
-Configure key-based SSH authentication so that user ops32 on clientvm can log in to backup32@servervm without a password prompt.
+Configure key-based SSH authentication so that user relay32 on clientvm can log in to vault32@servervm without a password prompt.
 
 ---
 
-### Task 03 — Do not disable PasswordAuthentication globally for…
+### Task 03 - Do not disable PasswordAuthentication globally for…
 **System:** clientvm
 
 Do not disable PasswordAuthentication globally for this task.
@@ -47,5 +47,5 @@ Do not disable PasswordAuthentication globally for this task.
 
 ### Validation Commands
 ```bash
-runuser -l ops32 -c "ssh -o StrictHostKeyChecking=no -o BatchMode=yes backup32@servervm true"
+runuser -l relay32 -c "ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true"
 ```

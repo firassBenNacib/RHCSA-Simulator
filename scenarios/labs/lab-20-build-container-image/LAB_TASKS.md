@@ -21,14 +21,14 @@ Build and tag a local container image from a provided Containerfile.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — build an image named localhost/text2pdf20:latest from…
+### Task 01 - build an image named localhost/text2pdf20:latest from…
 **System:** clientvm
 
 As user builder20, build an image named localhost/text2pdf20:latest from /opt/rhcsa/workspaces/text2pdf20/Containerfile.
 
 ---
 
-### Task 02 — Verify that the image exists locally for that user
+### Task 02 - Verify that the image exists locally for that user
 **System:** clientvm
 
 Verify that the image exists locally for that user.

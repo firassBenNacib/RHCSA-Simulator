@@ -21,49 +21,49 @@ Load a provided container image into user storage and inspect its metadata with 
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create user inspect46 with password redhat if it does…
+### Task 01 - Create user scope46 with password cinder9 if it does…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-id inspect46 || useradd -m inspect46
-passwd inspect46
-# enter: redhat
+id scope46 || useradd -m scope46
+passwd scope46
+# enter: cinder9
 ```
 
 ---
 
-### Task 02 — load the image archive /opt/rhcsa/container-…
+### Task 02 - load the image archive /opt/rhcsa/container-…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l inspect46 -c "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
+runuser -l scope46 -c "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
 ```
 
 ---
 
-### Task 03 — inspect localhost/rhcsa-httpd-base:latest and write…
+### Task 03 - inspect localhost/rhcsa-httpd-base:latest and write…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l inspect46 -c "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt"
+runuser -l scope46 -c "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt"
 ```
 
 ---
 
-### Task 04 — If the image has no explicit configured user, write…
+### Task 04 - If the image has no explicit configured user, write…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l inspect46 -c "sh -c 'u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); printf %s \"${u:-root}\" > ~/user.txt'"
+runuser -l scope46 -c "sh -c 'u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); printf %s \"${u:-root}\" > ~/user.txt'"
 ```
 
 ---
 
 ### Verification
 ```bash
-runuser -l inspect46 -c "test -s ~/workdir.txt && test -s ~/user.txt"
+runuser -l scope46 -c "test -s ~/workdir.txt && test -s ~/user.txt"
 ```

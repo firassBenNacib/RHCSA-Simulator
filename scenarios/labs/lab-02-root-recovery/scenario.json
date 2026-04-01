@@ -19,13 +19,13 @@
   "content": {
     "lab": {
       "tasks": [
-        "Recover root access on clientvm from the console and set the root password to redhat.",
+        "Recover root access on clientvm from the console and set the root password to cinder9.",
         "After the system boots normally, confirm that SELinux relabeling completed and root can log in again.",
         "Leave SSH password authentication working for root and admin."
       ],
       "hints": [
-        "Use the rescue edit path with rd.break.",
-        "Remember to touch /.autorelabel before exiting the chroot."
+        "Use the boot menu edit path with rw init=/bin/bash.",
+        "Remember to touch /.autorelabel before starting the normal init process."
       ],
       "checks": [
         "getenforce",
@@ -43,15 +43,12 @@
       "task_points": [],
       "solution_commands": [
         [
-          "# At the boot menu, edit the selected entry and append rd.break to the linux line.",
-          "# Boot with Ctrl+x.",
-          "mount -o remount,rw /sysroot",
-          "chroot /sysroot",
+          "# At the boot menu, edit the selected kernel entry.",
+          "# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.",
           "passwd root",
-          "# enter: redhat",
+          "# enter: cinder9",
           "touch /.autorelabel",
-          "exit",
-          "exit"
+          "exec /sbin/init"
         ],
         [
           "getenforce",

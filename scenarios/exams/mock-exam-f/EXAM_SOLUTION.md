@@ -23,7 +23,7 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Client Network
+### Question 01 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -38,7 +38,7 @@ hostnamectl set-hostname clientvm.aurora.lab
 
 ---
 
-### Question 02 — Static Host Entry
+### Question 02 - Static Host Entry
 **System:** clientvm
 
 #### Command Flow
@@ -49,7 +49,7 @@ vim /etc/hosts
 
 ---
 
-### Question 03 — Client Repositories
+### Question 03 - Client Repositories
 **System:** clientvm
 
 #### Command Flow
@@ -70,7 +70,7 @@ gpgcheck=0
 
 ---
 
-### Question 04 — Server Repositories
+### Question 04 - Server Repositories
 **System:** servervm
 
 #### Command Flow
@@ -93,7 +93,7 @@ gpgcheck=0
 
 ---
 
-### Question 05 — Apache Custom Docroot
+### Question 05 - Apache Custom Docroot
 **System:** clientvm
 
 #### Command Flow
@@ -115,7 +115,7 @@ systemctl enable --now httpd
 
 ---
 
-### Question 06 — Users And Group
+### Question 06 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -130,22 +130,22 @@ usermod -aG auroraops risa
 
 ---
 
-### Question 07 — User Passwords
+### Question 07 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd elio
-# enter: redhat
+# enter: cinder9
 passwd risa
-# enter: redhat
+# enter: cinder9
 passwd nox
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 08 — Delegated Sudo
+### Question 08 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -158,14 +158,14 @@ elio ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 09 — Shared Directory With Default ACL
+### Question 09 - Shared Directory With Default ACL
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m auditf
 passwd auditf
-# enter: redhat
+# enter: cinder9
 mkdir -p /data/aurora
 chown root:auroraops /data/aurora
 chmod 2770 /data/aurora
@@ -174,7 +174,7 @@ setfacl -m d:u:auditf:rwx /data/aurora
 
 ---
 
-### Question 10 — User Umask
+### Question 10 - User Umask
 **System:** clientvm
 
 #### Command Flow
@@ -186,25 +186,25 @@ chown risa:risa /home/risa/.bashrc
 
 ---
 
-### Question 11 — SSH Key Authentication
+### Question 11 - SSH Key Authentication
 **System:** clientvm + servervm
 
 #### Command Flow
 ```bash
 useradd -m opsf
 passwd opsf
-# enter: redhat
+# enter: cinder9
 # on servervm
 useradd -m backupf
 passwd backupf
-# enter: redhat
+# enter: cinder9
 runuser -l opsf -c "ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa"
 runuser -l opsf -c "ssh-copy-id backupf@servervm"
 ```
 
 ---
 
-### Question 12 — Firewalld Rich Rule
+### Question 12 - Firewalld Rich Rule
 **System:** clientvm
 
 #### Command Flow
@@ -216,7 +216,7 @@ firewall-cmd --list-rich-rules
 
 ---
 
-### Question 13 — Chrony Client
+### Question 13 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -228,14 +228,14 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 14 — Autofs Map
+### Question 14 - Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m aurorarem
 passwd aurorarem
-# enter: redhat
+# enter: cinder9
 dnf -y install autofs
 vim /etc/auto.master.d/aurora.autofs
 /aurora/home /etc/auto.aurora
@@ -246,19 +246,19 @@ systemctl enable --now autofs
 
 ---
 
-### Question 15 — Fixed UID User
+### Question 15 - Fixed UID User
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -u 4560 -m pine560
 passwd pine560
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 16 — Find And Copy
+### Question 16 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -269,7 +269,7 @@ find /opt/exam-f/find -user seekerf -mtime -1 -type f -exec cp --parents {} /roo
 
 ---
 
-### Question 17 — Grep Filter
+### Question 17 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -279,7 +279,7 @@ grep comet /usr/share/dict/words > /root/comet-lines
 
 ---
 
-### Question 18 — Archive
+### Question 18 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -289,7 +289,7 @@ tar -czf /root/usr-local-f.tar.gz /usr/local
 
 ---
 
-### Question 19 — Shell Script
+### Question 19 - Shell Script
 **System:** clientvm
 
 #### Command Flow
@@ -306,7 +306,7 @@ chmod +x /usr/local/bin/aurora-report
 
 ---
 
-### Question 20 — Swap Space
+### Question 20 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -323,7 +323,7 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-### Question 21 — Create And Mount LV
+### Question 21 - Create And Mount LV
 **System:** clientvm
 
 #### Command Flow
@@ -344,7 +344,7 @@ mount -a
 
 ---
 
-### Question 22 — Rootless Container Autostart
+### Question 22 - Rootless Container Autostart
 **System:** clientvm
 
 #### Command Flow

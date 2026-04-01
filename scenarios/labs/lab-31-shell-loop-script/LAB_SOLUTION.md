@@ -21,7 +21,7 @@ Create a simple shell script that uses a loop to filter files by name.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create an executable script /usr/local/bin/listlogs31…
+### Task 01 - Create an executable script /usr/local/bin/listlogs31…
 **System:** clientvm
 
 #### Command Flow
@@ -38,7 +38,7 @@ chmod +x /usr/local/bin/listlogs31
 
 ---
 
-### Task 02 — Run the script once
+### Task 02 - Run the script once
 **System:** clientvm
 
 #### Command Flow

@@ -21,7 +21,7 @@ Extend an existing logical volume without losing data.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Resize logical volume /dev/reviewvg/reviewlv so the…
+### Task 01 - Resize logical volume /dev/reviewvg/reviewlv so the…
 **System:** clientvm
 
 #### Command Flow

@@ -23,20 +23,20 @@
   "content": {
     "exam": {
       "tasks": [
-        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
         "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.26\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.opsedge.lab",
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
         "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8282.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Make the SELinux change required for the new port.\n- Do not move or relabel the existing document root content.",
         "Create group sysopsa and users violet and amber with sysopsa as a supplementary group. Create user frost with /sbin/nologin and no sysopsa membership.",
-        "Set the password of violet, amber, and frost to redhat.",
+        "Set the password of violet, amber, and frost to cinder9.",
         "Allow members of sysopsa to run useradd through sudo, and allow violet to run passwd for other users without a sudo password prompt.",
         "Create /srv/sysopsa with group ownership sysopsa, no access for other users, and automatic group inheritance for new files.",
         "Configure a cron job for amber that runs every 2 minutes and logs the message \"OpsEdge tick\".",
         "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
-        "Create user netopsa with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /researcha/netopsa\nREMOTE EXPORT: servervm:/exports/researcha",
-        "Create user ash420 with UID 4420 and set its password to redhat.",
+        "Create user netopsa with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /researcha/netopsa\nREMOTE EXPORT: servervm:/exports/researcha",
+        "Create user ash420 with UID 4420 and set its password to cinder9.",
         "Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours, then copy them to /root/amber-files while preserving the source directory structure.",
         "Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.",
         "Create /root/etc-opsa.tar.bz2 containing /etc.",
@@ -73,14 +73,12 @@
       "task_points": [],
       "solution_commands": [
         [
-          "# At the boot menu, edit the kernel line and append rd.break",
-          "mount -o remount,rw /sysroot",
-          "chroot /sysroot",
+          "# At the boot menu, edit the selected kernel entry.",
+          "# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.",
           "passwd root",
-          "# enter: redhat",
+          "# enter: cinder9",
           "touch /.autorelabel",
-          "exit",
-          "exit"
+          "exec /sbin/init"
         ],
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
@@ -91,7 +89,7 @@
           "hostnamectl set-hostname clientvm.opsedge.lab"
         ],
         [
-          "grubby --update-kernel=ALL --args=\"audit=1\"",
+          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
           "grubby --info=ALL | grep -E \"^kernel|^args\""
         ],
         [
@@ -144,11 +142,11 @@
         ],
         [
           "passwd violet",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd amber",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd frost",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/sysopsa",
@@ -174,7 +172,7 @@
         [
           "useradd -m netopsa",
           "passwd netopsa",
-          "# enter: redhat",
+          "# enter: cinder9",
           "vim /etc/auto.opsa",
           "netopsa -rw,sync servervm:/exports/researcha",
           "vim /etc/auto.master.d/opsa.autofs",
@@ -184,7 +182,7 @@
         [
           "useradd -u 4420 ash420",
           "passwd ash420",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "find /opt/exam-a/find -type f -user amber -mtime -1 -exec cp --parents {} /root/amber-files \\;"

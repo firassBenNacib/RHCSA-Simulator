@@ -21,7 +21,7 @@ Configure default password aging for newly created local users through login.def
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure the system defaults for newly created local…
+### Task 01 - Configure the system defaults for newly created local…
 **System:** clientvm
 
 #### Command Flow
@@ -34,15 +34,15 @@ PASS_WARN_AGE   10
 
 ---
 
-### Task 02 — Create the user aging24, set its password to redhat,…
+### Task 02 - Create the user drift24, set its password to cinder9,…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-useradd -m aging24
-passwd aging24
-# enter: redhat
-chage -l aging24
+useradd -m drift24
+passwd drift24
+# enter: cinder9
+chage -l drift24
 ```
 
 ---
@@ -50,5 +50,5 @@ chage -l aging24
 ### Verification
 ```bash
 grep -E '^PASS_(MAX_DAYS|MIN_DAYS|WARN_AGE)' /etc/login.defs
-chage -l aging24
+chage -l drift24
 ```

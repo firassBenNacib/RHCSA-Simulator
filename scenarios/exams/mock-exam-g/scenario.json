@@ -23,20 +23,20 @@
   "content": {
     "exam": {
       "tasks": [
-        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
         "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.46\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.deltaforge.lab",
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
         "On clientvm and servervm, configure a repository file with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves content from /srv/delta-web on TCP port 8086.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Configure the SELinux file context and SELinux port label required for the new location and port.",
         "Create group deltaops and users gwen and pavel with deltaops as a supplementary group. Create user sable with /sbin/nologin and no deltaops membership.",
-        "Set the password of gwen, pavel, and sable to redhat.",
+        "Set the password of gwen, pavel, and sable to cinder9.",
         "Allow members of deltaops to run useradd through sudo, and allow gwen to run passwd for other users without a sudo password prompt.",
-        "Create user auditg with password redhat. Then create /projects/delta with group ownership deltaops, mode 2770, and a default ACL that gives auditg read write execute access to new content.",
+        "Create user auditg with password cinder9. Then create /projects/delta with group ownership deltaops, mode 2770, and a default ACL that gives auditg read write execute access to new content.",
         "Configure user pavel so that new regular files are created with mode 0640 and new directories are created with mode 0750.",
         "Create a one-time at job as user pavel that appends the text Delta queued to /home/pavel/at-g.log two minutes from now. Ensure the atd service is enabled and running.",
         "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
         "Mount the server export servervm:/exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.",
-        "Create user copyg on both systems with password redhat. Then configure key based SSH access for copyg from clientvm to servervm and copy /home/copyg/payload.txt to /home/copyg/inbox/ on servervm with scp.",
+        "Create user copyg on both systems with password cinder9. Then configure key based SSH access for copyg from clientvm to servervm and copy /home/copyg/payload.txt to /home/copyg/inbox/ on servervm with scp.",
         "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.",
         "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.",
         "Create /root/etc-g.tar.bz2 containing /etc.",
@@ -73,14 +73,12 @@
       "task_points": [],
       "solution_commands": [
         [
-          "# At the boot menu, edit the kernel line and append rd.break",
-          "mount -o remount,rw /sysroot",
-          "chroot /sysroot",
+          "# At the boot menu, edit the selected kernel entry.",
+          "# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.",
           "passwd root",
-          "# enter: redhat",
+          "# enter: cinder9",
           "touch /.autorelabel",
-          "exit",
-          "exit"
+          "exec /sbin/init"
         ],
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
@@ -90,7 +88,7 @@
           "hostnamectl set-hostname clientvm.deltaforge.lab"
         ],
         [
-          "grubby --update-kernel=ALL --args=\"audit=1\"",
+          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
           "grubby --info=ALL | grep -E \"^kernel|^args\""
         ],
         [
@@ -152,11 +150,11 @@
         ],
         [
           "passwd gwen",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd pavel",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd sable",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/deltaops",
@@ -169,7 +167,7 @@
         [
           "useradd -m auditg",
           "passwd auditg",
-          "# enter: redhat",
+          "# enter: cinder9",
           "mkdir -p /projects/delta",
           "chgrp deltaops /projects/delta",
           "chmod 2770 /projects/delta",
@@ -204,7 +202,7 @@
           "# On both systems",
           "useradd -m copyg",
           "passwd copyg",
-          "# enter: redhat",
+          "# enter: cinder9",
           "runuser -l copyg -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\"",
           "runuser -l copyg -c \"ssh-copy-id -o StrictHostKeyChecking=no copyg@192.168.122.3\"",
           "runuser -l copyg -c \"scp -o StrictHostKeyChecking=no /home/copyg/payload.txt copyg@192.168.122.3:/home/copyg/inbox/\""

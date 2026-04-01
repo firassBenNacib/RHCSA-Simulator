@@ -21,28 +21,28 @@ Create a small shell script that processes arguments and returns the correct exi
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create the executable script…
+### Task 01 - Create the executable script…
 **System:** clientvm
 
 Create the executable script /usr/local/bin/usercheck40 on clientvm.
 
 ---
 
-### Task 02 — The script must accept one username argument
+### Task 02 - The script must accept one username argument
 **System:** clientvm
 
 The script must accept one username argument.
 
 ---
 
-### Task 03 — If the user exists, print EXISTS: username to…
+### Task 03 - If the user exists, print EXISTS: username to…
 **System:** clientvm
 
-If the user exists, print EXISTS: username to standard output and exit with status 0.
+- **If the user exists, print EXISTS:** username to standard output and exit with status 0.
 
 ---
 
-### Task 04 — If the user does not exist, print MISSING: username…
+### Task 04 - If the user does not exist, print MISSING: username…
 **System:** clientvm
 
 If the user does not exist, print MISSING: username to standard output and exit with status 1.

@@ -23,24 +23,22 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, di
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Root Recovery
+### Question 01 - Root Recovery
 **System:** clientvm
 
 #### Command Flow
 ```bash
-# At the boot menu, edit the kernel line and append rd.break
-mount -o remount,rw /sysroot
-chroot /sysroot
+# At the boot menu, edit the selected kernel entry.
+# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
 passwd root
-# enter: redhat
+# enter: cinder9
 touch /.autorelabel
-exit
-exit
+exec /sbin/init
 ```
 
 ---
 
-### Question 02 — Client Network
+### Question 02 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -54,18 +52,18 @@ hostnamectl set-hostname clientvm.deltaforge.lab
 
 ---
 
-### Question 03 — Bootloader Kernel Argument
+### Question 03 - Bootloader Kernel Argument
 **System:** clientvm
 
 #### Command Flow
 ```bash
-grubby --update-kernel=ALL --args="audit=1"
+grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 grubby --info=ALL | grep -E "^kernel|^args"
 ```
 
 ---
 
-### Question 04 — Repositories On Both Systems
+### Question 04 - Repositories On Both Systems
 **System:** clientvm + servervm
 
 #### Command Flow
@@ -104,7 +102,7 @@ dnf clean all
 
 ---
 
-### Question 05 — Apache Custom Docroot
+### Question 05 - Apache Custom Docroot
 **System:** clientvm
 
 #### Command Flow
@@ -128,7 +126,7 @@ systemctl enable --now httpd
 
 ---
 
-### Question 06 — Users And Group
+### Question 06 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -143,22 +141,22 @@ usermod -aG deltaops pavel
 
 ---
 
-### Question 07 — User Passwords
+### Question 07 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd gwen
-# enter: redhat
+# enter: cinder9
 passwd pavel
-# enter: redhat
+# enter: cinder9
 passwd sable
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 08 — Delegated Sudo
+### Question 08 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -173,14 +171,14 @@ gwen ALL=(ALL) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 09 — Shared Directory With Default ACL
+### Question 09 - Shared Directory With Default ACL
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m auditg
 passwd auditg
-# enter: redhat
+# enter: cinder9
 mkdir -p /projects/delta
 chgrp deltaops /projects/delta
 chmod 2770 /projects/delta
@@ -190,7 +188,7 @@ setfacl -m d:u:auditg:rwx /projects/delta
 
 ---
 
-### Question 10 — User Umask
+### Question 10 - User Umask
 **System:** clientvm
 
 #### Command Flow
@@ -202,7 +200,7 @@ umask 027
 
 ---
 
-### Question 11 — At Job
+### Question 11 - At Job
 **System:** clientvm
 
 #### Command Flow
@@ -216,7 +214,7 @@ atq
 
 ---
 
-### Question 12 — Chrony Client
+### Question 12 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -230,7 +228,7 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 13 — Direct NFS Mount
+### Question 13 - Direct NFS Mount
 **System:** clientvm
 
 #### Command Flow
@@ -244,7 +242,7 @@ mount -a
 
 ---
 
-### Question 14 — SSH Key And Secure Copy
+### Question 14 - SSH Key And Secure Copy
 **System:** servervm
 
 #### Command Flow
@@ -252,7 +250,7 @@ mount -a
 # On both systems
 useradd -m copyg
 passwd copyg
-# enter: redhat
+# enter: cinder9
 runuser -l copyg -c "ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519"
 runuser -l copyg -c "ssh-copy-id -o StrictHostKeyChecking=no copyg@192.168.122.3"
 runuser -l copyg -c "scp -o StrictHostKeyChecking=no /home/copyg/payload.txt copyg@192.168.122.3:/home/copyg/inbox/"
@@ -260,7 +258,7 @@ runuser -l copyg -c "scp -o StrictHostKeyChecking=no /home/copyg/payload.txt cop
 
 ---
 
-### Question 15 — Find And Copy
+### Question 15 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -271,7 +269,7 @@ find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-### Question 16 — Grep Filter
+### Question 16 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -281,7 +279,7 @@ grep ember /usr/share/dict/words > /root/ember-lines
 
 ---
 
-### Question 17 — Archive
+### Question 17 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -291,7 +289,7 @@ tar -cjf /root/etc-g.tar.bz2 /etc
 
 ---
 
-### Question 18 — Persistent Journal
+### Question 18 - Persistent Journal
 **System:** clientvm
 
 #### Command Flow
@@ -305,7 +303,7 @@ systemctl restart systemd-journald
 
 ---
 
-### Question 19 — Process Renice And Kill
+### Question 19 - Process Renice And Kill
 **System:** clientvm
 
 #### Command Flow
@@ -316,7 +314,7 @@ renice 10 -p "$(cat /home/workerg/sleep.pid)"
 
 ---
 
-### Question 20 — Swap Space
+### Question 20 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -342,7 +340,7 @@ swapon -a
 
 ---
 
-### Question 21 — Create And Mount LV
+### Question 21 - Create And Mount LV
 **System:** clientvm
 
 #### Command Flow
@@ -372,7 +370,7 @@ mount -a
 
 ---
 
-### Question 22 — Rootless Container Autostart
+### Question 22 - Rootless Container Autostart
 **System:** clientvm
 
 #### Command Flow

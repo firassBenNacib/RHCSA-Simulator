@@ -21,19 +21,19 @@ Schedule a one time task with at and verify that the at daemon is enabled.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create the user atuser27 and set its password to…
+### Task 01 - Create the user queue27 and set its password to…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-useradd -m atuser27
-passwd atuser27
-# enter: redhat
+useradd -m queue27
+passwd queue27
+# enter: cinder9
 ```
 
 ---
 
-### Task 02 — Enable and start the atd service
+### Task 02 - Enable and start the atd service
 **System:** clientvm
 
 #### Command Flow
@@ -43,12 +43,12 @@ systemctl enable --now atd
 
 ---
 
-### Task 03 — schedule a one-time at job that appends the text AT27…
+### Task 03 - schedule a one-time at job that appends the text AT27…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l atuser27 -c "echo 'echo AT27 OK >> /home/atuser27/at27.log' | at now + 2 minutes"
+runuser -l queue27 -c "echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes"
 atq
 ```
 

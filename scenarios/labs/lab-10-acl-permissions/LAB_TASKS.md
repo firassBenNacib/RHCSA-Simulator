@@ -21,17 +21,17 @@ Apply fine grained access with POSIX ACLs.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Copy /etc/fstab to /var/tmp/fstab-acl
+### Task 01 - Copy /etc/fstab to /var/tmp/fstab-acl
 **System:** clientvm
 
 Copy /etc/fstab to /var/tmp/fstab-acl.
 
 ---
 
-### Task 02 — Set owner and group to root:root, remove all execute…
+### Task 02 - Set owner and group to root:root, remove all execute…
 **System:** clientvm
 
-Set owner and group to root:root, remove all execute bits, give natacl read-write, deny haracl all access, and allow others read only.
+- **Set owner and group to root:** root, remove all execute bits, give natacl read-write, deny haracl all access, and allow others read only.
 
 ### Hints
 - Create the users natacl and haracl if they are missing.

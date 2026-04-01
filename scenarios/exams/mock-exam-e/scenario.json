@@ -23,21 +23,21 @@
   "content": {
     "exam": {
       "tasks": [
-        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
         "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.harbor.lab",
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
         "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8181.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Make the SELinux change required for the new port.\n- Do not alter the existing site content.",
         "Create group harborops and users lena and ivor with harborops as a supplementary group. Create user hush with /sbin/nologin and no harborops membership.",
-        "Set the password of lena, ivor, and hush to redhat.",
+        "Set the password of lena, ivor, and hush to cinder9.",
         "Allow members of harborops to run useradd through sudo, and allow lena to restart httpd through sudo without a password prompt.",
         "Create /srv/harbor with group ownership harborops, permissions 2770, and inherited group ownership for new files.",
         "Configure a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12 and at least 3 character classes.",
         "Create a one-time at job as user ivor that appends the text Harbor queued to /home/ivor/at.log two minutes from now. Ensure the atd service is enabled and running.",
         "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
-        "Create user harborremote with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /harbor/home/harborremote\nREMOTE EXPORT: servervm:/exports/harborhome",
-        "Create user maple551 with UID 4551 and set its password to redhat.",
+        "Create user harborremote with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /harbor/home/harborremote\nREMOTE EXPORT: servervm:/exports/harborhome",
+        "Create user maple551 with UID 4551 and set its password to cinder9.",
         "Find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.",
         "Extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.",
         "Create /root/var-tmp-harbor.tar.bz2 containing /var/tmp.",
@@ -73,14 +73,12 @@
       "task_points": [],
       "solution_commands": [
         [
-          "# At the boot menu, edit the kernel line and append rd.break",
-          "mount -o remount,rw /sysroot",
-          "chroot /sysroot",
+          "# At the boot menu, edit the selected kernel entry.",
+          "# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.",
           "passwd root",
-          "# enter: redhat",
+          "# enter: cinder9",
           "touch /.autorelabel",
-          "exit",
-          "exit"
+          "exec /sbin/init"
         ],
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
@@ -91,7 +89,7 @@
           "hostnamectl set-hostname clientvm.harbor.lab"
         ],
         [
-          "grubby --update-kernel=ALL --args=\"audit=1\"",
+          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
           "grubby --info=ALL | grep -E \"^kernel|^args\""
         ],
         [
@@ -142,11 +140,11 @@
         ],
         [
           "passwd lena",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd ivor",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd hush",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/harborops",
@@ -178,7 +176,7 @@
         [
           "useradd -m harborremote",
           "passwd harborremote",
-          "# enter: redhat",
+          "# enter: cinder9",
           "dnf -y install autofs",
           "vim /etc/auto.master.d/harbor.autofs",
           "/harbor/home /etc/auto.harbor",
@@ -189,7 +187,7 @@
         [
           "useradd -u 4551 -m maple551",
           "passwd maple551",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "mkdir -p /root/scoutte-files",

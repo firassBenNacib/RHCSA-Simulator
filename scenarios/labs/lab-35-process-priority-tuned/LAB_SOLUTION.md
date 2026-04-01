@@ -21,7 +21,7 @@ Tune the system with the requested profile and adjust process scheduling priorit
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Install the tuned package if it is not already…
+### Task 01 - Install the tuned package if it is not already…
 **System:** clientvm
 
 #### Command Flow
@@ -33,7 +33,7 @@ tuned-adm profile throughput-performance
 
 ---
 
-### Task 02 — Start the command sleep 3600 in the background and…
+### Task 02 - Start the command sleep 3600 in the background and…
 **System:** clientvm
 
 #### Command Flow
@@ -44,7 +44,7 @@ echo $! > /root/sleep35.pid
 
 ---
 
-### Task 03 — Adjust the nice value of that process so it becomes 5
+### Task 03 - Adjust the nice value of that process so it becomes 5
 **System:** clientvm
 
 #### Command Flow

@@ -23,7 +23,7 @@ A second 22 task RHCSA style mock exam with distinct variables and combined task
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Client Network
+### Question 01 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -38,7 +38,7 @@ hostnamectl set-hostname clientvm.coremesh.lab
 
 ---
 
-### Question 02 — Host Entry
+### Question 02 - Host Entry
 **System:** clientvm
 
 #### Command Flow
@@ -49,7 +49,7 @@ vim /etc/hosts
 
 ---
 
-### Question 03 — Client Repositories
+### Question 03 - Client Repositories
 **System:** clientvm
 
 #### Command Flow
@@ -70,7 +70,7 @@ gpgcheck=0
 
 ---
 
-### Question 04 — Server Repositories
+### Question 04 - Server Repositories
 **System:** servervm
 
 #### Command Flow
@@ -92,7 +92,7 @@ gpgcheck=0
 
 ---
 
-### Question 05 — Apache Firewall SELinux
+### Question 05 - Apache Firewall SELinux
 **System:** clientvm
 
 #### Command Flow
@@ -108,7 +108,7 @@ systemctl restart httpd
 
 ---
 
-### Question 06 — Users And Group
+### Question 06 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -123,22 +123,22 @@ usermod -aG platformb jonas
 
 ---
 
-### Question 07 — User Passwords
+### Question 07 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd mira
-# enter: redhat
+# enter: cinder9
 passwd jonas
-# enter: redhat
+# enter: cinder9
 passwd noel
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 08 — Delegated Sudo
+### Question 08 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -151,7 +151,7 @@ mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
 
 ---
 
-### Question 09 — Setgid Directory
+### Question 09 - Setgid Directory
 **System:** clientvm
 
 #### Command Flow
@@ -163,7 +163,7 @@ chmod 2770 /srv/platformb
 
 ---
 
-### Question 10 — Cron Logger
+### Question 10 - Cron Logger
 **System:** clientvm
 
 #### Command Flow
@@ -174,7 +174,7 @@ crontab -e -u mira
 
 ---
 
-### Question 11 — Chrony Client
+### Question 11 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -187,14 +187,14 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 12 — Autofs Map
+### Question 12 - Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m meshremote
 passwd meshremote
-# enter: redhat
+# enter: cinder9
 vim /etc/auto.meshb
 meshremote -rw,sync servervm:/exports/meshb
 vim /etc/auto.master.d/meshb.autofs
@@ -204,19 +204,19 @@ systemctl enable --now autofs
 
 ---
 
-### Question 13 — Fixed UID User
+### Question 13 - Fixed UID User
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -u 4421 cato421
 passwd cato421
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 14 — Find And Copy
+### Question 14 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -226,7 +226,7 @@ find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/m
 
 ---
 
-### Question 15 — Grep Filter
+### Question 15 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -236,7 +236,7 @@ grep proto /usr/share/dict/words > /root/proto-lines
 
 ---
 
-### Question 16 — Archive
+### Question 16 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -246,7 +246,7 @@ tar -cjf /root/usr-local-b.tar.bz2 /usr/local
 
 ---
 
-### Question 17 — Unit Status Script
+### Question 17 - Unit Status Script
 **System:** clientvm
 
 #### Command Flow
@@ -262,7 +262,7 @@ chmod 755 /usr/local/bin/corecheck
 
 ---
 
-### Question 18 — Swap Space
+### Question 18 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -279,7 +279,7 @@ UUID=<uuid-of-sdb1> swap swap defaults 0 0
 
 ---
 
-### Question 19 — Resize Existing LV
+### Question 19 - Resize Existing LV
 **System:** clientvm
 
 #### Command Flow
@@ -290,7 +290,7 @@ resize2fs /dev/reviewvgb/reviewb
 
 ---
 
-### Question 20 — Tuned Profile
+### Question 20 - Tuned Profile
 **System:** clientvm
 
 #### Command Flow
@@ -301,7 +301,7 @@ tuned-adm profile <recommended-profile>
 
 ---
 
-### Question 21 — Rootless Container
+### Question 21 - Rootless Container
 **System:** clientvm
 
 #### Command Flow
@@ -315,7 +315,7 @@ exit
 
 ---
 
-### Question 22 — Container Autostart
+### Question 22 - Container Autostart
 **System:** clientvm
 
 #### Command Flow

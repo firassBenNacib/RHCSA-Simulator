@@ -13,7 +13,7 @@ EOF
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
 id copyg >/dev/null 2>&1 || useradd -m copyg
-printf 'copyg:redhat
+printf 'copyg:cinder9
 ' | chpasswd
 rm -rf /home/copyg/.ssh /home/copyg/inbox
 mkdir -p /home/copyg/inbox

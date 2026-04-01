@@ -35,7 +35,7 @@ cd rhcsa_exam_vms
 ```
 
 The simulator content is aligned to the official EX200V9K objective list from Red Hat's exam objectives PDF:
-[Red Hat Certification Exam Objectives by Version](https://learn.redhat.com/jfvwy86652/attachments/jfvwy86652/Linux/2255/1/Red%20Hat%20Certification%20Exam%20Objectives%20by%20Version%20%281%29.pdf)
+[Red Hat Certification Exam Objectives by Version](https://learn.cinder9.com/jfvwy86652/attachments/jfvwy86652/Linux/2255/1/Red%20Hat%20Certification%20Exam%20Objectives%20by%20Version%20%281%29.pdf)
 
 The imported objective review in this repo intentionally excludes Flatpak and RPM-management additions that you asked to keep out of scope for this simulator build.
 

@@ -23,7 +23,7 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds package management, boo
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Client Network
+### Question 01 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -37,7 +37,7 @@ hostnamectl set-hostname clientvm.silverpeak.lab
 
 ---
 
-### Question 02 — Static Host Entry
+### Question 02 - Static Host Entry
 **System:** clientvm
 
 #### Command Flow
@@ -49,7 +49,7 @@ vim /etc/hosts
 
 ---
 
-### Question 03 — Repositories On Both Systems
+### Question 03 - Repositories On Both Systems
 **System:** clientvm + servervm
 
 #### Command Flow
@@ -88,7 +88,7 @@ dnf clean all
 
 ---
 
-### Question 04 — Apache SELinux Port
+### Question 04 - Apache SELinux Port
 **System:** clientvm
 
 #### Command Flow
@@ -105,7 +105,7 @@ systemctl restart httpd
 
 ---
 
-### Question 05 — Users And Group
+### Question 05 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -120,22 +120,22 @@ usermod -aG silverops daren
 
 ---
 
-### Question 06 — User Passwords
+### Question 06 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd iris
-# enter: redhat
+# enter: cinder9
 passwd daren
-# enter: redhat
+# enter: cinder9
 passwd hush
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 07 — Delegated Sudo
+### Question 07 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -150,7 +150,7 @@ iris ALL=(ALL) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 08 — Setgid Directory
+### Question 08 - Setgid Directory
 **System:** clientvm
 
 #### Command Flow
@@ -162,7 +162,7 @@ chmod 2770 /srv/silver
 
 ---
 
-### Question 09 — Pwquality Policy
+### Question 09 - Pwquality Policy
 **System:** clientvm
 
 #### Command Flow
@@ -176,21 +176,21 @@ minclass = 3
 
 ---
 
-### Question 10 — Per-User Password Aging
+### Question 10 - Per-User Password Aging
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m agingh
 passwd agingh
-# enter: redhat
+# enter: cinder9
 chage -M 30 -m 2 -W 7 agingh
 chage -d 0 agingh
 ```
 
 ---
 
-### Question 11 — Chrony Client
+### Question 11 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -204,14 +204,14 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 12 — Autofs Map
+### Question 12 - Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m silverremote
 passwd silverremote
-# enter: redhat
+# enter: cinder9
 vim /etc/auto.silver
 silverremote -rw servervm:/exports/silverhome
 :wq
@@ -223,7 +223,7 @@ systemctl enable --now autofs
 
 ---
 
-### Question 13 — Firewalld Rich Rule
+### Question 13 - Firewalld Rich Rule
 **System:** clientvm
 
 #### Command Flow
@@ -234,7 +234,7 @@ firewall-cmd --reload
 
 ---
 
-### Question 14 — Find And Copy
+### Question 14 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -245,7 +245,7 @@ find /opt/exam-h/find -user watcherh -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-### Question 15 — Grep Filter
+### Question 15 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -255,7 +255,7 @@ grep silver /usr/share/dict/words > /root/silver-lines
 
 ---
 
-### Question 16 — Archive
+### Question 16 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -265,7 +265,7 @@ tar -czf /root/usr-local-h.tar.gz /usr/local
 
 ---
 
-### Question 17 — Swap Space
+### Question 17 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -291,7 +291,7 @@ swapon -a
 
 ---
 
-### Question 18 — Resize Existing LV
+### Question 18 - Resize Existing LV
 **System:** clientvm
 
 #### Command Flow
@@ -302,7 +302,7 @@ resize2fs /dev/reviewvgh/reviewh
 
 ---
 
-### Question 19 — Boot Target And Services
+### Question 19 - Boot Target And Services
 **System:** clientvm
 
 #### Command Flow
@@ -314,7 +314,7 @@ systemctl disable --now postfix
 
 ---
 
-### Question 20 — Install And Remove Packages
+### Question 20 - Install And Remove Packages
 **System:** clientvm
 
 #### Command Flow
@@ -326,21 +326,21 @@ rpm -q tree
 
 ---
 
-### Question 21 — Inspect Container Image
+### Question 21 - Inspect Container Image
 **System:** clientvm
 
 #### Command Flow
 ```bash
 id inspecth || useradd -m inspecth
 passwd inspecth
-# enter: redhat
+# enter: cinder9
 runuser -l inspecth -c "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
 runuser -l inspecth -c "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt"
 ```
 
 ---
 
-### Question 22 — Recommended Tuned Profile
+### Question 22 - Recommended Tuned Profile
 **System:** clientvm
 
 #### Command Flow

@@ -26,6 +26,118 @@ def normalize_task_text(value: str) -> str:
     return "\n".join(lines).strip()
 
 
+def _split_blocks(text: str) -> list[list[str]]:
+    blocks: list[list[str]] = []
+    current: list[str] = []
+    for raw in normalize_task_text(text).splitlines():
+        line = raw.rstrip()
+        if not line.strip():
+            if current:
+                blocks.append(current)
+                current = []
+            continue
+        current.append(line)
+    if current:
+        blocks.append(current)
+    return blocks
+
+
+def _is_list_line(line: str) -> bool:
+    stripped = line.strip()
+    return bool(re.match(r"^([-*]|\d+[.)])\s+", stripped))
+
+
+def _is_section_heading(line: str) -> bool:
+    stripped = line.strip()
+    return stripped.endswith(":") and ":" not in stripped[:-1] and len(stripped) <= 40
+
+
+def _is_key_value_line(line: str) -> bool:
+    stripped = line.strip()
+    if _is_list_line(stripped) or _is_section_heading(stripped):
+        return False
+    if ":" not in stripped:
+        return False
+    key, value = stripped.split(":", 1)
+    key = key.strip()
+    value = value.strip()
+    if not key or not value:
+        return False
+    if len(key) > 32:
+        return False
+    return True
+
+
+def _title_case_label(label: str) -> str:
+    cleaned = re.sub(r"\s+", " ", label.strip())
+    replacements = {
+        "Ip ": "IP ",
+        "Dns ": "DNS ",
+        "Url": "URL",
+        "Uid": "UID",
+        "Gid": "GID",
+        "Os": "OS",
+        "Baseos": "BaseOS",
+        "Appstream": "AppStream",
+        "Gpgcheck": "gpgcheck",
+    }
+    if cleaned.isupper() or cleaned.islower():
+        cleaned = cleaned.title()
+    for old, new in replacements.items():
+        cleaned = cleaned.replace(old, new)
+    return cleaned
+
+
+def render_task_body(value: str) -> str:
+    rendered: list[str] = []
+    for block in _split_blocks(value):
+        if all(_is_key_value_line(line) for line in block):
+            for line in block:
+                key, val = line.split(":", 1)
+                rendered.append(f"- **{_title_case_label(key)}:** {val.strip()}")
+            rendered.append("")
+            continue
+
+        idx = 0
+        while idx < len(block):
+            line = block[idx].strip()
+            if _is_section_heading(line):
+                rendered.append(f"**{line[:-1].strip()}**")
+                idx += 1
+                while idx < len(block) and _is_list_line(block[idx].strip()):
+                    rendered.append(block[idx].strip())
+                    idx += 1
+                rendered.append("")
+                continue
+            if _is_key_value_line(line):
+                group = []
+                while idx < len(block) and _is_key_value_line(block[idx].strip()):
+                    group.append(block[idx].strip())
+                    idx += 1
+                for item in group:
+                    key, val = item.split(":", 1)
+                    rendered.append(f"- **{_title_case_label(key)}:** {val.strip()}")
+                rendered.append("")
+                continue
+            if _is_list_line(line):
+                rendered.append(line)
+                idx += 1
+                continue
+            para = [line]
+            idx += 1
+            while idx < len(block):
+                nxt = block[idx].strip()
+                if _is_list_line(nxt) or _is_key_value_line(nxt) or _is_section_heading(nxt):
+                    break
+                para.append(nxt)
+                idx += 1
+            rendered.append(" ".join(para))
+            rendered.append("")
+    while rendered and rendered[-1] == "":
+        rendered.pop()
+    return "\n".join(rendered)
+
+
 def infer_system(task_text: str, requires_servervm: bool) -> str:
     lowered = task_text.lower()
     if re.search(r"\bon\s+clientvm\s+and\s+servervm\b|\bon\s+servervm\s+and\s+clientvm\b", lowered):
@@ -57,7 +169,7 @@ def infer_title_from_task(task_text: str) -> str:
 
 
 def render_task_heading(index: int, title: str, system: str, points: int | None, label: str) -> str:
-    heading = f"### {label} {index:02d} — {title}"
+    heading = f"### {label} {index:02d} - {title}"
     meta = [f"**System:** {system}"]
     if points is not None:
         meta.append(f"**Points:** {points}")
@@ -84,7 +196,7 @@ def render_tasks(tasks, task_titles, task_points, requires_servervm, label):
         points = get_task_points(task_points, index - 1)
         sections.append(render_task_heading(index, title, system, points, label))
         sections.append("")
-        sections.append(normalize_task_text(task))
+        sections.append(render_task_body(task))
         sections.append("")
         sections.append("---")
         sections.append("")

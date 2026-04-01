@@ -21,7 +21,7 @@ Create a filesystem, label it, and mount it persistently by label.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — On /dev/sdb, create a GPT partition of 600 MiB for an…
+### Task 01 - On /dev/sdb, create a GPT partition of 600 MiB for an…
 **System:** clientvm
 
 #### Command Flow
@@ -37,7 +37,7 @@ fdisk /dev/sdb
 
 ---
 
-### Task 02 — Format the new partition with the filesystem label…
+### Task 02 - Format the new partition with the filesystem label…
 **System:** clientvm
 
 #### Command Flow
@@ -48,7 +48,7 @@ mkdir -p /data44
 
 ---
 
-### Task 03 — Configure the mount persistently in /etc/fstab by…
+### Task 03 - Configure the mount persistently in /etc/fstab by…
 **System:** clientvm
 
 #### Command Flow

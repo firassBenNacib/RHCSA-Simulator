@@ -4,4 +4,4 @@ set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
 
-userdel -r choubix >/dev/null 2>&1 || true
+userdel -r tavric >/dev/null 2>&1 || true

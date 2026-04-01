@@ -20,7 +20,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
         "The change must persist across reboots and must not require manual GRUB editing during startup."
       ],
       "hints": [
@@ -28,7 +28,7 @@
         "Verify the configured kernel arguments for all installed kernels."
       ],
       "checks": [
-        "grubby --info=ALL | grep -E \"^args=\" | grep -q \"audit=1\""
+        "grubby --info=ALL | grep -E \"^args=\" | grep -q \"audit_backlog_limit=8192\""
       ],
       "solution_outline": [
         "Use grubby to update all installed kernels."
@@ -40,7 +40,7 @@
       "task_points": [],
       "solution_commands": [
         [
-          "grubby --update-kernel=ALL --args=\"audit=1\""
+          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\""
         ],
         [
           "grubby --info=ALL | grep -E \"^kernel|^args\""

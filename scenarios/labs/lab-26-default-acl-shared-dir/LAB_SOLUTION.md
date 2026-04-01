@@ -21,20 +21,20 @@ Create a collaborative directory that combines setgid permissions with a default
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create the group collab26 and the user qa26. Set the…
+### Task 01 - Create the group collab26 and the user probe26. Set…
 **System:** clientvm
 
 #### Command Flow
 ```bash
 groupadd collab26
-useradd -m qa26
-passwd qa26
-# enter: redhat
+useradd -m probe26
+passwd probe26
+# enter: cinder9
 ```
 
 ---
 
-### Task 02 — Create the directory /shared/collab26 with owner…
+### Task 02 - Create the directory /shared/collab26 with owner…
 **System:** clientvm
 
 #### Command Flow
@@ -46,12 +46,12 @@ chmod 2770 /shared/collab26
 
 ---
 
-### Task 03 — Configure a default ACL so that user qa26 receives…
+### Task 03 - Configure a default ACL so that user probe26 receives…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-setfacl -m d:u:qa26:rwx /shared/collab26
+setfacl -m d:u:probe26:rwx /shared/collab26
 getfacl /shared/collab26
 ```
 

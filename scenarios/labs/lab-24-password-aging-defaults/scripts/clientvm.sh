@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
             set -euo pipefail
-            userdel -r aging24 >/dev/null 2>&1 || true
+            userdel -r drift24 >/dev/null 2>&1 || true
             python - <<'EOF'
 from pathlib import Path
 p = Path('/etc/login.defs')

@@ -20,7 +20,7 @@
     "lab": {
       "tasks": [
         "Configure the system defaults for newly created local users with the following values:\n\nPASS_MAX_DAYS: 45\nPASS_MIN_DAYS: 2\nPASS_WARN_AGE: 10",
-        "Create the user aging24, set its password to redhat, and ensure the user inherits the default password aging policy."
+        "Create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy."
       ],
       "hints": [
         "Edit /etc/login.defs directly.",
@@ -28,7 +28,7 @@
       ],
       "checks": [
         "grep -E '^PASS_(MAX_DAYS|MIN_DAYS|WARN_AGE)' /etc/login.defs",
-        "chage -l aging24"
+        "chage -l drift24"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -46,10 +46,10 @@
           "PASS_WARN_AGE   10"
         ],
         [
-          "useradd -m aging24",
-          "passwd aging24",
-          "# enter: redhat",
-          "chage -l aging24"
+          "useradd -m drift24",
+          "passwd drift24",
+          "# enter: cinder9",
+          "chage -l drift24"
         ]
       ]
     }

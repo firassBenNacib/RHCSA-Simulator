@@ -21,7 +21,7 @@ Restore the default SELinux context on existing web content without disabling SE
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — the file /var/www/html/index45.html has the wrong…
+### Task 01 - the file /var/www/html/index45.html has the wrong…
 **System:** clientvm
 
 #### Command Flow
@@ -31,7 +31,7 @@ restorecon -v /var/www/html/index45.html
 
 ---
 
-### Task 02 — Ensure the httpd service is enabled and running.…
+### Task 02 - Ensure the httpd service is enabled and running.…
 **System:** clientvm
 
 #### Command Flow

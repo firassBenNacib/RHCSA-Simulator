@@ -22,21 +22,21 @@ Configure an indirect automount from servervm.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Seed Export And User
+### Task 01 - Seed Export And User
 **System:** clientvm + servervm
 
-On servervm, export /exports/netuser8. On clientvm, create user netuser8 with password redhat.
+On servervm, export /exports/vault8. On clientvm, create user vault8 with password cinder9.
 
 ---
 
-### Task 02 — Configure Autofs Map
+### Task 02 - Configure Autofs Map
 **System:** clientvm
 
-Configure autofs on clientvm so /netdir/netuser8 is mounted on demand from servervm:/exports/netuser8.
+Configure autofs on clientvm so /netdir/vault8 is mounted on demand from servervm:/exports/vault8.
 
 ---
 
-### Task 03 — Verify Access
+### Task 03 - Verify Access
 **System:** clientvm
 
 Leave the configuration persistent across reboot.
@@ -48,6 +48,6 @@ Leave the configuration persistent across reboot.
 ### Validation Commands
 ```bash
 showmount -e servervm
-ls -l /netdir/netuser8
-ls -l /netdir/netuser8/welcome.txt
+ls -l /netdir/vault8
+ls -l /netdir/vault8/welcome.txt
 ```

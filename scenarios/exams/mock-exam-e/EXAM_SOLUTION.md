@@ -23,24 +23,22 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at schedulin
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Root Recovery
+### Question 01 - Root Recovery
 **System:** clientvm
 
 #### Command Flow
 ```bash
-# At the boot menu, edit the kernel line and append rd.break
-mount -o remount,rw /sysroot
-chroot /sysroot
+# At the boot menu, edit the selected kernel entry.
+# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
 passwd root
-# enter: redhat
+# enter: cinder9
 touch /.autorelabel
-exit
-exit
+exec /sbin/init
 ```
 
 ---
 
-### Question 02 — Client Network
+### Question 02 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -55,18 +53,18 @@ hostnamectl set-hostname clientvm.harbor.lab
 
 ---
 
-### Question 03 — Bootloader Kernel Argument
+### Question 03 - Bootloader Kernel Argument
 **System:** clientvm
 
 #### Command Flow
 ```bash
-grubby --update-kernel=ALL --args="audit=1"
+grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 grubby --info=ALL | grep -E "^kernel|^args"
 ```
 
 ---
 
-### Question 04 — Client Repositories
+### Question 04 - Client Repositories
 **System:** clientvm
 
 #### Command Flow
@@ -87,7 +85,7 @@ gpgcheck=0
 
 ---
 
-### Question 05 — Server Repositories
+### Question 05 - Server Repositories
 **System:** servervm
 
 #### Command Flow
@@ -110,7 +108,7 @@ gpgcheck=0
 
 ---
 
-### Question 06 — Apache SELinux Port
+### Question 06 - Apache SELinux Port
 **System:** clientvm
 
 #### Command Flow
@@ -125,7 +123,7 @@ systemctl enable --now httpd
 
 ---
 
-### Question 07 — Users And Group
+### Question 07 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -140,22 +138,22 @@ usermod -aG harborops ivor
 
 ---
 
-### Question 08 — User Passwords
+### Question 08 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd lena
-# enter: redhat
+# enter: cinder9
 passwd ivor
-# enter: redhat
+# enter: cinder9
 passwd hush
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 09 — Delegated Sudo
+### Question 09 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -168,7 +166,7 @@ lena ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
 
 ---
 
-### Question 10 — Setgid Directory
+### Question 10 - Setgid Directory
 **System:** clientvm
 
 #### Command Flow
@@ -180,7 +178,7 @@ chmod 2770 /srv/harbor
 
 ---
 
-### Question 11 — Pwquality Policy
+### Question 11 - Pwquality Policy
 **System:** clientvm
 
 #### Command Flow
@@ -193,7 +191,7 @@ minclass = 3
 
 ---
 
-### Question 12 — At Job
+### Question 12 - At Job
 **System:** clientvm
 
 #### Command Flow
@@ -207,7 +205,7 @@ atq
 
 ---
 
-### Question 13 — Chrony Client
+### Question 13 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -219,14 +217,14 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 14 — Autofs Map
+### Question 14 - Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m harborremote
 passwd harborremote
-# enter: redhat
+# enter: cinder9
 dnf -y install autofs
 vim /etc/auto.master.d/harbor.autofs
 /harbor/home /etc/auto.harbor
@@ -237,19 +235,19 @@ systemctl enable --now autofs
 
 ---
 
-### Question 15 — Fixed UID User
+### Question 15 - Fixed UID User
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -u 4551 -m maple551
 passwd maple551
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 16 — Find And Copy
+### Question 16 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -260,7 +258,7 @@ find /opt/exam-e/find -user scoutte -mtime -1 -type f -exec cp --parents {} /roo
 
 ---
 
-### Question 17 — Grep Filter
+### Question 17 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -270,7 +268,7 @@ grep beacon /usr/share/dict/words > /root/beacon-lines
 
 ---
 
-### Question 18 — Archive
+### Question 18 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -280,7 +278,7 @@ tar -cjf /root/var-tmp-harbor.tar.bz2 /var/tmp
 
 ---
 
-### Question 19 — Shell Script
+### Question 19 - Shell Script
 **System:** clientvm
 
 #### Command Flow
@@ -297,7 +295,7 @@ chmod +x /usr/local/bin/harbor-check
 
 ---
 
-### Question 20 — Swap Space
+### Question 20 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -314,7 +312,7 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-### Question 21 — Resize Existing LV
+### Question 21 - Resize Existing LV
 **System:** clientvm
 
 #### Command Flow
@@ -325,7 +323,7 @@ resize2fs /dev/reviewvge/reviewe
 
 ---
 
-### Question 22 — Recommended Tuned Profile
+### Question 22 - Recommended Tuned Profile
 **System:** clientvm
 
 #### Command Flow

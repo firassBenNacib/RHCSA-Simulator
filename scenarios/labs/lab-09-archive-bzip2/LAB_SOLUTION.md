@@ -21,7 +21,7 @@ Create a compressed archive in bzip2 format.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create /root/myetcbackup.tar.bz2 containing the /etc…
+### Task 01 - Create /root/myetcbackup.tar.bz2 containing the /etc…
 **System:** clientvm
 
 #### Command Flow

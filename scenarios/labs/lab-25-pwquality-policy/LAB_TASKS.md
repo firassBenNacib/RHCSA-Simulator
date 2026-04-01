@@ -21,17 +21,17 @@ Configure a persistent local password quality policy without editing PAM service
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create a persistent password quality policy in…
+### Task 01 - Create a persistent password quality policy in…
 **System:** clientvm
 
 Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords must meet the following requirements:
 
-MINIMUM LENGTH: 12
-MINIMUM CHARACTER CLASSES: 3
+- **Minimum Length:** 12
+- **Minimum Character Classes:** 3
 
 ---
 
-### Task 02 — Do not edit any PAM service file for this task
+### Task 02 - Do not edit any PAM service file for this task
 **System:** clientvm
 
 Do not edit any PAM service file for this task.

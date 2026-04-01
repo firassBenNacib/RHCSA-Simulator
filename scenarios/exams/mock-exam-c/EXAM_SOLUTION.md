@@ -23,24 +23,22 @@ A third 22 task RHCSA style mock exam with another variable set and recovery wor
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 — Root Recovery
+### Question 01 - Root Recovery
 **System:** clientvm
 
 #### Command Flow
 ```bash
-# At the boot menu, edit the kernel line and append rd.break
-mount -o remount,rw /sysroot
-chroot /sysroot
+# At the boot menu, edit the selected kernel entry.
+# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
 passwd root
-# enter: redhat
+# enter: cinder9
 touch /.autorelabel
-exit
-exit
+exec /sbin/init
 ```
 
 ---
 
-### Question 02 — Client Network
+### Question 02 - Client Network
 **System:** clientvm
 
 #### Command Flow
@@ -55,18 +53,18 @@ hostnamectl set-hostname clientvm.northstar.lab
 
 ---
 
-### Question 03 — Bootloader Kernel Argument
+### Question 03 - Bootloader Kernel Argument
 **System:** clientvm
 
 #### Command Flow
 ```bash
-grubby --update-kernel=ALL --args="audit=1"
+grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 grubby --info=ALL | grep -E "^kernel|^args"
 ```
 
 ---
 
-### Question 04 — Client Repositories
+### Question 04 - Client Repositories
 **System:** clientvm
 
 #### Command Flow
@@ -87,7 +85,7 @@ gpgcheck=0
 
 ---
 
-### Question 05 — Server Repositories
+### Question 05 - Server Repositories
 **System:** servervm
 
 #### Command Flow
@@ -109,7 +107,7 @@ gpgcheck=0
 
 ---
 
-### Question 06 — Apache Firewall SELinux
+### Question 06 - Apache Firewall SELinux
 **System:** clientvm
 
 #### Command Flow
@@ -125,7 +123,7 @@ systemctl restart httpd
 
 ---
 
-### Question 07 — Users And Group
+### Question 07 - Users And Group
 **System:** clientvm
 
 #### Command Flow
@@ -140,22 +138,22 @@ usermod -aG infrac ren
 
 ---
 
-### Question 08 — User Passwords
+### Question 08 - User Passwords
 **System:** clientvm
 
 #### Command Flow
 ```bash
 passwd talia
-# enter: redhat
+# enter: cinder9
 passwd ren
-# enter: redhat
+# enter: cinder9
 passwd sage
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 09 — Delegated Sudo
+### Question 09 - Delegated Sudo
 **System:** clientvm
 
 #### Command Flow
@@ -168,7 +166,7 @@ talia ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 10 — Setgid Directory
+### Question 10 - Setgid Directory
 **System:** clientvm
 
 #### Command Flow
@@ -180,7 +178,7 @@ chmod 2770 /srv/infrac
 
 ---
 
-### Question 11 — Cron Logger
+### Question 11 - Cron Logger
 **System:** clientvm
 
 #### Command Flow
@@ -191,7 +189,7 @@ crontab -e -u ren
 
 ---
 
-### Question 12 — Chrony Client
+### Question 12 - Chrony Client
 **System:** clientvm
 
 #### Command Flow
@@ -204,14 +202,14 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 13 — Autofs Map
+### Question 13 - Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -m remote63
 passwd remote63
-# enter: redhat
+# enter: cinder9
 vim /etc/auto.bluec
 remote63 -rw,sync servervm:/exports/bluec
 vim /etc/auto.master.d/bluec.autofs
@@ -221,19 +219,19 @@ systemctl enable --now autofs
 
 ---
 
-### Question 14 — Fixed UID User
+### Question 14 - Fixed UID User
 **System:** clientvm
 
 #### Command Flow
 ```bash
 useradd -u 4431 kian431
 passwd kian431
-# enter: redhat
+# enter: cinder9
 ```
 
 ---
 
-### Question 15 — Find And Copy
+### Question 15 - Find And Copy
 **System:** clientvm
 
 #### Command Flow
@@ -243,7 +241,7 @@ find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/re
 
 ---
 
-### Question 16 — Grep Filter
+### Question 16 - Grep Filter
 **System:** clientvm
 
 #### Command Flow
@@ -253,7 +251,7 @@ grep orbit /usr/share/dict/words > /root/orbit-lines
 
 ---
 
-### Question 17 — Archive
+### Question 17 - Archive
 **System:** clientvm
 
 #### Command Flow
@@ -263,7 +261,7 @@ tar -cjf /root/etc-c.tar.bz2 /etc
 
 ---
 
-### Question 18 — Service Status Script
+### Question 18 - Service Status Script
 **System:** clientvm
 
 #### Command Flow
@@ -279,7 +277,7 @@ chmod 755 /usr/local/bin/northcheck
 
 ---
 
-### Question 19 — Swap Space
+### Question 19 - Swap Space
 **System:** clientvm
 
 #### Command Flow
@@ -296,7 +294,7 @@ UUID=<uuid-of-sdb1> swap swap defaults 0 0
 
 ---
 
-### Question 20 — Resize Existing LV
+### Question 20 - Resize Existing LV
 **System:** clientvm
 
 #### Command Flow
@@ -307,7 +305,7 @@ resize2fs /dev/reviewvgc/reviewc
 
 ---
 
-### Question 21 — Rootless Container
+### Question 21 - Rootless Container
 **System:** clientvm
 
 #### Command Flow
@@ -321,7 +319,7 @@ exit
 
 ---
 
-### Question 22 — Container Autostart
+### Question 22 - Container Autostart
 **System:** clientvm
 
 #### Command Flow

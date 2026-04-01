@@ -22,44 +22,44 @@ Configure passwordless SSH login from clientvm to servervm using a key pair.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create user ops32 on clientvm and user backup32 on…
+### Task 01 - Create user relay32 on clientvm and user vault32 on…
 **System:** clientvm + servervm
 
 #### Command Flow
 ```bash
-useradd -m ops32
-passwd ops32
-# enter: redhat
+useradd -m relay32
+passwd relay32
+# enter: cinder9
 # on servervm
-useradd -m backup32
-passwd backup32
-# enter: redhat
+useradd -m vault32
+passwd vault32
+# enter: cinder9
 ```
 
 ---
 
-### Task 02 — Configure key-based SSH authentication so that user…
+### Task 02 - Configure key-based SSH authentication so that user…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l ops32 -c "ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa"
-runuser -l ops32 -c "ssh-copy-id backup32@servervm"
+runuser -l relay32 -c "ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa"
+runuser -l relay32 -c "ssh-copy-id vault32@servervm"
 ```
 
 ---
 
-### Task 03 — Do not disable PasswordAuthentication globally for…
+### Task 03 - Do not disable PasswordAuthentication globally for…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-runuser -l ops32 -c "ssh -o StrictHostKeyChecking=no backup32@servervm true"
+runuser -l relay32 -c "ssh -o StrictHostKeyChecking=no vault32@servervm true"
 ```
 
 ---
 
 ### Verification
 ```bash
-runuser -l ops32 -c "ssh -o StrictHostKeyChecking=no -o BatchMode=yes backup32@servervm true"
+runuser -l relay32 -c "ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true"
 ```

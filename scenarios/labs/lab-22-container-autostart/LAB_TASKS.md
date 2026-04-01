@@ -21,24 +21,24 @@ Run a rootless container as a persistent user service.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Run The Container
+### Task 01 - Run The Container
 **System:** clientvm
 
-Create user student22 with password redhat if it does not already exist. Then, as that user, run a container named mycontainer22 from localhost/text2pdf22:latest with /opt/file22 mounted to /data/input and /opt/processed22 mounted to /data/output.
+Create user merin22 with password cinder9 if it does not already exist. Then, as that user, run a container named render22 from localhost/fluxpdf22:latest with /opt/inbox22 mounted to /data/input and /opt/outbox22 mounted to /data/output.
 
 ---
 
-### Task 02 — Generate User Service
+### Task 02 - Generate User Service
 **System:** clientvm
 
-As user student22, generate a systemd user unit for that container and enable it.
+As user merin22, generate a systemd user unit for that container and enable it.
 
 ---
 
-### Task 03 — Enable Lingering
+### Task 03 - Enable Lingering
 **System:** clientvm
 
-Enable lingering for student22 so the user service starts automatically after reboot.
+Enable lingering for merin22 so the user service starts automatically after reboot.
 
 ### Hints
 - Use podman generate systemd --files --new or podman generate systemd --new depending on the environment.
@@ -46,6 +46,6 @@ Enable lingering for student22 so the user service starts automatically after re
 
 ### Validation Commands
 ```bash
-loginctl show-user student22 | grep Linger
-runuser -l student22 -c "systemctl --user status container-mycontainer22.service --no-pager"
+loginctl show-user merin22 | grep Linger
+runuser -l merin22 -c "systemctl --user status container-render22.service --no-pager"
 ```

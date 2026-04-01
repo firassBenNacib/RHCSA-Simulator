@@ -21,7 +21,7 @@ Create a collaborative directory that preserves group ownership.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create /shared/analysts with group ownership of…
+### Task 01 - Create /shared/analysts with group ownership of…
 **System:** clientvm
 
 #### Command Flow
@@ -33,7 +33,7 @@ chmod 2770 /shared/analysts
 
 ---
 
-### Task 02 — Set the directory so new files inherit the analystsx…
+### Task 02 - Set the directory so new files inherit the analystsx…
 **System:** clientvm
 
 #### Command Flow
@@ -44,7 +44,7 @@ ls -l /shared/analysts/probe.txt
 
 ---
 
-### Task 03 — Verify the final directory permissions
+### Task 03 - Verify the final directory permissions
 **System:** clientvm
 
 #### Command Flow

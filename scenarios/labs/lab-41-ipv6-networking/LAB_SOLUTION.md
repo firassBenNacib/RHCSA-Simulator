@@ -21,7 +21,7 @@ Configure persistent IPv6 networking and hostname resolution on the client syste
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure the active clientvm connection with the…
+### Task 01 - Configure the active clientvm connection with the…
 **System:** clientvm
 
 #### Command Flow
@@ -34,7 +34,7 @@ nmcli connection up "$CONN"
 
 ---
 
-### Task 02 — Set the persistent hostname to clientvm.ipv6lab.local…
+### Task 02 - Set the persistent hostname to clientvm.ipv6lab.local…
 **System:** clientvm
 
 #### Command Flow
@@ -47,7 +47,7 @@ fd00:122:41::3 servervm.ipv6lab.local
 
 ---
 
-### Task 03 — Leave the existing IPv4 configuration unchanged
+### Task 03 - Leave the existing IPv4 configuration unchanged
 **System:** clientvm
 
 #### Command Flow

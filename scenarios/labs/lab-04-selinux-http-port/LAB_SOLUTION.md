@@ -21,7 +21,7 @@ Fix Apache so it listens on a nonstandard port without disabling SELinux.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure Apache on clientvm so it listens on TCP…
+### Task 01 - Configure Apache on clientvm so it listens on TCP…
 **System:** clientvm
 
 #### Command Flow
@@ -33,7 +33,7 @@ systemctl enable --now httpd
 
 ---
 
-### Task 02 — Allow TCP port 9082 through the firewall permanently
+### Task 02 - Allow TCP port 9082 through the firewall permanently
 **System:** clientvm
 
 #### Command Flow
@@ -44,7 +44,7 @@ firewall-cmd --reload
 
 ---
 
-### Task 03 — Make the SELinux changes needed so Apache serves the…
+### Task 03 - Make the SELinux changes needed so Apache serves the…
 **System:** clientvm
 
 #### Command Flow

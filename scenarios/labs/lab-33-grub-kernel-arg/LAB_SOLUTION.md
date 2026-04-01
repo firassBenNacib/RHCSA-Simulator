@@ -21,17 +21,17 @@ Modify the system bootloader so every installed kernel boots with the required p
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure the bootloader on clientvm so that every…
+### Task 01 - Configure the bootloader on clientvm so that every…
 **System:** clientvm
 
 #### Command Flow
 ```bash
-grubby --update-kernel=ALL --args="audit=1"
+grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 ```
 
 ---
 
-### Task 02 — The change must persist across reboots and must not…
+### Task 02 - The change must persist across reboots and must not…
 **System:** clientvm
 
 #### Command Flow
@@ -43,5 +43,5 @@ grubby --info=ALL | grep -E "^kernel|^args"
 
 ### Verification
 ```bash
-grubby --info=ALL | grep -E "^args=" | grep -q "audit=1"
+grubby --info=ALL | grep -E "^args=" | grep -q "audit_backlog_limit=8192"
 ```

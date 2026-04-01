@@ -23,20 +23,20 @@
   "content": {
     "exam": {
       "tasks": [
-        "Recover root access on clientvm from the console.\n\nSet the root password to: redhat",
+        "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
         "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.northstar.lab",
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit=1.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
+        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
         "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8484.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Allow the port in SELinux.\n- Do not alter the existing site content.",
         "Create group infrac and users talia and ren with infrac as a supplementary group. Create user sage with /sbin/nologin and no infrac membership.",
-        "Set the password of talia, ren, and sage to redhat.",
+        "Set the password of talia, ren, and sage to cinder9.",
         "Allow members of infrac to run useradd with sudo, and allow talia to run passwd for other users without a sudo password prompt.",
         "Create /srv/infrac with group ownership infrac, mode 2770, and inherited group ownership for new files.",
         "Configure a cron job for ren that runs every 5 minutes and logs the message \"NorthStar exam\".",
         "Configure chrony on clientvm so it synchronizes only with servervm.",
-        "Create user remote63 with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /bluec/remote63\nREMOTE EXPORT: servervm:/exports/bluec",
-        "Create user kian431 with UID 4431 and set its password to redhat.",
+        "Create user remote63 with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /bluec/remote63\nREMOTE EXPORT: servervm:/exports/bluec",
+        "Create user kian431 with UID 4431 and set its password to cinder9.",
         "Find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.",
         "Extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.",
         "Create /root/etc-c.tar.bz2 containing /etc.",
@@ -73,14 +73,12 @@
       "task_points": [],
       "solution_commands": [
         [
-          "# At the boot menu, edit the kernel line and append rd.break",
-          "mount -o remount,rw /sysroot",
-          "chroot /sysroot",
+          "# At the boot menu, edit the selected kernel entry.",
+          "# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.",
           "passwd root",
-          "# enter: redhat",
+          "# enter: cinder9",
           "touch /.autorelabel",
-          "exit",
-          "exit"
+          "exec /sbin/init"
         ],
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
@@ -91,7 +89,7 @@
           "hostnamectl set-hostname clientvm.northstar.lab"
         ],
         [
-          "grubby --update-kernel=ALL --args=\"audit=1\"",
+          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
           "grubby --info=ALL | grep -E \"^kernel|^args\""
         ],
         [
@@ -142,11 +140,11 @@
         ],
         [
           "passwd talia",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd ren",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd sage",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/infrac",
@@ -172,7 +170,7 @@
         [
           "useradd -m remote63",
           "passwd remote63",
-          "# enter: redhat",
+          "# enter: cinder9",
           "vim /etc/auto.bluec",
           "remote63 -rw,sync servervm:/exports/bluec",
           "vim /etc/auto.master.d/bluec.autofs",
@@ -182,7 +180,7 @@
         [
           "useradd -u 4431 kian431",
           "passwd kian431",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/ren-files \\;"

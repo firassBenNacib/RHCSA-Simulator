@@ -20,16 +20,16 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user copy48 on both clientvm and servervm. Set the password on both systems to redhat.",
-        "As user copy48 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
-        "Configure passwordless SSH access for copy48 from clientvm to servervm using the public key.",
-        "Using scp over SSH, copy /home/copy48/payload.txt from clientvm to /home/copy48/inbox/ on servervm."
+        "Create user bridge48 on both clientvm and servervm. Set the password on both systems to cinder9.",
+        "As user bridge48 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
+        "Configure passwordless SSH access for bridge48 from clientvm to servervm using the public key.",
+        "Using scp over SSH, copy /home/bridge48/payload.txt from clientvm to /home/bridge48/inbox/ on servervm."
       ],
       "hints": [
         "Use ssh-keygen, ssh-copy-id, and scp as the target user."
       ],
       "checks": [
-        "ssh -o BatchMode=yes -o StrictHostKeyChecking=no copy48@192.168.122.3 \"test -f /home/copy48/inbox/payload.txt\""
+        "ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@192.168.122.3 \"test -f /home/bridge48/inbox/payload.txt\""
       ],
       "solution_outline": [],
       "task_titles": [],
@@ -37,18 +37,18 @@
       "solution_commands": [
         [
           "# On both systems",
-          "useradd -m copy48",
-          "passwd copy48",
-          "# enter: redhat"
+          "useradd -m bridge48",
+          "passwd bridge48",
+          "# enter: cinder9"
         ],
         [
-          "runuser -l copy48 -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\""
+          "runuser -l bridge48 -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\""
         ],
         [
-          "runuser -l copy48 -c \"ssh-copy-id -o StrictHostKeyChecking=no copy48@192.168.122.3\""
+          "runuser -l bridge48 -c \"ssh-copy-id -o StrictHostKeyChecking=no bridge48@192.168.122.3\""
         ],
         [
-          "runuser -l copy48 -c \"scp -o StrictHostKeyChecking=no /home/copy48/payload.txt copy48@192.168.122.3:/home/copy48/inbox/\""
+          "runuser -l bridge48 -c \"scp -o StrictHostKeyChecking=no /home/bridge48/payload.txt bridge48@192.168.122.3:/home/bridge48/inbox/\""
         ]
       ]
     }

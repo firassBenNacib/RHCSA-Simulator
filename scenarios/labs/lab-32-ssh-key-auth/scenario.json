@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user ops32 on clientvm and user backup32 on servervm. Set the password of both users to redhat.",
-        "Configure key-based SSH authentication so that user ops32 on clientvm can log in to backup32@servervm without a password prompt.",
+        "Create user relay32 on clientvm and user vault32 on servervm. Set the password of both users to cinder9.",
+        "Configure key-based SSH authentication so that user relay32 on clientvm can log in to vault32@servervm without a password prompt.",
         "Do not disable PasswordAuthentication globally for this task."
       ],
       "hints": [
@@ -29,7 +29,7 @@
         "Populate authorized_keys for the target user."
       ],
       "checks": [
-        "runuser -l ops32 -c \"ssh -o StrictHostKeyChecking=no -o BatchMode=yes backup32@servervm true\""
+        "runuser -l relay32 -c \"ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true\""
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -42,20 +42,20 @@
       "task_points": [],
       "solution_commands": [
         [
-          "useradd -m ops32",
-          "passwd ops32",
-          "# enter: redhat",
+          "useradd -m relay32",
+          "passwd relay32",
+          "# enter: cinder9",
           "# on servervm",
-          "useradd -m backup32",
-          "passwd backup32",
-          "# enter: redhat"
+          "useradd -m vault32",
+          "passwd vault32",
+          "# enter: cinder9"
         ],
         [
-          "runuser -l ops32 -c \"ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa\"",
-          "runuser -l ops32 -c \"ssh-copy-id backup32@servervm\""
+          "runuser -l relay32 -c \"ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa\"",
+          "runuser -l relay32 -c \"ssh-copy-id vault32@servervm\""
         ],
         [
-          "runuser -l ops32 -c \"ssh -o StrictHostKeyChecking=no backup32@servervm true\""
+          "runuser -l relay32 -c \"ssh -o StrictHostKeyChecking=no vault32@servervm true\""
         ]
       ]
     }

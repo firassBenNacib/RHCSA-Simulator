@@ -1,0 +1,22 @@
+# Vagrant / VM state
+.vagrant/
+*.box
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local archives
+*.zip
+
+# Editor settings
+.vscode/
+.idea/

@@ -21,7 +21,7 @@ Extract matching lines from a seeded words file.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — From /usr/share/dict/words, extract the lines…
+### Task 01 - From /usr/share/dict/words, extract the lines…
 **System:** clientvm
 
 From /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines.

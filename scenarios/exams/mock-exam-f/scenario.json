@@ -29,15 +29,15 @@
         "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the Apache HTTP server on clientvm so that it serves content from /srv/aurora-web on TCP port 9090.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Configure the required SELinux file context and port label.\n- Do not modify /srv/aurora-web/index.html.",
         "Create group auroraops and users elio and risa with auroraops as a supplementary group. Create user nox with /sbin/nologin and no auroraops membership.",
-        "Set the password of elio, risa, and nox to redhat.",
+        "Set the password of elio, risa, and nox to cinder9.",
         "Allow members of auroraops to run useradd through sudo, and allow elio to run passwd for other users without a sudo password prompt.",
-        "Create user auditf with password redhat. Then create /data/aurora with group ownership auroraops, permissions 2770, inherited group ownership for new files, and a default ACL that grants auditf rwx on new content.",
+        "Create user auditf with password cinder9. Then create /data/aurora with group ownership auroraops, permissions 2770, inherited group ownership for new files, and a default ACL that grants auditf rwx on new content.",
         "Configure user risa so that new regular files are created with mode 0600 and new directories are created with mode 0700 when the user logs in.",
-        "Create user opsf on clientvm and user backupf on servervm. Set the password of both users to redhat. Then configure key-based SSH authentication so opsf on clientvm can log in to backupf@servervm without a password prompt.",
+        "Create user opsf on clientvm and user backupf on servervm. Set the password of both users to cinder9. Then configure key-based SSH authentication so opsf on clientvm can log in to backupf@servervm without a password prompt.",
         "Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24. Reload firewalld and verify the rule is active.",
         "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
-        "Create user aurorarem with password redhat and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /aurora/home/aurorarem\nREMOTE EXPORT: servervm:/exports/aurorahome",
-        "Create user pine560 with UID 4560 and set its password to redhat.",
+        "Create user aurorarem with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /aurora/home/aurorarem\nREMOTE EXPORT: servervm:/exports/aurorahome",
+        "Create user pine560 with UID 4560 and set its password to cinder9.",
         "Find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.",
         "Extract lines containing comet from /usr/share/dict/words into /root/comet-lines.",
         "Create /root/usr-local-f.tar.gz containing /usr/local.",
@@ -139,11 +139,11 @@
         ],
         [
           "passwd elio",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd risa",
-          "# enter: redhat",
+          "# enter: cinder9",
           "passwd nox",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "visudo -f /etc/sudoers.d/auroraops",
@@ -154,7 +154,7 @@
         [
           "useradd -m auditf",
           "passwd auditf",
-          "# enter: redhat",
+          "# enter: cinder9",
           "mkdir -p /data/aurora",
           "chown root:auroraops /data/aurora",
           "chmod 2770 /data/aurora",
@@ -168,11 +168,11 @@
         [
           "useradd -m opsf",
           "passwd opsf",
-          "# enter: redhat",
+          "# enter: cinder9",
           "# on servervm",
           "useradd -m backupf",
           "passwd backupf",
-          "# enter: redhat",
+          "# enter: cinder9",
           "runuser -l opsf -c \"ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa\"",
           "runuser -l opsf -c \"ssh-copy-id backupf@servervm\""
         ],
@@ -189,7 +189,7 @@
         [
           "useradd -m aurorarem",
           "passwd aurorarem",
-          "# enter: redhat",
+          "# enter: cinder9",
           "dnf -y install autofs",
           "vim /etc/auto.master.d/aurora.autofs",
           "/aurora/home /etc/auto.aurora",
@@ -200,7 +200,7 @@
         [
           "useradd -u 4560 -m pine560",
           "passwd pine560",
-          "# enter: redhat"
+          "# enter: cinder9"
         ],
         [
           "mkdir -p /root/seekerf-files",

@@ -21,7 +21,7 @@ Apply fine grained access with POSIX ACLs.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Copy /etc/fstab to /var/tmp/fstab-acl
+### Task 01 - Copy /etc/fstab to /var/tmp/fstab-acl
 **System:** clientvm
 
 #### Command Flow
@@ -35,7 +35,7 @@ chmod 644 /var/tmp/fstab-acl
 
 ---
 
-### Task 02 — Set owner and group to root:root, remove all execute…
+### Task 02 - Set owner and group to root:root, remove all execute…
 **System:** clientvm
 
 #### Command Flow

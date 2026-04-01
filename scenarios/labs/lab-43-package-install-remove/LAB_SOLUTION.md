@@ -21,7 +21,7 @@ Install packages from the prepared local repositories and remove the one that is
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Use the prepared local repositories on clientvm to…
+### Task 01 - Use the prepared local repositories on clientvm to…
 **System:** clientvm
 
 #### Command Flow
@@ -31,7 +31,7 @@ dnf install -y tree dos2unix
 
 ---
 
-### Task 02 — Remove dos2unix and leave tree installed
+### Task 02 - Remove dos2unix and leave tree installed
 **System:** clientvm
 
 #### Command Flow

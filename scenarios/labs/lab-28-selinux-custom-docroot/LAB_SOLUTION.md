@@ -21,7 +21,7 @@ Serve a custom document root on a nonstandard HTTP port while keeping SELinux en
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Configure Apache to serve content from…
+### Task 01 - Configure Apache to serve content from…
 **System:** clientvm
 
 #### Command Flow
@@ -37,7 +37,7 @@ vim /etc/httpd/conf.d/lab28.conf
 
 ---
 
-### Task 02 — Keep SELinux enforcing, configure the correct file…
+### Task 02 - Keep SELinux enforcing, configure the correct file…
 **System:** clientvm
 
 #### Command Flow
@@ -52,7 +52,7 @@ systemctl enable --now httpd
 
 ---
 
-### Task 03 — Do not edit or remove /srv/lab28/site/index.html
+### Task 03 - Do not edit or remove /srv/lab28/site/index.html
 **System:** clientvm
 
 #### Command Flow

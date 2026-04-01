@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
-id key39 >/dev/null 2>&1 || useradd -m key39
-printf 'key39:redhat\n' | chpasswd
-rm -rf /home/key39/.ssh /home/key39/server-data
-mkdir -p /home/key39/server-data
-chown -R key39:key39 /home/key39
+id mesh39 >/dev/null 2>&1 || useradd -m mesh39
+printf 'mesh39:cinder9\n' | chpasswd
+rm -rf /home/mesh39/.ssh /home/mesh39/server-data
+mkdir -p /home/mesh39/server-data
+chown -R mesh39:mesh39 /home/mesh39
 python - <<'EOF'
 from pathlib import Path
 p = Path('/etc/ssh/sshd_config')

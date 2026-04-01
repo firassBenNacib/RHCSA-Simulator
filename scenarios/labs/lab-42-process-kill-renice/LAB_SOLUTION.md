@@ -21,7 +21,7 @@ Identify a running process, terminate it, and adjust the scheduling priority of 
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — user worker42 has a CPU-bound process whose PID is…
+### Task 01 - user worker42 has a CPU-bound process whose PID is…
 **System:** clientvm
 
 #### Command Flow
@@ -31,7 +31,7 @@ kill "$(cat /home/worker42/cpu.pid)"
 
 ---
 
-### Task 02 — User worker42 also has a long-running sleep process…
+### Task 02 - User worker42 also has a long-running sleep process…
 **System:** clientvm
 
 #### Command Flow

@@ -22,30 +22,30 @@ Configure an indirect automount from servervm.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Seed Export And User
+### Task 01 - Seed Export And User
 **System:** clientvm + servervm
 
 #### Command Flow
 ```bash
 # On servervm
-mkdir -p /exports/netuser8
-printf "autofs lab 08\n" > /exports/netuser8/welcome.txt
+mkdir -p /exports/vault8
+printf "autofs lab 08\n" > /exports/vault8/welcome.txt
 exportfs -arv
 # On clientvm
-useradd -m netuser8
-passwd netuser8
-# enter: redhat
+useradd -m vault8
+passwd vault8
+# enter: cinder9
 ```
 
 ---
 
-### Task 02 — Configure Autofs Map
+### Task 02 - Configure Autofs Map
 **System:** clientvm
 
 #### Command Flow
 ```bash
 vim /etc/auto.lab8
-netuser8 -rw,sync servervm:/exports/netuser8
+vault8 -rw,sync servervm:/exports/vault8
 vim /etc/auto.master.d/lab8.autofs
 /netdir /etc/auto.lab8
 systemctl enable --now autofs
@@ -53,13 +53,13 @@ systemctl enable --now autofs
 
 ---
 
-### Task 03 — Verify Access
+### Task 03 - Verify Access
 **System:** clientvm
 
 #### Command Flow
 ```bash
-ls -l /netdir/netuser8
-cat /netdir/netuser8/welcome.txt
+ls -l /netdir/vault8
+cat /netdir/vault8/welcome.txt
 ```
 
 ---
@@ -67,6 +67,6 @@ cat /netdir/netuser8/welcome.txt
 ### Verification
 ```bash
 showmount -e servervm
-ls -l /netdir/netuser8
-ls -l /netdir/netuser8/welcome.txt
+ls -l /netdir/vault8
+ls -l /netdir/vault8/welcome.txt
 ```

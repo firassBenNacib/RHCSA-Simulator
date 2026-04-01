@@ -19,9 +19,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the user atuser27 and set its password to redhat.",
+        "Create the user queue27 and set its password to cinder9.",
         "Enable and start the atd service.",
-        "As user atuser27, schedule a one-time at job that appends the text AT27 OK to /home/atuser27/at27.log two minutes from now."
+        "As user queue27, schedule a one-time at job that appends the text AT27 OK to /home/queue27/at27.log two minutes from now."
       ],
       "hints": [
         "You can submit the job to at with standard input.",
@@ -43,15 +43,15 @@
       "task_points": [],
       "solution_commands": [
         [
-          "useradd -m atuser27",
-          "passwd atuser27",
-          "# enter: redhat"
+          "useradd -m queue27",
+          "passwd queue27",
+          "# enter: cinder9"
         ],
         [
           "systemctl enable --now atd"
         ],
         [
-          "runuser -l atuser27 -c \"echo 'echo AT27 OK >> /home/atuser27/at27.log' | at now + 2 minutes\"",
+          "runuser -l queue27 -c \"echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes\"",
           "atq"
         ]
       ]

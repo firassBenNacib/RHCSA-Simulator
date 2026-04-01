@@ -21,14 +21,14 @@ Run a container from a prepared local image with bind mounts.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — run a container named mycontainer21 from…
+### Task 01 - run a container named mycontainer21 from…
 **System:** clientvm
 
 As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest.
 
 ---
 
-### Task 02 — Bind mount /opt/file21 to /data/input and…
+### Task 02 - Bind mount /opt/file21 to /data/input and…
 **System:** clientvm
 
 Bind mount /opt/file21 to /data/input and /opt/processed21 to /data/output.

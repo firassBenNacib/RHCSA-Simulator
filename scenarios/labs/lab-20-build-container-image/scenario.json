@@ -41,7 +41,7 @@
         [
           "id builder20 || useradd -m builder20",
           "passwd builder20",
-          "# enter: redhat",
+          "# enter: cinder9",
           "su - builder20",
           "cd /opt/rhcsa/workspaces/text2pdf20",
           "podman build -t localhost/text2pdf20:latest .",

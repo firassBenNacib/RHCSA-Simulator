@@ -21,14 +21,14 @@ Run a container from a prepared local image with bind mounts.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — run a container named mycontainer21 from…
+### Task 01 - run a container named mycontainer21 from…
 **System:** clientvm
 
 #### Command Flow
 ```bash
 id runner21 || useradd -m runner21
 passwd runner21
-# enter: redhat
+# enter: cinder9
 su - runner21
 podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest
 podman ps
@@ -37,7 +37,7 @@ exit
 
 ---
 
-### Task 02 — Bind mount /opt/file21 to /data/input and…
+### Task 02 - Bind mount /opt/file21 to /data/input and…
 **System:** clientvm
 
 #### Command Flow

@@ -13,7 +13,7 @@ if [[ -n "${connection_name:-}" ]]; then
   nmcli connection up "$connection_name" >/dev/null 2>&1 || true
 fi
 if command -v grubby >/dev/null 2>&1; then
-  grubby --update-kernel=ALL --remove-args="audit=1" >/dev/null 2>&1 || true
+  grubby --update-kernel=ALL --remove-args="audit_backlog_limit=8192" >/dev/null 2>&1 || true
 fi
 mkdir -p /srv/delta-web
 printf 'delta forge page
@@ -51,7 +51,7 @@ umount /mnt/delta-home >/dev/null 2>&1 || true
 sed -i '\#/mnt/delta-home#d' /etc/fstab
 rm -f /home/copyg/.ssh/authorized_keys /root/.ssh/known_hosts >/dev/null 2>&1 || true
 id copyg >/dev/null 2>&1 || useradd -m copyg
-printf 'copyg:redhat
+printf 'copyg:cinder9
 ' | chpasswd
 rm -rf /home/copyg/.ssh /home/copyg/inbox
 printf 'copy g payload

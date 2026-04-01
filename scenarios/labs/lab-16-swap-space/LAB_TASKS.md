@@ -21,7 +21,7 @@ Add a persistent swap partition on an extra disk.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 — Create a 400 MiB swap partition on /dev/sdb, enable…
+### Task 01 - Create a 400 MiB swap partition on /dev/sdb, enable…
 **System:** clientvm
 
 Create a 400 MiB swap partition on /dev/sdb, enable it, and make it persistent.
