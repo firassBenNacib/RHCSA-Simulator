@@ -6,11 +6,48 @@ import re
 import shutil
 import textwrap
 from pathlib import Path
+from typing import Any, TypedDict, cast
 
 ROOT = Path(__file__).resolve().parents[1]
 LABS_ROOT = ROOT / "scenarios" / "labs"
 EXAMS_ROOT = ROOT / "scenarios" / "exams"
 EXERCISES_ROOT = ROOT / "exercises"
+
+
+class ExercisePaths(TypedDict):
+    prompt: str
+    hint: str
+    check: str
+    solution: str
+    metadata: str
+
+
+class LabCatalogEntry(TypedDict):
+    id: str
+    title: str
+    description: str
+    time_limit_minutes: int
+    objective_tags: list[str]
+    requires_servervm: bool
+    paths: ExercisePaths
+    source_manifest: str
+
+
+class ExamPaths(TypedDict):
+    tasks: str
+    solution: str
+
+
+class ExamCatalogEntry(TypedDict):
+    id: str
+    title: str
+    description: str
+    time_limit_minutes: int
+    objective_tags: list[str]
+    requires_servervm: bool
+    password_recovery: bool
+    source_manifest: str
+    paths: ExamPaths
 
 
 def write_text(path: Path, content: str) -> None:
@@ -307,7 +344,7 @@ def render_check_script(data: dict, checks: list[dict[str, object]]) -> str:
     return "\n".join(lines).rstrip()
 
 
-def render_catalog(entries: list[dict[str, object]]) -> str:
+def render_catalog(entries: list[LabCatalogEntry]) -> str:
     lines = [
         'title = "RHCSA Labs"',
         'track = "rhcsa"',
@@ -331,7 +368,7 @@ def render_catalog(entries: list[dict[str, object]]) -> str:
     return "\n".join(lines).rstrip()
 
 
-def render_root_readme(entries: list[dict[str, object]]) -> str:
+def render_root_readme(entries: list[LabCatalogEntry]) -> str:
     lines = [
         "# RHCSA Exercises",
         "",
@@ -345,18 +382,11 @@ def render_root_readme(entries: list[dict[str, object]]) -> str:
         "- `catalog.json` contains the generated lab catalog for the TUI.",
         "- `exams.json` contains the generated exam catalog for the TUI.",
         "",
-        f"Current lab count: {len(entries)}",
-        "",
-        "Regenerate these files after editing lab manifests:",
-        "",
-        "```powershell",
-        "python .\\host\\generate_exercises.py",
-        "```",
     ]
     return "\n".join(lines).rstrip()
 
 
-def build_exam_entry(data: dict) -> dict[str, object]:
+def build_exam_entry(data: dict[str, Any]) -> ExamCatalogEntry:
     exam_root = ROOT / "scenarios" / "exams" / data["id"]
     exam_tasks = exam_root / "EXAM_TASKS.md"
     exam_solution = exam_root / "EXAM_SOLUTION.md"
@@ -378,12 +408,12 @@ def build_exam_entry(data: dict) -> dict[str, object]:
 
 def main() -> None:
     EXERCISES_ROOT.mkdir(parents=True, exist_ok=True)
-    labs = []
-    exams = []
+    labs: list[LabCatalogEntry] = []
+    exams: list[ExamCatalogEntry] = []
     expected_ids: set[str] = set()
 
     for manifest_path in sorted(LABS_ROOT.glob("*/scenario.json")):
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        data: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
         supported_modes = [mode.lower() for mode in data.get("supported_modes", [])]
         if "lab" not in supported_modes:
             continue
@@ -447,12 +477,12 @@ def main() -> None:
             "time_limit_minutes": data["time_limit_minutes"],
             "objective_tags": data.get("objective_tags", []),
             "requires_servervm": requires_servervm,
-            "paths": metadata["paths"],
+            "paths": cast(ExercisePaths, metadata["paths"]),
             "source_manifest": relpath(manifest_path),
         })
 
     for manifest_path in sorted(EXAMS_ROOT.glob("*/scenario.json")):
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        data: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
         supported_modes = [mode.lower() for mode in data.get("supported_modes", [])]
         if "exam" not in supported_modes:
             continue

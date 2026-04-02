@@ -1758,6 +1758,8 @@ function Write-LabCheckScript {
 }
 
 function New-SshSessionKeyFile {
+    [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
         [string]$SourcePath,
@@ -1767,11 +1769,13 @@ function New-SshSessionKeyFile {
     )
 
     $tempPath = Join-Path ([System.IO.Path]::GetTempPath()) ("rhcsa-{0}-{1}.key" -f $MachineName, [System.Guid]::NewGuid().ToString('N'))
-    Copy-Item -Path $SourcePath -Destination $tempPath -Force
+    if ($PSCmdlet.ShouldProcess($tempPath, 'Create temporary SSH session key file')) {
+        Copy-Item -Path $SourcePath -Destination $tempPath -Force
 
-    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
-        $grantTarget = if (-not [string]::IsNullOrWhiteSpace([string]$env:USERNAME)) { "{0}:F" -f $env:USERNAME } else { '{0}:F' -f [System.Environment]::UserName }
-        $null = & icacls.exe $tempPath '/inheritance:r' '/grant:r' $grantTarget
+        if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+            $grantTarget = if (-not [string]::IsNullOrWhiteSpace([string]$env:USERNAME)) { "{0}:F" -f $env:USERNAME } else { '{0}:F' -f [System.Environment]::UserName }
+            $null = & icacls.exe $tempPath '/inheritance:r' '/grant:r' $grantTarget
+        }
     }
 
     return $tempPath
@@ -2577,7 +2581,7 @@ function Start-BaselineSession {
     if ([string]::IsNullOrWhiteSpace((Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot))) {
         Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
     }
-    Ensure-ClientLabDisks -ProjectRoot $ProjectRoot | Out-Null
+    Initialize-ClientLabDiskSet -ProjectRoot $ProjectRoot | Out-Null
 
     $script:WorkflowProgressArea = 'baseline'
     $script:WorkflowProgressIndex = 0
@@ -2628,7 +2632,7 @@ function Start-BaselineSession {
                 $message -match 'clientvm-disk[0-9]+(?:-[0-9A-Za-z_-]+)?\.vdi' -and
                 $message -match 'VERR_ALREADY_EXISTS|VERR_FILE_NOT_FOUND|Invalid UUID or filename|Could not find file for the medium'
             ) {
-                $removedDisk = @(Remove-OrphanLabDiskSet -Force -ProjectRoot $ProjectRoot)
+                @(Remove-OrphanLabDiskSet -Force -ProjectRoot $ProjectRoot) | Out-Null
                 $notices += 'Rebuilt the clientvm lab disk set after a stale or missing disk error.'
                 Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
                 Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
@@ -3048,6 +3052,7 @@ function Get-LabVBoxVmCandidate {
 
 function Remove-OrphanLabDiskSet {
     [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([object[]])]
     param(
         [ValidateSet('clientvm')]
         [string]$MachineName = 'clientvm',
@@ -3267,8 +3272,9 @@ function Invoke-VBoxHardDiskCleanup {
     }
 }
 
-function Ensure-VBoxLabDiskFile {
+function Initialize-VBoxLabDiskFile {
     [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
         [string]$Path,
@@ -3309,8 +3315,9 @@ function Ensure-VBoxLabDiskFile {
     return $Path
 }
 
-function Ensure-ClientLabDisks {
+function Initialize-ClientLabDiskSet {
     [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([object[]])]
     param(
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
@@ -3340,7 +3347,7 @@ function Ensure-ClientLabDisks {
     }
 
     foreach ($path in $paths) {
-        Ensure-VBoxLabDiskFile -Path $path -SizeMB 2048 -SkipFolderCleanup:$needsRebuild -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage | Out-Null
+        Initialize-VBoxLabDiskFile -Path $path -SizeMB 2048 -SkipFolderCleanup:$needsRebuild -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage | Out-Null
     }
 
     return $paths
@@ -3497,6 +3504,7 @@ function Open-RhcsaTui {
                     Remove-Item -Path $_.FullName -Force -ErrorAction Stop
                 }
                 catch {
+                    Write-Verbose "Skipping removal of stale TUI launcher '$($_.FullName)' because it is currently locked."
                 }
             }
 
