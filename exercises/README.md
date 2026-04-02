@@ -1,6 +1,6 @@
 # RHCSA Exercises
 
-Generated lab exercise assets modeled after a dockerlings-style layout.
+Generated lab exercise assets.
 
 - `prompt.md` contains the trainee handout for a focused lab.
 - `hint.md` contains the lab hints.

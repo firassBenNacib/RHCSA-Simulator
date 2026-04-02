@@ -16,10 +16,10 @@ An interactive PowerShell project for running RHCSA v9 practice labs and mock ex
 
 * Windows 10 or 11
 * PowerShell 5.1 or newer
-* [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on PATH
-* [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on PATH
+* [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
+* [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * [rhel-9.7-x86_64-dvd.iso](https://developers.redhat.com/content-gateway/file/rhel/Red_Hat_Enterprise_Linux_9.7/rhel-9.7-x86_64-dvd.iso) in the project root, downloaded from [Red Hat Developer](https://developers.redhat.com/products/rhel/download) or the Red Hat Customer Portal
-* [Go](https://go.dev/dl/) installed and on PATH if you want to use the TUI
+* [Go](https://go.dev/dl/) installed and on **PATH** if you want to use the TUI
 
 ## Installation
 
