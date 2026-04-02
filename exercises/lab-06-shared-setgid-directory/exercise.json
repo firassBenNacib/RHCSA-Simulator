@@ -1,0 +1,65 @@
+{
+  "id": "lab-06-shared-setgid-directory",
+  "title": "Lab 06: Shared Setgid Directory",
+  "description": "Create a collaborative directory that preserves group ownership.",
+  "time_limit_minutes": 25,
+  "objective_tags": [
+    "filesystems-and-autofs"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-06-shared-setgid-directory/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-06-shared-setgid-directory/prompt.md",
+    "hint": "exercises/lab-06-shared-setgid-directory/hint.md",
+    "check": "exercises/lab-06-shared-setgid-directory/check.sh",
+    "solution": "exercises/lab-06-shared-setgid-directory/solution.md",
+    "metadata": "exercises/lab-06-shared-setgid-directory/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Create /shared/analysts with group ownership of",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Create /shared/analysts with group ownership of analystsx and allow access only to root and members of analystsx.",
+      "solution_commands": [
+        "mkdir -p /shared/analysts",
+        "chgrp analystsx /shared/analysts",
+        "chmod 2770 /shared/analysts"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Set the directory so new files inherit the",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Set the directory so new files inherit the analystsx group automatically.",
+      "solution_commands": [
+        "touch /shared/analysts/probe.txt",
+        "ls -l /shared/analysts/probe.txt"
+      ]
+    },
+    {
+      "index": 3,
+      "title": "Verify the final directory permissions",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Verify the final directory permissions.",
+      "solution_commands": [
+        "ls -ld /shared/analysts"
+      ]
+    }
+  ],
+  "hints": [
+    "The group analystsx already exists for this lab.",
+    "The directory must keep the setgid bit."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "stat -c '%A %a %G' /shared/analysts | grep -qx 'drwxrws--- 2770 analystsx'",
+      "command": "stat -c '%A %a %G' /shared/analysts | grep -qx 'drwxrws--- 2770 analystsx'"
+    }
+  ]
+}

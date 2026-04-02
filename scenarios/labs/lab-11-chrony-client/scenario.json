@@ -26,16 +26,18 @@
         "Use iburst on the server line."
       ],
       "checks": [
-        "chronyc sources -v",
-        "systemctl status chronyd --no-pager"
+        "awk '$1 ~ /^(server|pool)$/ { if ($2 != \"servervm\") bad=1; if ($1==\"server\" && $2==\"servervm\") good=1 } END { exit !(good && !bad) }' /etc/chrony.conf",
+        "systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01"
+        "Configure chrony on clientvm so it synchronizes..."
       ],
-      "task_points": [],
+      "task_points": [
+        10
+      ],
       "solution_commands": [
         [
           "vim /etc/chrony.conf",

@@ -27,11 +27,19 @@
         "Use chage, not manual edits to /etc/shadow."
       ],
       "checks": [
-        "chage -l cycle47"
+        "chage -l cycle47 | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l cycle47 | grep -Eq 'Maximum number of days between password change[^0-9]*30$' && chage -l cycle47 | grep -Eq 'Number of days of warning before password expires[^0-9]*7$' && chage -l cycle47 | grep -Eq 'Last password change[^:]*: password must be changed'"
       ],
       "solution_outline": [],
-      "task_titles": [],
-      "task_points": [],
+      "task_titles": [
+        "Create user cycle47 with password cinder9 if it...",
+        "Configure cycle47 with a maximum password age of 30...",
+        "Force cycle47 to change the password at the next login"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id cycle47 || useradd -m cycle47",

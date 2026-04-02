@@ -27,22 +27,27 @@
         "Use podman run with two bind mounts."
       ],
       "checks": [
-        "runuser -l runner21 -c \"podman ps --format \"{{.Names}}\"\""
+        "runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "run a container named mycontainer21 from...",
+        "Bind mount /opt/file21 to /data/input and..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id runner21 || useradd -m runner21",
           "passwd runner21",
           "# enter: cinder9",
-          "su - runner21",
+          "su - runner21"
+        ],
+        [
           "podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest",
           "podman ps",
           "exit"

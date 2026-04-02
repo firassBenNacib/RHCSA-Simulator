@@ -1,0 +1,57 @@
+{
+  "id": "lab-21-run-container",
+  "title": "Lab 21: Run A Container",
+  "description": "Run a container from a prepared local image with bind mounts.",
+  "time_limit_minutes": 25,
+  "objective_tags": [
+    "containers"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-21-run-container/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-21-run-container/prompt.md",
+    "hint": "exercises/lab-21-run-container/hint.md",
+    "check": "exercises/lab-21-run-container/check.sh",
+    "solution": "exercises/lab-21-run-container/solution.md",
+    "metadata": "exercises/lab-21-run-container/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "run a container named mycontainer21 from",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest.",
+      "solution_commands": [
+        "id runner21 || useradd -m runner21",
+        "passwd runner21",
+        "# enter: cinder9",
+        "su - runner21"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Bind mount /opt/file21 to /data/input and",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Bind mount /opt/file21 to /data/input and /opt/processed21 to /data/output.",
+      "solution_commands": [
+        "podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest",
+        "podman ps",
+        "exit"
+      ]
+    }
+  ],
+  "hints": [
+    "The local image for this lab is prebuilt.",
+    "Use podman run with two bind mounts."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21",
+      "command": "runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21"
+    }
+  ]
+}

@@ -28,21 +28,25 @@
         "Create sudo policy files under /etc/sudoers.d and validate them with visudo."
       ],
       "checks": [
-        "id brenor",
-        "id lyessa",
-        "getent passwd quillan",
-        "visudo -cf /etc/sudoers.d/opsrune",
-        "visudo -cf /etc/sudoers.d/brenor-passwd"
+        "id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && getent passwd brenor >/dev/null",
+        "id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && getent passwd lyessa >/dev/null",
+        "getent passwd quillan | awk -F: '{exit !($7==\"/sbin/nologin\")}'",
+        "visudo -cf /etc/sudoers.d/opsrune >/dev/null && grep -Eq '^%opsrune[[:space:]]+ALL=\\(root\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers.d/opsrune",
+        "visudo -cf /etc/sudoers.d/brenor-passwd >/dev/null && grep -Eq '^brenor[[:space:]]+ALL=\\(root\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers.d/brenor-passwd"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Create the group opsrune and the users brenor,...",
+        "Set the password of all three users to cinder9",
+        "Allow members of opsrune to run useradd through..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "groupadd opsrune",

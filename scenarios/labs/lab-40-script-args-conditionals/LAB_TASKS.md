@@ -1,7 +1,7 @@
 # Lab 40: Script Arguments and Conditionals
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-40-script-args-conditionals` |
@@ -16,44 +16,40 @@ Create a small shell script that processes arguments and returns the correct exi
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create the executable script…
-**System:** clientvm
+## Task 01 - Create the executable script (clientvm) - 10 pts
 
 Create the executable script /usr/local/bin/usercheck40 on clientvm.
 
 ---
 
-### Task 02 - The script must accept one username argument
-**System:** clientvm
+## Task 02 - The script must accept one username argument (clientvm) - 10 pts
 
 The script must accept one username argument.
 
 ---
 
-### Task 03 - If the user exists, print EXISTS: username to…
-**System:** clientvm
+## Task 03 - If the user exists, print EXISTS: username to (clientvm) - 10 pts
 
 - **If the user exists, print EXISTS:** username to standard output and exit with status 0.
 
 ---
 
-### Task 04 - If the user does not exist, print MISSING: username…
-**System:** clientvm
+## Task 04 - If the user does not exist, print MISSING: username (clientvm) - 10 pts
 
 If the user does not exist, print MISSING: username to standard output and exit with status 1.
 
-### Hints
+## Hints
 - Use an if test against the passwd database or the id command.
 - Make the script executable.
 
-### Validation Commands
+## Validation Commands
 ```bash
 id script40 >/dev/null 2>&1
-/usr/local/bin/usercheck40 script40 | grep -qx "EXISTS: script40"
-! /usr/local/bin/usercheck40 nosuch40 >/dev/null 2>&1
+/usr/local/bin/usercheck40 script40 | grep -qx 'EXISTS: script40'
+output="$(/usr/local/bin/usercheck40 nosuch40 2>/dev/null || true)"; test "$output" = 'MISSING: nosuch40'
 ```

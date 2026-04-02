@@ -35,10 +35,13 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Create the user veil23 and set its password to cinder9",
+        "Configure the umask for user veil23 so that new..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "useradd -m veil23",

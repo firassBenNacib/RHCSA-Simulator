@@ -1,7 +1,7 @@
 # Lab 36: Persistent NFS Direct Mount
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-36-nfs-direct-mount` |
@@ -17,15 +17,13 @@ Mount a remote NFS export persistently using /etc/fstab.
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Persistently mount the NFS export…
-**System:** clientvm
+## Task 01 - Persistently mount the NFS export (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 mkdir -p /mnt/direct36
 vim /etc/fstab
@@ -35,29 +33,25 @@ vim /etc/fstab
 
 ---
 
-### Task 02 - Use the mount options ro,sync
-**System:** clientvm
+## Task 02 - Use the mount options ro,sync (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 mount -a
 ```
 
 ---
 
-### Task 03 - Ensure the mount is available after a reboot and that…
-**System:** clientvm
+## Task 03 - Ensure the mount is available after a reboot and (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 ls /mnt/direct36
 ```
 
 ---
 
-### Verification
+## Verification
 ```bash
-grep -q "/mnt/direct36" /etc/fstab
+grep -Eq '^[^#].*192\.168\.122\.3:/exports/direct36[[:space:]]+/mnt/direct36[[:space:]]+nfs[[:space:]]+ro,sync' /etc/fstab
 mountpoint -q /mnt/direct36
 test -f /mnt/direct36/nfs36.txt
 ```

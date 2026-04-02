@@ -30,8 +30,14 @@
         "! rpm -q dos2unix"
       ],
       "solution_outline": [],
-      "task_titles": [],
-      "task_points": [],
+      "task_titles": [
+        "Use the prepared local repositories on clientvm to...",
+        "Remove dos2unix and leave tree installed"
+      ],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "dnf install -y tree dos2unix"

@@ -26,30 +26,29 @@
         "Use a UUID entry in /etc/fstab."
       ],
       "checks": [
-        "swapon --show",
-        "lsblk -f /dev/sdb"
+        "swapon --noheadings --show=NAME | grep -qx '/dev/sdb1'",
+        "blkid -o value -s TYPE /dev/sdb1 | grep -qx swap",
+        "uuid=\"$(blkid -o value -s UUID /dev/sdb1)\"; grep -Eq \"^UUID=${uuid}[[:space:]]+swap[[:space:]]+swap[[:space:]]+\" /etc/fstab"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01"
+        "Create a 400 MiB swap partition on /dev/sdb, enable..."
       ],
-      "task_points": [],
+      "task_points": [
+        10
+      ],
       "solution_commands": [
         [
           "fdisk /dev/sdb",
           "# create a 400M partition and change the type to Linux swap",
           "partprobe /dev/sdb",
           "mkswap /dev/sdb1",
-          "swapon /dev/sdb1"
-        ],
-        [
+          "swapon /dev/sdb1",
           "blkid /dev/sdb1",
           "vim /etc/fstab",
-          "UUID=<uuid-of-sdb1> swap swap defaults 0 0"
-        ],
-        [
+          "UUID=<uuid-of-sdb1> swap swap defaults 0 0",
           "swapon --show"
         ]
       ]

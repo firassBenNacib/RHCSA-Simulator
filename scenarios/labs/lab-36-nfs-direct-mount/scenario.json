@@ -30,7 +30,7 @@
         "Do not use autofs for this task."
       ],
       "checks": [
-        "grep -q \"/mnt/direct36\" /etc/fstab",
+        "grep -Eq '^[^#].*192\\.168\\.122\\.3:/exports/direct36[[:space:]]+/mnt/direct36[[:space:]]+nfs[[:space:]]+ro,sync' /etc/fstab",
         "mountpoint -q /mnt/direct36",
         "test -f /mnt/direct36/nfs36.txt"
       ],
@@ -38,11 +38,15 @@
         "Configure a direct persistent NFS mount."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Persistently mount the NFS export...",
+        "Use the mount options ro,sync",
+        "Ensure the mount is available after a reboot and..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "mkdir -p /mnt/direct36",

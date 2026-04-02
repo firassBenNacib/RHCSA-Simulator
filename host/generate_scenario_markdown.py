@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 import textwrap
 from pathlib import Path
 
@@ -172,11 +174,10 @@ def infer_title_from_task(task_text: str) -> str:
 
 
 def render_task_heading(index: int, title: str, system: str, points: int | None, label: str) -> str:
-    heading = f"### {label} {index:02d} - {title}"
-    meta = [f"**System:** {system}"]
+    heading = f"## {label} {index:02d} - {title} ({system})"
     if points is not None:
-        meta.append(f"**Points:** {points}")
-    return heading + "\n" + "  \n".join(meta)
+        heading += f" - {points} pts"
+    return heading
 
 
 def get_task_title(task_titles: list[str], index: int, task_text: str) -> str:
@@ -209,7 +210,7 @@ def render_tasks(tasks, task_titles, task_points, requires_servervm, label):
 
 
 def render_hints(hints):
-    lines = ["### Hints"]
+    lines = ["## Hints"]
     if not hints:
         lines.append("- No additional hints.")
         return "\n".join(lines)
@@ -227,13 +228,12 @@ def render_solution(tasks, task_titles, task_points, solution_commands, checks, 
         commands = solution_commands[index - 1] if index - 1 < len(solution_commands) else []
         sections.append(render_task_heading(index, title, system, points, label))
         sections.append("")
-        sections.append("#### Command Flow")
         sections.append(code_block(commands))
         sections.append("")
         sections.append("---")
         sections.append("")
     if checks:
-        sections.append("### Verification")
+        sections.append("## Verification")
         sections.append(code_block(checks))
     elif sections and sections[-2:] == ["---", ""]:
         sections = sections[:-2]
@@ -273,13 +273,13 @@ def systems_table(requires_servervm: bool):
 
 def metadata_lines(data, mode):
     lines = [
-        "### Overview",
+        "## Overview",
         summary_table(data, mode),
         "",
         normalize_task_text(data["description"]),
         "",
         systems_table(bool(data.get("flags", {}).get("requires_servervm", False))),
-        "### General Instructions",
+        "## General Instructions",
         "1. Unless a task states otherwise, make all changes persistent across reboots.",
     ]
     if mode == "Exam":
@@ -316,7 +316,7 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
             "",
             render_hints(lab.get("hints", [])),
             "",
-            "### Validation Commands",
+            "## Validation Commands",
             code_block(lab.get("checks", [])),
         ])
         lab_solution_md = "\n".join([
@@ -352,3 +352,5 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
     else:
         remove_if_exists(scenario_root / "EXAM_TASKS.md")
         remove_if_exists(scenario_root / "EXAM_SOLUTION.md")
+
+subprocess.run([sys.executable, str(ROOT / "host" / "generate_exercises.py")], check=True)

@@ -27,17 +27,20 @@
         "Leave crond enabled and running."
       ],
       "checks": [
-        "crontab -l -u ferro",
-        "systemctl status crond --no-pager"
+        "crontab -l -u ferro | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"'",
+        "systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Create user ferro if it does not exist and set its...",
+        "Configure a cron job for ferro that runs every 2..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id ferro || useradd -m ferro",

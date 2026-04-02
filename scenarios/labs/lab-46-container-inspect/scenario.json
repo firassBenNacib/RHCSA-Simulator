@@ -31,8 +31,18 @@
         "runuser -l scope46 -c \"test -s ~/workdir.txt && test -s ~/user.txt\""
       ],
       "solution_outline": [],
-      "task_titles": [],
-      "task_points": [],
+      "task_titles": [
+        "Create user scope46 with password cinder9 if it...",
+        "load the image archive /opt/rhcsa/container-...",
+        "inspect localhost/rhcsa-httpd-base:latest and write...",
+        "If the image has no explicit configured user, write..."
+      ],
+      "task_points": [
+        10,
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id scope46 || useradd -m scope46",

@@ -70,7 +70,30 @@
         "Rootless Container",
         "Container Autostart"
       ],
-      "task_points": [],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
       "solution_commands": [
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
@@ -228,7 +251,13 @@
           "loginctl enable-linger lyrab"
         ]
       ],
-      "checks": []
+      "checks": [
+        "getent hosts registry.coremesh.lab | grep -Fq '192.168.122.3'",
+        "curl -fsS http://localhost:8383 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8383\\b'",
+        "crontab -l -u mira | grep -Fqx '*/1 * * * * logger \"CoreMesh exam\"'",
+        "rec=\"$(tuned-adm recommended | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\"",
+        "runuser -l lyrab -c 'systemctl --user is-enabled container-pdfb.service' | grep -qx enabled && runuser -l lyrab -c 'systemctl --user is-active container-pdfb.service' | grep -qx active && loginctl show-user lyrab | grep -Eq '^Linger=yes$'"
+      ]
     }
   }
 }

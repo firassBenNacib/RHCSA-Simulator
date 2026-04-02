@@ -27,16 +27,19 @@
         "Use podman build."
       ],
       "checks": [
-        "runuser -l builder20 -c \"podman images\""
+        "runuser -l builder20 -c 'podman image exists localhost/text2pdf20:latest'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "build an image named localhost/text2pdf20:latest...",
+        "Verify that the image exists locally for that user"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id builder20 || useradd -m builder20",

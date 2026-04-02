@@ -1,7 +1,7 @@
 # Lab 04: SELinux Custom HTTP Port
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-04-selinux-http-port` |
@@ -16,15 +16,13 @@ Fix Apache so it listens on a nonstandard port without disabling SELinux.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Configure Apache on clientvm so it listens on TCP…
-**System:** clientvm
+## Task 01 - Configure Apache on clientvm so it listens on TCP (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 vim /etc/httpd/conf/httpd.conf
 Listen 9082
@@ -33,10 +31,8 @@ systemctl enable --now httpd
 
 ---
 
-### Task 02 - Allow TCP port 9082 through the firewall permanently
-**System:** clientvm
+## Task 02 - Allow TCP port 9082 through the firewall permanently (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 firewall-cmd --permanent --add-port=9082/tcp
 firewall-cmd --reload
@@ -44,10 +40,8 @@ firewall-cmd --reload
 
 ---
 
-### Task 03 - Make the SELinux changes needed so Apache serves the…
-**System:** clientvm
+## Task 03 - Make the SELinux changes needed so Apache serves (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 semanage port -a -t http_port_t -p tcp 9082
 systemctl restart httpd
@@ -55,9 +49,9 @@ systemctl restart httpd
 
 ---
 
-### Verification
+## Verification
 ```bash
-ss -ltnp | grep 9082
-semanage port -l | grep http_port_t | grep 9082
-curl -s http://localhost:9082
+ss -ltn '( sport = :9082 )' | grep -q ':9082' && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active
+firewall-cmd --permanent --query-port=9082/tcp
+curl -fsS http://localhost:9082 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b9082\b'
 ```

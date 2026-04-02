@@ -1,7 +1,7 @@
 # Lab 16: Additional Swap Space
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-16-swap-space` |
@@ -16,22 +16,22 @@ Add a persistent swap partition on an extra disk.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create a 400 MiB swap partition on /dev/sdb, enable…
-**System:** clientvm
+## Task 01 - Create a 400 MiB swap partition on /dev/sdb, enable (clientvm) - 10 pts
 
 Create a 400 MiB swap partition on /dev/sdb, enable it, and make it persistent.
 
-### Hints
+## Hints
 - Use GPT partition type 19 for swap.
 - Use a UUID entry in /etc/fstab.
 
-### Validation Commands
+## Validation Commands
 ```bash
-swapon --show
-lsblk -f /dev/sdb
+swapon --noheadings --show=NAME | grep -qx '/dev/sdb1'
+blkid -o value -s TYPE /dev/sdb1 | grep -qx swap
+uuid="$(blkid -o value -s UUID /dev/sdb1)"; grep -Eq "^UUID=${uuid}[[:space:]]+swap[[:space:]]+swap[[:space:]]+" /etc/fstab
 ```

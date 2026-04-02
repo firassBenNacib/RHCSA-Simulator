@@ -1,7 +1,7 @@
 # Lab 21: Run A Container
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-21-run-container` |
@@ -16,28 +16,26 @@ Run a container from a prepared local image with bind mounts.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - run a container named mycontainer21 from…
-**System:** clientvm
+## Task 01 - run a container named mycontainer21 from (clientvm) - 10 pts
 
 As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest.
 
 ---
 
-### Task 02 - Bind mount /opt/file21 to /data/input and…
-**System:** clientvm
+## Task 02 - Bind mount /opt/file21 to /data/input and (clientvm) - 10 pts
 
 Bind mount /opt/file21 to /data/input and /opt/processed21 to /data/output.
 
-### Hints
+## Hints
 - The local image for this lab is prebuilt.
 - Use podman run with two bind mounts.
 
-### Validation Commands
+## Validation Commands
 ```bash
-runuser -l runner21 -c "podman ps --format "{{.Names}}""
+runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21
 ```

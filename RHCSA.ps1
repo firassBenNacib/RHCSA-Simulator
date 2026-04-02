@@ -1,13 +1,142 @@
-[CmdletBinding()]
+[CmdletBinding(PositionalBinding = $true)]
 param(
+    [Parameter(Position = 0)]
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete)
+        $null = $commandName, $parameterName
+
+        foreach ($value in @('help', 'up', 'destroy', 'list', 'start', 'reset', 'status', 'check', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', '-h', '--help')) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Area,
+
+    [Parameter(Position = 1)]
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+        $null = $commandName, $parameterName, $commandAst
+
+        $area = [string]$fakeBoundParameters['Area']
+        $candidates = switch ($area.ToLowerInvariant()) {
+            'help' { @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion') }
+            'list' { @('all', 'labs', 'lab', 'exams', 'exam') }
+            'ssh' { @('clientvm', 'servervm') }
+            'ssh-config' { @('clientvm', 'servervm') }
+            'completion' { @('powershell', 'install') }
+            default { @() }
+        }
+
+        foreach ($value in $candidates) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Command,
+
+    [Parameter(Position = 2)]
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+        $null = $commandName, $parameterName, $commandAst
+
+        $area = [string]$fakeBoundParameters['Area']
+        $command = [string]$fakeBoundParameters['Command']
+        $candidates = @()
+
+        switch ("$($area.ToLowerInvariant())/$($command.ToLowerInvariant())") {
+            'list/' {
+                $candidates = @('all', 'labs', 'lab', 'exams', 'exam')
+            }
+            'ssh/' {
+                $candidates = @('servervm', 'clientvm')
+            }
+            'ssh-config/' {
+                $candidates = @('servervm', 'clientvm')
+            }
+        }
+
+        foreach ($value in $candidates) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Item,
+
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$ArgumentList
+    [string[]]$Extra,
+
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete, $commandAst)
+        $null = $commandName, $parameterName
+
+        $scriptRoot = Split-Path -Parent $commandAst.Extent.File
+        $scenarioRoot = Join-Path $scriptRoot 'scenarios'
+        if (-not (Test-Path $scenarioRoot -PathType Container)) {
+            return
+        }
+
+        $ids = @(Get-ChildItem -Path $scenarioRoot -Filter 'scenario.json' -File -Recurse -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                try {
+                    ($_.Directory.Name)
+                }
+                catch {
+                    $null
+                }
+            } |
+            Sort-Object -Unique)
+
+        foreach ($value in $ids) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Id,
+
+    [ValidateSet('Lab', 'Exam')]
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete)
+        $null = $commandName, $parameterName
+
+        foreach ($value in @('Lab', 'Exam')) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Mode = 'Lab',
+
+    [ValidateSet('servervm', 'clientvm')]
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete)
+        $null = $commandName, $parameterName
+
+        foreach ($value in @('servervm', 'clientvm')) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Vm,
+
+    [Alias('h')]
+    [switch]$Help,
+
+    [switch]$NoProvision,
+    [switch]$NormalStart,
+    [switch]$HeadlessClient,
+    [switch]$RealisticMode
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'host/simulator_common.ps1')
+$script:ShowWorkflowStatus = $false
 
 function Test-UiColorSupport {
     if ($env:NO_COLOR) {
@@ -28,14 +157,16 @@ function Get-UiStyleCode {
 
     $escape = [char]27
     switch ($StyleName) {
-        'Header' { return "$escape[1;38;5;81m" }
-        'Accent' { return "$escape[38;5;45m" }
+        'Header' { return "$escape[1;38;5;196m" }
+        'Accent' { return "$escape[1;38;5;203m" }
+        'Brand' { return "$escape[1;38;5;196m" }
+        'BrandShadow' { return "$escape[38;5;88m" }
         'Success' { return "$escape[1;38;5;42m" }
         'Warning' { return "$escape[1;38;5;214m" }
         'Muted' { return "$escape[38;5;245m" }
         'Command' { return "$escape[1;38;5;220m" }
         'Exam' { return "$escape[1;38;5;203m" }
-        'Lab' { return "$escape[1;38;5;112m" }
+        'Lab' { return "$escape[1;38;5;167m" }
         'Reset' { return "$escape[0m" }
         default { return '' }
     }
@@ -95,125 +226,227 @@ function Test-HelpToken {
 
 function Get-RecommendedHelpCommand {
     param(
-        [string]$Area
+        [string]$Area,
+        [string]$Command
     )
 
-    switch ($Area) {
-        'baseline' { return '.\RHCSA.ps1 baseline help' }
-        'scenario' { return '.\RHCSA.ps1 scenario help' }
+    switch ("$Area/$Command") {
+        'baseline/up' { return '.\RHCSA.ps1 help up' }
+        'baseline/destroy' { return '.\RHCSA.ps1 help destroy' }
+        'scenario/list' { return '.\RHCSA.ps1 help list' }
+        'scenario/start' { return '.\RHCSA.ps1 help start' }
+        'scenario/check' { return '.\RHCSA.ps1 help check' }
+        'scenario/reset' { return '.\RHCSA.ps1 help reset' }
+        'dashboard/status' { return '.\RHCSA.ps1 help status' }
+        'vm/status' { return '.\RHCSA.ps1 help vms' }
+        'vm/ssh' { return '.\RHCSA.ps1 help ssh' }
+        'vm/ssh-config' { return '.\RHCSA.ps1 help ssh-config' }
+        'app/tui' { return '.\RHCSA.ps1 help tui' }
+        'completion/manage' { return '.\RHCSA.ps1 help completion' }
         default { return '.\RHCSA.ps1 help' }
     }
 }
 
 function Format-ErrorOutput {
     param(
-        [string]$Message,
-        [string]$Area = ''
+        [string]$Message
     )
 
-    return @(
-        (Get-UiHeading -Text 'Error' -StyleName 'Warning'),
-        ('  {0}' -f $Message),
-        '',
-        (Get-UiHeading -Text 'Help'),
-        (Format-UiCommandLine -CommandText (Get-RecommendedHelpCommand -Area $Area))
+    return @('{0} {1}' -f (Format-StyledText -Text 'Error:' -StyleName 'Warning'), $Message)
+}
+
+function Format-HelpUsageLine {
+    param(
+        [string]$CommandText
     )
+
+    return 'Usage: {0}' -f (Format-StyledText -Text $CommandText -StyleName 'Command')
+}
+
+function Format-HelpEntryList {
+    param(
+        [object[]]$Entry
+    )
+
+    $nameWidth = Get-MaxCellWidth -Value ($Entry | ForEach-Object { $_.Name }) -Minimum 4
+    $lines = @()
+    foreach ($item in @($Entry)) {
+        $lines += ('  {0}  {1}' -f (Format-PaddedCell -Text $item.Name -Width $nameWidth -StyleName 'Accent'), $item.Description)
+    }
+
+    return $lines
 }
 
 function Get-HelpOutput {
     param(
-        [ValidateSet('general', 'baseline', 'scenario')]
+        [ValidateSet('general', 'up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')]
         [string]$Scope = 'general'
     )
 
     switch ($Scope) {
-        'baseline' {
+        'up' {
             return @(
-                (Get-UiHeading -Text 'RHCSA Baseline Commands'),
-                (Format-StyledText -Text 'Manage the clean Vagrant baseline and snapshot lifecycle.' -StyleName 'Muted'),
+                (Get-UiHeading -Text 'up'),
+                (Format-StyledText -Text 'Start or refresh the clean baseline.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 up [-NoProvision] [-NormalStart] [-HeadlessClient] [-RealisticMode]'),
                 '',
-                (Get-UiHeading -Text 'Usage'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline help'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline up [options]'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline destroy'),
+                'Options:',
+                '  -NoProvision    Start both VMs without guest provisioning',
+                '  -NormalStart    Compatibility switch; normal behavior is already the default',
+                '  -HeadlessClient Compatibility switch for older workflows',
+                '  -RealisticMode  Compatibility switch for older workflows',
                 '',
-                (Get-UiHeading -Text 'Commands'),
-                (Format-UiLabelValue -Label 'up' -Value 'Start or refresh servervm and clientvm, then update base-clean snapshots'),
-                (Format-UiLabelValue -Label 'destroy' -Value 'Destroy the VMs and remove local simulator state'),
-                '',
-                (Get-UiHeading -Text 'Options For baseline up'),
-                (Format-UiLabelValue -Label '-NoProvision' -Value 'Boot the VMs without running guest provisioning'),
-                (Format-UiLabelValue -Label '-NormalStart' -Value 'Start the baseline without forcing realism behavior'),
-                (Format-UiLabelValue -Label '-HeadlessClient' -Value 'Start clientvm without opening a GUI window'),
-                (Format-UiLabelValue -Label '-RealisticMode' -Value 'Keep compatibility with the realism toggle when needed'),
-                '',
-                (Get-UiHeading -Text 'Examples'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline up'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline up -NoProvision'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline destroy')
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up -NoProvision')
             )
         }
-        'scenario' {
+        'destroy' {
             return @(
-                (Get-UiHeading -Text 'RHCSA Scenario Commands'),
-                (Format-StyledText -Text 'List, start, reset, and inspect RHCSA v9 labs and mock exams.' -StyleName 'Muted'),
+                (Get-UiHeading -Text 'destroy'),
+                (Format-StyledText -Text 'Destroy both VMs and clean local simulator state.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 destroy'),
                 '',
-                (Get-UiHeading -Text 'Usage'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario help'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario list [labs|exams|all]'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id <scenario-id> -Mode <Lab|Exam>'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario reset'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario status'),
+                'Example:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 destroy')
+            )
+        }
+        'list' {
+            return @(
+                (Get-UiHeading -Text 'list'),
+                (Format-StyledText -Text 'List available labs and mock exams.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 list [labs|exams]'),
                 '',
-                (Get-UiHeading -Text 'Commands'),
-                (Format-UiLabelValue -Label 'list' -Value 'Show all scenarios or filter to labs or exams only'),
-                (Format-UiLabelValue -Label 'start' -Value 'Restore the clean baseline, apply a scenario overlay, and generate the run brief'),
-                (Format-UiLabelValue -Label 'reset' -Value 'Reset the active scenario back to its clean seeded state'),
-                (Format-UiLabelValue -Label 'status' -Value 'Show the active scenario run and current run-brief path'),
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list exams')
+            )
+        }
+        'start' {
+            return @(
+                (Get-UiHeading -Text 'start'),
+                (Format-StyledText -Text 'Start a lab or exam run.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 start -Id <scenario-id> -Mode <Lab|Exam>'),
                 '',
-                (Get-UiHeading -Text 'List Filters'),
-                (Format-UiLabelValue -Label 'labs' -Value 'Show only objective labs'),
-                (Format-UiLabelValue -Label 'exams' -Value 'Show only mock exams'),
-                (Format-UiLabelValue -Label 'all' -Value 'Show the full catalog'),
+                'Options:',
+                '  -Id     Scenario id to start',
+                '  -Mode   Lab or Exam',
                 '',
-                (Get-UiHeading -Text 'Examples'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario list'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario list exams'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario list labs'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id essential-tools -Mode Lab'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id mock-exam-a -Mode Exam'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario status')
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id mock-exam-a -Mode Exam')
+            )
+        }
+        'check' {
+            return @(
+                (Get-UiHeading -Text 'check'),
+                (Format-StyledText -Text 'Run the automated checks for the active lab.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 check [-Id <lab-id>]'),
+                '',
+                'Example:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 check')
+            )
+        }
+        'reset' {
+            return @(
+                (Get-UiHeading -Text 'reset'),
+                (Format-StyledText -Text 'Reset the active run back to the clean baseline and reapply its overlay.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 reset'),
+                '',
+                'Example:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 reset')
+            )
+        }
+        'status' {
+            return @(
+                (Get-UiHeading -Text 'status'),
+                (Format-StyledText -Text 'Show baseline, VM state, and the active scenario.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 status')
+            )
+        }
+        'vms' {
+            return @(
+                (Get-UiHeading -Text 'vms'),
+                (Format-StyledText -Text 'Show VM state for servervm and clientvm.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 vms')
+            )
+        }
+        'ssh' {
+            return @(
+                (Get-UiHeading -Text 'ssh'),
+                (Format-StyledText -Text 'Open an SSH session. Defaults to clientvm.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 ssh [servervm|clientvm]'),
+                '',
+                (Format-StyledText -Text 'On Windows this opens a dedicated PowerShell window for the session.' -StyleName 'Muted'),
+                '',
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh servervm')
+            )
+        }
+        'ssh-config' {
+            return @(
+                (Get-UiHeading -Text 'ssh-config'),
+                (Format-StyledText -Text 'Print SSH config for external SSH clients. Defaults to clientvm.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 ssh-config [servervm|clientvm]'),
+                '',
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh-config'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh-config servervm')
+            )
+        }
+        'tui' {
+            return @(
+                (Get-UiHeading -Text 'tui'),
+                (Format-StyledText -Text 'Open the labs-first interactive terminal UI.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 tui'),
+                '',
+                'Example:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
+            )
+        }
+        'completion' {
+            return @(
+                (Get-UiHeading -Text 'completion'),
+                (Format-StyledText -Text 'Generate or install PowerShell tab completion for commands, lab ids, modes, and VM names.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 completion <powershell|install>'),
+                '',
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 completion powershell'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 completion install')
             )
         }
         default {
+            $entry = @(
+                [PSCustomObject]@{ Name = 'up'; Description = 'Start or refresh the clean baseline' }
+                [PSCustomObject]@{ Name = 'destroy'; Description = 'Destroy VMs and local simulator state' }
+                [PSCustomObject]@{ Name = 'list'; Description = 'List labs and mock exams' }
+                [PSCustomObject]@{ Name = 'start'; Description = 'Start a lab or exam run' }
+                [PSCustomObject]@{ Name = 'check'; Description = 'Run checks for the active lab' }
+                [PSCustomObject]@{ Name = 'reset'; Description = 'Reset the active run' }
+                [PSCustomObject]@{ Name = 'status'; Description = 'Show baseline, VMs, and active scenario' }
+                [PSCustomObject]@{ Name = 'vms'; Description = 'Show VM state' }
+                [PSCustomObject]@{ Name = 'ssh'; Description = 'Open an SSH session' }
+                [PSCustomObject]@{ Name = 'ssh-config'; Description = 'Print SSH config for external clients' }
+                [PSCustomObject]@{ Name = 'tui'; Description = 'Open the interactive TUI' }
+                [PSCustomObject]@{ Name = 'completion'; Description = 'Generate or install PowerShell completion' }
+            )
             return @(
-                (Get-UiHeading -Text 'RHCSA v9 Simulator'),
-                (Format-StyledText -Text 'Windows + Vagrant + VirtualBox launcher for RHCSA v9 labs and mock exams.' -StyleName 'Muted'),
+                (Get-UiHeading -Text 'RHCSA Simulator'),
+                (Format-StyledText -Text 'Usage: .\RHCSA.ps1 <command> [args]' -StyleName 'Muted'),
                 '',
-                (Get-UiHeading -Text 'Usage'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 help'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline <command>'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario <command>'),
+                'Commands:',
+                (Format-HelpEntryList -Entry $entry),
                 '',
-                (Get-UiHeading -Text 'Areas'),
-                (Format-UiLabelValue -Label 'baseline' -Value 'Manage the clean Vagrant baseline'),
-                (Format-UiLabelValue -Label 'scenario' -Value 'Manage RHCSA labs and mock exams'),
+                (Format-StyledText -Text 'Help: .\RHCSA.ps1 help <command>' -StyleName 'Muted'),
                 '',
-                (Get-UiHeading -Text 'Common Commands'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline up'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline destroy'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario list'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id essential-tools -Mode Lab'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id mock-exam-a -Mode Exam'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario reset'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario status'),
-                '',
-                (Get-UiHeading -Text 'More Help'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 baseline help'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario help')
+                'Examples:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
             )
         }
     }
@@ -250,7 +483,7 @@ function ConvertTo-StartOption {
                 $index++
             }
             default {
-                throw "Unknown scenario start argument '$token'."
+                throw "Unknown start argument '$token'."
             }
         }
     }
@@ -303,7 +536,7 @@ function ConvertTo-ScenarioListOption {
     }
 
     if ($commandItem.Count -gt 1) {
-        throw "Unknown scenario list argument '$($commandItem[1])'."
+        throw "Unknown list argument '$($commandItem[1])'."
     }
 
     if ($commandItem.Count -eq 1) {
@@ -313,15 +546,179 @@ function ConvertTo-ScenarioListOption {
             'labs' { $option.Filter = 'labs' }
             'exam' { $option.Filter = 'exams' }
             'exams' { $option.Filter = 'exams' }
-            default { throw "Unknown scenario list argument '$($commandItem[0])'." }
+            default { throw "Unknown list argument '$($commandItem[0])'." }
         }
     }
 
     return $option
 }
 
+function Get-PowerShellCompletionScript {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $scriptPath = (Join-Path $ProjectRoot 'RHCSA.ps1').Replace("'", "''")
+    $scenarioRoot = (Join-Path $ProjectRoot 'scenarios').Replace("'", "''")
+
+    return @"
+`$rhcsaScriptPath = '$scriptPath'
+`$rhcsaScenarioRoot = '$scenarioRoot'
+
+Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock {
+    param(`$commandName, `$parameterName, `$wordToComplete, `$commandAst, `$fakeBoundParameters)
+    `$null = `$commandName, `$parameterName, `$fakeBoundParameters
+
+    function New-RhcsaCompletionResult {
+        param([string]`$Value)
+        [System.Management.Automation.CompletionResult]::new(`$Value, `$Value, 'ParameterValue', `$Value)
+    }
+
+    function Complete-RhcsaValues {
+        param([string[]]`$Value)
+        foreach (`$item in @(`$Value | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) } | Sort-Object -Unique)) {
+            if (`$item -like "`$wordToComplete*") {
+                New-RhcsaCompletionResult -Value `$item
+            }
+        }
+    }
+
+    function Get-RhcsaScenarioIds {
+        param([switch]`$LabsOnly)
+        if (-not (Test-Path `$rhcsaScenarioRoot -PathType Container)) {
+            return @()
+        }
+
+        if (`$LabsOnly) {
+            return @(Get-ChildItem -Path (Join-Path `$rhcsaScenarioRoot 'labs') -Filter 'scenario.json' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object { `$_.Directory.Name } | Sort-Object -Unique)
+        }
+
+        return @(Get-ChildItem -Path `$rhcsaScenarioRoot -Filter 'scenario.json' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object { `$_.Directory.Name } | Sort-Object -Unique)
+    }
+
+    `$elements = @(`$commandAst.CommandElements | ForEach-Object { `$_.Extent.Text })
+    if (`$elements.Count -eq 0) {
+        return
+    }
+
+    `$tokens = @()
+    if (`$elements.Count -gt 1) {
+        `$tokens = @(`$elements[1..(`$elements.Count - 1)] | Where-Object { -not [string]::IsNullOrWhiteSpace(`$_) })
+    }
+
+    if (`$tokens.Count -gt 0 -and `$tokens[-1] -eq `$wordToComplete) {
+        if (`$tokens.Count -eq 1) {
+            `$tokens = @()
+        }
+        else {
+            `$tokens = @(`$tokens[0..(`$tokens.Count - 2)])
+        }
+    }
+
+    if (`$tokens.Count -eq 0) {
+        Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', 'help')
+        return
+    }
+
+    `$root = `$tokens[0].ToLowerInvariant()
+    `$last = if (`$tokens.Count -gt 0) { [string]`$tokens[-1] } else { '' }
+
+    switch (`$root) {
+        'help' {
+            Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
+            return
+        }
+        'list' {
+            if (`$tokens.Count -le 1) {
+                Complete-RhcsaValues -Value @('labs', 'exams')
+            }
+            return
+        }
+        'ssh' {
+            if (`$tokens.Count -le 1) {
+                Complete-RhcsaValues -Value @('clientvm', 'servervm')
+            }
+            return
+        }
+        'ssh-config' {
+            if (`$tokens.Count -le 1) {
+                Complete-RhcsaValues -Value @('clientvm', 'servervm')
+            }
+            return
+        }
+        'completion' {
+            if (`$tokens.Count -le 1) {
+                Complete-RhcsaValues -Value @('powershell', 'install')
+            }
+            return
+        }
+        'start' {
+            if (`$last -eq '-Id') {
+                Complete-RhcsaValues -Value (Get-RhcsaScenarioIds)
+                return
+            }
+            if (`$last -eq '-Mode') {
+                Complete-RhcsaValues -Value @('Lab', 'Exam')
+                return
+            }
+            Complete-RhcsaValues -Value @('-Id', '-Mode')
+            return
+        }
+        'check' {
+            if (`$last -eq '-Id') {
+                Complete-RhcsaValues -Value (Get-RhcsaScenarioIds -LabsOnly)
+                return
+            }
+            Complete-RhcsaValues -Value @('-Id')
+            return
+        }
+    }
+}
+"@
+}
+
+function Install-PowerShellCompletion {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $startMarker = '# >>> RHCSA simulator completion >>>'
+    $endMarker = '# <<< RHCSA simulator completion <<<'
+    $completionBlock = @(
+        $startMarker,
+        (Get-PowerShellCompletionScript -ProjectRoot $ProjectRoot),
+        $endMarker
+    ) -join [Environment]::NewLine
+
+    $profilePath = $PROFILE.CurrentUserCurrentHost
+    $profileDirectory = Split-Path -Parent $profilePath
+    if (-not (Test-Path $profileDirectory)) {
+        New-Item -ItemType Directory -Path $profileDirectory -Force | Out-Null
+    }
+
+    $currentContent = if (Test-Path $profilePath) { Get-Content $profilePath -Raw } else { '' }
+    $pattern = '(?s)' + [regex]::Escape($startMarker) + '.*?' + [regex]::Escape($endMarker)
+    if ($currentContent -match $pattern) {
+        $updatedContent = [regex]::Replace($currentContent, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{
+            param($match)
+            $null = $match
+            $completionBlock
+        })
+    }
+    elseif ([string]::IsNullOrWhiteSpace($currentContent)) {
+        $updatedContent = $completionBlock
+    }
+    else {
+        $updatedContent = ($currentContent.TrimEnd() + [Environment]::NewLine + [Environment]::NewLine + $completionBlock)
+    }
+
+    Set-Utf8NoBomFile -Path $profilePath -Content $updatedContent
+    return $profilePath
+}
+
 function Get-MaxCellWidth {
     param(
+        [AllowNull()]
         [string[]]$Value = @(),
         [int]$Minimum = 0
     )
@@ -434,23 +831,17 @@ function Format-ScenarioCatalogOutput {
     }
 
     $lines = @(
-        (Get-UiHeading -Text 'RHCSA v9 Scenario Catalog'),
+        (Get-UiHeading -Text 'Scenarios'),
         (Format-StyledText -Text $summary -StyleName 'Muted'),
         ''
     )
 
     if ($labList.Count -gt 0) {
-        $lines += Format-ScenarioCatalogTable -SectionTitle 'Objective Labs' -SectionStyleName 'Lab' -ScenarioList $labList
+        $lines += Format-ScenarioCatalogTable -SectionTitle 'Labs' -SectionStyleName 'Lab' -ScenarioList $labList
     }
 
     if ($examList.Count -gt 0) {
-        $lines += Format-ScenarioCatalogTable -SectionTitle 'Mock Exams' -SectionStyleName 'Exam' -ScenarioList $examList
-    }
-
-    if ($Filter -eq 'all') {
-        $lines += (Get-UiHeading -Text 'Next Commands')
-        $lines += (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id essential-tools -Mode Lab')
-        $lines += (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id mock-exam-a -Mode Exam')
+        $lines += Format-ScenarioCatalogTable -SectionTitle 'Exams' -SectionStyleName 'Exam' -ScenarioList $examList
     }
 
     return $lines
@@ -463,44 +854,130 @@ function Format-ScenarioStatusOutput {
 
     if ($null -eq $ScenarioStatus) {
         return @(
-            (Get-UiHeading -Text 'No active scenario run' -StyleName 'Warning'),
-            (Format-StyledText -Text 'Start one with .\RHCSA.ps1 scenario start -Id <id> -Mode <Lab|Exam>.' -StyleName 'Muted')
+            (Get-UiHeading -Text 'No active scenario' -StyleName 'Warning')
         )
     }
 
+    $tasksPath = if ($ScenarioStatus.Mode -eq 'lab') { $ScenarioStatus.LabTasksDoc } else { $ScenarioStatus.ExamTasksDoc }
+    $solutionPath = if ($ScenarioStatus.Mode -eq 'lab') { $ScenarioStatus.LabSolutionDoc } else { $ScenarioStatus.ExamSolutionDoc }
+
     $lines = @(
-        (Get-UiHeading -Text 'Active Scenario Run'),
-        (Format-UiLabelValue -Label 'Scenario' -Value $ScenarioStatus.ScenarioId),
-        (Format-UiLabelValue -Label 'Category' -Value $ScenarioStatus.Category),
+        (Get-UiHeading -Text 'Active Scenario'),
+        (Format-UiLabelValue -Label 'Id' -Value $ScenarioStatus.ScenarioId),
         (Format-UiLabelValue -Label 'Title' -Value $ScenarioStatus.Title),
         (Format-UiLabelValue -Label 'Mode' -Value $ScenarioStatus.Mode),
-        (Format-UiLabelValue -Label 'Objectives' -Value ($ScenarioStatus.ObjectiveTags -join ', ')),
-        (Format-UiLabelValue -Label 'Run Id' -Value $ScenarioStatus.RunId),
-        (Format-UiLabelValue -Label 'Started' -Value $ScenarioStatus.StartedAt),
         (Format-UiLabelValue -Label 'Ends' -Value $ScenarioStatus.EndsAt),
-        (Format-UiLabelValue -Label 'Artifacts' -Value $ScenarioStatus.ArtifactRoot),
-        '',
-        (Get-UiHeading -Text 'Run Brief'),
-        ('  {0}' -f $ScenarioStatus.RunBrief)
+        (Format-UiLabelValue -Label 'Brief' -Value $ScenarioStatus.RunBrief),
+        (Format-UiLabelValue -Label 'Tasks' -Value $tasksPath),
+        (Format-UiLabelValue -Label 'Solution' -Value $solutionPath)
     )
 
-    $lines += ''
-    $lines += (Get-UiHeading -Text 'Scenario Docs')
-    if ($ScenarioStatus.Mode -eq 'lab') {
-        $lines += ('  {0}' -f $ScenarioStatus.LabTasksDoc)
-        $lines += ('  {0}' -f $ScenarioStatus.LabSolutionDoc)
+    return $lines
+}
+
+function Format-VmStatusOutput {
+    param(
+        [object[]]$MachineStatus = @()
+    )
+
+    $statusList = @($MachineStatus)
+    if ($statusList.Count -eq 0) {
+        return @(
+            (Get-UiHeading -Text 'VMs'),
+            (Format-StyledText -Text 'No Vagrant status data was returned for this project.' -StyleName 'Warning')
+        )
     }
-    else {
-        $lines += ('  {0}' -f $ScenarioStatus.ExamTasksDoc)
-        $lines += ('  {0}' -f $ScenarioStatus.ExamSolutionDoc)
+
+    $rows = foreach ($machine in $statusList) {
+        [PSCustomObject]@{
+            Name = [string]$machine.Name
+            State = [string]$machine.StateHuman
+        }
+    }
+
+    $nameWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Name }) -Minimum 2
+    $stateWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.State }) -Minimum 5
+
+    $headerLine = '{0}  {1}' -f `
+        (Format-PaddedCell -Text 'VM' -Width $nameWidth -StyleName 'Accent'),
+        (Format-PaddedCell -Text 'STATE' -Width $stateWidth -StyleName 'Accent')
+
+    $separatorLine = Format-StyledText -Text ('{0}  {1}' -f `
+        ('-' * $nameWidth),
+        ('-' * $stateWidth)) -StyleName 'Muted'
+
+    $lines = @(
+        (Get-UiHeading -Text 'VMs'),
+        '',
+        $headerLine,
+        $separatorLine
+    )
+
+    foreach ($row in $rows) {
+        $stateStyle = if ($row.State -eq 'running') { 'Success' } elseif ($row.State -eq 'not created') { 'Muted' } else { 'Warning' }
+        $lines += ('{0}  {1}' -f `
+            (Format-PaddedCell -Text $row.Name -Width $nameWidth -StyleName 'Accent'),
+            (Format-PaddedCell -Text $row.State -Width $stateWidth -StyleName $stateStyle))
     }
 
     return $lines
 }
 
+function Get-RhcsaAsciiBanner {
+    $face = @(
+        '4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKVlyAg4paI4paI4pWXIOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilZcgICAgIOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKVl+KWiOKWiOKWiOKVlyAgIOKWiOKWiOKWiOKVl+KWiOKWiOKVlyAgIOKWiOKWiOKVl+KWiOKWiOKVlyAgICAgIOKWiOKWiOKWiOKWiOKWiOKVlyDilojilojilojilojilojilojilojilojilZcg4paI4paI4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKWiOKWiOKWiOKVlyA=',
+        '4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWRICDilojilojilZHilojilojilZTilZDilZDilZDilZDilZ3ilojilojilZTilZDilZDilZDilZDilZ3ilojilojilZTilZDilZDilojilojilZcgICAg4paI4paI4pWU4pWQ4pWQ4pWQ4pWQ4pWd4paI4paI4pWR4paI4paI4paI4paI4pWXIOKWiOKWiOKWiOKWiOKVkeKWiOKWiOKVkSAgIOKWiOKWiOKVkeKWiOKWiOKVkSAgICAg4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4pWa4pWQ4pWQ4paI4paI4pWU4pWQ4pWQ4pWd4paI4paI4pWU4pWQ4pWQ4pWQ4paI4paI4pWX4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX',
+        '4paI4paI4paI4paI4paI4paI4pWU4pWd4paI4paI4paI4paI4paI4paI4paI4pWR4paI4paI4pWRICAgICDilojilojilojilojilojilojilojilZfilojilojilojilojilojilojilojilZEgICAg4paI4paI4paI4paI4paI4paI4paI4pWX4paI4paI4pWR4paI4paI4pWU4paI4paI4paI4paI4pWU4paI4paI4pWR4paI4paI4pWRICAg4paI4paI4pWR4paI4paI4pWRICAgICDilojilojilojilojilojilojilojilZEgICDilojilojilZEgICDilojilojilZEgICDilojilojilZHilojilojilojilojilojilojilZTilZ0=',
+        '4paI4paI4pWU4pWQ4pWQ4paI4paI4pWX4paI4paI4pWU4pWQ4pWQ4paI4paI4pWR4paI4paI4pWRICAgICDilZrilZDilZDilZDilZDilojilojilZHilojilojilZTilZDilZDilojilojilZEgICAg4pWa4pWQ4pWQ4pWQ4pWQ4paI4paI4pWR4paI4paI4pWR4paI4paI4pWR4pWa4paI4paI4pWU4pWd4paI4paI4pWR4paI4paI4pWRICAg4paI4paI4pWR4paI4paI4pWRICAgICDilojilojilZTilZDilZDilojilojilZEgICDilojilojilZEgICDilojilojilZEgICDilojilojilZHilojilojilZTilZDilZDilojilojilZc=',
+        '4paI4paI4pWRICDilojilojilZHilojilojilZEgIOKWiOKWiOKVkeKVmuKWiOKWiOKWiOKWiOKWiOKWiOKVl+KWiOKWiOKWiOKWiOKWiOKWiOKWiOKVkeKWiOKWiOKVkSAg4paI4paI4pWRICAgIOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKVkeKWiOKWiOKVkeKWiOKWiOKVkSDilZrilZDilZ0g4paI4paI4pWR4pWa4paI4paI4paI4paI4paI4paI4pWU4pWd4paI4paI4paI4paI4paI4paI4paI4pWX4paI4paI4pWRICDilojilojilZEgICDilojilojilZEgICDilZrilojilojilojilojilojilojilZTilZ3ilojilojilZEgIOKWiOKWiOKVkQ==',
+        '4pWa4pWQ4pWdICDilZrilZDilZ3ilZrilZDilZ0gIOKVmuKVkOKVnSDilZrilZDilZDilZDilZDilZDilZ3ilZrilZDilZDilZDilZDilZDilZDilZ3ilZrilZDilZ0gIOKVmuKVkOKVnSAgICDilZrilZDilZDilZDilZDilZDilZDilZ3ilZrilZDilZ3ilZrilZDilZ0gICAgIOKVmuKVkOKVnSDilZrilZDilZDilZDilZDilZDilZ0g4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWd4pWa4pWQ4pWdICDilZrilZDilZ0gICDilZrilZDilZ0gICAg4pWa4pWQ4pWQ4pWQ4pWQ4pWQ4pWdIOKVmuKVkOKVnSAg4pWa4pWQ4pWd'
+    ) | ForEach-Object {
+        [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_))
+    }
+
+    $lines = @()
+    foreach ($line in $face) {
+        $lines += (Format-StyledText -Text $line -StyleName 'Brand')
+    }
+    $lines += (Format-StyledText -Text 'Made by Firas Ben Nacib' -StyleName 'Accent')
+    return $lines
+}
+
+function Format-DashboardOutput {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$BaselineStatus,
+        [AllowNull()]
+        [object]$ScenarioStatus = $null
+    )
+
+    $vmSummary = @($BaselineStatus.MachineStatus | ForEach-Object { '{0} {1}' -f $_.Name, $_.StateHuman }) -join ' | '
+    $scenarioSummary = if ($null -eq $ScenarioStatus) {
+        'No active scenario'
+    }
+    else {
+        '{0} ({1})' -f $ScenarioStatus.ScenarioId, $ScenarioStatus.Mode
+    }
+
+    $stateStyle = switch ([string]$BaselineStatus.State) {
+        'ready' { 'Success' }
+        'available' { 'Accent' }
+        'incomplete' { 'Warning' }
+        default { 'Muted' }
+    }
+
+    return @(
+        (Get-UiHeading -Text 'RHCSA'),
+        (Format-UiLabelValue -Label 'Baseline' -Value (Format-StyledText -Text $BaselineStatus.StateText -StyleName $stateStyle)),
+        (Format-UiLabelValue -Label 'VMs' -Value $vmSummary),
+        (Format-UiLabelValue -Label 'Scenario' -Value $scenarioSummary)
+    )
+}
+
 function Format-BaselineStartOutput {
     param(
-        [object]$BaselineResult
+        [object]$BaselineResult,
+        [object]$BaselineStatus
     )
 
     if ($null -eq $BaselineResult) {
@@ -527,13 +1004,13 @@ function Format-BaselineStartOutput {
         return $lines
     }
 
-    $lines += (Get-UiHeading -Text 'RHCSA v9 baseline ready' -StyleName 'Success')
-    $lines += (Format-StyledText -Text 'servervm and clientvm are running with the clean baseline.' -StyleName 'Muted')
-    $lines += ''
-    $lines += (Get-UiHeading -Text 'Next Commands')
-    $lines += (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario list')
-    $lines += (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id essential-tools -Mode Lab')
-    $lines += (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario start -Id mock-exam-a -Mode Exam')
+    $scenarioText = if ($BaselineResult.ClearedActiveRun) { 'No active scenario' } else { 'No active scenario' }
+
+    $lines += @(
+        (Get-UiHeading -Text 'Baseline ready' -StyleName 'Success'),
+        (Format-UiLabelValue -Label 'VMs' -Value (@($BaselineStatus.MachineStatus | ForEach-Object { '{0} {1}' -f $_.Name, $_.StateHuman }) -join ' | ')),
+        (Format-UiLabelValue -Label 'Scenario' -Value $scenarioText)
+    )
     return $lines
 }
 
@@ -546,46 +1023,32 @@ function Format-ScenarioStartOutput {
         return @((Get-UiHeading -Text 'Scenario start skipped' -StyleName 'Warning'))
     }
 
+    $tasksPath = if ($ScenarioResult.Mode -eq 'lab') { $ScenarioResult.Manifest.Docs.LabTasksRelative } else { $ScenarioResult.Manifest.Docs.ExamTasksRelative }
+    $solutionPath = if ($ScenarioResult.Mode -eq 'lab') { $ScenarioResult.Manifest.Docs.LabSolutionRelative } else { $ScenarioResult.Manifest.Docs.ExamSolutionRelative }
+
     $lines = @(
         (Get-UiHeading -Text ("Started {0}" -f $ScenarioResult.Manifest.Id) -StyleName 'Success'),
-        (Format-UiLabelValue -Label 'Mode' -Value $ScenarioResult.Mode),
-        (Format-UiLabelValue -Label 'Type' -Value $ScenarioResult.Manifest.Category),
         (Format-UiLabelValue -Label 'Title' -Value $ScenarioResult.Manifest.Title),
-        (Format-UiLabelValue -Label 'Started' -Value $ScenarioResult.StartedAt.ToString('yyyy-MM-dd HH:mm:ss')),
-        (Format-UiLabelValue -Label 'Ends' -Value $ScenarioResult.EndsAt.ToString('yyyy-MM-dd HH:mm:ss')),
-        (Format-UiLabelValue -Label 'Reset Path' -Value $ScenarioResult.RestoreMethod),
-        (Format-UiLabelValue -Label 'Artifacts' -Value $ScenarioResult.RunArtifact.RunRootRelative),
-        '',
-        (Get-UiHeading -Text 'Run Brief'),
-        ('  {0}' -f $ScenarioResult.RunArtifact.GeneratedArtifact.RunBrief),
-        ''
+        (Format-UiLabelValue -Label 'Mode' -Value $ScenarioResult.Mode),
+        (Format-UiLabelValue -Label 'Brief' -Value $ScenarioResult.RunArtifact.GeneratedArtifact.RunBrief)
     )
 
-    $lines += (Get-UiHeading -Text 'Scenario Docs')
-    if ($ScenarioResult.Mode -eq 'lab') {
-        $lines += ('  {0}' -f $ScenarioResult.Manifest.Docs.LabTasksRelative)
-        $lines += ('  {0}' -f $ScenarioResult.Manifest.Docs.LabSolutionRelative)
+    $replacedActiveRun = $null
+    if ($ScenarioResult.PSObject.Properties.Match('ReplacedActiveRun').Count -gt 0) {
+        $replacedActiveRun = $ScenarioResult.ReplacedActiveRun
     }
-    else {
-        $lines += ('  {0}' -f $ScenarioResult.Manifest.Docs.ExamTasksRelative)
-        $lines += ('  {0}' -f $ScenarioResult.Manifest.Docs.ExamSolutionRelative)
+
+    if ($null -ne $replacedActiveRun -and -not [string]::IsNullOrWhiteSpace([string]$replacedActiveRun.RunId)) {
+        $lines += (Format-UiLabelValue -Label 'Replaced' -Value $replacedActiveRun.ScenarioId)
     }
-    $lines += ''
+
+    $lines += (Format-UiLabelValue -Label 'Tasks' -Value $tasksPath)
+    $lines += (Format-UiLabelValue -Label 'Solution' -Value $solutionPath)
 
     if ($ScenarioResult.Manifest.Flags.PasswordRecovery) {
-        $lines += (Format-StyledText -Text 'clientvm was restarted in GUI mode for password-recovery practice.' -StyleName 'Warning')
-        $lines += (Format-StyledText -Text 'Vagrant SSH access to clientvm stays unavailable until you complete recovery and reboot normally.' -StyleName 'Muted')
-    }
-    elseif ($ScenarioResult.RestoreMethod -eq 'baseline-rebuild') {
-        $lines += (Format-StyledText -Text 'Snapshot restore failed on this host, so the clean baseline was rebuilt and the scenario overlay was applied.' -StyleName 'Warning')
-    }
-    else {
-        $lines += (Format-StyledText -Text 'Both VMs were restored to the clean baseline and the scenario overlay was applied.' -StyleName 'Muted')
+        $lines += (Format-StyledText -Text 'Recovery mode uses the clientvm GUI console.' -StyleName 'Warning')
     }
 
-    $lines += ''
-    $lines += (Get-UiHeading -Text 'Next Commands')
-    $lines += (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario status')
     return $lines
 }
 
@@ -599,13 +1062,124 @@ function Format-ScenarioResetOutput {
     }
 
     return @(
-        (Get-UiHeading -Text 'Scenario reset complete' -StyleName 'Success'),
-        (Format-UiLabelValue -Label 'Run Id' -Value $ScenarioResult.RunArtifact.RunId),
-        (Format-UiLabelValue -Label 'Artifacts' -Value $ScenarioResult.RunArtifact.RunRootRelative),
-        '',
-        (Get-UiHeading -Text 'Next Commands'),
-        (Format-UiCommandLine -CommandText '.\RHCSA.ps1 scenario status')
+        (Get-UiHeading -Text 'Reset complete' -StyleName 'Success'),
+        (Format-UiLabelValue -Label 'Brief' -Value $ScenarioResult.RunArtifact.GeneratedArtifact.RunBrief)
     )
+}
+
+function Format-ExerciseCheckOutput {
+    param(
+        [object]$CheckResult
+    )
+
+    if ($null -eq $CheckResult) {
+        return @((Get-UiHeading -Text 'Check skipped' -StyleName 'Warning'))
+    }
+
+    if ($CheckResult.NoChecks) {
+        return @(
+            (Get-UiHeading -Text 'No automated checks' -StyleName 'Warning'),
+            (Format-StyledText -Text 'This lab does not define automated checks yet' -StyleName 'Muted')
+        )
+    }
+
+    $failedResults = @($CheckResult.Results | Where-Object { -not $_.Passed })
+    if ($failedResults.Count -eq $CheckResult.TotalCount -and $failedResults.Count -gt 0) {
+        $transportFailures = @(
+            $failedResults | Where-Object {
+                $joined = ((@($_.StdOut) + @($_.StdErr)) -join "`n")
+                $joined -match '`ssh` executable not found in any directories in the %PATH% variable'
+            }
+        )
+
+        if ($transportFailures.Count -eq $failedResults.Count) {
+            return @(
+                (Get-UiHeading -Text 'Check unavailable' -StyleName 'Warning'),
+                (Format-StyledText -Text 'Vagrant could not locate ssh.exe for non-interactive validation in this PowerShell session.' -StyleName 'Muted'),
+                (Format-StyledText -Text 'Open a normal PowerShell window with ssh.exe on PATH, or run vagrant ssh manually for this host.' -StyleName 'Muted')
+            )
+        }
+    }
+
+    $heading = if ($CheckResult.Passed) { 'Progress check' } else { 'Progress check' }
+    $headingStyle = if ($CheckResult.Passed) { 'Success' } else { 'Warning' }
+    $resultText = if ($CheckResult.Passed) {
+        Format-StyledText -Text ("complete ({0}/{1})" -f $CheckResult.PassedCount, $CheckResult.TotalCount) -StyleName 'Success'
+    }
+    else {
+        Format-StyledText -Text ("incomplete ({0}/{1})" -f $CheckResult.PassedCount, $CheckResult.TotalCount) -StyleName 'Warning'
+    }
+    $lines = @(
+        (Get-UiHeading -Text $heading -StyleName $headingStyle),
+        (Format-UiLabelValue -Label 'Lab' -Value $CheckResult.ScenarioId),
+        (Format-UiLabelValue -Label 'Result' -Value $resultText)
+    )
+
+    if (-not $CheckResult.Passed) {
+        $lines += (Format-StyledText -Text 'This returns a non-zero exit code until every task is finished.' -StyleName 'Muted')
+    }
+
+    foreach ($result in @($CheckResult.Results)) {
+        $statusText = if ($result.Passed) { '[ok]' } else { '[fail]' }
+        $statusStyle = if ($result.Passed) { 'Success' } else { 'Warning' }
+        $displayCommand = if ([string]::IsNullOrWhiteSpace([string]$result.OriginalCommand)) { [string]$result.Command } else { [string]$result.OriginalCommand }
+        $lines += ('{0} [{1}] {2}' -f (Format-StyledText -Text $statusText -StyleName $statusStyle), $result.Target, $displayCommand)
+    }
+
+    if ($failedResults.Count -gt 0) {
+        $lines += ''
+        foreach ($failedResult in $failedResults) {
+            $lines += (Format-UiLabelValue -Label ("Fail {0}" -f $failedResult.Index) -Value ("[{0}] {1}" -f $failedResult.Target, $failedResult.OriginalCommand))
+            $transcript = @($failedResult.StdOut) + @($failedResult.StdErr)
+            $usedSyntheticPreview = $false
+            $preview = @(
+                $transcript |
+                    Where-Object {
+                        $text = [string]$_
+                        -not [string]::IsNullOrWhiteSpace($text) -and
+                        $text -notmatch '^\s*==>\s+\S+:\s+Running provisioner:' -and
+                        $text -notmatch '^\s+\S+:\s+Running:\s+script:' -and
+                        $text -notmatch '^The SSH command responded with a non-zero exit status\.' -and
+                        $text -notmatch '^assumes that this means the command failed\.' -and
+                        $text -notmatch '^should be in the log above\.' -and
+                        $text -notmatch '^went wrong\.$'
+                    } |
+                    Select-Object -First 8
+            )
+            if ($preview.Count -eq 0) {
+                $preview = @('Command returned a non-zero exit status.')
+                $usedSyntheticPreview = $true
+            }
+            foreach ($line in $preview) {
+                $lines += ('    {0}' -f $line)
+            }
+            if (-not $usedSyntheticPreview -and $transcript.Count -gt $preview.Count) {
+                $lines += '    ...'
+            }
+        }
+    }
+
+    return $lines
+}
+
+function Format-VmSshOutput {
+    param(
+        [object]$SessionResult
+    )
+
+    if ($null -eq $SessionResult) {
+        return @()
+    }
+
+    if ($SessionResult.PSObject.Properties.Match('Detached').Count -gt 0 -and [bool]$SessionResult.Detached) {
+        return @(
+            (Get-UiHeading -Text 'SSH session opened' -StyleName 'Success'),
+            (Format-UiLabelValue -Label 'VM' -Value ([string]$SessionResult.MachineName)),
+            (Format-StyledText -Text 'A new PowerShell window was opened for the interactive SSH session.' -StyleName 'Muted')
+        )
+    }
+
+    return @()
 }
 
 function Format-DestroyOutput {
@@ -627,7 +1201,7 @@ function Format-DestroyOutput {
 
     $lines = @()
     foreach ($note in @($resultObject.Notes)) {
-        if ([string]$note -match '^vagrant destroy returned exit code 1\b') {
+        if ([string]$note -match '^vagrant destroy returned exit code (-1|1)\b') {
             continue
         }
         $lines += ('{0} {1}' -f (Format-StyledText -Text 'NOTICE' -StyleName 'Warning'), $note)
@@ -638,56 +1212,209 @@ function Format-DestroyOutput {
         return $lines
     }
 
-    $lines += (Get-UiHeading -Text 'Lab destroyed and cleaned.' -StyleName 'Success')
+    $lines += (Get-UiHeading -Text 'Simulator destroyed and cleaned' -StyleName 'Success')
     return $lines
 }
 
+function Get-NonEmptyTokenList {
+    param(
+        [string[]]$Value = @()
+    )
+
+    return @($Value | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Resolve-CommandRoute {
+    param(
+        [string]$AreaValue,
+        [string]$CommandValue,
+        [string]$ItemValue,
+        [string[]]$ExtraValue = @()
+    )
+
+    $resolvedArea = if ([string]::IsNullOrWhiteSpace($AreaValue)) { '' } else { $AreaValue.ToLowerInvariant() }
+    $tokens = @(Get-NonEmptyTokenList -Value @($CommandValue, $ItemValue) + @($ExtraValue))
+
+    switch ($resolvedArea) {
+        'help' {
+            if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
+                $nextArea = $tokens[0].ToLowerInvariant()
+                $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
+                return [PSCustomObject]@{ Area = 'help'; Command = $nextArea; Item = $null; Extra = $remaining; Legacy = $false }
+            }
+        }
+        'up' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'up'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'destroy' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'destroy'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'list' {
+            $listItem = if ($tokens.Count -gt 0) { $tokens[0] } else { $null }
+            $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
+            return [PSCustomObject]@{ Area = 'scenario'; Command = 'list'; Item = $listItem; Extra = $remaining; Legacy = $false }
+        }
+        'start' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'start'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'reset' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'reset'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'status' { return [PSCustomObject]@{ Area = 'dashboard'; Command = 'status'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'check' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'check'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'vms' { return [PSCustomObject]@{ Area = 'vm'; Command = 'status'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'ssh' {
+            $targetVm = if ($tokens.Count -gt 0) { $tokens[0] } else { 'clientvm' }
+            $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
+            return [PSCustomObject]@{ Area = 'vm'; Command = 'ssh'; Item = $targetVm; Extra = $remaining; Legacy = $false }
+        }
+        'ssh-config' {
+            $targetVm = if ($tokens.Count -gt 0) { $tokens[0] } else { 'clientvm' }
+            $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
+            return [PSCustomObject]@{ Area = 'vm'; Command = 'ssh-config'; Item = $targetVm; Extra = $remaining; Legacy = $false }
+        }
+        'tui' { return [PSCustomObject]@{ Area = 'app'; Command = 'tui'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'completion' {
+            $subcommand = if ($tokens.Count -gt 0) { $tokens[0] } else { $null }
+            $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
+            return [PSCustomObject]@{ Area = 'completion'; Command = 'manage'; Item = $subcommand; Extra = $remaining; Legacy = $false }
+        }
+    }
+
+    return [PSCustomObject]@{
+        Area = $resolvedArea
+        Command = if ([string]::IsNullOrWhiteSpace($CommandValue)) { '' } else { $CommandValue.ToLowerInvariant() }
+        Item = if ([string]::IsNullOrWhiteSpace($ItemValue)) { $null } else { $ItemValue }
+        Extra = @(Get-NonEmptyTokenList -Value $ExtraValue)
+        Legacy = ($resolvedArea -in @('baseline', 'scenario', 'vm'))
+    }
+}
+
 $projectRoot = Get-ProjectRoot -Start $PSScriptRoot
-$cliArgument = @($ArgumentList | Where-Object { $null -ne $_ })
-$area = if ($cliArgument.Count -ge 1) { $cliArgument[0].ToLowerInvariant() } else { '' }
-$command = if ($cliArgument.Count -ge 2) { $cliArgument[1].ToLowerInvariant() } else { '' }
-$remainingArgument = if ($cliArgument.Count -gt 2) { @($cliArgument[2..($cliArgument.Count - 1)]) } else { @() }
-$remainingItem = @($remainingArgument)
+
+if ($Help) {
+    $helpScope = 'general'
+    $normalizedArea = if ([string]::IsNullOrWhiteSpace($Area)) { '' } else { $Area.ToLowerInvariant() }
+    $normalizedCommand = if ([string]::IsNullOrWhiteSpace($Command)) { '' } else { $Command.ToLowerInvariant() }
+
+    switch ($normalizedArea) {
+        '' { $helpScope = 'general' }
+        'up' { $helpScope = 'up' }
+        'destroy' { $helpScope = 'destroy' }
+        'list' { $helpScope = 'list' }
+        'start' { $helpScope = 'start' }
+        'check' { $helpScope = 'check' }
+        'reset' { $helpScope = 'reset' }
+        'status' { $helpScope = 'status' }
+        'vms' { $helpScope = 'vms' }
+        'ssh' { $helpScope = 'ssh' }
+        'ssh-config' { $helpScope = 'ssh-config' }
+        'tui' { $helpScope = 'tui' }
+        'completion' { $helpScope = 'completion' }
+        'help' {
+            $helpScope = if ($normalizedCommand -in @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
+                $normalizedCommand
+            }
+            else {
+                'general'
+            }
+        }
+        default { $helpScope = 'general' }
+    }
+
+    Get-HelpOutput -Scope $helpScope | Write-Output
+    return
+}
+
+$route = Resolve-CommandRoute -AreaValue $Area -CommandValue $Command -ItemValue $Item -ExtraValue $Extra
+$area = [string]$route.Area
+$command = [string]$route.Command
+$item = if ([string]::IsNullOrWhiteSpace([string]$route.Item)) { $null } else { [string]$route.Item }
+$remainingItem = @($route.Extra)
+$isLegacyRoute = [bool]$route.Legacy
 
 try {
-    if ($cliArgument.Count -eq 0 -or (Test-HelpToken -Token $area)) {
+    if ($area -eq 'help') {
+        if ($remainingItem.Count -gt 0) {
+            throw "Unknown help argument '$($remainingItem[0])'."
+        }
+
+        $helpScope = if ([string]::IsNullOrWhiteSpace($command)) { 'general' } else { $command }
+        Get-HelpOutput -Scope $helpScope | Write-Output
+        return
+    }
+
+    if ([string]::IsNullOrWhiteSpace($area) -or (Test-HelpToken -Token $area)) {
         Get-HelpOutput -Scope 'general' | Write-Output
         return
     }
 
-    if ($area -eq 'baseline' -and ($cliArgument.Count -eq 1 -or (Test-HelpToken -Token $command))) {
-        if ($remainingItem.Count -gt 0) {
-            throw "Unknown baseline help argument '$($remainingItem[0])'."
-        }
-
-        Get-HelpOutput -Scope 'baseline' | Write-Output
-        return
-    }
-
-    if ($area -eq 'scenario' -and ($cliArgument.Count -eq 1 -or (Test-HelpToken -Token $command))) {
-        if ($remainingItem.Count -gt 0) {
-            throw "Unknown scenario help argument '$($remainingItem[0])'."
-        }
-
-        Get-HelpOutput -Scope 'scenario' | Write-Output
-        return
+    if ($isLegacyRoute) {
+        throw 'Unknown command. Run .\RHCSA.ps1 help for usage.'
     }
 
     switch ("$area/$command") {
         'baseline/up' {
-            $baselineOption = ConvertTo-BaselineOption -CommandArgument $remainingItem
-            $result = Start-BaselineSession `
-                -NoProvision:$baselineOption.NoProvision `
-                -NormalStart:$baselineOption.NormalStart `
-                -HeadlessClient:$baselineOption.HeadlessClient `
-                -RealisticMode:$baselineOption.RealisticMode `
-                -ProjectRoot $projectRoot
-            Format-BaselineStartOutput -BaselineResult $result | Write-Output
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'up' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown up argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown up argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown up argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown up argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown up argument '-Vm'."
+            }
+
+            Write-Output ''
+            Get-RhcsaAsciiBanner | Write-Output
+            Write-Output ''
+            $previousWorkflowPreference = $script:ShowWorkflowStatus
+            $script:ShowWorkflowStatus = $true
+            try {
+                $result = Start-BaselineSession `
+                    -NoProvision:$NoProvision `
+                    -NormalStart:$NormalStart `
+                    -HeadlessClient:$HeadlessClient `
+                    -RealisticMode:$RealisticMode `
+                    -ProjectRoot $projectRoot
+            }
+            finally {
+                $script:ShowWorkflowStatus = $previousWorkflowPreference
+            }
+            Format-BaselineStartOutput -BaselineResult $result -BaselineStatus (Get-BaselineStatus -ProjectRoot $projectRoot) | Write-Output
             break
         }
         'baseline/destroy' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'destroy' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown destroy argument '$item'."
+            }
+
             if ($remainingItem.Count -gt 0) {
-                throw "Unknown baseline destroy argument '$($remainingItem[0])'."
+                throw "Unknown destroy argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown destroy argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown destroy argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown destroy argument '-Vm'."
             }
 
             $result = Remove-LabEnvironment -ProjectRoot $projectRoot
@@ -695,46 +1422,336 @@ try {
             break
         }
         'scenario/list' {
-            $listOption = ConvertTo-ScenarioListOption -CommandArgument $remainingItem
-            Format-ScenarioCatalogOutput -ScenarioCatalog @(Get-ScenarioCatalog -ProjectRoot $projectRoot) -Filter $listOption.Filter | Write-Output
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'list' | Write-Output
+                break
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown list argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown list argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown list argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown list argument '-Vm'."
+            }
+
+            $listFilter = 'all'
+            if ($item) {
+                switch ($item.ToLowerInvariant()) {
+                    'all' { $listFilter = 'all' }
+                    'lab' { $listFilter = 'labs' }
+                    'labs' { $listFilter = 'labs' }
+                    'exam' { $listFilter = 'exams' }
+                    'exams' { $listFilter = 'exams' }
+                    default { throw "Unknown list argument '$item'." }
+                }
+            }
+
+            Format-ScenarioCatalogOutput -ScenarioCatalog @(Get-ScenarioCatalog -ProjectRoot $projectRoot) -Filter $listFilter | Write-Output
             break
         }
         'scenario/start' {
-            $startOption = ConvertTo-StartOption -CommandArgument $remainingItem
-            $result = Start-ScenarioRun -ScenarioId $startOption.Id -Mode $startOption.Mode -ProjectRoot $projectRoot
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'start' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown start argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown start argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown start argument '-Vm'."
+            }
+
+            if (-not $PSBoundParameters.ContainsKey('Id') -or [string]::IsNullOrWhiteSpace($Id)) {
+                throw 'Scenario start requires -Id <scenario-id>.'
+            }
+
+            $result = Start-ScenarioRun -ScenarioId $Id -Mode $Mode -ProjectRoot $projectRoot
             Format-ScenarioStartOutput -ScenarioResult $result | Write-Output
             break
         }
         'scenario/reset' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'reset' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown reset argument '$item'."
+            }
+
             if ($remainingItem.Count -gt 0) {
-                throw "Unknown scenario reset argument '$($remainingItem[0])'."
+                throw "Unknown reset argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown reset argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown reset argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown reset argument '-Vm'."
             }
 
             $status = Get-ScenarioStatus -ProjectRoot $projectRoot
             if ($null -eq $status) {
-                throw 'No active run found. Start a scenario first with .\RHCSA.ps1 scenario start.'
+                throw 'No active run found. Start one first with .\RHCSA.ps1 start -Id <scenario-id> -Mode Lab.'
             }
 
-            Write-Output ("Resetting scenario '{0}' in {1} mode..." -f $status.ScenarioId, $status.Mode)
             $result = Reset-ScenarioRun -ProjectRoot $projectRoot
             Format-ScenarioResetOutput -ScenarioResult $result | Write-Output
             break
         }
         'scenario/status' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'status' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown status argument '$item'."
+            }
+
             if ($remainingItem.Count -gt 0) {
-                throw "Unknown scenario status argument '$($remainingItem[0])'."
+                throw "Unknown status argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown status argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown status argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown status argument '-Vm'."
             }
 
             Format-ScenarioStatusOutput -ScenarioStatus (Get-ScenarioStatus -ProjectRoot $projectRoot) | Write-Output
             break
         }
-        default {
-            if ($area -eq 'baseline') {
-                throw 'Unknown baseline command. Run .\RHCSA.ps1 baseline help for usage.'
+        'scenario/check' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'check' | Write-Output
+                break
             }
 
-            if ($area -eq 'scenario') {
-                throw 'Unknown scenario command. Run .\RHCSA.ps1 scenario help for usage.'
+            if ($item) {
+                throw "Unknown check argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown check argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown check argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown check argument '-Vm'."
+            }
+
+            $result = Invoke-LabExerciseCheck -ScenarioId $Id -ProjectRoot $projectRoot
+            Format-ExerciseCheckOutput -CheckResult $result | Write-Output
+            if (-not $result.Passed) {
+                exit 1
+            }
+            break
+        }
+        'dashboard/status' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'status' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown status argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown status argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown status argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown status argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown status argument '-Vm'."
+            }
+
+            Format-DashboardOutput -BaselineStatus (Get-BaselineStatus -ProjectRoot $projectRoot) -ScenarioStatus (Get-ScenarioStatus -ProjectRoot $projectRoot) | Write-Output
+            break
+        }
+        'vm/status' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'vms' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown vms argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown vms argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown vms argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown vms argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown vms argument '-Vm'."
+            }
+
+            Format-VmStatusOutput -MachineStatus (Get-VagrantMachineStatus -ProjectRoot $projectRoot) | Write-Output
+            break
+        }
+        'vm/ssh' {
+            if ((-not $PSBoundParameters.ContainsKey('Vm')) -and $item -and (Test-HelpToken -Token $item)) {
+                Get-HelpOutput -Scope 'ssh' | Write-Output
+                break
+            }
+            if ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0])) {
+                Get-HelpOutput -Scope 'ssh' | Write-Output
+                break
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown ssh argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown ssh argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown ssh argument '-Mode'."
+            }
+
+            $targetVm = if ($PSBoundParameters.ContainsKey('Vm')) { $Vm } else { $item }
+            if ([string]::IsNullOrWhiteSpace($targetVm)) {
+                $targetVm = 'clientvm'
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm') -and $item -and $item -ne $Vm) {
+                throw "Conflicting ssh targets '$item' and '$Vm'."
+            }
+
+            $session = Open-VmSshSession -MachineName $targetVm -ProjectRoot $projectRoot
+            Format-VmSshOutput -SessionResult $session | Write-Output
+            break
+        }
+        'vm/ssh-config' {
+            if ((-not $PSBoundParameters.ContainsKey('Vm')) -and $item -and (Test-HelpToken -Token $item)) {
+                Get-HelpOutput -Scope 'ssh-config' | Write-Output
+                break
+            }
+            if ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0])) {
+                Get-HelpOutput -Scope 'ssh-config' | Write-Output
+                break
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown ssh-config argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown ssh-config argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown ssh-config argument '-Mode'."
+            }
+
+            $targetVm = if ($PSBoundParameters.ContainsKey('Vm')) { $Vm } else { $item }
+            if ([string]::IsNullOrWhiteSpace($targetVm)) {
+                $targetVm = 'clientvm'
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm') -and $item -and $item -ne $Vm) {
+                throw "Conflicting ssh-config targets '$item' and '$Vm'."
+            }
+
+            Get-VmSshConfig -MachineName $targetVm -ProjectRoot $projectRoot | Write-Output
+            break
+        }
+        'app/tui' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'tui' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown tui argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown tui argument '$($remainingItem[0])'."
+            }
+
+            Open-RhcsaTui -ProjectRoot $projectRoot
+            break
+        }
+        'completion/manage' {
+            $completionCommand = if ([string]::IsNullOrWhiteSpace($item)) { 'powershell' } else { $item.ToLowerInvariant() }
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown completion argument '$($remainingItem[0])'."
+            }
+
+            if (Test-HelpToken -Token $completionCommand) {
+                Get-HelpOutput -Scope 'completion' | Write-Output
+                break
+            }
+
+            switch ($completionCommand) {
+                'powershell' {
+                    Get-PowerShellCompletionScript -ProjectRoot $projectRoot | Write-Output
+                    break
+                }
+                'install' {
+                    $profilePath = Install-PowerShellCompletion -ProjectRoot $projectRoot
+                    Write-Output (Get-UiHeading -Text 'Completion installed' -StyleName 'Success')
+                    Write-Output (Format-UiLabelValue -Label 'Profile' -Value $profilePath)
+                    break
+                }
+                default {
+                    throw "Unknown completion command '$completionCommand'."
+                }
+            }
+            break
+        }
+        default {
+            if ($area -eq 'completion') {
+                throw 'Unknown completion command. Run .\RHCSA.ps1 help completion for usage.'
             }
 
             throw 'Unknown command. Run .\RHCSA.ps1 help for usage.'
@@ -742,6 +1759,13 @@ try {
     }
 }
 catch {
-    Format-ErrorOutput -Message $_.Exception.Message -Area $area | Write-Output
+    Format-ErrorOutput -Message $_.Exception.Message | Write-Output
+    $recommendedHelp = if ($isLegacyRoute) {
+        '.\RHCSA.ps1 help'
+    }
+    else {
+        Get-RecommendedHelpCommand -Area $area -Command $command
+    }
+    Write-Output (Format-StyledText -Text ("Use: {0}" -f $recommendedHelp) -StyleName 'Muted')
     exit 1
 }

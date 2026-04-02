@@ -1,0 +1,52 @@
+{
+  "id": "lab-33-grub-kernel-arg",
+  "title": "Lab 33: Bootloader Kernel Argument",
+  "description": "Modify the system bootloader so every installed kernel boots with the required persistent argument.",
+  "time_limit_minutes": 20,
+  "objective_tags": [
+    "boot-and-recovery"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-33-grub-kernel-arg/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-33-grub-kernel-arg/prompt.md",
+    "hint": "exercises/lab-33-grub-kernel-arg/hint.md",
+    "check": "exercises/lab-33-grub-kernel-arg/check.sh",
+    "solution": "exercises/lab-33-grub-kernel-arg/solution.md",
+    "metadata": "exercises/lab-33-grub-kernel-arg/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Configure the bootloader on clientvm so that every",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
+      "solution_commands": [
+        "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\""
+      ]
+    },
+    {
+      "index": 2,
+      "title": "The change must persist across reboots and must not",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "The change must persist across reboots and must not require manual GRUB editing during startup.",
+      "solution_commands": [
+        "grubby --info=ALL | grep -E \"^kernel|^args\""
+      ]
+    }
+  ],
+  "hints": [
+    "Use a persistent bootloader tool rather than a one-time edit at the GRUB menu.",
+    "Verify the configured kernel arguments for all installed kernels."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "grubby --info=ALL | grep -E \"^args=\" | grep -q \"audit_backlog_limit=8192\"",
+      "command": "grubby --info=ALL | grep -E \"^args=\" | grep -q \"audit_backlog_limit=8192\""
+    }
+  ]
+}

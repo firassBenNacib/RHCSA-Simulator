@@ -32,8 +32,18 @@
         "ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@192.168.122.3 \"test -f /home/bridge48/inbox/payload.txt\""
       ],
       "solution_outline": [],
-      "task_titles": [],
-      "task_points": [],
+      "task_titles": [
+        "Create user bridge48 on both clientvm and servervm....",
+        "generate an ED25519 SSH key pair with no passphrase",
+        "Configure passwordless SSH access for bridge48 from...",
+        "Using scp over SSH, copy /home/bridge48/payload.txt..."
+      ],
+      "task_points": [
+        10,
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "# On both systems",

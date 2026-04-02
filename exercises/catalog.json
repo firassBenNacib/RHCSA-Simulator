@@ -1,0 +1,874 @@
+[
+  {
+    "id": "lab-01-networking-hostname",
+    "title": "Lab 01: Networking And Hostname",
+    "description": "Configure persistent networking and hostname settings on clientvm in RHCSA style.",
+    "time_limit_minutes": 35,
+    "objective_tags": [
+      "networking-and-firewall"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-01-networking-hostname/prompt.md",
+      "hint": "exercises/lab-01-networking-hostname/hint.md",
+      "check": "exercises/lab-01-networking-hostname/check.sh",
+      "solution": "exercises/lab-01-networking-hostname/solution.md",
+      "metadata": "exercises/lab-01-networking-hostname/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-01-networking-hostname/scenario.json"
+  },
+  {
+    "id": "lab-02-root-recovery",
+    "title": "Lab 02: Root Password Recovery",
+    "description": "Recover root access through the bootloader and restore normal access on clientvm.",
+    "time_limit_minutes": 40,
+    "objective_tags": [
+      "boot-and-recovery"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-02-root-recovery/prompt.md",
+      "hint": "exercises/lab-02-root-recovery/hint.md",
+      "check": "exercises/lab-02-root-recovery/check.sh",
+      "solution": "exercises/lab-02-root-recovery/solution.md",
+      "metadata": "exercises/lab-02-root-recovery/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-02-root-recovery/scenario.json"
+  },
+  {
+    "id": "lab-03-dnf-repositories",
+    "title": "Lab 03: DNF Repository Configuration",
+    "description": "Configure offline BaseOS and AppStream repositories on both systems.",
+    "time_limit_minutes": 40,
+    "objective_tags": [
+      "software-scheduling-time"
+    ],
+    "requires_servervm": true,
+    "paths": {
+      "prompt": "exercises/lab-03-dnf-repositories/prompt.md",
+      "hint": "exercises/lab-03-dnf-repositories/hint.md",
+      "check": "exercises/lab-03-dnf-repositories/check.sh",
+      "solution": "exercises/lab-03-dnf-repositories/solution.md",
+      "metadata": "exercises/lab-03-dnf-repositories/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-03-dnf-repositories/scenario.json"
+  },
+  {
+    "id": "lab-04-selinux-http-port",
+    "title": "Lab 04: SELinux Custom HTTP Port",
+    "description": "Fix Apache so it listens on a nonstandard port without disabling SELinux.",
+    "time_limit_minutes": 35,
+    "objective_tags": [
+      "selinux-and-default-perms"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-04-selinux-http-port/prompt.md",
+      "hint": "exercises/lab-04-selinux-http-port/hint.md",
+      "check": "exercises/lab-04-selinux-http-port/check.sh",
+      "solution": "exercises/lab-04-selinux-http-port/solution.md",
+      "metadata": "exercises/lab-04-selinux-http-port/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-04-selinux-http-port/scenario.json"
+  },
+  {
+    "id": "lab-05-users-groups-sudo",
+    "title": "Lab 05: Users Groups And Sudo",
+    "description": "Create local users, a delegated admin group, and passwordless privileged access.",
+    "time_limit_minutes": 40,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-05-users-groups-sudo/prompt.md",
+      "hint": "exercises/lab-05-users-groups-sudo/hint.md",
+      "check": "exercises/lab-05-users-groups-sudo/check.sh",
+      "solution": "exercises/lab-05-users-groups-sudo/solution.md",
+      "metadata": "exercises/lab-05-users-groups-sudo/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-05-users-groups-sudo/scenario.json"
+  },
+  {
+    "id": "lab-06-shared-setgid-directory",
+    "title": "Lab 06: Shared Setgid Directory",
+    "description": "Create a collaborative directory that preserves group ownership.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "filesystems-and-autofs"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-06-shared-setgid-directory/prompt.md",
+      "hint": "exercises/lab-06-shared-setgid-directory/hint.md",
+      "check": "exercises/lab-06-shared-setgid-directory/check.sh",
+      "solution": "exercises/lab-06-shared-setgid-directory/solution.md",
+      "metadata": "exercises/lab-06-shared-setgid-directory/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-06-shared-setgid-directory/scenario.json"
+  },
+  {
+    "id": "lab-07-cron-logger",
+    "title": "Lab 07: Cron Scheduling",
+    "description": "Schedule a recurring task for a specific user.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "software-scheduling-time"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-07-cron-logger/prompt.md",
+      "hint": "exercises/lab-07-cron-logger/hint.md",
+      "check": "exercises/lab-07-cron-logger/check.sh",
+      "solution": "exercises/lab-07-cron-logger/solution.md",
+      "metadata": "exercises/lab-07-cron-logger/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-07-cron-logger/scenario.json"
+  },
+  {
+    "id": "lab-08-autofs-nfs",
+    "title": "Lab 08: Autofs With NFS",
+    "description": "Configure an indirect automount from servervm.",
+    "time_limit_minutes": 40,
+    "objective_tags": [
+      "filesystems-and-autofs"
+    ],
+    "requires_servervm": true,
+    "paths": {
+      "prompt": "exercises/lab-08-autofs-nfs/prompt.md",
+      "hint": "exercises/lab-08-autofs-nfs/hint.md",
+      "check": "exercises/lab-08-autofs-nfs/check.sh",
+      "solution": "exercises/lab-08-autofs-nfs/solution.md",
+      "metadata": "exercises/lab-08-autofs-nfs/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-08-autofs-nfs/scenario.json"
+  },
+  {
+    "id": "lab-09-archive-bzip2",
+    "title": "Lab 09: Tar Archive With Bzip2",
+    "description": "Create a compressed archive in bzip2 format.",
+    "time_limit_minutes": 15,
+    "objective_tags": [
+      "essential-tools"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-09-archive-bzip2/prompt.md",
+      "hint": "exercises/lab-09-archive-bzip2/hint.md",
+      "check": "exercises/lab-09-archive-bzip2/check.sh",
+      "solution": "exercises/lab-09-archive-bzip2/solution.md",
+      "metadata": "exercises/lab-09-archive-bzip2/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-09-archive-bzip2/scenario.json"
+  },
+  {
+    "id": "lab-10-acl-permissions",
+    "title": "Lab 10: ACL And Permissions",
+    "description": "Apply fine grained access with POSIX ACLs.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "selinux-and-default-perms"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-10-acl-permissions/prompt.md",
+      "hint": "exercises/lab-10-acl-permissions/hint.md",
+      "check": "exercises/lab-10-acl-permissions/check.sh",
+      "solution": "exercises/lab-10-acl-permissions/solution.md",
+      "metadata": "exercises/lab-10-acl-permissions/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-10-acl-permissions/scenario.json"
+  },
+  {
+    "id": "lab-11-chrony-client",
+    "title": "Lab 11: Time Synchronization",
+    "description": "Configure clientvm to synchronize time from servervm.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "software-scheduling-time"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-11-chrony-client/prompt.md",
+      "hint": "exercises/lab-11-chrony-client/hint.md",
+      "check": "exercises/lab-11-chrony-client/check.sh",
+      "solution": "exercises/lab-11-chrony-client/solution.md",
+      "metadata": "exercises/lab-11-chrony-client/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-11-chrony-client/scenario.json"
+  },
+  {
+    "id": "lab-12-find-copy-preserve",
+    "title": "Lab 12: Find And Copy With Structure",
+    "description": "Locate recent files owned by a user and copy them while preserving directories.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "essential-tools"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-12-find-copy-preserve/prompt.md",
+      "hint": "exercises/lab-12-find-copy-preserve/hint.md",
+      "check": "exercises/lab-12-find-copy-preserve/check.sh",
+      "solution": "exercises/lab-12-find-copy-preserve/solution.md",
+      "metadata": "exercises/lab-12-find-copy-preserve/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-12-find-copy-preserve/scenario.json"
+  },
+  {
+    "id": "lab-13-grep-filter",
+    "title": "Lab 13: Text Filtering With Grep",
+    "description": "Extract matching lines from a seeded words file.",
+    "time_limit_minutes": 15,
+    "objective_tags": [
+      "essential-tools"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-13-grep-filter/prompt.md",
+      "hint": "exercises/lab-13-grep-filter/hint.md",
+      "check": "exercises/lab-13-grep-filter/check.sh",
+      "solution": "exercises/lab-13-grep-filter/solution.md",
+      "metadata": "exercises/lab-13-grep-filter/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-13-grep-filter/scenario.json"
+  },
+  {
+    "id": "lab-14-user-fixed-uid",
+    "title": "Lab 14: User With Fixed UID",
+    "description": "Create a local user with a specific UID.",
+    "time_limit_minutes": 15,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-14-user-fixed-uid/prompt.md",
+      "hint": "exercises/lab-14-user-fixed-uid/hint.md",
+      "check": "exercises/lab-14-user-fixed-uid/check.sh",
+      "solution": "exercises/lab-14-user-fixed-uid/solution.md",
+      "metadata": "exercises/lab-14-user-fixed-uid/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-14-user-fixed-uid/scenario.json"
+  },
+  {
+    "id": "lab-15-lvm-create-mount",
+    "title": "Lab 15: LVM Creation And Mount",
+    "description": "Create a new volume group and logical volume and mount it persistently.",
+    "time_limit_minutes": 40,
+    "objective_tags": [
+      "storage-lvm"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-15-lvm-create-mount/prompt.md",
+      "hint": "exercises/lab-15-lvm-create-mount/hint.md",
+      "check": "exercises/lab-15-lvm-create-mount/check.sh",
+      "solution": "exercises/lab-15-lvm-create-mount/solution.md",
+      "metadata": "exercises/lab-15-lvm-create-mount/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-15-lvm-create-mount/scenario.json"
+  },
+  {
+    "id": "lab-16-swap-space",
+    "title": "Lab 16: Additional Swap Space",
+    "description": "Add a persistent swap partition on an extra disk.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "storage-lvm"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-16-swap-space/prompt.md",
+      "hint": "exercises/lab-16-swap-space/hint.md",
+      "check": "exercises/lab-16-swap-space/check.sh",
+      "solution": "exercises/lab-16-swap-space/solution.md",
+      "metadata": "exercises/lab-16-swap-space/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-16-swap-space/scenario.json"
+  },
+  {
+    "id": "lab-17-resize-logical-volume",
+    "title": "Lab 17: Resize A Logical Volume",
+    "description": "Extend an existing logical volume without losing data.",
+    "time_limit_minutes": 30,
+    "objective_tags": [
+      "storage-lvm"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-17-resize-logical-volume/prompt.md",
+      "hint": "exercises/lab-17-resize-logical-volume/hint.md",
+      "check": "exercises/lab-17-resize-logical-volume/check.sh",
+      "solution": "exercises/lab-17-resize-logical-volume/solution.md",
+      "metadata": "exercises/lab-17-resize-logical-volume/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-17-resize-logical-volume/scenario.json"
+  },
+  {
+    "id": "lab-18-tuned-profile",
+    "title": "Lab 18: Tuned Recommended Profile",
+    "description": "Apply the system recommended tuned profile.",
+    "time_limit_minutes": 15,
+    "objective_tags": [
+      "processes-logs-tuning"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-18-tuned-profile/prompt.md",
+      "hint": "exercises/lab-18-tuned-profile/hint.md",
+      "check": "exercises/lab-18-tuned-profile/check.sh",
+      "solution": "exercises/lab-18-tuned-profile/solution.md",
+      "metadata": "exercises/lab-18-tuned-profile/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-18-tuned-profile/scenario.json"
+  },
+  {
+    "id": "lab-19-login-messages",
+    "title": "Lab 19: Login Greeting Messages",
+    "description": "Configure user specific and global shell greetings.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-19-login-messages/prompt.md",
+      "hint": "exercises/lab-19-login-messages/hint.md",
+      "check": "exercises/lab-19-login-messages/check.sh",
+      "solution": "exercises/lab-19-login-messages/solution.md",
+      "metadata": "exercises/lab-19-login-messages/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-19-login-messages/scenario.json"
+  },
+  {
+    "id": "lab-20-build-container-image",
+    "title": "Lab 20: Build Container Image",
+    "description": "Build and tag a local container image from a provided Containerfile.",
+    "time_limit_minutes": 30,
+    "objective_tags": [
+      "containers"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-20-build-container-image/prompt.md",
+      "hint": "exercises/lab-20-build-container-image/hint.md",
+      "check": "exercises/lab-20-build-container-image/check.sh",
+      "solution": "exercises/lab-20-build-container-image/solution.md",
+      "metadata": "exercises/lab-20-build-container-image/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-20-build-container-image/scenario.json"
+  },
+  {
+    "id": "lab-21-run-container",
+    "title": "Lab 21: Run A Container",
+    "description": "Run a container from a prepared local image with bind mounts.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "containers"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-21-run-container/prompt.md",
+      "hint": "exercises/lab-21-run-container/hint.md",
+      "check": "exercises/lab-21-run-container/check.sh",
+      "solution": "exercises/lab-21-run-container/solution.md",
+      "metadata": "exercises/lab-21-run-container/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-21-run-container/scenario.json"
+  },
+  {
+    "id": "lab-22-container-autostart",
+    "title": "Lab 22: Container Autostart With Systemd",
+    "description": "Run a rootless container as a persistent user service.",
+    "time_limit_minutes": 35,
+    "objective_tags": [
+      "containers"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-22-container-autostart/prompt.md",
+      "hint": "exercises/lab-22-container-autostart/hint.md",
+      "check": "exercises/lab-22-container-autostart/check.sh",
+      "solution": "exercises/lab-22-container-autostart/solution.md",
+      "metadata": "exercises/lab-22-container-autostart/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-22-container-autostart/scenario.json"
+  },
+  {
+    "id": "lab-23-umask-defaults",
+    "title": "Lab 23: Umask Defaults",
+    "description": "Configure a user specific umask so new files and directories get the required default permissions.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "selinux-and-default-perms",
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-23-umask-defaults/prompt.md",
+      "hint": "exercises/lab-23-umask-defaults/hint.md",
+      "check": "exercises/lab-23-umask-defaults/check.sh",
+      "solution": "exercises/lab-23-umask-defaults/solution.md",
+      "metadata": "exercises/lab-23-umask-defaults/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-23-umask-defaults/scenario.json"
+  },
+  {
+    "id": "lab-24-password-aging-defaults",
+    "title": "Lab 24: Password Aging Defaults",
+    "description": "Configure default password aging for newly created local users through login.defs.",
+    "time_limit_minutes": 30,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-24-password-aging-defaults/prompt.md",
+      "hint": "exercises/lab-24-password-aging-defaults/hint.md",
+      "check": "exercises/lab-24-password-aging-defaults/check.sh",
+      "solution": "exercises/lab-24-password-aging-defaults/solution.md",
+      "metadata": "exercises/lab-24-password-aging-defaults/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-24-password-aging-defaults/scenario.json"
+  },
+  {
+    "id": "lab-25-pwquality-policy",
+    "title": "Lab 25: Pwquality Policy",
+    "description": "Configure a persistent local password quality policy without editing PAM service files.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-25-pwquality-policy/prompt.md",
+      "hint": "exercises/lab-25-pwquality-policy/hint.md",
+      "check": "exercises/lab-25-pwquality-policy/check.sh",
+      "solution": "exercises/lab-25-pwquality-policy/solution.md",
+      "metadata": "exercises/lab-25-pwquality-policy/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-25-pwquality-policy/scenario.json"
+  },
+  {
+    "id": "lab-26-default-acl-shared-dir",
+    "title": "Lab 26: Default ACL Shared Directory",
+    "description": "Create a collaborative directory that combines setgid permissions with a default ACL.",
+    "time_limit_minutes": 30,
+    "objective_tags": [
+      "filesystems-and-autofs",
+      "selinux-and-default-perms"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-26-default-acl-shared-dir/prompt.md",
+      "hint": "exercises/lab-26-default-acl-shared-dir/hint.md",
+      "check": "exercises/lab-26-default-acl-shared-dir/check.sh",
+      "solution": "exercises/lab-26-default-acl-shared-dir/solution.md",
+      "metadata": "exercises/lab-26-default-acl-shared-dir/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-26-default-acl-shared-dir/scenario.json"
+  },
+  {
+    "id": "lab-27-at-job",
+    "title": "Lab 27: At Job Scheduling",
+    "description": "Schedule a one time task with at and verify that the at daemon is enabled.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "software-scheduling-time"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-27-at-job/prompt.md",
+      "hint": "exercises/lab-27-at-job/hint.md",
+      "check": "exercises/lab-27-at-job/check.sh",
+      "solution": "exercises/lab-27-at-job/solution.md",
+      "metadata": "exercises/lab-27-at-job/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-27-at-job/scenario.json"
+  },
+  {
+    "id": "lab-28-selinux-custom-docroot",
+    "title": "Lab 28: SELinux Custom Document Root",
+    "description": "Serve a custom document root on a nonstandard HTTP port while keeping SELinux enforcing.",
+    "time_limit_minutes": 35,
+    "objective_tags": [
+      "selinux-and-default-perms",
+      "networking-and-firewall"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-28-selinux-custom-docroot/prompt.md",
+      "hint": "exercises/lab-28-selinux-custom-docroot/hint.md",
+      "check": "exercises/lab-28-selinux-custom-docroot/check.sh",
+      "solution": "exercises/lab-28-selinux-custom-docroot/solution.md",
+      "metadata": "exercises/lab-28-selinux-custom-docroot/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-28-selinux-custom-docroot/scenario.json"
+  },
+  {
+    "id": "lab-29-firewalld-rich-rule",
+    "title": "Lab 29: Firewalld Rich Rule",
+    "description": "Use a persistent rich rule to restrict access to a custom port by source network.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "networking-and-firewall"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-29-firewalld-rich-rule/prompt.md",
+      "hint": "exercises/lab-29-firewalld-rich-rule/hint.md",
+      "check": "exercises/lab-29-firewalld-rich-rule/check.sh",
+      "solution": "exercises/lab-29-firewalld-rich-rule/solution.md",
+      "metadata": "exercises/lab-29-firewalld-rich-rule/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-29-firewalld-rich-rule/scenario.json"
+  },
+  {
+    "id": "lab-30-links-hard-soft",
+    "title": "Lab 30: Hard And Soft Links",
+    "description": "Create and verify both a hard link and a symbolic link to the same source file.",
+    "time_limit_minutes": 15,
+    "objective_tags": [
+      "essential-tools"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-30-links-hard-soft/prompt.md",
+      "hint": "exercises/lab-30-links-hard-soft/hint.md",
+      "check": "exercises/lab-30-links-hard-soft/check.sh",
+      "solution": "exercises/lab-30-links-hard-soft/solution.md",
+      "metadata": "exercises/lab-30-links-hard-soft/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-30-links-hard-soft/scenario.json"
+  },
+  {
+    "id": "lab-31-shell-loop-script",
+    "title": "Lab 31: Shell Loop Script",
+    "description": "Create a simple shell script that uses a loop to filter files by name.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "shell-scripting"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-31-shell-loop-script/prompt.md",
+      "hint": "exercises/lab-31-shell-loop-script/hint.md",
+      "check": "exercises/lab-31-shell-loop-script/check.sh",
+      "solution": "exercises/lab-31-shell-loop-script/solution.md",
+      "metadata": "exercises/lab-31-shell-loop-script/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-31-shell-loop-script/scenario.json"
+  },
+  {
+    "id": "lab-32-ssh-key-auth",
+    "title": "Lab 32: SSH Key Authentication",
+    "description": "Configure passwordless SSH login from clientvm to servervm using a key pair.",
+    "time_limit_minutes": 35,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": true,
+    "paths": {
+      "prompt": "exercises/lab-32-ssh-key-auth/prompt.md",
+      "hint": "exercises/lab-32-ssh-key-auth/hint.md",
+      "check": "exercises/lab-32-ssh-key-auth/check.sh",
+      "solution": "exercises/lab-32-ssh-key-auth/solution.md",
+      "metadata": "exercises/lab-32-ssh-key-auth/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-32-ssh-key-auth/scenario.json"
+  },
+  {
+    "id": "lab-33-grub-kernel-arg",
+    "title": "Lab 33: Bootloader Kernel Argument",
+    "description": "Modify the system bootloader so every installed kernel boots with the required persistent argument.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "boot-and-recovery"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-33-grub-kernel-arg/prompt.md",
+      "hint": "exercises/lab-33-grub-kernel-arg/hint.md",
+      "check": "exercises/lab-33-grub-kernel-arg/check.sh",
+      "solution": "exercises/lab-33-grub-kernel-arg/solution.md",
+      "metadata": "exercises/lab-33-grub-kernel-arg/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-33-grub-kernel-arg/scenario.json"
+  },
+  {
+    "id": "lab-34-journald-rsyslog",
+    "title": "Lab 34: Journald Persistence and Rsyslog",
+    "description": "Configure persistent journal storage and a custom rsyslog drop-in for authentication warnings.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "processes-logs-tuning",
+      "software-scheduling-time"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-34-journald-rsyslog/prompt.md",
+      "hint": "exercises/lab-34-journald-rsyslog/hint.md",
+      "check": "exercises/lab-34-journald-rsyslog/check.sh",
+      "solution": "exercises/lab-34-journald-rsyslog/solution.md",
+      "metadata": "exercises/lab-34-journald-rsyslog/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-34-journald-rsyslog/scenario.json"
+  },
+  {
+    "id": "lab-35-process-priority-tuned",
+    "title": "Lab 35: Process Priority and Tuned",
+    "description": "Tune the system with the requested profile and adjust process scheduling priority.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "processes-logs-tuning"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-35-process-priority-tuned/prompt.md",
+      "hint": "exercises/lab-35-process-priority-tuned/hint.md",
+      "check": "exercises/lab-35-process-priority-tuned/check.sh",
+      "solution": "exercises/lab-35-process-priority-tuned/solution.md",
+      "metadata": "exercises/lab-35-process-priority-tuned/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-35-process-priority-tuned/scenario.json"
+  },
+  {
+    "id": "lab-36-nfs-direct-mount",
+    "title": "Lab 36: Persistent NFS Direct Mount",
+    "description": "Mount a remote NFS export persistently using /etc/fstab.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "filesystems-and-autofs",
+      "storage-lvm"
+    ],
+    "requires_servervm": true,
+    "paths": {
+      "prompt": "exercises/lab-36-nfs-direct-mount/prompt.md",
+      "hint": "exercises/lab-36-nfs-direct-mount/hint.md",
+      "check": "exercises/lab-36-nfs-direct-mount/check.sh",
+      "solution": "exercises/lab-36-nfs-direct-mount/solution.md",
+      "metadata": "exercises/lab-36-nfs-direct-mount/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-36-nfs-direct-mount/scenario.json"
+  },
+  {
+    "id": "lab-37-services-default-target",
+    "title": "Lab 37: Services and Default Target",
+    "description": "Control the default boot target and manage system services in a persistent way.",
+    "time_limit_minutes": 20,
+    "objective_tags": [
+      "software-scheduling-time",
+      "boot-and-recovery"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-37-services-default-target/prompt.md",
+      "hint": "exercises/lab-37-services-default-target/hint.md",
+      "check": "exercises/lab-37-services-default-target/check.sh",
+      "solution": "exercises/lab-37-services-default-target/solution.md",
+      "metadata": "exercises/lab-37-services-default-target/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-37-services-default-target/scenario.json"
+  },
+  {
+    "id": "lab-38-selinux-boolean",
+    "title": "Lab 38: SELinux Boolean",
+    "description": "Modify a SELinux boolean persistently without changing enforcing mode.",
+    "time_limit_minutes": 15,
+    "objective_tags": [
+      "selinux-and-default-perms"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-38-selinux-boolean/prompt.md",
+      "hint": "exercises/lab-38-selinux-boolean/hint.md",
+      "check": "exercises/lab-38-selinux-boolean/check.sh",
+      "solution": "exercises/lab-38-selinux-boolean/solution.md",
+      "metadata": "exercises/lab-38-selinux-boolean/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-38-selinux-boolean/scenario.json"
+  },
+  {
+    "id": "lab-39-ssh-key-rsync",
+    "title": "Lab 39: SSH Key Authentication and Rsync",
+    "description": "Configure key-based SSH access and securely transfer files between systems.",
+    "time_limit_minutes": 30,
+    "objective_tags": [
+      "users-sudo-ssh",
+      "essential-tools"
+    ],
+    "requires_servervm": true,
+    "paths": {
+      "prompt": "exercises/lab-39-ssh-key-rsync/prompt.md",
+      "hint": "exercises/lab-39-ssh-key-rsync/hint.md",
+      "check": "exercises/lab-39-ssh-key-rsync/check.sh",
+      "solution": "exercises/lab-39-ssh-key-rsync/solution.md",
+      "metadata": "exercises/lab-39-ssh-key-rsync/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-39-ssh-key-rsync/scenario.json"
+  },
+  {
+    "id": "lab-40-script-args-conditionals",
+    "title": "Lab 40: Script Arguments and Conditionals",
+    "description": "Create a small shell script that processes arguments and returns the correct exit status.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "shell-scripting",
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-40-script-args-conditionals/prompt.md",
+      "hint": "exercises/lab-40-script-args-conditionals/hint.md",
+      "check": "exercises/lab-40-script-args-conditionals/check.sh",
+      "solution": "exercises/lab-40-script-args-conditionals/solution.md",
+      "metadata": "exercises/lab-40-script-args-conditionals/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-40-script-args-conditionals/scenario.json"
+  },
+  {
+    "id": "lab-41-ipv6-networking",
+    "title": "Lab 41: IPv6 Networking",
+    "description": "Configure persistent IPv6 networking and hostname resolution on the client system.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "networking-and-firewall"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-41-ipv6-networking/prompt.md",
+      "hint": "exercises/lab-41-ipv6-networking/hint.md",
+      "check": "exercises/lab-41-ipv6-networking/check.sh",
+      "solution": "exercises/lab-41-ipv6-networking/solution.md",
+      "metadata": "exercises/lab-41-ipv6-networking/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-41-ipv6-networking/scenario.json"
+  },
+  {
+    "id": "lab-42-process-kill-renice",
+    "title": "Lab 42: Process Kill And Renice",
+    "description": "Identify a running process, terminate it, and adjust the scheduling priority of another one.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "processes-logs-tuning"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-42-process-kill-renice/prompt.md",
+      "hint": "exercises/lab-42-process-kill-renice/hint.md",
+      "check": "exercises/lab-42-process-kill-renice/check.sh",
+      "solution": "exercises/lab-42-process-kill-renice/solution.md",
+      "metadata": "exercises/lab-42-process-kill-renice/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-42-process-kill-renice/scenario.json"
+  },
+  {
+    "id": "lab-43-package-install-remove",
+    "title": "Lab 43: Package Install And Remove",
+    "description": "Install packages from the prepared local repositories and remove the one that is no longer needed.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "software-scheduling-time"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-43-package-install-remove/prompt.md",
+      "hint": "exercises/lab-43-package-install-remove/hint.md",
+      "check": "exercises/lab-43-package-install-remove/check.sh",
+      "solution": "exercises/lab-43-package-install-remove/solution.md",
+      "metadata": "exercises/lab-43-package-install-remove/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-43-package-install-remove/scenario.json"
+  },
+  {
+    "id": "lab-44-filesystem-label-mount",
+    "title": "Lab 44: Filesystem By Label",
+    "description": "Create a filesystem, label it, and mount it persistently by label.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "storage-lvm"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-44-filesystem-label-mount/prompt.md",
+      "hint": "exercises/lab-44-filesystem-label-mount/hint.md",
+      "check": "exercises/lab-44-filesystem-label-mount/check.sh",
+      "solution": "exercises/lab-44-filesystem-label-mount/solution.md",
+      "metadata": "exercises/lab-44-filesystem-label-mount/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-44-filesystem-label-mount/scenario.json"
+  },
+  {
+    "id": "lab-45-restorecon-httpd",
+    "title": "Lab 45: Restore Default SELinux Context",
+    "description": "Restore the default SELinux context on existing web content without disabling SELinux.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "selinux-and-default-perms"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-45-restorecon-httpd/prompt.md",
+      "hint": "exercises/lab-45-restorecon-httpd/hint.md",
+      "check": "exercises/lab-45-restorecon-httpd/check.sh",
+      "solution": "exercises/lab-45-restorecon-httpd/solution.md",
+      "metadata": "exercises/lab-45-restorecon-httpd/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-45-restorecon-httpd/scenario.json"
+  },
+  {
+    "id": "lab-46-container-inspect",
+    "title": "Lab 46: Container Load And Inspect",
+    "description": "Load a provided container image into user storage and inspect its metadata with podman.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "containers"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-46-container-inspect/prompt.md",
+      "hint": "exercises/lab-46-container-inspect/hint.md",
+      "check": "exercises/lab-46-container-inspect/check.sh",
+      "solution": "exercises/lab-46-container-inspect/solution.md",
+      "metadata": "exercises/lab-46-container-inspect/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-46-container-inspect/scenario.json"
+  },
+  {
+    "id": "lab-47-user-password-aging",
+    "title": "Lab 47: Per-User Password Aging",
+    "description": "Adjust password aging for an existing user account with chage.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": false,
+    "paths": {
+      "prompt": "exercises/lab-47-user-password-aging/prompt.md",
+      "hint": "exercises/lab-47-user-password-aging/hint.md",
+      "check": "exercises/lab-47-user-password-aging/check.sh",
+      "solution": "exercises/lab-47-user-password-aging/solution.md",
+      "metadata": "exercises/lab-47-user-password-aging/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-47-user-password-aging/scenario.json"
+  },
+  {
+    "id": "lab-48-ssh-key-scp",
+    "title": "Lab 48: SSH Key Authentication And SCP",
+    "description": "Configure key-based SSH access and securely copy a file to the second system.",
+    "time_limit_minutes": 25,
+    "objective_tags": [
+      "users-sudo-ssh"
+    ],
+    "requires_servervm": true,
+    "paths": {
+      "prompt": "exercises/lab-48-ssh-key-scp/prompt.md",
+      "hint": "exercises/lab-48-ssh-key-scp/hint.md",
+      "check": "exercises/lab-48-ssh-key-scp/check.sh",
+      "solution": "exercises/lab-48-ssh-key-scp/solution.md",
+      "metadata": "exercises/lab-48-ssh-key-scp/exercise.json"
+    },
+    "source_manifest": "scenarios/labs/lab-48-ssh-key-scp/scenario.json"
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "id": "lab-14-user-fixed-uid",
+  "title": "Lab 14: User With Fixed UID",
+  "description": "Create a local user with a specific UID.",
+  "time_limit_minutes": 15,
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-14-user-fixed-uid/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-14-user-fixed-uid/prompt.md",
+    "hint": "exercises/lab-14-user-fixed-uid/hint.md",
+    "check": "exercises/lab-14-user-fixed-uid/check.sh",
+    "solution": "exercises/lab-14-user-fixed-uid/solution.md",
+    "metadata": "exercises/lab-14-user-fixed-uid/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Create user tavric with UID 4111 and set its",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Create user tavric with UID 4111 and set its password to cinder9.",
+      "solution_commands": [
+        "useradd -u 4111 tavric",
+        "passwd tavric",
+        "# enter: cinder9",
+        "id tavric"
+      ]
+    }
+  ],
+  "hints": [
+    "Use passwd interactively."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "id -u tavric | grep -qx '4111'",
+      "command": "id -u tavric | grep -qx '4111'"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "lab-07-cron-logger",
+  "title": "Lab 07: Cron Scheduling",
+  "description": "Schedule a recurring task for a specific user.",
+  "time_limit_minutes": 20,
+  "objective_tags": [
+    "software-scheduling-time"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-07-cron-logger/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-07-cron-logger/prompt.md",
+    "hint": "exercises/lab-07-cron-logger/hint.md",
+    "check": "exercises/lab-07-cron-logger/check.sh",
+    "solution": "exercises/lab-07-cron-logger/solution.md",
+    "metadata": "exercises/lab-07-cron-logger/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Create user ferro if it does not exist and set its",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Create user ferro if it does not exist and set its password to cinder9.",
+      "solution_commands": [
+        "id ferro || useradd -m ferro",
+        "passwd ferro",
+        "# enter: cinder9"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Configure a cron job for ferro that runs every 2",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Configure a cron job for ferro that runs every 2 minutes and logs the message \"Lab 07 running\" with logger.",
+      "solution_commands": [
+        "crontab -e -u ferro",
+        "*/2 * * * * logger \"Lab 07 running\"",
+        "systemctl enable --now crond"
+      ]
+    }
+  ],
+  "hints": [
+    "Use crontab -e -u ferro.",
+    "Leave crond enabled and running."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "crontab -l -u ferro | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"'",
+      "command": "crontab -l -u ferro | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"'"
+    },
+    {
+      "index": 2,
+      "target": "clientvm",
+      "original_command": "systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active",
+      "command": "systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
+    }
+  ]
+}

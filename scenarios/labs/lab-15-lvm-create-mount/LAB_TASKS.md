@@ -1,7 +1,7 @@
 # Lab 15: LVM Creation And Mount
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-15-lvm-create-mount` |
@@ -16,32 +16,30 @@ Create a new volume group and logical volume and mount it persistently.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - On /dev/sdb, create an LVM partition, then create…
-**System:** clientvm
+## Task 01 - On /dev/sdb, create an LVM partition, then create (clientvm) - 10 pts
 
 On /dev/sdb, create an LVM partition, then create volume group wgroupx with physical extent size 8 MiB.
 
 ---
 
-### Task 02 - Create logical volume wsharex with 50 extents, format…
-**System:** clientvm
+## Task 02 - Create logical volume wsharex with 50 extents, (clientvm) - 10 pts
 
 Create logical volume wsharex with 50 extents, format it as ext4, and mount it persistently on /mnt/wsharex.
 
-### Hints
+## Hints
 - Use GPT on /dev/sdb.
 - Use a UUID entry in /etc/fstab.
 
-### Validation Commands
+## Validation Commands
 ```bash
-pvs
-vgs
-lvs
-lsblk -f /dev/sdb
-findmnt /mnt/wsharex
+pvs --noheadings -o pv_name,vg_name | awk '$1=="/dev/sdb1" && $2=="wgroupx"{found=1} END{exit !found}'
+vgs --noheadings -o vg_name,vg_extent_size --units m --nosuffix | awk '$1=="wgroupx" && int($2)==8{found=1} END{exit !found}'
+lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="wsharex" && $2=="wgroupx" && $3>=399 && $3<=401{found=1} END{exit !found}'
+blkid -o value -s TYPE /dev/wgroupx/wsharex | grep -qx ext4
+findmnt -no TARGET,SOURCE,FSTYPE /mnt/wsharex | grep -Eq '^/mnt/wsharex /dev/mapper/wgroupx-wsharex ext4$'
 ```

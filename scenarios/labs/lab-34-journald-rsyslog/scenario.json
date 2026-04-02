@@ -29,19 +29,23 @@
         "Reload or restart the affected logging services after you update their configuration."
       ],
       "checks": [
-        "test -d /var/log/journal",
-        "test -f /etc/rsyslog.d/10-auth34.conf",
+        "test -d /var/log/journal && grep -Eq '^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*$' /etc/systemd/journald.conf",
+        "grep -Eq '^[[:space:]]*authpriv\\.warning[[:space:]]+/var/log/auth34\\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf",
         "systemctl is-active rsyslog | grep -qx active"
       ],
       "solution_outline": [
         "Configure journald and rsyslog persistently."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Configure journald on clientvm so logs are stored...",
+        "Create the drop-in file...",
+        "Ensure the rsyslog service is active after your..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "mkdir -p /var/log/journal",

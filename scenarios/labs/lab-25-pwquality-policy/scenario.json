@@ -27,16 +27,19 @@
         "Keep the configuration minimal."
       ],
       "checks": [
-        "grep -R \"minlen\\|minclass\" /etc/security/pwquality.conf.d"
+        "grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Create a persistent password quality policy in...",
+        "Do not edit any PAM service file for this task"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "mkdir -p /etc/security/pwquality.conf.d",

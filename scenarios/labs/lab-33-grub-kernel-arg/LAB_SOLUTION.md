@@ -1,7 +1,7 @@
 # Lab 33: Bootloader Kernel Argument
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-33-grub-kernel-arg` |
@@ -16,32 +16,28 @@ Modify the system bootloader so every installed kernel boots with the required p
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Configure the bootloader on clientvm so that every…
-**System:** clientvm
+## Task 01 - Configure the bootloader on clientvm so that every (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 ```
 
 ---
 
-### Task 02 - The change must persist across reboots and must not…
-**System:** clientvm
+## Task 02 - The change must persist across reboots and must not (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 grubby --info=ALL | grep -E "^kernel|^args"
 ```
 
 ---
 
-### Verification
+## Verification
 ```bash
 grubby --info=ALL | grep -E "^args=" | grep -q "audit_backlog_limit=8192"
 ```

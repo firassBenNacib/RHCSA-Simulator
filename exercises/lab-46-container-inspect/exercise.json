@@ -1,0 +1,73 @@
+{
+  "id": "lab-46-container-inspect",
+  "title": "Lab 46: Container Load And Inspect",
+  "description": "Load a provided container image into user storage and inspect its metadata with podman.",
+  "time_limit_minutes": 25,
+  "objective_tags": [
+    "containers"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-46-container-inspect/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-46-container-inspect/prompt.md",
+    "hint": "exercises/lab-46-container-inspect/hint.md",
+    "check": "exercises/lab-46-container-inspect/check.sh",
+    "solution": "exercises/lab-46-container-inspect/solution.md",
+    "metadata": "exercises/lab-46-container-inspect/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Create user scope46 with password cinder9 if it",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Create user scope46 with password cinder9 if it does not already exist.",
+      "solution_commands": [
+        "id scope46 || useradd -m scope46",
+        "passwd scope46",
+        "# enter: cinder9"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "load the image archive /opt/rhcsa/container-",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "As user scope46, load the image archive /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage.",
+      "solution_commands": [
+        "runuser -l scope46 -c \"podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar\""
+      ]
+    },
+    {
+      "index": 3,
+      "title": "inspect localhost/rhcsa-httpd-base:latest and write",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "As user scope46, inspect localhost/rhcsa-httpd-base:latest and write the configured working directory to /home/scope46/workdir.txt.",
+      "solution_commands": [
+        "runuser -l scope46 -c \"podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt\""
+      ]
+    },
+    {
+      "index": 4,
+      "title": "If the image has no explicit configured user, write",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "If the image has no explicit configured user, write root to /home/scope46/user.txt. Otherwise write the configured user value.",
+      "solution_commands": [
+        "runuser -l scope46 -c \"sh -c 'u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); printf %s \\\"${u:-root}\\\" > ~/user.txt'\""
+      ]
+    }
+  ],
+  "hints": [
+    "Use podman image inspect with --format."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "runuser -l scope46 -c \"test -s ~/workdir.txt && test -s ~/user.txt\"",
+      "command": "runuser -l scope46 -c \"test -s ~/workdir.txt && test -s ~/user.txt\""
+    }
+  ]
+}

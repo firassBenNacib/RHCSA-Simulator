@@ -1,0 +1,154 @@
+[
+  {
+    "id": "mock-exam-a",
+    "title": "Mock Exam A: OpsEdge Integrated Review",
+    "description": "A 22 task RHCSA style mock exam for RHEL 9 with recovery, repositories, SELinux, storage, and rootless containers.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "boot-and-recovery",
+      "networking-and-firewall",
+      "storage-lvm",
+      "containers"
+    ],
+    "requires_servervm": true,
+    "password_recovery": true,
+    "source_manifest": "scenarios/exams/mock-exam-a/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-a/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-a/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-b",
+    "title": "Mock Exam B: CoreMesh Service Review",
+    "description": "A second 22 task RHCSA style mock exam with distinct variables and combined tasks.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "networking-and-firewall",
+      "users-sudo-ssh",
+      "storage-lvm",
+      "containers"
+    ],
+    "requires_servervm": true,
+    "password_recovery": false,
+    "source_manifest": "scenarios/exams/mock-exam-b/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-b/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-b/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-c",
+    "title": "Mock Exam C: NorthStar Recovery Review",
+    "description": "A third 22 task RHCSA style mock exam with another variable set and recovery workflow.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "boot-and-recovery",
+      "selinux-and-default-perms",
+      "storage-lvm",
+      "containers"
+    ],
+    "requires_servervm": true,
+    "password_recovery": true,
+    "source_manifest": "scenarios/exams/mock-exam-c/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-c/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-c/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-d",
+    "title": "Mock Exam D: SummitLine Operations Review",
+    "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds default ACLs, umask tuning, password aging, and a full create mount storage task.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "networking-and-firewall",
+      "storage-lvm",
+      "users-sudo-ssh",
+      "containers"
+    ],
+    "requires_servervm": true,
+    "password_recovery": false,
+    "source_manifest": "scenarios/exams/mock-exam-d/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-d/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-d/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-e",
+    "title": "Mock Exam E: HarborGrid Recovery Review",
+    "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at scheduling, tuned, and an existing logical volume resize.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "boot-and-recovery",
+      "software-scheduling-time",
+      "storage-lvm",
+      "selinux-and-default-perms"
+    ],
+    "requires_servervm": true,
+    "password_recovery": true,
+    "source_manifest": "scenarios/exams/mock-exam-e/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-e/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-e/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-f",
+    "title": "Mock Exam F: AuroraPath Access Review",
+    "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a restrictive rich rule, an alternate umask, and another create mount container build workflow.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "networking-and-firewall",
+      "storage-lvm",
+      "users-sudo-ssh",
+      "containers"
+    ],
+    "requires_servervm": true,
+    "password_recovery": false,
+    "source_manifest": "scenarios/exams/mock-exam-f/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-f/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-f/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-g",
+    "title": "Mock Exam G: DeltaForge Recovery Review",
+    "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, direct NFS mounting, secure copy, and process scheduling work.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "boot-and-recovery",
+      "networking-and-firewall",
+      "processes-logs-tuning",
+      "storage-lvm"
+    ],
+    "requires_servervm": true,
+    "password_recovery": true,
+    "source_manifest": "scenarios/exams/mock-exam-g/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-g/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-g/EXAM_SOLUTION.md"
+    }
+  },
+  {
+    "id": "mock-exam-h",
+    "title": "Mock Exam H: SilverPeak Services Review",
+    "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds package management, boot target work, rich rules, and image inspection.",
+    "time_limit_minutes": 150,
+    "objective_tags": [
+      "networking-and-firewall",
+      "users-sudo-ssh",
+      "storage-lvm",
+      "containers"
+    ],
+    "requires_servervm": true,
+    "password_recovery": false,
+    "source_manifest": "scenarios/exams/mock-exam-h/scenario.json",
+    "paths": {
+      "tasks": "scenarios/exams/mock-exam-h/EXAM_TASKS.md",
+      "solution": "scenarios/exams/mock-exam-h/EXAM_SOLUTION.md"
+    }
+  }
+]

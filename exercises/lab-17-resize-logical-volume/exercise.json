@@ -1,0 +1,54 @@
+{
+  "id": "lab-17-resize-logical-volume",
+  "title": "Lab 17: Resize A Logical Volume",
+  "description": "Extend an existing logical volume without losing data.",
+  "time_limit_minutes": 30,
+  "objective_tags": [
+    "storage-lvm"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-17-resize-logical-volume/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-17-resize-logical-volume/prompt.md",
+    "hint": "exercises/lab-17-resize-logical-volume/hint.md",
+    "check": "exercises/lab-17-resize-logical-volume/check.sh",
+    "solution": "exercises/lab-17-resize-logical-volume/solution.md",
+    "metadata": "exercises/lab-17-resize-logical-volume/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Resize logical volume /dev/reviewvg/reviewlv so the",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot.",
+      "solution_commands": [
+        "lsblk -f",
+        "lvs",
+        "lvextend -L 320M /dev/reviewvg/reviewlv",
+        "blkid /dev/reviewvg/reviewlv",
+        "# if the filesystem is ext4, run resize2fs /dev/reviewvg/reviewlv",
+        "# if the filesystem is xfs, run xfs_growfs /mnt/reviewlv",
+        "df -hT /mnt/reviewlv"
+      ]
+    }
+  ],
+  "hints": [
+    "The logical volume already exists and is mounted on /mnt/reviewlv.",
+    "Do not recreate the filesystem."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewlv\" && $2==\"reviewvg\" && $3>=319 && $3<=321{found=1} END{exit !found}'",
+      "command": "lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewlv\" && $2==\"reviewvg\" && $3>=319 && $3<=321{found=1} END{exit !found}'"
+    },
+    {
+      "index": 2,
+      "target": "clientvm",
+      "original_command": "findmnt -no TARGET,SOURCE /mnt/reviewlv | grep -Eq '^/mnt/reviewlv /dev/mapper/reviewvg-reviewlv$'",
+      "command": "findmnt -no TARGET,SOURCE /mnt/reviewlv | grep -Eq '^/mnt/reviewlv /dev/mapper/reviewvg-reviewlv$'"
+    }
+  ]
+}

@@ -40,6 +40,22 @@ function Get-LabStateRoot {
     return (Join-Path $ProjectRoot '.lab-state')
 }
 
+function Get-ExercisesRoot {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return (Join-Path $ProjectRoot 'exercises')
+}
+
+function Get-ExamsCatalogPath {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return (Join-Path (Get-ExercisesRoot -ProjectRoot $ProjectRoot) 'exams.json')
+}
+
 function Get-ActiveRunPath {
     param(
         [string]$ProjectRoot = (Get-ProjectRoot)
@@ -54,6 +70,66 @@ function Get-BaseSnapshotStatePath {
     )
 
     return (Join-Path (Get-LabStateRoot -ProjectRoot $ProjectRoot) 'base-snapshots.json')
+}
+
+function Get-LabDiskGenerationPath {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return (Join-Path (Get-LabStateRoot -ProjectRoot $ProjectRoot) 'disk-generation.txt')
+}
+
+function Get-LabDisksRoot {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return (Join-Path $ProjectRoot '.lab-disks')
+}
+
+function Get-LabDiskGenerationToken {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $path = Get-LabDiskGenerationPath -ProjectRoot $ProjectRoot
+    if (-not (Test-Path -LiteralPath $path)) {
+        return ''
+    }
+
+    $content = Get-Content -LiteralPath $path -Raw -ErrorAction SilentlyContinue
+    if ($null -eq $content) {
+        $content = ''
+    }
+
+    return $content.Trim() -replace '[^0-9A-Za-z_-]', ''
+}
+
+function Get-ClientLabDiskPath {
+    param(
+        [ValidateRange(1, 99)]
+        [int]$DiskNumber,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $generation = Get-LabDiskGenerationToken -ProjectRoot $ProjectRoot
+    $suffix = if ([string]::IsNullOrWhiteSpace($generation)) { '' } else { "-$generation" }
+    return (Join-Path (Get-LabDisksRoot -ProjectRoot $ProjectRoot) ("clientvm-disk{0}{1}.vdi" -f $DiskNumber, $suffix))
+}
+
+function Set-LabDiskGeneration {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    Initialize-LabStateLayout -ProjectRoot $ProjectRoot | Out-Null
+    $generation = [System.Guid]::NewGuid().ToString('N')
+    if ($PSCmdlet.ShouldProcess((Get-LabDiskGenerationPath -ProjectRoot $ProjectRoot), 'Write lab disk generation token')) {
+        Set-Utf8NoBomFile -Path (Get-LabDiskGenerationPath -ProjectRoot $ProjectRoot) -Content $generation
+    }
+    return $generation
 }
 
 function Initialize-LabStateLayout {
@@ -170,8 +246,8 @@ function Get-OptionalPropertyValue {
 
 function Get-StringArray {
     param(
-        [Parameter(Mandatory = $true)]
-        [object]$Value,
+        [AllowNull()]
+        [object]$Value = $null,
         [Parameter(Mandatory = $true)]
         [string]$Label,
         [switch]$AllowEmpty
@@ -195,7 +271,78 @@ function Get-StringArray {
         throw "$Label must contain at least one entry."
     }
 
-    return $items
+    return ,$items
+}
+
+function Get-IntegerArray {
+    param(
+        [AllowNull()]
+        [object]$Value = $null,
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
+        [switch]$AllowEmpty
+    )
+
+    $items = @()
+    foreach ($item in @($Value)) {
+        if ($null -eq $item -or [string]::IsNullOrWhiteSpace([string]$item)) {
+            continue
+        }
+
+        $number = [int]$item
+        if ($number -le 0) {
+            throw "$Label entries must be positive integers."
+        }
+
+        $items += $number
+    }
+
+    if (-not $AllowEmpty -and $items.Count -eq 0) {
+        throw "$Label must contain at least one entry."
+    }
+
+    return ,$items
+}
+
+function Get-StringMatrix {
+    param(
+        [AllowNull()]
+        [object]$Value = $null,
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
+        [switch]$AllowEmpty
+    )
+
+    $rows = @()
+    $rowIndex = 0
+    $sourceRows = @($Value)
+    $hasNestedRows = $false
+
+    foreach ($row in $sourceRows) {
+        if ($null -eq $row) {
+            continue
+        }
+
+        if ($row -isnot [string] -and $row -is [System.Collections.IEnumerable]) {
+            $hasNestedRows = $true
+            break
+        }
+    }
+
+    if (-not $hasNestedRows) {
+        $sourceRows = ,$sourceRows
+    }
+
+    foreach ($row in $sourceRows) {
+        $rowIndex++
+        $rows += ,(Get-StringArray -Value $row -Label ("{0}[{1}]" -f $Label, $rowIndex) -AllowEmpty:$AllowEmpty)
+    }
+
+    if (-not $AllowEmpty -and $rows.Count -eq 0) {
+        throw "$Label must contain at least one entry."
+    }
+
+    return ,$rows
 }
 
 function Resolve-ScenarioScriptPath {
@@ -352,19 +499,59 @@ function ConvertTo-ScenarioManifest {
     }
 
     $labTasks = @()
+    $labTaskTitles = @()
+    $labTaskPoints = @()
+    $labSolutionCommands = @()
     $labHints = @()
     $labChecks = @()
     $labSolutionOutline = @()
     if ($null -ne $labContent) {
         $labTasks = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'tasks') -Label "Scenario '$id' content.lab.tasks"
+        $labTaskTitles = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'task_titles') -Label "Scenario '$id' content.lab.task_titles"
+        $labTaskPoints = Get-IntegerArray -Value (Get-RequiredProperty -Object $labContent -Name 'task_points') -Label "Scenario '$id' content.lab.task_points"
+        $labSolutionCommands = Get-StringMatrix -Value (Get-RequiredProperty -Object $labContent -Name 'solution_commands') -Label "Scenario '$id' content.lab.solution_commands"
         $labHints = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'hints' -AllowZero) -Label "Scenario '$id' content.lab.hints" -AllowEmpty
         $labChecks = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'checks' -AllowZero) -Label "Scenario '$id' content.lab.checks" -AllowEmpty
         $labSolutionOutline = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'solution_outline' -AllowZero) -Label "Scenario '$id' content.lab.solution_outline" -AllowEmpty
+
+        if ($labTaskTitles.Count -ne $labTasks.Count) {
+            throw "Scenario '$id' content.lab.task_titles must match the task count."
+        }
+
+        if ($labTaskPoints.Count -ne $labTasks.Count) {
+            throw "Scenario '$id' content.lab.task_points must match the task count."
+        }
+
+        if ($labSolutionCommands.Count -ne $labTasks.Count) {
+            throw "Scenario '$id' content.lab.solution_commands must match the task count."
+        }
     }
 
     $examTasks = @()
+    $examTaskTitles = @()
+    $examTaskPoints = @()
+    $examSolutionCommands = @()
     if ($null -ne $examContent) {
         $examTasks = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'tasks') -Label "Scenario '$id' content.exam.tasks"
+        $examTaskTitles = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'task_titles') -Label "Scenario '$id' content.exam.task_titles"
+        $examTaskPoints = Get-IntegerArray -Value (Get-RequiredProperty -Object $examContent -Name 'task_points') -Label "Scenario '$id' content.exam.task_points"
+        $examSolutionCommands = Get-StringMatrix -Value (Get-RequiredProperty -Object $examContent -Name 'solution_commands') -Label "Scenario '$id' content.exam.solution_commands"
+
+        if ($examTaskTitles.Count -ne $examTasks.Count) {
+            throw "Scenario '$id' content.exam.task_titles must match the task count."
+        }
+
+        if ($examTaskPoints.Count -ne $examTasks.Count) {
+            throw "Scenario '$id' content.exam.task_points must match the task count."
+        }
+
+        if ($examSolutionCommands.Count -ne $examTasks.Count) {
+            throw "Scenario '$id' content.exam.solution_commands must match the task count."
+        }
+
+        if ((($examTaskPoints | Measure-Object -Sum).Sum) -ne 100) {
+            throw "Scenario '$id' content.exam.task_points must sum to 100."
+        }
     }
 
     return [PSCustomObject]@{
@@ -402,12 +589,18 @@ function ConvertTo-ScenarioManifest {
         Content = [PSCustomObject]@{
             Lab = [PSCustomObject]@{
                 Tasks = $labTasks
+                TaskTitles = $labTaskTitles
+                TaskPoints = $labTaskPoints
+                SolutionCommands = $labSolutionCommands
                 Hints = $labHints
                 Checks = $labChecks
                 SolutionOutline = $labSolutionOutline
             }
             Exam = [PSCustomObject]@{
                 Tasks = $examTasks
+                TaskTitles = $examTaskTitles
+                TaskPoints = $examTaskPoints
+                SolutionCommands = $examSolutionCommands
             }
         }
     }
@@ -448,6 +641,118 @@ function Get-ScenarioManifest {
     }
 
     return $matchingManifest[0]
+}
+
+function ConvertTo-ExerciseCheckEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Command,
+        [Parameter(Mandatory = $true)]
+        [int]$Index
+    )
+
+    $trimmedCommand = $Command.Trim()
+    $target = 'clientvm'
+    $effectiveCommand = $trimmedCommand
+
+    if ($trimmedCommand -match '^\s*ssh\s+(?<host>\S*servervm\S*)\s+(?<remote>.+?)\s*$') {
+        $remoteCommand = [string]$matches['remote']
+        $remoteCommand = ($remoteCommand -replace '^\s*sudo\s+', '').Trim()
+        if (-not [string]::IsNullOrWhiteSpace($remoteCommand)) {
+            $target = 'servervm'
+            $effectiveCommand = $remoteCommand
+        }
+    }
+
+    return [PSCustomObject]@{
+        Index = $Index
+        Target = $target
+        OriginalCommand = $trimmedCommand
+        Command = $effectiveCommand
+    }
+}
+
+function Get-LabExerciseDefinition {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ScenarioId,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot
+    if ($manifest.Category -ne 'labs') {
+        throw "Scenario '$ScenarioId' is not a lab exercise."
+    }
+
+    $exerciseRoot = Join-Path (Get-ExercisesRoot -ProjectRoot $ProjectRoot) $ScenarioId
+    $metadataPath = Join-Path $exerciseRoot 'exercise.json'
+    $promptRelativePath = "exercises/$ScenarioId/prompt.md"
+    $hintRelativePath = "exercises/$ScenarioId/hint.md"
+    $checkRelativePath = "exercises/$ScenarioId/check.sh"
+    $solutionRelativePath = "exercises/$ScenarioId/solution.md"
+    $metadataRelativePath = "exercises/$ScenarioId/exercise.json"
+
+    if (Test-Path $metadataPath -PathType Leaf) {
+        $rawMetadata = Get-Content $metadataPath -Raw
+        if ($rawMetadata.Length -gt 0 -and [int][char]$rawMetadata[0] -eq 0xFEFF) {
+            $rawMetadata = $rawMetadata.Substring(1)
+        }
+
+        $metadata = $rawMetadata | ConvertFrom-Json
+        $exerciseChecks = @(
+            @($metadata.checks) | ForEach-Object {
+                [PSCustomObject]@{
+                    Index = [int]$_.index
+                    Target = [string]$_.target
+                    OriginalCommand = [string]$_.original_command
+                    Command = [string]$_.command
+                }
+            }
+        )
+
+        return [PSCustomObject]@{
+            Id = [string]$metadata.id
+            Title = [string]$metadata.title
+            Description = [string]$metadata.description
+            TimeLimitMinutes = [int]$metadata.time_limit_minutes
+            ObjectiveTags = @($metadata.objective_tags)
+            RequiresServervm = [bool]$metadata.requires_servervm
+            SourceManifest = [string]$metadata.source_manifest
+            Paths = [PSCustomObject]@{
+                Prompt = [string]$metadata.paths.prompt
+                Hint = [string]$metadata.paths.hint
+                Check = [string]$metadata.paths.check
+                Solution = [string]$metadata.paths.solution
+                Metadata = [string]$metadata.paths.metadata
+            }
+            Checks = $exerciseChecks
+        }
+    }
+
+    $exerciseChecks = @()
+    $checkIndex = 0
+    foreach ($checkCommand in @($manifest.Content.Lab.Checks)) {
+        $checkIndex++
+        $exerciseChecks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex
+    }
+
+    return [PSCustomObject]@{
+        Id = $manifest.Id
+        Title = $manifest.Title
+        Description = $manifest.Description
+        TimeLimitMinutes = $manifest.TimeLimitMinutes
+        ObjectiveTags = @($manifest.ObjectiveTags)
+        RequiresServervm = [bool]$manifest.Flags.RequiresServervm
+        SourceManifest = $manifest.RelativeManifestPath
+        Paths = [PSCustomObject]@{
+            Prompt = $promptRelativePath
+            Hint = $hintRelativePath
+            Check = $checkRelativePath
+            Solution = $solutionRelativePath
+            Metadata = $metadataRelativePath
+        }
+        Checks = $exerciseChecks
+    }
 }
 
 function Format-NumberedSection {
@@ -599,8 +904,8 @@ function Export-ActiveRunState {
             category = $Manifest.Category
             title = $Manifest.Title
             description = $Manifest.Description
-            objective_tags = $Manifest.ObjectiveTags
-            supported_modes = $Manifest.SupportedModes
+            objective_tags = @($Manifest.ObjectiveTags)
+            supported_modes = @($Manifest.SupportedModes)
             time_limit_minutes = $Manifest.TimeLimitMinutes
             scenario_root = $Manifest.RelativeScenarioRoot
             manifest_path = $Manifest.RelativeManifestPath
@@ -759,6 +1064,31 @@ function Get-VBoxManagePath {
     return $path
 }
 
+function Get-GoExecutablePath {
+    $command = Get-Command go -ErrorAction SilentlyContinue
+    if ($null -ne $command) {
+        return $command.Source
+    }
+
+    $default64 = Join-Path $env:ProgramFiles 'Go\bin\go.exe'
+    if (Test-Path $default64) {
+        return $default64
+    }
+
+    throw 'Go not found. Install Go to use the RHCSA TUI.'
+}
+
+function Get-RhcsaTuiBinaryPath {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $buildRoot = Join-Path $ProjectRoot '.build'
+    $isWindowsHost = ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT)
+    $binaryName = if ($isWindowsHost) { 'rhcsa-tui.exe' } else { 'rhcsa-tui' }
+    return (Join-Path $buildRoot $binaryName)
+}
+
 function Get-NativeExitCode {
     param(
         [int]$Default = 0
@@ -779,7 +1109,41 @@ function Write-WorkflowStatus {
         [string]$Message
     )
 
-    [Console]::Out.WriteLine(('[{0}] {1}' -f $Area, $Message))
+    $isVerbose = $false
+    if (Test-Path variable:script:ShowWorkflowStatus) {
+        $isVerbose = [bool]$script:ShowWorkflowStatus
+    }
+    elseif ($env:RHCSA_VERBOSE -match '^(1|true|yes|on)$') {
+        $isVerbose = $true
+    }
+
+    if (-not $isVerbose) {
+        return
+    }
+
+    $prefix = 'INFO'
+    if (Get-Command Get-UiStyleCode -ErrorAction SilentlyContinue) {
+        $prefix = '{0}{1}{2}' -f (Get-UiStyleCode -StyleName 'Accent'), 'INFO', (Get-UiStyleCode -StyleName 'Reset')
+    }
+
+    $progressPrefix = ''
+    if ((Test-Path variable:script:WorkflowProgressArea) -and
+        (Test-Path variable:script:WorkflowProgressTotal) -and
+        ([string]$script:WorkflowProgressArea -eq $Area) -and
+        ([int]$script:WorkflowProgressTotal -gt 0)) {
+        if (-not (Test-Path variable:script:WorkflowProgressIndex)) {
+            $script:WorkflowProgressIndex = 0
+        }
+
+        $script:WorkflowProgressIndex = [Math]::Min(([int]$script:WorkflowProgressIndex + 1), [int]$script:WorkflowProgressTotal)
+        $current = [int]$script:WorkflowProgressIndex
+        $total = [int]$script:WorkflowProgressTotal
+        $completed = '#' * $current
+        $remaining = '-' * ([Math]::Max($total - $current, 0))
+        $progressPrefix = '[{0}{1}] ' -f $completed, $remaining
+    }
+
+    [Console]::Out.WriteLine(('{0}  {1}{2}' -f $prefix, $progressPrefix, $Message))
 }
 
 function Test-ProgressOnlyOutputLine {
@@ -977,6 +1341,633 @@ function Invoke-VagrantCommand {
         }
 
         return
+    }
+}
+
+function Invoke-InteractiveExternalCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+        [string[]]$ArgumentList = @(),
+        [string]$FailureMessage = 'Command failed.'
+    )
+
+    & $FilePath @ArgumentList
+    $exitCode = Get-NativeExitCode
+    if ($exitCode -ne 0) {
+        $commandText = @($FilePath) + $ArgumentList
+        throw "$FailureMessage Command: $($commandText -join ' ') Exit code: $exitCode"
+    }
+}
+
+function Get-VagrantMachineStatus {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $vagrantPath = Get-VagrantPath
+
+    Push-Location $ProjectRoot
+    try {
+        $result = Invoke-ExternalCapture -FilePath $vagrantPath -ArgumentList @('status', '--machine-readable')
+    }
+    finally {
+        Pop-Location
+    }
+
+    if ($result.ExitCode -ne 0) {
+        $fallback = @(Get-VirtualBoxMachineStatusFallback -ProjectRoot $ProjectRoot)
+        if ($fallback.Count -gt 0) {
+            return $fallback
+        }
+
+        Write-FailureTranscript -StdOut $result.StdOut -StdErr $result.StdErr | Out-Null
+        throw "Failed to read local Vagrant machine status."
+    }
+
+    $statusMap = @{}
+    foreach ($line in @($result.StdOut)) {
+        $text = [string]$line
+        if ([string]::IsNullOrWhiteSpace($text)) {
+            continue
+        }
+
+        $parts = $text -split ',', 4
+        if ($parts.Count -ne 4) {
+            continue
+        }
+
+        $machineName = [string]$parts[1]
+        $eventName = [string]$parts[2]
+        $eventValue = [string]$parts[3]
+
+        if ([string]::IsNullOrWhiteSpace($machineName)) {
+            continue
+        }
+
+        if (-not $statusMap.ContainsKey($machineName)) {
+            $statusMap[$machineName] = [ordered]@{
+                Name = $machineName
+                State = 'not_created'
+                StateHuman = 'not created'
+                Provider = 'virtualbox'
+            }
+        }
+
+        switch ($eventName) {
+            'state' { $statusMap[$machineName].State = $eventValue }
+            'state-human-short' { $statusMap[$machineName].StateHuman = $eventValue }
+            'provider-name' { $statusMap[$machineName].Provider = $eventValue }
+        }
+    }
+
+    $machineStatus = foreach ($machineName in @('servervm', 'clientvm')) {
+        if ($statusMap.ContainsKey($machineName)) {
+            [PSCustomObject]$statusMap[$machineName]
+        }
+        else {
+            [PSCustomObject]@{
+                Name = $machineName
+                State = 'not_created'
+                StateHuman = 'not created'
+                Provider = 'virtualbox'
+            }
+        }
+    }
+
+    return @($machineStatus)
+}
+
+function ConvertFrom-VirtualBoxState {
+    param(
+        [string]$State
+    )
+
+    $normalized = ([string]$State).Trim().ToLowerInvariant()
+    switch ($normalized) {
+        'running' { return [PSCustomObject]@{ State = 'running'; StateHuman = 'running' } }
+        'poweroff' { return [PSCustomObject]@{ State = 'poweroff'; StateHuman = 'poweroff' } }
+        'saved' { return [PSCustomObject]@{ State = 'saved'; StateHuman = 'saved' } }
+        'paused' { return [PSCustomObject]@{ State = 'paused'; StateHuman = 'paused' } }
+        'aborted' { return [PSCustomObject]@{ State = 'aborted'; StateHuman = 'aborted' } }
+        default { return [PSCustomObject]@{ State = $normalized; StateHuman = if ([string]::IsNullOrWhiteSpace($normalized)) { 'unknown' } else { $normalized } } }
+    }
+}
+
+function Get-VirtualBoxMachineStatusFallback {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $vboxManage = Get-OptionalVBoxManagePath
+    $fallbackStatus = @()
+
+    foreach ($machineName in @('servervm', 'clientvm')) {
+        $machineId = Get-OptionalVagrantMachineId -MachineName $machineName -ProjectRoot $ProjectRoot
+        if ([string]::IsNullOrWhiteSpace($machineId)) {
+            $fallbackStatus += [PSCustomObject]@{
+                Name = $machineName
+                State = 'not_created'
+                StateHuman = 'not created'
+                Provider = 'virtualbox'
+            }
+            continue
+        }
+
+        if (-not $vboxManage) {
+            $fallbackStatus += [PSCustomObject]@{
+                Name = $machineName
+                State = 'unknown'
+                StateHuman = 'unknown'
+                Provider = 'virtualbox'
+            }
+            continue
+        }
+
+        $result = Invoke-ExternalCapture -FilePath $vboxManage -ArgumentList @('showvminfo', $machineId, '--machinereadable')
+        if ($result.ExitCode -ne 0) {
+            $fallbackStatus += [PSCustomObject]@{
+                Name = $machineName
+                State = 'unknown'
+                StateHuman = 'unknown'
+                Provider = 'virtualbox'
+            }
+            continue
+        }
+
+        $vmStateLine = @($result.StdOut | Where-Object { [string]$_ -match '^VMState=' } | Select-Object -First 1)
+        $vmStateValue = if ($vmStateLine.Count -gt 0) {
+            ([string]$vmStateLine[0] -replace '^VMState="?([^"]+)"?$', '$1')
+        }
+        else {
+            'unknown'
+        }
+
+        $stateInfo = ConvertFrom-VirtualBoxState -State $vmStateValue
+        $fallbackStatus += [PSCustomObject]@{
+            Name = $machineName
+            State = [string]$stateInfo.State
+            StateHuman = [string]$stateInfo.StateHuman
+            Provider = 'virtualbox'
+        }
+    }
+
+    return @($fallbackStatus)
+}
+
+function Get-VmSshConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $vagrantPath = Get-VagrantPath
+
+    Push-Location $ProjectRoot
+    try {
+        $result = Invoke-ExternalCapture -FilePath $vagrantPath -ArgumentList @('ssh-config', $MachineName)
+    }
+    finally {
+        Pop-Location
+    }
+
+    if ($result.ExitCode -ne 0) {
+        Write-FailureTranscript -StdOut $result.StdOut -StdErr $result.StdErr | Out-Null
+        throw "Failed to read SSH config for $MachineName."
+    }
+
+    return @($result.StdOut)
+}
+
+function Get-VmSshConnectionInfo {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $configLines = @(Get-VmSshConfig -MachineName $MachineName -ProjectRoot $ProjectRoot)
+    $values = @{}
+
+    foreach ($line in $configLines) {
+        if ($line -notmatch '^\s*([A-Za-z][A-Za-z0-9]+)\s+(.+?)\s*$') {
+            continue
+        }
+
+        $key = $matches[1].ToLowerInvariant()
+        $value = $matches[2].Trim()
+        if (-not $values.ContainsKey($key)) {
+            $values[$key] = @()
+        }
+
+        $values[$key] += $value
+    }
+
+    return [PSCustomObject]@{
+        HostName = if ($values.ContainsKey('hostname')) { [string]$values['hostname'][0] } else { '127.0.0.1' }
+        Port = if ($values.ContainsKey('port')) { [int]$values['port'][0] } else { 22 }
+        User = if ($values.ContainsKey('user')) { [string]$values['user'][0] } else { 'vagrant' }
+        IdentityFiles = if ($values.ContainsKey('identityfile')) { @($values['identityfile']) } else { @() }
+        ConfigLines = $configLines
+    }
+}
+
+function Test-SshBannerReady {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$HostName,
+        [Parameter(Mandatory = $true)]
+        [int]$Port,
+        [int]$TimeoutMilliseconds = 4000
+    )
+
+    $client = New-Object System.Net.Sockets.TcpClient
+    $asyncResult = $null
+    $stream = $null
+
+    try {
+        $asyncResult = $client.BeginConnect($HostName, $Port, $null, $null)
+        if (-not $asyncResult.AsyncWaitHandle.WaitOne($TimeoutMilliseconds, $false)) {
+            return $false
+        }
+
+        $client.EndConnect($asyncResult)
+        $client.ReceiveTimeout = $TimeoutMilliseconds
+        $stream = $client.GetStream()
+
+        $buffer = New-Object byte[] 256
+        $bannerBuilder = New-Object System.Text.StringBuilder
+        $deadline = (Get-Date).AddMilliseconds($TimeoutMilliseconds)
+
+        do {
+            if ($stream.DataAvailable) {
+                $bytesRead = $stream.Read($buffer, 0, $buffer.Length)
+                if ($bytesRead -le 0) {
+                    break
+                }
+
+                [void]$bannerBuilder.Append([System.Text.Encoding]::ASCII.GetString($buffer, 0, $bytesRead))
+                if ($bannerBuilder.ToString().Contains("`n")) {
+                    break
+                }
+            }
+            else {
+                Start-Sleep -Milliseconds 100
+            }
+        } while ((Get-Date) -lt $deadline)
+
+        $banner = $bannerBuilder.ToString().Trim()
+        return $banner.StartsWith('SSH-')
+    }
+    catch {
+        return $false
+    }
+    finally {
+        if ($null -ne $asyncResult) {
+            $asyncResult.AsyncWaitHandle.Close()
+        }
+
+        if ($null -ne $stream) {
+            $stream.Dispose()
+        }
+
+        $client.Close()
+    }
+}
+
+function Get-SshExecutablePath {
+    $candidate = Get-Command ssh.exe -ErrorAction SilentlyContinue
+    if ($null -ne $candidate -and -not [string]::IsNullOrWhiteSpace([string]$candidate.Source)) {
+        return $candidate.Source
+    }
+
+    $standardPaths = @(
+        'C:\Program Files\Vagrant\embedded\usr\bin\ssh.exe',
+        (Join-Path $env:SystemRoot 'System32\OpenSSH\ssh.exe'),
+        'C:\Windows\System32\OpenSSH\ssh.exe',
+        'C:\Program Files\Git\usr\bin\ssh.exe',
+        'C:\Program Files\Git\bin\ssh.exe'
+    )
+
+    foreach ($path in $standardPaths) {
+        if (-not [string]::IsNullOrWhiteSpace($path) -and (Test-Path $path -PathType Leaf)) {
+            return $path
+        }
+    }
+
+    throw 'Unable to locate ssh.exe on this host.'
+}
+
+function Invoke-SshWithVmConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string[]]$RemoteCommand = @(),
+        [switch]$Interactive,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $sshPath = Get-SshExecutablePath
+    $configLines = @(Get-VmSshConfig -MachineName $MachineName -ProjectRoot $ProjectRoot)
+    $configPath = Join-Path ([System.IO.Path]::GetTempPath()) ("rhcsa-ssh-{0}.conf" -f ([System.Guid]::NewGuid().ToString('N')))
+
+    try {
+        Set-Content -Path $configPath -Value $configLines -Encoding ascii
+        $argumentList = @('-F', $configPath, $MachineName) + @($RemoteCommand)
+
+        if ($Interactive) {
+            $argumentList = @(
+                '-F', $configPath,
+                '-o', 'PasswordAuthentication=yes',
+                '-o', 'PreferredAuthentications=publickey,password',
+                $MachineName
+            ) + @($RemoteCommand)
+            Invoke-InteractiveExternalCommand -FilePath $sshPath -ArgumentList $argumentList -FailureMessage "Failed to open an SSH session for $MachineName."
+            return
+        }
+
+        return (Invoke-ExternalCapture -FilePath $sshPath -ArgumentList $argumentList)
+    }
+    finally {
+        Remove-Item -Path $configPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-LabCheckScriptPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $stateRoot = Initialize-LabStateLayout -ProjectRoot $ProjectRoot
+    $fileName = if ($MachineName -eq 'servervm') { 'check-server.sh' } else { 'check-client.sh' }
+    return (Join-Path $stateRoot $fileName)
+}
+
+function Clear-LabCheckScriptState {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    foreach ($machineName in @('servervm', 'clientvm')) {
+        $scriptPath = Get-LabCheckScriptPath -MachineName $machineName -ProjectRoot $ProjectRoot
+        Remove-Item -Path $scriptPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-LabCheckProvisionerName {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName
+    )
+
+    if ($MachineName -eq 'servervm') {
+        return 'check-server'
+    }
+
+    return 'check-client'
+}
+
+function Write-LabCheckScript {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [Parameter(Mandatory = $true)]
+        [string]$Command,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $scriptPath = Get-LabCheckScriptPath -MachineName $MachineName -ProjectRoot $ProjectRoot
+    $quotedCommand = ConvertTo-BashSingleQuotedString -Value $Command
+    $content = @(
+        '#!/usr/bin/env bash',
+        'set -euo pipefail',
+        "/bin/bash -lc $quotedCommand"
+    ) -join "`n"
+
+    Set-Utf8NoBomFile -Path $scriptPath -Content ($content + "`n")
+    return $scriptPath
+}
+
+function New-SshSessionKeyFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourcePath,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName
+    )
+
+    $tempPath = Join-Path ([System.IO.Path]::GetTempPath()) ("rhcsa-{0}-{1}.key" -f $MachineName, [System.Guid]::NewGuid().ToString('N'))
+    Copy-Item -Path $SourcePath -Destination $tempPath -Force
+
+    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+        $grantTarget = if (-not [string]::IsNullOrWhiteSpace([string]$env:USERNAME)) { "{0}:F" -f $env:USERNAME } else { '{0}:F' -f [System.Environment]::UserName }
+        $null = & icacls.exe $tempPath '/inheritance:r' '/grant:r' $grantTarget
+    }
+
+    return $tempPath
+}
+
+function Get-VmDirectSshLaunchSpec {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$BatchMode
+    )
+
+    $connectionInfo = Get-VmSshConnectionInfo -MachineName $MachineName -ProjectRoot $ProjectRoot
+    $sshPath = Get-SshExecutablePath
+    $keySource = @($connectionInfo.IdentityFiles | Where-Object { $_ -match '\.rsa$' -and (Test-Path $_ -PathType Leaf) } | Select-Object -First 1)
+    if ($keySource.Count -eq 0) {
+        $keySource = @($connectionInfo.IdentityFiles | Where-Object { Test-Path $_ -PathType Leaf } | Select-Object -First 1)
+    }
+
+    if ($keySource.Count -eq 0) {
+        throw "No SSH identity file was found for $MachineName."
+    }
+
+    $temporaryKeyPath = New-SshSessionKeyFile -SourcePath $keySource[0] -MachineName $MachineName
+    $argumentList = @(
+        '-o', 'StrictHostKeyChecking=no',
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'LogLevel=ERROR',
+        '-o', 'IdentitiesOnly=yes',
+        '-o', 'PubkeyAcceptedKeyTypes=+ssh-rsa',
+        '-o', 'HostKeyAlgorithms=+ssh-rsa',
+        '-i', $temporaryKeyPath,
+        '-p', ([string]$connectionInfo.Port)
+    )
+
+    if ($BatchMode) {
+        $argumentList += @('-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5')
+    }
+
+    $argumentList += ("{0}@{1}" -f $connectionInfo.User, $connectionInfo.HostName)
+
+    return [PSCustomObject]@{
+        SshPath = $sshPath
+        ArgumentList = $argumentList
+        TemporaryKeyPath = $temporaryKeyPath
+    }
+}
+
+function Open-VmSshSession {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    Test-VagrantSshConnectivity -MachineName $MachineName -ProjectRoot $ProjectRoot
+    $launchSpec = Get-VmDirectSshLaunchSpec -MachineName $MachineName -ProjectRoot $ProjectRoot
+
+    if ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT) {
+        $powershellPath = (Get-Command powershell.exe -ErrorAction Stop).Source
+        $sshArgs = @($launchSpec.ArgumentList | ForEach-Object { ConvertTo-PowerShellSingleQuotedString -Value ([string]$_) }) -join ', '
+        $launchScript = @(
+            ('$sshArgs = @({0})' -f $sshArgs),
+            ('& {0} @sshArgs' -f (ConvertTo-PowerShellSingleQuotedString -Value $launchSpec.SshPath)),
+            ('$code = $LASTEXITCODE'),
+            ('Remove-Item -Path {0} -Force -ErrorAction SilentlyContinue' -f (ConvertTo-PowerShellSingleQuotedString -Value $launchSpec.TemporaryKeyPath)),
+            ('exit $code')
+        ) -join '; '
+
+        Start-Process `
+            -FilePath $powershellPath `
+            -WorkingDirectory $ProjectRoot `
+            -ArgumentList @('-NoLogo', '-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $launchScript) `
+            | Out-Null
+
+        return [PSCustomObject]@{
+            Detached = $true
+            MachineName = $MachineName
+        }
+    }
+
+    try {
+        Invoke-InteractiveExternalCommand `
+            -FilePath $launchSpec.SshPath `
+            -ArgumentList $launchSpec.ArgumentList `
+            -FailureMessage "Failed to open an SSH session for $MachineName."
+    }
+    finally {
+        Remove-Item -Path $launchSpec.TemporaryKeyPath -Force -ErrorAction SilentlyContinue
+    }
+
+    return [PSCustomObject]@{
+        Detached = $false
+        MachineName = $MachineName
+    }
+}
+
+function ConvertTo-BashSingleQuotedString {
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$Value
+    )
+
+    return "'{0}'" -f ($Value -replace "'", "'""'""'")
+}
+
+function ConvertTo-PowerShellSingleQuotedString {
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$Value
+    )
+
+    return "'{0}'" -f ($Value -replace "'", "''")
+}
+
+function Test-VagrantSshConnectivity {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [int]$RetryCount = 5,
+        [int]$RetryDelaySeconds = 3
+    )
+
+    for ($attempt = 1; $attempt -le $RetryCount; $attempt++) {
+        $launchSpec = $null
+        try {
+            $launchSpec = Get-VmDirectSshLaunchSpec -MachineName $MachineName -ProjectRoot $ProjectRoot -BatchMode
+            $result = Invoke-ExternalCapture -FilePath $launchSpec.SshPath -ArgumentList ($launchSpec.ArgumentList + @('true'))
+        }
+        finally {
+            if ($null -ne $launchSpec -and -not [string]::IsNullOrWhiteSpace([string]$launchSpec.TemporaryKeyPath)) {
+                Remove-Item -Path $launchSpec.TemporaryKeyPath -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        if ($result.ExitCode -eq 0) {
+            return
+        }
+
+        $combinedOutput = ((@($result.StdOut) + @($result.StdErr)) -join "`n")
+        $isRetryable = $combinedOutput -match 'Permission denied|Connection refused|Connection reset|timed out|Connection closed|No route to host'
+        if ($attempt -lt $RetryCount -and $isRetryable) {
+            Start-Sleep -Seconds ($RetryDelaySeconds * $attempt)
+            continue
+        }
+
+        Write-FailureTranscript -StdOut $result.StdOut -StdErr $result.StdErr | Out-Null
+        throw "Failed to validate SSH connectivity for $MachineName."
+    }
+}
+
+function Invoke-VagrantVmShellCommandCapture {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [Parameter(Mandatory = $true)]
+        [string]$Command,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [int]$RetryCount = 2,
+        [int]$RetryDelaySeconds = 5
+    )
+
+    $vagrantPath = Get-VagrantPath
+    $provisionerName = Get-LabCheckProvisionerName -MachineName $MachineName
+
+    Clear-LabCheckScriptState -ProjectRoot $ProjectRoot
+    Write-LabCheckScript -MachineName $MachineName -Command $Command -ProjectRoot $ProjectRoot | Out-Null
+
+    Push-Location $ProjectRoot
+    try {
+        for ($attempt = 1; $attempt -le ($RetryCount + 1); $attempt++) {
+            $result = Invoke-ExternalCapture -FilePath $vagrantPath -ArgumentList @('provision', $MachineName, '--provision-with', $provisionerName, '--no-color')
+            if ($result.ExitCode -eq 0) {
+                return $result
+            }
+
+            $canRetry = $attempt -le $RetryCount -and (Test-TransientVagrantFailure -StdOut $result.StdOut -StdErr $result.StdErr)
+            if ($canRetry) {
+                Start-Sleep -Seconds ($RetryDelaySeconds * $attempt)
+                continue
+            }
+
+            return $result
+        }
+    }
+    finally {
+        Pop-Location
+        Clear-LabCheckScriptState -ProjectRoot $ProjectRoot
     }
 }
 
@@ -1204,6 +2195,65 @@ function Test-BaseSnapshot {
     return ('base-clean' -in (Get-VBoxSnapshotCatalog -VmId $vmId))
 }
 
+function Get-BaselineStatus {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $ProjectRoot)
+    $machineNames = @('servervm', 'clientvm')
+    $snapshotReady = @{}
+
+    foreach ($machineName in $machineNames) {
+        $snapshotReady[$machineName] = $false
+        $idFile = Join-Path $ProjectRoot ".vagrant\machines\$machineName\virtualbox\id"
+        if (-not (Test-Path $idFile -PathType Leaf)) {
+            continue
+        }
+
+        try {
+            $snapshotReady[$machineName] = [bool](Test-BaseSnapshot -MachineName $machineName -ProjectRoot $ProjectRoot)
+        }
+        catch {
+            $snapshotReady[$machineName] = $false
+        }
+    }
+
+    $runningCount = @($machineStatus | Where-Object { [string]$_.StateHuman -eq 'running' }).Count
+    $createdCount = @($machineStatus | Where-Object { [string]$_.StateHuman -ne 'not created' }).Count
+    $snapshotsReady = ($snapshotReady['servervm'] -and $snapshotReady['clientvm'])
+
+    $state = 'missing'
+    $stateText = 'not built'
+    if ($createdCount -eq 0) {
+        $state = 'missing'
+        $stateText = 'not built'
+    }
+    elseif ($snapshotsReady -and $runningCount -eq $machineNames.Count) {
+        $state = 'ready'
+        $stateText = 'ready'
+    }
+    elseif ($snapshotsReady) {
+        $state = 'available'
+        $stateText = 'available'
+    }
+    else {
+        $state = 'incomplete'
+        $stateText = 'incomplete'
+    }
+
+    return [PSCustomObject]@{
+        State = $state
+        StateText = $stateText
+        SnapshotsReady = $snapshotsReady
+        MachineStatus = $machineStatus
+        SnapshotReady = [PSCustomObject]@{
+            Servervm = $snapshotReady['servervm']
+            Clientvm = $snapshotReady['clientvm']
+        }
+    }
+}
+
 function Invoke-BaseSnapshotInitialization {
     param(
         [string]$ProjectRoot = (Get-ProjectRoot),
@@ -1252,8 +2302,10 @@ function Invoke-BaseSnapshotInitialization {
 
         Export-BaseSnapshotState -MachineIdMap $machineIdMap -ProjectRoot $ProjectRoot | Out-Null
 
-        Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--no-provision', '--no-color') -FailureMessage 'Failed to restart servervm after snapshot creation.' -RetryArea 'baseline' -RetryMessage 'Retrying servervm startup after a transient SSH/provider failure'
-        Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--no-provision', '--no-color') -FailureMessage 'Failed to restart clientvm after snapshot creation.' -RetryArea 'baseline' -RetryMessage 'Retrying clientvm startup after a transient SSH/provider failure'
+        foreach ($machine in @('servervm', 'clientvm')) {
+            $vmId = $machineIdMap[$machine]
+            Invoke-ExternalCommand -FilePath $vboxManage -ArgumentList @('startvm', $vmId, '--type', 'headless') -FailureMessage "Failed to restart $machine after snapshot creation." -SuppressOutput
+        }
     }
     finally {
         Pop-Location
@@ -1283,11 +2335,52 @@ function Invoke-BaseSnapshotRestore {
             Invoke-VBoxSnapshotCommand -VmId $vmId -SnapshotArgumentList @('restore', 'base-clean') -FailureMessage "Failed to restore snapshot 'base-clean' for $machine." -VBoxManagePath $vboxManage
         }
 
-        Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--no-provision', '--no-color') -FailureMessage 'Failed to start servervm after restoring base snapshots.' -RetryArea 'scenario' -RetryMessage 'Retrying servervm startup after restoring the clean baseline'
-        Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--no-provision', '--no-color') -FailureMessage 'Failed to start clientvm after restoring base snapshots.' -RetryArea 'scenario' -RetryMessage 'Retrying clientvm startup after restoring the clean baseline'
+        foreach ($machine in @('servervm', 'clientvm')) {
+            $vmId = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
+            Invoke-ExternalCommand -FilePath $vboxManage -ArgumentList @('startvm', $vmId, '--type', 'headless') -FailureMessage "Failed to start $machine after restoring base snapshots." -SuppressOutput
+        }
     }
     finally {
         Pop-Location
+    }
+}
+
+function Wait-VagrantGuestSshReady {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [int]$MaxAttempts = 18,
+        [int]$DelaySeconds = 10,
+        [int]$RequiredSuccesses = 2,
+        [int]$StabilizationDelaySeconds = 3
+    )
+
+    $connectionInfo = Get-VmSshConnectionInfo -MachineName $MachineName -ProjectRoot $ProjectRoot
+    $consecutiveSuccesses = 0
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        if (Test-SshBannerReady -HostName $connectionInfo.HostName -Port $connectionInfo.Port) {
+            $consecutiveSuccesses += 1
+            if ($consecutiveSuccesses -ge $RequiredSuccesses) {
+                Start-Sleep -Seconds $StabilizationDelaySeconds
+                return
+            }
+
+            Write-WorkflowStatus -Area 'scenario' -Message "Confirmed $MachineName SSH once; waiting for stable readiness ($consecutiveSuccesses/$RequiredSuccesses)"
+            Start-Sleep -Seconds $StabilizationDelaySeconds
+            continue
+        }
+
+        $consecutiveSuccesses = 0
+
+        if ($attempt -lt $MaxAttempts) {
+            Write-WorkflowStatus -Area 'scenario' -Message "Waiting for $MachineName SSH readiness before provisioning ($attempt/$MaxAttempts)"
+            Start-Sleep -Seconds $DelaySeconds
+            continue
+        }
+
+        throw "Failed to confirm SSH banner readiness for $MachineName before provisioning."
     }
 }
 
@@ -1304,12 +2397,19 @@ function Invoke-ScenarioProvisioning {
         # fully ready for a second Vagrant connection, especially on Windows hosts.
         Start-Sleep -Seconds 5
 
+        # Always wait for both guests to settle after a snapshot restore. Single-VM
+        # overlays were more likely to fail because the other VM was not provisioned
+        # first, which accidentally acted like an extra readiness delay.
+        Wait-VagrantGuestSshReady -MachineName 'servervm' -ProjectRoot $ProjectRoot
+        Wait-VagrantGuestSshReady -MachineName 'clientvm' -ProjectRoot $ProjectRoot
+
         if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ServervmRelative)) {
             Write-WorkflowStatus -Area 'scenario' -Message "Applying the servervm overlay for '$($Manifest.Id)'"
             Invoke-VagrantCommand -ArgumentList @('provision', 'servervm', '--provision-with', 'scenario-server', '--no-color') -FailureMessage "Failed to apply server scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the servervm overlay for '$($Manifest.Id)' after a transient SSH/provider failure"
         }
 
         if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ClientvmRelative)) {
+            Wait-VagrantGuestSshReady -MachineName 'clientvm' -ProjectRoot $ProjectRoot -MaxAttempts 6 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2
             Write-WorkflowStatus -Area 'scenario' -Message "Applying the clientvm overlay for '$($Manifest.Id)'"
             Invoke-VagrantCommand -ArgumentList @('provision', 'clientvm', '--provision-with', 'scenario-client', '--no-color') -FailureMessage "Failed to apply client scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the clientvm overlay for '$($Manifest.Id)' after a transient SSH/provider failure" -RetryCount 3 -RetryDelaySeconds 10
         }
@@ -1361,7 +2461,7 @@ function Repair-BaselineSnapshotIfNeeded {
 
     foreach ($machine in $machineToCheck) {
         if (-not (Test-GuestBaselineReady -MachineName $machine -ProjectRoot $ProjectRoot)) {
-            throw "The restored baseline snapshot is incomplete on $machine. Run .\RHCSA.ps1 baseline up and verify the guest provisioning logs."
+            throw "The restored baseline snapshot is incomplete on $machine. Run .\RHCSA.ps1 up and verify the guest provisioning logs."
         }
     }
 
@@ -1446,11 +2546,11 @@ function Start-BaselineSession {
 
     $notices = @()
     if ($HeadlessClient) {
-        $notices += 'HeadlessClient is deprecated. Use .\RHCSA.ps1 scenario start for password recovery scenarios.'
+        $notices += 'HeadlessClient is deprecated. Use .\RHCSA.ps1 start for password recovery scenarios.'
     }
 
     if ($RealisticMode) {
-        $notices += 'RealisticMode is deprecated. Use .\RHCSA.ps1 scenario start for password recovery scenarios.'
+        $notices += 'RealisticMode is deprecated. Use .\RHCSA.ps1 start for password recovery scenarios.'
     }
 
     if ($NormalStart) {
@@ -1466,67 +2566,119 @@ function Start-BaselineSession {
         }
     }
 
+    $baselineStatus = Get-BaselineStatus -ProjectRoot $ProjectRoot
+    if (-not $SkipEnvironmentRecovery -and [string]$baselineStatus.State -eq 'incomplete') {
+        $notices += 'Detected an incomplete baseline from a prior failed run. Rebuilding it from scratch.'
+        Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
+    }
+
     Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+    Remove-OrphanLabDiskSet -ProjectRoot $ProjectRoot | Out-Null
+    if ([string]::IsNullOrWhiteSpace((Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot))) {
+        Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
+    }
+    Ensure-ClientLabDisks -ProjectRoot $ProjectRoot | Out-Null
+
+    $script:WorkflowProgressArea = 'baseline'
+    $script:WorkflowProgressIndex = 0
+    $script:WorkflowProgressTotal = if ($NoProvision) { 3 } else { 4 }
 
     try {
-        Push-Location $ProjectRoot
+        Write-WorkflowStatus -Area 'baseline' -Message 'Preparing lab environment'
+
         try {
-            if ($NoProvision) {
-                Write-WorkflowStatus -Area 'baseline' -Message 'Starting servervm without guest provisioning'
-                Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--no-provision', '--no-color') -FailureMessage "'vagrant up servervm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm startup after a transient SSH/provider failure'
-                Write-WorkflowStatus -Area 'baseline' -Message 'Starting clientvm without guest provisioning'
-                Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--no-provision', '--no-color') -FailureMessage "'vagrant up clientvm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm startup after a transient SSH/provider failure'
+            Push-Location $ProjectRoot
+            try {
+                if ($NoProvision) {
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting servervm without guest provisioning'
+                    Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--no-provision', '--no-color') -FailureMessage "'vagrant up servervm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm startup after a transient SSH/provider failure'
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting clientvm without guest provisioning'
+                    Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--no-provision', '--no-color') -FailureMessage "'vagrant up clientvm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm startup after a transient SSH/provider failure'
+                }
+                else {
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting and provisioning servervm'
+                    Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--provision', '--no-color') -FailureMessage "'vagrant up servervm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm provisioning after a transient SSH/provider failure'
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting and provisioning clientvm'
+                    Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--provision', '--no-color') -FailureMessage "'vagrant up clientvm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm provisioning after a transient SSH/provider failure'
+                }
             }
-            else {
-                Write-WorkflowStatus -Area 'baseline' -Message 'Starting and provisioning servervm'
-                Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--provision', '--no-color') -FailureMessage "'vagrant up servervm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm provisioning after a transient SSH/provider failure'
-                Write-WorkflowStatus -Area 'baseline' -Message 'Starting and provisioning clientvm'
-                Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--provision', '--no-color') -FailureMessage "'vagrant up clientvm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm provisioning after a transient SSH/provider failure'
+            finally {
+                Pop-Location
             }
         }
-        finally {
-            Pop-Location
-        }
-    }
-    catch {
-        $message = $_.ToString()
-        if (-not $SkipEnvironmentRecovery -and $message -match 'E_ACCESSDENIED|object functionality is limited|another process is already executing an action on the machine|Vagrant locks each machine') {
-            $notices += 'Detected a stale VirtualBox machine lock. Rebuilding the Vagrant environment and retrying.'
-            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
-            Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
-            $recoveryResult = Start-BaselineSession `
-                -NoProvision:$NoProvision `
-                -NormalStart:$NormalStart `
-                -HeadlessClient:$HeadlessClient `
-                -RealisticMode:$RealisticMode `
-                -SkipEnvironmentRecovery `
-                -ProjectRoot $ProjectRoot
-            $recoveryResult.Notices = @($notices + @($recoveryResult.Notices))
-            return $recoveryResult
+        catch {
+            $message = $_.ToString()
+            if (-not $SkipEnvironmentRecovery -and $message -match 'E_ACCESSDENIED|object functionality is limited|another process is already executing an action on the machine|Vagrant locks each machine') {
+                $notices += 'Detected a stale VirtualBox machine lock. Rebuilding the Vagrant environment and retrying.'
+                Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+                Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
+                $recoveryResult = Start-BaselineSession `
+                    -NoProvision:$NoProvision `
+                    -NormalStart:$NormalStart `
+                    -HeadlessClient:$HeadlessClient `
+                    -RealisticMode:$RealisticMode `
+                    -SkipEnvironmentRecovery `
+                    -ProjectRoot $ProjectRoot
+                $recoveryResult.Notices = @($notices + @($recoveryResult.Notices))
+                return $recoveryResult
+            }
+
+            if (
+                -not $SkipEnvironmentRecovery -and
+                $message -match 'clientvm-disk[0-9]+(?:-[0-9A-Za-z_-]+)?\.vdi' -and
+                $message -match 'VERR_ALREADY_EXISTS|VERR_FILE_NOT_FOUND|Invalid UUID or filename|Could not find file for the medium'
+            ) {
+                $removedDisk = @(Remove-OrphanLabDiskSet -Force -ProjectRoot $ProjectRoot)
+                $notices += 'Rebuilt the clientvm lab disk set after a stale or missing disk error.'
+                Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
+                Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
+                $recoveryResult = Start-BaselineSession `
+                    -NoProvision:$NoProvision `
+                    -NormalStart:$NormalStart `
+                    -HeadlessClient:$HeadlessClient `
+                    -RealisticMode:$RealisticMode `
+                    -SkipEnvironmentRecovery `
+                    -ProjectRoot $ProjectRoot
+                $recoveryResult.Notices = @($notices + @($recoveryResult.Notices))
+                return $recoveryResult
+            }
+
+            throw
         }
 
-        throw
-    }
+        $createdBaseSnapshot = $false
+        $snapshotReady = $false
+        if ($NoProvision) {
+            $snapshotReady = (Test-BaseSnapshot -MachineName 'servervm' -ProjectRoot $ProjectRoot) -and
+                             (Test-BaseSnapshot -MachineName 'clientvm' -ProjectRoot $ProjectRoot)
+            if (-not $snapshotReady) {
+                $notices += "Baseline VMs are running, but 'base-clean' snapshots were not created because -NoProvision was used."
+            }
+        }
+        else {
+            Write-WorkflowStatus -Area 'baseline' -Message 'Creating clean baseline snapshots'
+            $createdBaseSnapshot = Invoke-BaseSnapshotInitialization -ProjectRoot $ProjectRoot -ForceRefresh
+            $snapshotReady = $true
+        }
 
-    $createdBaseSnapshot = $false
-    $snapshotReady = $false
-    if ($NoProvision) {
-        $snapshotReady = (Test-BaseSnapshot -MachineName 'servervm' -ProjectRoot $ProjectRoot) -and
-                         (Test-BaseSnapshot -MachineName 'clientvm' -ProjectRoot $ProjectRoot)
-        if (-not $snapshotReady) {
-            $notices += "Baseline VMs are running, but 'base-clean' snapshots were not created because -NoProvision was used."
+        $clearedActiveRun = $false
+        if ($null -ne (Get-ActiveRunState -ProjectRoot $ProjectRoot)) {
+            Clear-ActiveRunState -ProjectRoot $ProjectRoot
+            $clearedActiveRun = $true
+        }
+
+        return [PSCustomObject]@{
+            Skipped = $false
+            Notices = $notices
+            CreatedBaseSnapshot = $createdBaseSnapshot
+            SnapshotReady = $snapshotReady
+            ClearedActiveRun = $clearedActiveRun
         }
     }
-    else {
-        $createdBaseSnapshot = Invoke-BaseSnapshotInitialization -ProjectRoot $ProjectRoot -ForceRefresh
-        $snapshotReady = $true
-    }
-
-    return [PSCustomObject]@{
-        Skipped = $false
-        Notices = $notices
-        CreatedBaseSnapshot = $createdBaseSnapshot
-        SnapshotReady = $snapshotReady
+    finally {
+        Remove-Variable -Scope Script -Name WorkflowProgressArea -ErrorAction SilentlyContinue
+        Remove-Variable -Scope Script -Name WorkflowProgressIndex -ErrorAction SilentlyContinue
+        Remove-Variable -Scope Script -Name WorkflowProgressTotal -ErrorAction SilentlyContinue
     }
 }
 
@@ -1554,6 +2706,8 @@ function Start-ScenarioRun {
     Initialize-LabStateLayout -ProjectRoot $ProjectRoot | Out-Null
     Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
 
+    $previousActiveRun = Get-ScenarioStatus -ProjectRoot $ProjectRoot
+
     $needsBaselineBootstrap = $false
     foreach ($machine in @('servervm', 'clientvm')) {
         if (-not (Test-Path (Join-Path $ProjectRoot ".vagrant\machines\$machine\virtualbox\id"))) {
@@ -1578,7 +2732,7 @@ function Start-ScenarioRun {
 
     foreach ($machine in @('servervm', 'clientvm')) {
         if (-not (Test-BaseSnapshot -MachineName $machine -ProjectRoot $ProjectRoot)) {
-            throw "Missing 'base-clean' snapshot for $machine. Recreate the baseline with .\RHCSA.ps1 baseline up and try again."
+            throw "Missing 'base-clean' snapshot for $machine. Recreate the baseline with .\RHCSA.ps1 up and try again."
         }
     }
 
@@ -1616,6 +2770,7 @@ function Start-ScenarioRun {
         EndsAt = $endsAt
         BaselineResult = $baselineResult
         RestoreMethod = $restoreMethod
+        ReplacedActiveRun = $previousActiveRun
     }
 }
 
@@ -1647,6 +2802,144 @@ function Get-ScenarioStatus {
     }
 }
 
+function Test-IsAssertiveExerciseCheck {
+    param(
+        [string]$Command
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Command)) {
+        return $false
+    }
+
+    $trimmed = $Command.Trim()
+    $assertivePatterns = @(
+        '(?i)\bgrep\b[^\r\n]*\s-q(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-E(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-F(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-x(?:\s|$)',
+        '(^|\s)test\s',
+        '(^|\s)\[\s',
+        '(^|\s)\[\[\s',
+        '(^|\s)!\s',
+        '(?i)\bdiff\s',
+        '(?i)\bcmp\s',
+        '(?i)\bawk\b.*\bexit\b',
+        '(?i)\bid\s+\S+',
+        '(?i)\bvisudo\s+-cf\b',
+        '(?i)\bsystemctl\s+is-enabled\b',
+        '(?i)\bsystemctl\s+is-active\b',
+        '(?i)\bmountpoint\s+-q\b',
+        '(?i)\bfindmnt\b',
+        '(?i)\bpodman\s+image\s+exists\b',
+        '(?i)\bpodman\s+ps\b[^\r\n]*--format\b',
+        '(?i)\brpm\s+-q\b',
+        '(?i)\bgrubby\s+--info\b',
+        '(?i)\bmatchpathcon\b',
+        '(?i)\bstat\s+-c\b',
+        '(?i)\bblkid\s+-o\s+value\b',
+        '(?i)\bfirewall-cmd\b[^\r\n]*--query-(port|service)\b',
+        '(?i)\bhostnamectl\s+--static\b',
+        '(?i)\bgetenforce\b',
+        '(?i)\bswapon\s+--noheadings\b',
+        '(?i)\bgetent\s+passwd\b',
+        '(?i)\bgetent\s+hosts\b',
+        '(?i)\bchage\s+-l\b',
+        '(?i)\bcrontab\s+-l\b',
+        '(?i)\batq\b',
+        '(?i)\bsemanage\s+port\s+-l\b',
+        '(?i)\bcurl\b[^\r\n]*\s-f(?:[sS]*)(?:\s|$)',
+        '(?i)\bssh\b[^\r\n]*\bBatchMode=yes\b'
+    )
+
+    foreach ($pattern in $assertivePatterns) {
+        if ($trimmed -match $pattern) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Invoke-LabExerciseCheck {
+    param(
+        [string]$ScenarioId,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $activeRun = Get-ScenarioStatus -ProjectRoot $ProjectRoot
+    if ($null -eq $activeRun) {
+        throw 'No active lab run found. Start a lab first with .\RHCSA.ps1 start -Id <lab-id> -Mode Lab.'
+    }
+
+    if ([string]$activeRun.Mode -ne 'lab') {
+        throw 'Automated check is available for labs only right now.'
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ScenarioId) -and [string]$activeRun.ScenarioId -ne $ScenarioId) {
+        throw "Active run is '$($activeRun.ScenarioId)'. Start '$ScenarioId' first or run .\RHCSA.ps1 check without -Id."
+    }
+
+    $exercise = Get-LabExerciseDefinition -ScenarioId ([string]$activeRun.ScenarioId) -ProjectRoot $ProjectRoot
+    $checks = @($exercise.Checks)
+    if ($checks.Count -eq 0) {
+        return [PSCustomObject]@{
+            ScenarioId = [string]$activeRun.ScenarioId
+            Title = [string]$activeRun.Title
+            Exercise = $exercise
+            NoChecks = $true
+            Passed = $false
+            PassedCount = 0
+            FailedCount = 0
+            TotalCount = 0
+            Results = @()
+        }
+    }
+
+    $results = @()
+    foreach ($check in $checks) {
+        if (-not (Test-IsAssertiveExerciseCheck -Command $check.Command)) {
+            $results += [PSCustomObject]@{
+                Index = [int]$check.Index
+                Target = [string]$check.Target
+                OriginalCommand = [string]$check.OriginalCommand
+                Command = [string]$check.Command
+                ExitCode = 125
+                Passed = $false
+                StdOut = @()
+                StdErr = @('Weak automated check in scenario metadata. Replace display-style commands with assertive commands that return non-zero when the task is incomplete.')
+            }
+            continue
+        }
+
+        $result = Invoke-VagrantVmShellCommandCapture -MachineName $check.Target -Command $check.Command -ProjectRoot $ProjectRoot
+        $results += [PSCustomObject]@{
+            Index = [int]$check.Index
+            Target = [string]$check.Target
+            OriginalCommand = [string]$check.OriginalCommand
+            Command = [string]$check.Command
+            ExitCode = [int]$result.ExitCode
+            Passed = ([int]$result.ExitCode -eq 0)
+            StdOut = @($result.StdOut)
+            StdErr = @($result.StdErr)
+        }
+    }
+
+    $passedCount = @($results | Where-Object { $_.Passed }).Count
+    $failedCount = @($results | Where-Object { -not $_.Passed }).Count
+
+    return [PSCustomObject]@{
+        ScenarioId = [string]$activeRun.ScenarioId
+        Title = [string]$activeRun.Title
+        Exercise = $exercise
+        NoChecks = $false
+        Passed = ($failedCount -eq 0)
+        PassedCount = $passedCount
+        FailedCount = $failedCount
+        TotalCount = @($results).Count
+        Results = $results
+    }
+}
+
 function Reset-ScenarioRun {
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -1655,7 +2948,7 @@ function Reset-ScenarioRun {
 
     $activeRun = Get-ActiveRunState -ProjectRoot $ProjectRoot
     if ($null -eq $activeRun) {
-        throw 'No active run found. Start a scenario first with .\RHCSA.ps1 scenario start.'
+        throw 'No active run found. Start one first with .\RHCSA.ps1 start -Id <scenario-id> -Mode Lab.'
     }
 
     if (-not $PSCmdlet.ShouldProcess([string]$activeRun.scenario.id, 'Reset scenario run')) {
@@ -1753,6 +3046,62 @@ function Get-LabVBoxVmCandidate {
     return @($candidate | Sort-Object Id -Unique)
 }
 
+function Remove-OrphanLabDiskSet {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [ValidateSet('clientvm')]
+        [string]$MachineName = 'clientvm',
+        [switch]$Force,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $diskRoot = Join-Path $ProjectRoot '.lab-disks'
+    if (-not (Test-Path -LiteralPath $diskRoot)) {
+        return @()
+    }
+
+    $vboxManage = Get-OptionalVBoxManagePath
+    $shouldPrune = $Force.IsPresent
+    $vmId = Get-OptionalVagrantMachineId -MachineName $MachineName -ProjectRoot $ProjectRoot
+    if (-not $shouldPrune -and [string]::IsNullOrWhiteSpace($vmId)) {
+        $shouldPrune = $true
+    }
+    elseif (-not $shouldPrune) {
+        if ($vboxManage) {
+            $registeredVm = @(Get-VBoxVmCatalog -VBoxManagePath $vboxManage)
+            if (-not (Test-VBoxVmRegistration -RegisteredVm $registeredVm -VmId $vmId)) {
+                $shouldPrune = $true
+            }
+        }
+    }
+
+    if (-not $shouldPrune) {
+        return @()
+    }
+
+    if ($vboxManage) {
+        try {
+            Invoke-VBoxHardDiskCleanup -VBoxManagePath $vboxManage -FolderPath $diskRoot
+        }
+        catch {
+            Write-Verbose "Ignoring VirtualBox disk cleanup failure while pruning orphaned lab disks in '$diskRoot'."
+        }
+    }
+
+    $removed = @()
+    Get-ChildItem -LiteralPath $diskRoot -Filter ("{0}-disk*.vdi" -f $MachineName) -File -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            if ($PSCmdlet.ShouldProcess($_.FullName, 'Remove orphaned lab disk file')) {
+                Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
+                if (-not (Test-Path -LiteralPath $_.FullName)) {
+                    $removed += $_.FullName
+                }
+            }
+        }
+
+    return @($removed)
+}
+
 function Invoke-VBoxVmRemoval {
     param(
         [Parameter(Mandatory = $true)]
@@ -1793,6 +3142,7 @@ function Get-VBoxHardDiskCatalog {
     $items = @()
     $uuid = $null
     $location = $null
+    $parentUuid = $null
 
     foreach ($line in $result.StdOut) {
         if ($line -match '^UUID:\s+(.+)$') {
@@ -1800,11 +3150,13 @@ function Get-VBoxHardDiskCatalog {
                 $items += [PSCustomObject]@{
                     UUID = $uuid
                     Location = $location
+                    ParentUUID = $parentUuid
                 }
             }
 
             $uuid = $matches[1].Trim()
             $location = $null
+            $parentUuid = $null
             continue
         }
 
@@ -1813,16 +3165,23 @@ function Get-VBoxHardDiskCatalog {
             continue
         }
 
+        if ($line -match '^Parent UUID:\s+(.+)$') {
+            $parentUuid = $matches[1].Trim()
+            continue
+        }
+
         if ([string]::IsNullOrWhiteSpace($line)) {
             if ($uuid -and $location) {
                 $items += [PSCustomObject]@{
                     UUID = $uuid
                     Location = $location
+                    ParentUUID = $parentUuid
                 }
             }
 
             $uuid = $null
             $location = $null
+            $parentUuid = $null
         }
     }
 
@@ -1830,6 +3189,7 @@ function Get-VBoxHardDiskCatalog {
         $items += [PSCustomObject]@{
             UUID = $uuid
             Location = $location
+            ParentUUID = $parentUuid
         }
     }
 
@@ -1844,20 +3204,146 @@ function Invoke-VBoxHardDiskCleanup {
         [string]$FolderPath
     )
 
-    if (-not (Test-Path -LiteralPath $FolderPath)) {
+    $folderFull = if (Test-Path -LiteralPath $FolderPath) {
+        (Resolve-Path -LiteralPath $FolderPath).Path
+    }
+    else {
+        [System.IO.Path]::GetFullPath($FolderPath)
+    }
+    $folderNorm = $folderFull.Replace('/', '\').ToLowerInvariant().TrimEnd('\') + '\'
+
+    $hardDiskCatalog = @(Get-VBoxHardDiskCatalog -VBoxManagePath $VBoxManagePath)
+    $targetDisks = @($hardDiskCatalog | Where-Object {
+        $_.Location.Replace('/', '\').ToLowerInvariant().StartsWith($folderNorm)
+    })
+
+    if ($targetDisks.Count -eq 0) {
         return
     }
 
-    $folderFull = (Resolve-Path -LiteralPath $FolderPath).Path
-    $folderNorm = $folderFull.Replace('/', '\').ToLowerInvariant().TrimEnd('\') + '\'
+    $diskByUuid = @{}
+    foreach ($hardDisk in $targetDisks) {
+        $diskByUuid[$hardDisk.UUID] = $hardDisk
+    }
 
-    $hardDiskCatalog = Get-VBoxHardDiskCatalog -VBoxManagePath $VBoxManagePath
-    foreach ($hardDisk in $hardDiskCatalog) {
-        $locationNorm = $hardDisk.Location.Replace('/', '\').ToLowerInvariant()
-        if ($locationNorm.StartsWith($folderNorm)) {
-            & $VBoxManagePath closemedium disk $hardDisk.UUID --delete 1>$null 2>$null
+    $depthMemo = @{}
+    function Get-VBoxDiskDepth {
+        param([string]$Uuid)
+
+        if ($depthMemo.ContainsKey($Uuid)) {
+            return $depthMemo[$Uuid]
+        }
+
+        $item = $diskByUuid[$Uuid]
+        if ($null -eq $item -or [string]::IsNullOrWhiteSpace($item.ParentUUID) -or -not $diskByUuid.ContainsKey($item.ParentUUID)) {
+            $depthMemo[$Uuid] = 0
+            return 0
+        }
+
+        $depth = 1 + (Get-VBoxDiskDepth -Uuid $item.ParentUUID)
+        $depthMemo[$Uuid] = $depth
+        return $depth
+    }
+
+    $targetDisks = @($targetDisks | Sort-Object -Property @{ Expression = { Get-VBoxDiskDepth -Uuid $_.UUID }; Descending = $true })
+    foreach ($hardDisk in $targetDisks) {
+        foreach ($argumentList in @(
+            @('closemedium', 'disk', $hardDisk.UUID, '--delete'),
+            @('closemedium', 'disk', $hardDisk.UUID),
+            @('closemedium', 'disk', $hardDisk.Location, '--delete'),
+            @('closemedium', 'disk', $hardDisk.Location)
+        )) {
+            $exitCode = Invoke-ExternalCommand `
+                -FilePath $VBoxManagePath `
+                -ArgumentList $argumentList `
+                -FailureMessage "Failed to close VirtualBox medium '$($hardDisk.UUID)'." `
+                -IgnoreExitCode `
+                -PassThruExitCode `
+                -SuppressOutput
+            if ($exitCode -eq 0) {
+                break
+            }
         }
     }
+}
+
+function Ensure-VBoxLabDiskFile {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [int]$SizeMB,
+        [switch]$SkipFolderCleanup,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$VBoxManagePath = (Get-VBoxManagePath)
+    )
+
+    $parent = Split-Path -Parent $Path
+    if (-not (Test-Path -LiteralPath $parent)) {
+        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    }
+
+    if ((Test-Path -LiteralPath $Path) -and (Get-Item -LiteralPath $Path).Length -gt 0) {
+        return $Path
+    }
+
+    if (-not $SkipFolderCleanup) {
+        Invoke-VBoxHardDiskCleanup -VBoxManagePath $VBoxManagePath -FolderPath (Get-LabDisksRoot -ProjectRoot $ProjectRoot)
+    }
+    Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+
+    if ($PSCmdlet.ShouldProcess($Path, "Create $SizeMB MB VirtualBox disk")) {
+        $result = Invoke-ExternalCapture -FilePath $VBoxManagePath -ArgumentList @(
+            'createmedium', 'disk',
+            '--filename', $Path,
+            '--size', $SizeMB.ToString(),
+            '--format', 'VDI'
+        )
+
+        if ($result.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $Path)) {
+            throw "Failed to create VDI ${Path}: $((@($result.StdOut + $result.StdErr) -join [Environment]::NewLine).Trim())"
+        }
+    }
+
+    return $Path
+}
+
+function Ensure-ClientLabDisks {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $vboxManage = Get-VBoxManagePath
+    $paths = @(
+        (Get-ClientLabDiskPath -DiskNumber 1 -ProjectRoot $ProjectRoot),
+        (Get-ClientLabDiskPath -DiskNumber 2 -ProjectRoot $ProjectRoot)
+    )
+
+    $needsRebuild = $false
+    foreach ($path in $paths) {
+        if (-not (Test-Path -LiteralPath $path)) {
+            $needsRebuild = $true
+            break
+        }
+
+        $item = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+        if ($null -eq $item -or $item.Length -le 0) {
+            $needsRebuild = $true
+            break
+        }
+    }
+
+    if ($needsRebuild) {
+        Invoke-VBoxHardDiskCleanup -VBoxManagePath $vboxManage -FolderPath (Get-LabDisksRoot -ProjectRoot $ProjectRoot)
+    }
+
+    foreach ($path in $paths) {
+        Ensure-VBoxLabDiskFile -Path $path -SizeMB 2048 -SkipFolderCleanup:$needsRebuild -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage | Out-Null
+    }
+
+    return $paths
 }
 
 function Invoke-OrphanVmFolderCleanup {
@@ -1907,8 +3393,6 @@ function Remove-LabEnvironment {
     $vboxManage = Get-OptionalVBoxManagePath
     $vboxMachineFolder = if ($vboxManage) { Get-VBoxMachineFolder -VBoxManagePath $vboxManage } else { $null }
 
-    $serverId = Get-OptionalVagrantMachineId -MachineName 'servervm' -ProjectRoot $ProjectRoot
-    $clientId = Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot
     $labDisksDir = Join-Path $ProjectRoot '.lab-disks'
     $legacyDisksDir = Join-Path $ProjectRoot '.vagrant\disks'
     $removedPaths = @()
@@ -1944,8 +3428,13 @@ function Remove-LabEnvironment {
                 Invoke-VBoxVmRemoval -VBoxManagePath $vboxManage -VmId $candidate.Id
             }
 
-            Invoke-VBoxHardDiskCleanup -VBoxManagePath $vboxManage -FolderPath $labDisksDir
-            Invoke-VBoxHardDiskCleanup -VBoxManagePath $vboxManage -FolderPath $legacyDisksDir
+            try {
+                Invoke-VBoxHardDiskCleanup -VBoxManagePath $vboxManage -FolderPath $labDisksDir
+                Invoke-VBoxHardDiskCleanup -VBoxManagePath $vboxManage -FolderPath $legacyDisksDir
+            }
+            catch {
+                $notes += 'VirtualBox left stale disk registrations behind. Continuing with local disk cleanup.'
+            }
             Invoke-OrphanVmFolderCleanup -VBoxMachineFolder $vboxMachineFolder -ProjectName $projectName
         }
 
@@ -1963,14 +3452,14 @@ function Remove-LabEnvironment {
 
         foreach ($path in $paths) {
             if (Test-Path $path) {
-                Remove-Item -LiteralPath $path -Recurse -Force
+                Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
                 $removedPaths += $path
             }
         }
 
         Get-ChildItem -Path . -Filter '*.vdi' -File -ErrorAction SilentlyContinue |
             ForEach-Object {
-                Remove-Item -LiteralPath $_.FullName -Force
+                Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
                 $removedPaths += $_.FullName
             }
     }
@@ -1982,5 +3471,50 @@ function Remove-LabEnvironment {
         Skipped = $false
         Notes = $notes
         RemovedPaths = $removedPaths
+    }
+}
+
+function Open-RhcsaTui {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $goPath = Get-GoExecutablePath
+    $binaryPath = Get-RhcsaTuiBinaryPath -ProjectRoot $ProjectRoot
+    $buildRoot = Split-Path -Parent $binaryPath
+    $launchBinaryPath = $binaryPath
+
+    Push-Location $ProjectRoot
+    try {
+        if (-not (Test-Path $buildRoot)) {
+            New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
+        }
+
+        $isWindowsHost = ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT)
+        if ($isWindowsHost) {
+            Get-ChildItem -Path $buildRoot -Filter 'rhcsa-tui-*.exe' -ErrorAction SilentlyContinue | ForEach-Object {
+                try {
+                    Remove-Item -Path $_.FullName -Force -ErrorAction Stop
+                }
+                catch {
+                }
+            }
+
+            $launchBinaryPath = Join-Path $buildRoot ("rhcsa-tui-{0}.exe" -f ([guid]::NewGuid().ToString('N')))
+        }
+
+        Invoke-ExternalCommand `
+            -FilePath $goPath `
+            -ArgumentList @('build', '-o', $launchBinaryPath, './cmd/rhcsa-tui') `
+            -FailureMessage 'Failed to build the RHCSA TUI.' `
+            -SuppressOutput
+
+        Invoke-InteractiveExternalCommand `
+            -FilePath $launchBinaryPath `
+            -ArgumentList @('--project-root', $ProjectRoot) `
+            -FailureMessage 'Failed to open the RHCSA TUI.'
+    }
+    finally {
+        Pop-Location
     }
 }

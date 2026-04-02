@@ -1,0 +1,97 @@
+{
+  "id": "lab-03-dnf-repositories",
+  "title": "Lab 03: DNF Repository Configuration",
+  "description": "Configure offline BaseOS and AppStream repositories on both systems.",
+  "time_limit_minutes": 40,
+  "objective_tags": [
+    "software-scheduling-time"
+  ],
+  "requires_servervm": true,
+  "source_manifest": "scenarios/labs/lab-03-dnf-repositories/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-03-dnf-repositories/prompt.md",
+    "hint": "exercises/lab-03-dnf-repositories/hint.md",
+    "check": "exercises/lab-03-dnf-repositories/check.sh",
+    "solution": "exercises/lab-03-dnf-repositories/solution.md",
+    "metadata": "exercises/lab-03-dnf-repositories/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Client Repositories",
+      "points": 10,
+      "system": "clientvm + servervm",
+      "prompt": "On clientvm, configure a persistent repository file with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+      "solution_commands": [
+        "vim /etc/yum.repos.d/rhcsa.repo",
+        "[rhcsa-baseos]",
+        "name=RHCSA BaseOS",
+        "baseurl=http://servervm/repo/BaseOS/",
+        "enabled=1",
+        "gpgcheck=0",
+        "",
+        "[rhcsa-appstream]",
+        "name=RHCSA AppStream",
+        "baseurl=http://servervm/repo/AppStream/",
+        "enabled=1",
+        "gpgcheck=0",
+        ":wq",
+        "dnf clean all"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Server Repositories",
+      "points": 10,
+      "system": "servervm",
+      "prompt": "On servervm, configure the same repository file with the same settings.",
+      "solution_commands": [
+        "# Run on servervm",
+        "vim /etc/yum.repos.d/rhcsa.repo",
+        "[rhcsa-baseos]",
+        "name=RHCSA BaseOS",
+        "baseurl=http://servervm/repo/BaseOS/",
+        "enabled=1",
+        "gpgcheck=0",
+        "",
+        "[rhcsa-appstream]",
+        "name=RHCSA AppStream",
+        "baseurl=http://servervm/repo/AppStream/",
+        "enabled=1",
+        "gpgcheck=0",
+        ":wq",
+        "dnf clean all"
+      ]
+    },
+    {
+      "index": 3,
+      "title": "Verify Repositories",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Verify that both repositories are available on both systems.",
+      "solution_commands": [
+        "dnf repolist",
+        "# Run on servervm",
+        "dnf repolist"
+      ]
+    }
+  ],
+  "hints": [
+    "You can use one repo file per system.",
+    "Use vim to type the repository file manually."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'",
+      "command": "dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'"
+    },
+    {
+      "index": 2,
+      "target": "servervm",
+      "original_command": "ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'",
+      "command": "dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 # Lab 02: Root Password Recovery
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-02-root-recovery` |
@@ -16,15 +16,13 @@ Recover root access through the bootloader and restore normal access on clientvm
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Recover root access on clientvm from the console and…
-**System:** clientvm
+## Task 01 - Recover root access on clientvm from the console (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 # At the boot menu, edit the selected kernel entry.
 # Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
@@ -36,10 +34,8 @@ exec /sbin/init
 
 ---
 
-### Task 02 - After the system boots normally, confirm that SELinux…
-**System:** clientvm
+## Task 02 - After the system boots normally, confirm that (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 getenforce
 ls -Z /root | head
@@ -47,10 +43,8 @@ ls -Z /root | head
 
 ---
 
-### Task 03 - Leave SSH password authentication working for root…
-**System:** clientvm
+## Task 03 - Leave SSH password authentication working for root (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 vim /etc/ssh/sshd_config
 PasswordAuthentication yes
@@ -60,9 +54,9 @@ systemctl restart sshd
 
 ---
 
-### Verification
+## Verification
 ```bash
-getenforce
-ls -Z /root | head
-ssh -o StrictHostKeyChecking=no root@clientvm true
+getenforce | grep -qx Enforcing
+ls -Zd /root | grep -Eq '(^| )[^ ]+:object_r:admin_home_t:s0($| )'
+grep -Eq '^[[:space:]]*PasswordAuthentication[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config && grep -Eq '^[[:space:]]*PermitRootLogin[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config
 ```

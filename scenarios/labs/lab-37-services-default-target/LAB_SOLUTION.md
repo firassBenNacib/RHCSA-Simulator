@@ -1,7 +1,7 @@
 # Lab 37: Services and Default Target
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-37-services-default-target` |
@@ -16,42 +16,36 @@ Control the default boot target and manage system services in a persistent way.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Configure clientvm to boot into multi-user.target by…
-**System:** clientvm
+## Task 01 - Configure clientvm to boot into multi-user.target (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 systemctl set-default multi-user.target
 ```
 
 ---
 
-### Task 02 - Ensure the rsyslog service is enabled and running
-**System:** clientvm
+## Task 02 - Ensure the rsyslog service is enabled and running (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 systemctl enable --now rsyslog
 ```
 
 ---
 
-### Task 03 - If postfix is installed, disable it and stop it
-**System:** clientvm
+## Task 03 - If postfix is installed, disable it and stop it (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 systemctl disable --now postfix
 ```
 
 ---
 
-### Verification
+## Verification
 ```bash
 systemctl get-default | grep -qx multi-user.target
 systemctl is-enabled rsyslog | grep -qx enabled

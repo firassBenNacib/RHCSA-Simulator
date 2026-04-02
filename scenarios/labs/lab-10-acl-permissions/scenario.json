@@ -27,17 +27,20 @@
         "Use setfacl for the named user entries."
       ],
       "checks": [
-        "getfacl /var/tmp/fstab-acl",
-        "ls -l /var/tmp/fstab-acl"
+        "stat -c '%U:%G %a' /var/tmp/fstab-acl | grep -qx 'root:root 644'",
+        "getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:natacl:rw-' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:haracl:---' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'other::r--'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Copy /etc/fstab to /var/tmp/fstab-acl",
+        "Set owner and group to root:root, remove all..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id natacl || useradd -m natacl",
@@ -48,9 +51,7 @@
         ],
         [
           "setfacl -m u:natacl:rw- /var/tmp/fstab-acl",
-          "setfacl -m u:haracl:--- /var/tmp/fstab-acl"
-        ],
-        [
+          "setfacl -m u:haracl:--- /var/tmp/fstab-acl",
           "getfacl /var/tmp/fstab-acl"
         ]
       ]

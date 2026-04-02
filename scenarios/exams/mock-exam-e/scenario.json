@@ -70,7 +70,30 @@
         "Resize Existing LV",
         "Recommended Tuned Profile"
       ],
-      "task_points": [],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
       "solution_commands": [
         [
           "# At the boot menu, edit the selected kernel entry.",
@@ -229,11 +252,11 @@
         ]
       ],
       "checks": [
-        "getent hosts registry.harbor.lab",
-        "grep -R \"minlen\\|minclass\" /etc/security/pwquality.conf.d",
-        "atq",
-        "findmnt /mnt/reviewe",
-        "tuned-adm active"
+        "getent hosts registry.harbor.lab | grep -Fq '192.168.122.3'",
+        "grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d",
+        "atq | grep -q ivor",
+        "lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewe\" && $2==\"reviewvge\" && $3>=359 && $3<=361{f=1} END{exit !f}' && findmnt -no TARGET /mnt/reviewe | grep -qx /mnt/reviewe",
+        "rec=\"$(tuned-adm recommended | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
       ]
     }
   }

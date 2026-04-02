@@ -1,7 +1,7 @@
 # Lab 03: DNF Repository Configuration
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-03-dnf-repositories` |
@@ -17,15 +17,13 @@ Configure offline BaseOS and AppStream repositories on both systems.
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Client Repositories
-**System:** clientvm
+## Task 01 - Client Repositories (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 vim /etc/yum.repos.d/rhcsa.repo
 [rhcsa-baseos]
@@ -45,10 +43,8 @@ dnf clean all
 
 ---
 
-### Task 02 - Server Repositories
-**System:** servervm
+## Task 02 - Server Repositories (servervm) - 10 pts
 
-#### Command Flow
 ```bash
 # Run on servervm
 vim /etc/yum.repos.d/rhcsa.repo
@@ -69,10 +65,8 @@ dnf clean all
 
 ---
 
-### Task 03 - Verify Repositories
-**System:** clientvm
+## Task 03 - Verify Repositories (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 dnf repolist
 # Run on servervm
@@ -81,8 +75,8 @@ dnf repolist
 
 ---
 
-### Verification
+## Verification
 ```bash
-dnf repolist
-ssh admin@servervm sudo dnf repolist
+dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'
+ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'
 ```

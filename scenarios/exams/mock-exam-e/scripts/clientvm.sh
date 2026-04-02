@@ -7,12 +7,8 @@ mkdir -p /root/.repo-backup-client-exam-e
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-e
 hostnamectl set-hostname clientvm
 rhcsa_remove_matching_lines 'registry.harbor.lab' /etc/hosts
-connection_name="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-if [[ -n "${connection_name:-}" ]]; then
-  nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.2/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes >/dev/null 2>&1 || true
-  nmcli connection down "$connection_name" >/dev/null 2>&1 || true
-  nmcli connection up "$connection_name" >/dev/null 2>&1 || true
-fi
+connection_name="$(rhcsa_get_lab_connection_name || true)"
+rhcsa_reset_lab_ipv4_profile "$connection_name"
 python - <<'EOF'
 from pathlib import Path
 p = Path('/etc/httpd/conf/httpd.conf')

@@ -1,7 +1,7 @@
 # Lab 41: IPv6 Networking
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-41-ipv6-networking` |
@@ -16,13 +16,12 @@ Configure persistent IPv6 networking and hostname resolution on the client syste
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - IPv6 Address Configuration
-**System:** clientvm
+## Task 01 - IPv6 Address Configuration (clientvm) - 10 pts
 
 Configure the active clientvm connection with the following persistent IPv6 settings:
 
@@ -32,8 +31,7 @@ Configure the active clientvm connection with the following persistent IPv6 sett
 
 ---
 
-### Task 02 - Hostname And IPv6 Host Entry
-**System:** clientvm
+## Task 02 - Hostname And IPv6 Host Entry (clientvm) - 10 pts
 
 Set the following persistent identity and resolution settings on clientvm:
 
@@ -43,17 +41,16 @@ Set the following persistent identity and resolution settings on clientvm:
 
 ---
 
-### Task 03 - Preserve Existing IPv4 Settings
-**System:** clientvm
+## Task 03 - Preserve Existing IPv4 Settings (clientvm) - 10 pts
 
 Leave the existing IPv4 configuration unchanged.
 
-### Hints
+## Hints
 - Use nmcli so the change survives a reconnect.
 
-### Validation Commands
+## Validation Commands
 ```bash
-nmcli -t -f NAME,DEVICE connection show --active
-hostnamectl --static
-getent hosts servervm.ipv6lab.local
+CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"; test -n "$CONN"; test "$(nmcli -g ipv6.addresses connection show "$CONN")" = 'fd00:122:41::25/64' && test "$(nmcli -g ipv6.gateway connection show "$CONN")" = 'fd00:122:41::1' && test "$(nmcli -g ipv6.dns connection show "$CONN")" = 'fd00:122:41::53' && test "$(nmcli -g ipv6.method connection show "$CONN")" = 'manual'
+hostnamectl --static | grep -qx 'clientvm.ipv6lab.local'
+getent hosts servervm.ipv6lab.local | grep -Fq 'fd00:122:41::3'
 ```

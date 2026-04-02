@@ -1,7 +1,7 @@
 # Lab 17: Resize A Logical Volume
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-17-resize-logical-volume` |
@@ -16,22 +16,21 @@ Extend an existing logical volume without losing data.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Resize logical volume /dev/reviewvg/reviewlv so the…
-**System:** clientvm
+## Task 01 - Resize logical volume /dev/reviewvg/reviewlv so the (clientvm) - 10 pts
 
 Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot.
 
-### Hints
+## Hints
 - The logical volume already exists and is mounted on /mnt/reviewlv.
 - Do not recreate the filesystem.
 
-### Validation Commands
+## Validation Commands
 ```bash
-lvs
-df -hT /mnt/reviewlv
+lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewlv" && $2=="reviewvg" && $3>=319 && $3<=321{found=1} END{exit !found}'
+findmnt -no TARGET,SOURCE /mnt/reviewlv | grep -Eq '^/mnt/reviewlv /dev/mapper/reviewvg-reviewlv$'
 ```

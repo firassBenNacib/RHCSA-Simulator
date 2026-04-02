@@ -1,7 +1,7 @@
 # Mock Exam C: NorthStar Recovery Review
 
 ## Exam Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `mock-exam-c` |
@@ -17,16 +17,14 @@ A third 22 task RHCSA style mock exam with another variable set and recovery wor
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 - Root Recovery
-**System:** clientvm
+## Question 01 - Root Recovery (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 # At the boot menu, edit the selected kernel entry.
 # Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
@@ -38,10 +36,8 @@ exec /sbin/init
 
 ---
 
-### Question 02 - Client Network
-**System:** clientvm
+## Question 02 - Client Network (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
 nmcli connection show "$CONN"
@@ -53,10 +49,8 @@ hostnamectl set-hostname clientvm.northstar.lab
 
 ---
 
-### Question 03 - Bootloader Kernel Argument
-**System:** clientvm
+## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 grubby --info=ALL | grep -E "^kernel|^args"
@@ -64,10 +58,8 @@ grubby --info=ALL | grep -E "^kernel|^args"
 
 ---
 
-### Question 04 - Client Repositories
-**System:** clientvm
+## Question 04 - Client Repositories (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/yum.repos.d/northstar.repo
 [northstar-baseos]
@@ -85,10 +77,8 @@ gpgcheck=0
 
 ---
 
-### Question 05 - Server Repositories
-**System:** servervm
+## Question 05 - Server Repositories (servervm) - 5 pts
 
-#### Command Flow
 ```bash
 # Run on servervm
 vim /etc/yum.repos.d/northstar.repo
@@ -107,10 +97,8 @@ gpgcheck=0
 
 ---
 
-### Question 06 - Apache Firewall SELinux
-**System:** clientvm
+## Question 06 - Apache Firewall SELinux (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/httpd/conf/httpd.conf
 Listen 8484
@@ -123,10 +111,8 @@ systemctl restart httpd
 
 ---
 
-### Question 07 - Users And Group
-**System:** clientvm
+## Question 07 - Users And Group (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 groupadd infrac
 useradd -m talia
@@ -138,10 +124,8 @@ usermod -aG infrac ren
 
 ---
 
-### Question 08 - User Passwords
-**System:** clientvm
+## Question 08 - User Passwords (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 passwd talia
 # enter: cinder9
@@ -153,10 +137,8 @@ passwd sage
 
 ---
 
-### Question 09 - Delegated Sudo
-**System:** clientvm
+## Question 09 - Delegated Sudo (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/infrac
 %infrac ALL=(root) /usr/sbin/useradd
@@ -166,10 +148,8 @@ talia ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 10 - Setgid Directory
-**System:** clientvm
+## Question 10 - Setgid Directory (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 mkdir -p /srv/infrac
 chgrp infrac /srv/infrac
@@ -178,10 +158,8 @@ chmod 2770 /srv/infrac
 
 ---
 
-### Question 11 - Cron Logger
-**System:** clientvm
+## Question 11 - Cron Logger (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 crontab -e -u ren
 */5 * * * * logger "NorthStar exam"
@@ -189,10 +167,8 @@ crontab -e -u ren
 
 ---
 
-### Question 12 - Chrony Client
-**System:** clientvm
+## Question 12 - Chrony Client (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -202,10 +178,8 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 13 - Autofs Map
-**System:** clientvm
+## Question 13 - Autofs Map (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 useradd -m remote63
 passwd remote63
@@ -219,10 +193,8 @@ systemctl enable --now autofs
 
 ---
 
-### Question 14 - Fixed UID User
-**System:** clientvm
+## Question 14 - Fixed UID User (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 useradd -u 4431 kian431
 passwd kian431
@@ -231,40 +203,32 @@ passwd kian431
 
 ---
 
-### Question 15 - Find And Copy
-**System:** clientvm
+## Question 15 - Find And Copy (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/ren-files \;
 ```
 
 ---
 
-### Question 16 - Grep Filter
-**System:** clientvm
+## Question 16 - Grep Filter (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 grep orbit /usr/share/dict/words > /root/orbit-lines
 ```
 
 ---
 
-### Question 17 - Archive
-**System:** clientvm
+## Question 17 - Archive (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 tar -cjf /root/etc-c.tar.bz2 /etc
 ```
 
 ---
 
-### Question 18 - Service Status Script
-**System:** clientvm
+## Question 18 - Service Status Script (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 vim /usr/local/bin/northcheck
 #!/usr/bin/env bash
@@ -277,10 +241,8 @@ chmod 755 /usr/local/bin/northcheck
 
 ---
 
-### Question 19 - Swap Space
-**System:** clientvm
+## Question 19 - Swap Space (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 fdisk /dev/sdb
 # create a 700M GPT partition and set the type to Linux swap
@@ -294,10 +256,8 @@ UUID=<uuid-of-sdb1> swap swap defaults 0 0
 
 ---
 
-### Question 20 - Resize Existing LV
-**System:** clientvm
+## Question 20 - Resize Existing LV (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 lvextend -L 340M /dev/reviewvgc/reviewc
 resize2fs /dev/reviewvgc/reviewc
@@ -305,10 +265,8 @@ resize2fs /dev/reviewvgc/reviewc
 
 ---
 
-### Question 21 - Rootless Container
-**System:** clientvm
+## Question 21 - Rootless Container (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 su - eirac
 cd /opt/rhcsa/workspaces/exam-c
@@ -319,10 +277,8 @@ exit
 
 ---
 
-### Question 22 - Container Autostart
-**System:** clientvm
+## Question 22 - Container Autostart (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 su - eirac
 mkdir -p ~/.config/systemd/user
@@ -332,4 +288,16 @@ systemctl --user daemon-reload
 systemctl --user enable --now container-pdfc.service
 exit
 loginctl enable-linger eirac
+```
+
+---
+
+## Verification
+```bash
+hostnamectl --static | grep -qx 'clientvm.northstar.lab' && CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"; test "$(nmcli -g ipv4.addresses connection show "$CONN")" = '192.168.122.28/24'
+grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
+curl -fsS http://localhost:8484 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8484\b'
+crontab -l -u ren | grep -Fqx '*/5 * * * * logger "NorthStar exam"'
+lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewc" && $2=="reviewvgc" && $3>=339 && $3<=341{f=1} END{exit !f}'
+runuser -l eirac -c 'systemctl --user is-enabled container-pdfc.service' | grep -qx enabled && runuser -l eirac -c 'systemctl --user is-active container-pdfc.service' | grep -qx active && loginctl show-user eirac | grep -Eq '^Linger=yes$'
 ```

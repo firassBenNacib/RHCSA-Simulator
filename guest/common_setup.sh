@@ -215,6 +215,64 @@ rhcsa_remove_matching_lines() {
   fi
 }
 
+rhcsa_get_lab_connection_name() {
+  local connection_name
+  local device_name
+
+  while IFS=: read -r connection_name device_name; do
+    [[ -z "${device_name:-}" || "${device_name}" == "lo" ]] && continue
+    if ip -o -4 addr show dev "$device_name" 2>/dev/null | awk '{print $4}' | grep -q '^192\.168\.122\.'; then
+      printf '%s\n' "$connection_name"
+      return 0
+    fi
+  done < <(nmcli -t -f NAME,DEVICE connection show --active 2>/dev/null)
+
+  while IFS=: read -r connection_name device_name; do
+    [[ -z "${device_name:-}" || "${device_name}" == "lo" ]] && continue
+    printf '%s\n' "$connection_name"
+    return 0
+  done < <(nmcli -t -f NAME,DEVICE connection show --active 2>/dev/null)
+
+  return 1
+}
+
+rhcsa_reset_lab_ipv4_profile() {
+  local connection_name="${1:-}"
+  local address="${2:-192.168.122.2/24}"
+  local gateway="${3:-192.168.122.1}"
+  local dns_server="${4:-192.168.122.3}"
+
+  if [[ -z "${connection_name:-}" ]]; then
+    connection_name="$(rhcsa_get_lab_connection_name || true)"
+  fi
+
+  [[ -n "${connection_name:-}" ]] || return 0
+
+  nmcli connection modify "$connection_name" \
+    ipv4.addresses "$address" \
+    ipv4.gateway "$gateway" \
+    ipv4.dns "$dns_server" \
+    ipv4.method manual \
+    connection.autoconnect yes >/dev/null 2>&1 || true
+}
+
+rhcsa_reset_lab_ipv6_profile() {
+  local connection_name="${1:-}"
+
+  if [[ -z "${connection_name:-}" ]]; then
+    connection_name="$(rhcsa_get_lab_connection_name || true)"
+  fi
+
+  [[ -n "${connection_name:-}" ]] || return 0
+
+  nmcli connection modify "$connection_name" \
+    ipv6.method ignore \
+    ipv6.addresses "" \
+    ipv6.gateway "" \
+    ipv6.dns "" \
+    connection.autoconnect yes >/dev/null 2>&1 || true
+}
+
 rhcsa_ensure_packages() {
   dnf install -y "$@"
 }

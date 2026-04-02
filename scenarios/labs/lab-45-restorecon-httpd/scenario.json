@@ -26,13 +26,19 @@
         "Do not use chcon for the final state."
       ],
       "checks": [
-        "getenforce",
-        "ls -Z /var/www/html/index45.html",
-        "systemctl is-enabled httpd"
+        "getenforce | grep -qx Enforcing",
+        "matchpathcon /var/www/html/index45.html | grep -Eq ':httpd_sys_content_t:' && ls -Z /var/www/html/index45.html | grep -Eq ':httpd_sys_content_t:'",
+        "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"
       ],
       "solution_outline": [],
-      "task_titles": [],
-      "task_points": [],
+      "task_titles": [
+        "the file /var/www/html/index45.html has the wrong...",
+        "Ensure the httpd service is enabled and running...."
+      ],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "restorecon -v /var/www/html/index45.html"

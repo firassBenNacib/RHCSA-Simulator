@@ -1,7 +1,7 @@
 # Lab 45: Restore Default SELinux Context
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-45-restorecon-httpd` |
@@ -16,25 +16,21 @@ Restore the default SELinux context on existing web content without disabling SE
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - the file /var/www/html/index45.html has the wrong…
-**System:** clientvm
+## Task 01 - the file /var/www/html/index45.html has the wrong (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 restorecon -v /var/www/html/index45.html
 ```
 
 ---
 
-### Task 02 - Ensure the httpd service is enabled and running.…
-**System:** clientvm
+## Task 02 - Ensure the httpd service is enabled and running (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 systemctl enable --now httpd
 getenforce
@@ -43,9 +39,9 @@ ls -Z /var/www/html/index45.html
 
 ---
 
-### Verification
+## Verification
 ```bash
-getenforce
-ls -Z /var/www/html/index45.html
-systemctl is-enabled httpd
+getenforce | grep -qx Enforcing
+matchpathcon /var/www/html/index45.html | grep -Eq ':httpd_sys_content_t:' && ls -Z /var/www/html/index45.html | grep -Eq ':httpd_sys_content_t:'
+systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active
 ```

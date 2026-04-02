@@ -27,17 +27,20 @@
         "Use chage -l to verify the new account settings."
       ],
       "checks": [
-        "grep -E '^PASS_(MAX_DAYS|MIN_DAYS|WARN_AGE)' /etc/login.defs",
-        "chage -l drift24"
+        "grep -Eq '^[[:space:]]*PASS_MAX_DAYS[[:space:]]+45[[:space:]]*$' /etc/login.defs && grep -Eq '^[[:space:]]*PASS_MIN_DAYS[[:space:]]+2[[:space:]]*$' /etc/login.defs && grep -Eq '^[[:space:]]*PASS_WARN_AGE[[:space:]]+10[[:space:]]*$' /etc/login.defs",
+        "chage -l drift24 | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l drift24 | grep -Eq 'Maximum number of days between password change[^0-9]*45$' && chage -l drift24 | grep -Eq 'Number of days of warning before password expires[^0-9]*10$'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Configure the system defaults for newly created...",
+        "Create the user drift24, set its password to..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "vim /etc/login.defs",

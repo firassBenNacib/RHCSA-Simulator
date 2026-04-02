@@ -1,7 +1,7 @@
 # Mock Exam F: AuroraPath Access Review
 
 ## Exam Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `mock-exam-f` |
@@ -17,16 +17,14 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 - Client Network
-**System:** clientvm
+## Question 01 - Client Network (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
 nmcli connection show "$CONN"
@@ -38,10 +36,8 @@ hostnamectl set-hostname clientvm.aurora.lab
 
 ---
 
-### Question 02 - Static Host Entry
-**System:** clientvm
+## Question 02 - Static Host Entry (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/hosts
 192.168.122.3 db.aurora.lab
@@ -49,10 +45,8 @@ vim /etc/hosts
 
 ---
 
-### Question 03 - Client Repositories
-**System:** clientvm
+## Question 03 - Client Repositories (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/yum.repos.d/aurora.repo
 [BaseOS]
@@ -70,10 +64,8 @@ gpgcheck=0
 
 ---
 
-### Question 04 - Server Repositories
-**System:** servervm
+## Question 04 - Server Repositories (servervm) - 5 pts
 
-#### Command Flow
 ```bash
 # Run on servervm
 # on servervm
@@ -93,10 +85,8 @@ gpgcheck=0
 
 ---
 
-### Question 05 - Apache Custom Docroot
-**System:** clientvm
+## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/httpd/conf.d/aurora.conf
 <VirtualHost *:9090>
@@ -115,10 +105,8 @@ systemctl enable --now httpd
 
 ---
 
-### Question 06 - Users And Group
-**System:** clientvm
+## Question 06 - Users And Group (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 groupadd auroraops
 useradd -m elio
@@ -130,10 +118,8 @@ usermod -aG auroraops risa
 
 ---
 
-### Question 07 - User Passwords
-**System:** clientvm
+## Question 07 - User Passwords (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 passwd elio
 # enter: cinder9
@@ -145,10 +131,8 @@ passwd nox
 
 ---
 
-### Question 08 - Delegated Sudo
-**System:** clientvm
+## Question 08 - Delegated Sudo (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/auroraops
 %auroraops ALL=(root) /usr/sbin/useradd
@@ -158,10 +142,8 @@ elio ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 09 - Shared Directory With Default ACL
-**System:** clientvm
+## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 useradd -m auditf
 passwd auditf
@@ -174,10 +156,8 @@ setfacl -m d:u:auditf:rwx /data/aurora
 
 ---
 
-### Question 10 - User Umask
-**System:** clientvm
+## Question 10 - User Umask (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /home/risa/.bashrc
 umask 077
@@ -186,10 +166,8 @@ chown risa:risa /home/risa/.bashrc
 
 ---
 
-### Question 11 - SSH Key Authentication
-**System:** clientvm + servervm
+## Question 11 - SSH Key Authentication (clientvm + servervm) - 5 pts
 
-#### Command Flow
 ```bash
 useradd -m opsf
 passwd opsf
@@ -204,10 +182,8 @@ runuser -l opsf -c "ssh-copy-id backupf@servervm"
 
 ---
 
-### Question 12 - Firewalld Rich Rule
-**System:** clientvm
+## Question 12 - Firewalld Rich Rule (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
 firewall-cmd --reload
@@ -216,10 +192,8 @@ firewall-cmd --list-rich-rules
 
 ---
 
-### Question 13 - Chrony Client
-**System:** clientvm
+## Question 13 - Chrony Client (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -228,10 +202,8 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 14 - Autofs Map
-**System:** clientvm
+## Question 14 - Autofs Map (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 useradd -m aurorarem
 passwd aurorarem
@@ -246,10 +218,8 @@ systemctl enable --now autofs
 
 ---
 
-### Question 15 - Fixed UID User
-**System:** clientvm
+## Question 15 - Fixed UID User (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 useradd -u 4560 -m pine560
 passwd pine560
@@ -258,10 +228,8 @@ passwd pine560
 
 ---
 
-### Question 16 - Find And Copy
-**System:** clientvm
+## Question 16 - Find And Copy (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 mkdir -p /root/seekerf-files
 find /opt/exam-f/find -user seekerf -mtime -1 -type f -exec cp --parents {} /root/seekerf-files \;
@@ -269,30 +237,24 @@ find /opt/exam-f/find -user seekerf -mtime -1 -type f -exec cp --parents {} /roo
 
 ---
 
-### Question 17 - Grep Filter
-**System:** clientvm
+## Question 17 - Grep Filter (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 grep comet /usr/share/dict/words > /root/comet-lines
 ```
 
 ---
 
-### Question 18 - Archive
-**System:** clientvm
+## Question 18 - Archive (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 tar -czf /root/usr-local-f.tar.gz /usr/local
 ```
 
 ---
 
-### Question 19 - Shell Script
-**System:** clientvm
+## Question 19 - Shell Script (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 vim /usr/local/bin/aurora-report
 #!/bin/bash
@@ -306,10 +268,8 @@ chmod +x /usr/local/bin/aurora-report
 
 ---
 
-### Question 20 - Swap Space
-**System:** clientvm
+## Question 20 - Swap Space (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 fdisk /dev/sdb
 # create a 704 MiB partition and change the type to Linux swap
@@ -323,10 +283,8 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-### Question 21 - Create And Mount LV
-**System:** clientvm
+## Question 21 - Create And Mount LV (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 fdisk /dev/sdc
 # create one Linux LVM partition that uses the disk
@@ -344,10 +302,8 @@ mount -a
 
 ---
 
-### Question 22 - Rootless Container Autostart
-**System:** clientvm
+## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 runuser -l solf -c "cd /opt/rhcsa/workspaces/exam-f && podman build -t localhost/aurora-web:latest ."
 runuser -l solf -c "podman run -d --name pdff -v /opt/inf:/data/input:Z -v /opt/outf:/data/output:Z localhost/aurora-web:latest"
@@ -360,11 +316,11 @@ loginctl enable-linger solf
 
 ---
 
-### Verification
+## Verification
 ```bash
-getent hosts db.aurora.lab
-firewall-cmd --list-rich-rules
-runuser -l opsf -c "ssh -o StrictHostKeyChecking=no -o BatchMode=yes backupf@servervm true"
-findmnt /mnt/auroralv
-runuser -l solf -c "systemctl --user status container-pdff.service --no-pager"
+getent hosts db.aurora.lab | grep -Fq '192.168.122.3'
+firewall-cmd --list-rich-rules | grep -Fq 'source address="192.168.122.0/24"' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
+runuser -l opsf -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes backupf@servervm true'
+findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$'
+runuser -l solf -c 'systemctl --user is-enabled container-pdff.service' | grep -qx enabled && runuser -l solf -c 'systemctl --user is-active container-pdff.service' | grep -qx active && loginctl show-user solf | grep -Eq '^Linger=yes$'
 ```

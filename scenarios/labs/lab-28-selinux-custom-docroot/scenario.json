@@ -29,19 +29,23 @@
         "Use semanage fcontext and semanage port."
       ],
       "checks": [
-        "curl -s http://localhost:8088",
-        "semanage port -l | grep 8088",
-        "ls -Zd /srv/lab28/site"
+        "curl -fsS http://localhost:8088 >/dev/null",
+        "semanage port -l | grep -Eq '^http_port_t\\b.*\\b8088\\b' && firewall-cmd --permanent --query-port=8088/tcp && systemctl is-enabled httpd | grep -qx enabled",
+        "matchpathcon /srv/lab28/site/index.html | grep -Eq ':httpd_sys_content_t:' && ls -Zd /srv/lab28/site | grep -Eq ':httpd_sys_content_t:'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Configure Apache to serve content from...",
+        "Keep SELinux enforcing, configure the correct file...",
+        "Do not edit or remove /srv/lab28/site/index.html"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "vim /etc/httpd/conf.d/lab28.conf",

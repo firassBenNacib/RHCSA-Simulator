@@ -1,7 +1,7 @@
 # Mock Exam G: DeltaForge Recovery Review
 
 ## Exam Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `mock-exam-g` |
@@ -17,16 +17,14 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, di
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 - Root Recovery
-**System:** clientvm
+## Question 01 - Root Recovery (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 # At the boot menu, edit the selected kernel entry.
 # Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
@@ -38,10 +36,8 @@ exec /sbin/init
 
 ---
 
-### Question 02 - Client Network
-**System:** clientvm
+## Question 02 - Client Network (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.46/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -52,10 +48,8 @@ hostnamectl set-hostname clientvm.deltaforge.lab
 
 ---
 
-### Question 03 - Bootloader Kernel Argument
-**System:** clientvm
+## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 grubby --info=ALL | grep -E "^kernel|^args"
@@ -63,10 +57,8 @@ grubby --info=ALL | grep -E "^kernel|^args"
 
 ---
 
-### Question 04 - Repositories On Both Systems
-**System:** clientvm + servervm
+## Question 04 - Repositories On Both Systems (clientvm + servervm) - 5 pts
 
-#### Command Flow
 ```bash
 # On clientvm
 vim /etc/yum.repos.d/delta.repo
@@ -102,10 +94,8 @@ dnf clean all
 
 ---
 
-### Question 05 - Apache Custom Docroot
-**System:** clientvm
+## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/httpd/conf.d/delta.conf
 Listen 8086
@@ -126,10 +116,8 @@ systemctl enable --now httpd
 
 ---
 
-### Question 06 - Users And Group
-**System:** clientvm
+## Question 06 - Users And Group (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 groupadd deltaops
 useradd -m gwen
@@ -141,10 +129,8 @@ usermod -aG deltaops pavel
 
 ---
 
-### Question 07 - User Passwords
-**System:** clientvm
+## Question 07 - User Passwords (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 passwd gwen
 # enter: cinder9
@@ -156,10 +142,8 @@ passwd sable
 
 ---
 
-### Question 08 - Delegated Sudo
-**System:** clientvm
+## Question 08 - Delegated Sudo (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/deltaops
 %deltaops ALL=(ALL) /usr/sbin/useradd
@@ -171,10 +155,8 @@ gwen ALL=(ALL) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Question 09 - Shared Directory With Default ACL
-**System:** clientvm
+## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 useradd -m auditg
 passwd auditg
@@ -188,10 +170,8 @@ setfacl -m d:u:auditg:rwx /projects/delta
 
 ---
 
-### Question 10 - User Umask
-**System:** clientvm
+## Question 10 - User Umask (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /home/pavel/.bashrc
 umask 027
@@ -200,10 +180,8 @@ umask 027
 
 ---
 
-### Question 11 - At Job
-**System:** clientvm
+## Question 11 - At Job (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 systemctl enable --now atd
 runuser -l pavel -c 'cat <<"EOF" | at now + 2 minutes
@@ -214,10 +192,8 @@ atq
 
 ---
 
-### Question 12 - Chrony Client
-**System:** clientvm
+## Question 12 - Chrony Client (clientvm) - 5 pts
 
-#### Command Flow
 ```bash
 vim /etc/chrony.conf
 # Comment any existing pool or server lines and add:
@@ -228,10 +204,8 @@ systemctl enable --now chronyd
 
 ---
 
-### Question 13 - Direct NFS Mount
-**System:** clientvm
+## Question 13 - Direct NFS Mount (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 mkdir -p /mnt/delta-home
 vim /etc/fstab
@@ -242,10 +216,8 @@ mount -a
 
 ---
 
-### Question 14 - SSH Key And Secure Copy
-**System:** servervm
+## Question 14 - SSH Key And Secure Copy (servervm) - 4 pts
 
-#### Command Flow
 ```bash
 # On both systems
 useradd -m copyg
@@ -258,10 +230,8 @@ runuser -l copyg -c "scp -o StrictHostKeyChecking=no /home/copyg/payload.txt cop
 
 ---
 
-### Question 15 - Find And Copy
-**System:** clientvm
+## Question 15 - Find And Copy (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 mkdir -p /root/trackerg-files
 find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /root/trackerg-files \;
@@ -269,30 +239,24 @@ find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-### Question 16 - Grep Filter
-**System:** clientvm
+## Question 16 - Grep Filter (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 grep ember /usr/share/dict/words > /root/ember-lines
 ```
 
 ---
 
-### Question 17 - Archive
-**System:** clientvm
+## Question 17 - Archive (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 tar -cjf /root/etc-g.tar.bz2 /etc
 ```
 
 ---
 
-### Question 18 - Persistent Journal
-**System:** clientvm
+## Question 18 - Persistent Journal (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 mkdir -p /var/log/journal
 vim /etc/systemd/journald.conf
@@ -303,10 +267,8 @@ systemctl restart systemd-journald
 
 ---
 
-### Question 19 - Process Renice And Kill
-**System:** clientvm
+## Question 19 - Process Renice And Kill (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 kill "$(cat /home/workerg/cpu.pid)"
 renice 10 -p "$(cat /home/workerg/sleep.pid)"
@@ -314,10 +276,8 @@ renice 10 -p "$(cat /home/workerg/sleep.pid)"
 
 ---
 
-### Question 20 - Swap Space
-**System:** clientvm
+## Question 20 - Swap Space (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 fdisk /dev/sdb
 # g
@@ -340,10 +300,8 @@ swapon -a
 
 ---
 
-### Question 21 - Create And Mount LV
-**System:** clientvm
+## Question 21 - Create And Mount LV (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 fdisk /dev/sdc
 # g
@@ -370,10 +328,8 @@ mount -a
 
 ---
 
-### Question 22 - Rootless Container Autostart
-**System:** clientvm
+## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
 
-#### Command Flow
 ```bash
 runuser -l solg -c "cd /opt/rhcsa/workspaces/exam-g && podman build -t localhost/delta-web:latest ."
 runuser -l solg -c "podman run -d --name pdfg -v /opt/ing:/data/input:Z -v /opt/outg:/data/output:Z localhost/delta-web:latest"
@@ -382,4 +338,16 @@ runuser -l solg -c "cd ~/.config/systemd/user && podman generate systemd --name 
 runuser -l solg -c "systemctl --user daemon-reload"
 runuser -l solg -c "systemctl --user enable --now container-pdfg.service"
 loginctl enable-linger solg
+```
+
+---
+
+## Verification
+```bash
+hostnamectl --static | grep -qx 'clientvm.deltaforge.lab'
+grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
+curl -fsS http://localhost:8086 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8086\b'
+atq | grep -q pavel
+findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$'
+runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'
 ```

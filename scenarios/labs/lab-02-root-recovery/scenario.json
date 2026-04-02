@@ -28,19 +28,23 @@
         "Remember to touch /.autorelabel before starting the normal init process."
       ],
       "checks": [
-        "getenforce",
-        "ls -Z /root | head",
-        "ssh -o StrictHostKeyChecking=no root@clientvm true"
+        "getenforce | grep -qx Enforcing",
+        "ls -Zd /root | grep -Eq '(^| )[^ ]+:object_r:admin_home_t:s0($| )'",
+        "grep -Eq '^[[:space:]]*PasswordAuthentication[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config && grep -Eq '^[[:space:]]*PermitRootLogin[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Recover root access on clientvm from the console...",
+        "After the system boots normally, confirm that...",
+        "Leave SSH password authentication working for root..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "# At the boot menu, edit the selected kernel entry.",

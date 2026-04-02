@@ -27,11 +27,17 @@
       ],
       "checks": [
         "[ ! -d \"/proc/$(cat /home/worker42/cpu.pid)\" ]",
-        "ps -o ni= -p \"$(cat /home/worker42/sleep.pid)\""
+        "ps -o ni= -p \"$(cat /home/worker42/sleep.pid)\" | tr -d ' ' | grep -qx 10"
       ],
       "solution_outline": [],
-      "task_titles": [],
-      "task_points": [],
+      "task_titles": [
+        "user worker42 has a CPU-bound process whose PID is...",
+        "User worker42 also has a long-running sleep process..."
+      ],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "kill \"$(cat /home/worker42/cpu.pid)\""

@@ -1,7 +1,7 @@
 # Mock Exam C: NorthStar Recovery Review
 
 ## Exam Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `mock-exam-c` |
@@ -17,14 +17,13 @@ A third 22 task RHCSA style mock exam with another variable set and recovery wor
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 - Root Recovery
-**System:** clientvm
+## Question 01 - Root Recovery (clientvm) - 5 pts
 
 Recover root access on clientvm from the console.
 
@@ -32,8 +31,7 @@ Recover root access on clientvm from the console.
 
 ---
 
-### Question 02 - Client Network
-**System:** clientvm
+## Question 02 - Client Network (clientvm) - 5 pts
 
 Configure networking on clientvm with the following settings:
 
@@ -45,8 +43,7 @@ Configure networking on clientvm with the following settings:
 
 ---
 
-### Question 03 - Bootloader Kernel Argument
-**System:** clientvm
+## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
 Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
@@ -56,8 +53,7 @@ Configure the bootloader on clientvm so that every installed kernel boots with t
 
 ---
 
-### Question 04 - Client Repositories
-**System:** clientvm
+## Question 04 - Client Repositories (clientvm) - 5 pts
 
 Configure a repository file on clientvm with the following settings:
 
@@ -68,8 +64,7 @@ Configure a repository file on clientvm with the following settings:
 
 ---
 
-### Question 05 - Server Repositories
-**System:** servervm
+## Question 05 - Server Repositories (servervm) - 5 pts
 
 Configure the same repository file on servervm.
 
@@ -80,8 +75,7 @@ Configure the same repository file on servervm.
 
 ---
 
-### Question 06 - Apache Firewall SELinux
-**System:** clientvm
+## Question 06 - Apache Firewall SELinux (clientvm) - 5 pts
 
 Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8484.
 
@@ -93,50 +87,43 @@ Configure the Apache HTTP server on clientvm so that it serves the existing site
 
 ---
 
-### Question 07 - Users And Group
-**System:** clientvm
+## Question 07 - Users And Group (clientvm) - 5 pts
 
 Create group infrac and users talia and ren with infrac as a supplementary group. Create user sage with /sbin/nologin and no infrac membership.
 
 ---
 
-### Question 08 - User Passwords
-**System:** clientvm
+## Question 08 - User Passwords (clientvm) - 5 pts
 
 Set the password of talia, ren, and sage to cinder9.
 
 ---
 
-### Question 09 - Delegated Sudo
-**System:** clientvm
+## Question 09 - Delegated Sudo (clientvm) - 5 pts
 
 Allow members of infrac to run useradd with sudo, and allow talia to run passwd for other users without a sudo password prompt.
 
 ---
 
-### Question 10 - Setgid Directory
-**System:** clientvm
+## Question 10 - Setgid Directory (clientvm) - 5 pts
 
 Create /srv/infrac with group ownership infrac, mode 2770, and inherited group ownership for new files.
 
 ---
 
-### Question 11 - Cron Logger
-**System:** clientvm
+## Question 11 - Cron Logger (clientvm) - 5 pts
 
 Configure a cron job for ren that runs every 5 minutes and logs the message "NorthStar exam".
 
 ---
 
-### Question 12 - Chrony Client
-**System:** clientvm
+## Question 12 - Chrony Client (clientvm) - 5 pts
 
 Configure chrony on clientvm so it synchronizes only with servervm.
 
 ---
 
-### Question 13 - Autofs Map
-**System:** clientvm
+## Question 13 - Autofs Map (clientvm) - 4 pts
 
 Create user remote63 with password cinder9 and configure autofs so that the following mount becomes available on demand:
 
@@ -145,43 +132,37 @@ Create user remote63 with password cinder9 and configure autofs so that the foll
 
 ---
 
-### Question 14 - Fixed UID User
-**System:** clientvm
+## Question 14 - Fixed UID User (clientvm) - 4 pts
 
 Create user kian431 with UID 4431 and set its password to cinder9.
 
 ---
 
-### Question 15 - Find And Copy
-**System:** clientvm
+## Question 15 - Find And Copy (clientvm) - 4 pts
 
 Find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.
 
 ---
 
-### Question 16 - Grep Filter
-**System:** clientvm
+## Question 16 - Grep Filter (clientvm) - 4 pts
 
 Extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.
 
 ---
 
-### Question 17 - Archive
-**System:** clientvm
+## Question 17 - Archive (clientvm) - 4 pts
 
 Create /root/etc-c.tar.bz2 containing /etc.
 
 ---
 
-### Question 18 - Service Status Script
-**System:** clientvm
+## Question 18 - Service Status Script (clientvm) - 4 pts
 
 Create executable script /usr/local/bin/northcheck that writes the active state of each service listed in /usr/local/share/exam-c/check.lst to /root/north-services.txt.
 
 ---
 
-### Question 19 - Swap Space
-**System:** clientvm
+## Question 19 - Swap Space (clientvm) - 4 pts
 
 On /dev/sdb, create a 700 MiB swap partition.
 
@@ -191,21 +172,18 @@ On /dev/sdb, create a 700 MiB swap partition.
 
 ---
 
-### Question 20 - Resize Existing LV
-**System:** clientvm
+## Question 20 - Resize Existing LV (clientvm) - 4 pts
 
 Resize /dev/reviewvgc/reviewc so the final size is 340 MiB without losing data.
 
 ---
 
-### Question 21 - Rootless Container
-**System:** clientvm
+## Question 21 - Rootless Container (clientvm) - 4 pts
 
 As user eirac, build localhost/northstar-web:latest from /opt/rhcsa/workspaces/exam-c/Containerfile, then run container pdfc with /opt/inc mounted to /data/input and /opt/outc mounted to /data/output.
 
 ---
 
-### Question 22 - Container Autostart
-**System:** clientvm
+## Question 22 - Container Autostart (clientvm) - 4 pts
 
 Generate and enable a systemd user service for pdfc and enable lingering for eirac.

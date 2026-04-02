@@ -70,7 +70,30 @@
         "Create And Mount LV",
         "Rootless Container Autostart"
       ],
-      "task_points": [],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
       "solution_commands": [
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
@@ -257,11 +280,11 @@
         ]
       ],
       "checks": [
-        "getent hosts db.aurora.lab",
-        "firewall-cmd --list-rich-rules",
-        "runuser -l opsf -c \"ssh -o StrictHostKeyChecking=no -o BatchMode=yes backupf@servervm true\"",
-        "findmnt /mnt/auroralv",
-        "runuser -l solf -c \"systemctl --user status container-pdff.service --no-pager\""
+        "getent hosts db.aurora.lab | grep -Fq '192.168.122.3'",
+        "firewall-cmd --list-rich-rules | grep -Fq 'source address=\"192.168.122.0/24\"' && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
+        "runuser -l opsf -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes backupf@servervm true'",
+        "findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$'",
+        "runuser -l solf -c 'systemctl --user is-enabled container-pdff.service' | grep -qx enabled && runuser -l solf -c 'systemctl --user is-active container-pdff.service' | grep -qx active && loginctl show-user solf | grep -Eq '^Linger=yes$'"
       ]
     }
   }

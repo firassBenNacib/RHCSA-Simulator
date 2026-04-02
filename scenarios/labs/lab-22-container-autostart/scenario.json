@@ -28,8 +28,9 @@
         "The user service must run without an active login session."
       ],
       "checks": [
-        "loginctl show-user merin22 | grep Linger",
-        "runuser -l merin22 -c \"systemctl --user status container-render22.service --no-pager\""
+        "loginctl show-user merin22 | grep -Eq '^Linger=yes$'",
+        "runuser -l merin22 -c 'systemctl --user is-enabled container-render22.service' | grep -qx enabled",
+        "runuser -l merin22 -c 'systemctl --user is-active container-render22.service' | grep -qx active"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -39,7 +40,11 @@
         "Generate User Service",
         "Enable Lingering"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "id merin22 || useradd -m merin22",

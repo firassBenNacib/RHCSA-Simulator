@@ -1,7 +1,7 @@
 # Lab 44: Filesystem By Label
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-44-filesystem-label-mount` |
@@ -16,35 +16,32 @@ Create a filesystem, label it, and mount it persistently by label.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - On /dev/sdb, create a GPT partition of 600 MiB for an…
-**System:** clientvm
+## Task 01 - On /dev/sdb, create a GPT partition of 600 MiB for (clientvm) - 10 pts
 
 On /dev/sdb, create a GPT partition of 600 MiB for an ext4 filesystem.
 
 ---
 
-### Task 02 - Format the new partition with the filesystem label…
-**System:** clientvm
+## Task 02 - Format the new partition with the filesystem label (clientvm) - 10 pts
 
 Format the new partition with the filesystem label DATA44 and mount it at /data44.
 
 ---
 
-### Task 03 - Configure the mount persistently in /etc/fstab by…
-**System:** clientvm
+## Task 03 - Configure the mount persistently in /etc/fstab by (clientvm) - 10 pts
 
 Configure the mount persistently in /etc/fstab by using LABEL=DATA44.
 
-### Hints
+## Hints
 - Use blkid or lsblk -f to verify the label.
 
-### Validation Commands
+## Validation Commands
 ```bash
-blkid /dev/sdb1
-findmnt /data44
+blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44
+findmnt -no TARGET,SOURCE /data44 | grep -Eq '^/data44 /dev/sdb1$|^/data44 /dev/mapper/.+$' && grep -Eq '^[^#]*LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4' /etc/fstab
 ```

@@ -1,7 +1,7 @@
 # Lab 27: At Job Scheduling
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-27-at-job` |
@@ -16,15 +16,13 @@ Schedule a one time task with at and verify that the at daemon is enabled.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create the user queue27 and set its password to…
-**System:** clientvm
+## Task 01 - Create the user queue27 and set its password to (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 useradd -m queue27
 passwd queue27
@@ -33,20 +31,16 @@ passwd queue27
 
 ---
 
-### Task 02 - Enable and start the atd service
-**System:** clientvm
+## Task 02 - Enable and start the atd service (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 systemctl enable --now atd
 ```
 
 ---
 
-### Task 03 - schedule a one-time at job that appends the text AT27…
-**System:** clientvm
+## Task 03 - schedule a one-time at job that appends the text (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 runuser -l queue27 -c "echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes"
 atq
@@ -54,9 +48,9 @@ atq
 
 ---
 
-### Verification
+## Verification
 ```bash
-systemctl is-enabled atd
-systemctl is-active atd
-atq
+systemctl is-enabled atd | grep -qx enabled
+systemctl is-active atd | grep -qx active
+atq | grep -q queue27
 ```

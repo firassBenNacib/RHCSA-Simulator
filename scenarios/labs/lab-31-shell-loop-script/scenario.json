@@ -27,16 +27,19 @@
         "Write one path per line."
       ],
       "checks": [
-        "cat /root/listlogs31.out"
+        "diff -u <(find /opt/lab31 -maxdepth 1 -type f -name '*.log' | sort) <(sort /root/listlogs31.out)"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Create an executable script...",
+        "Run the script once"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "vim /usr/local/bin/listlogs31",

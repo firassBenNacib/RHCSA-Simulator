@@ -1,7 +1,7 @@
 # Lab 14: User With Fixed UID
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-14-user-fixed-uid` |
@@ -16,15 +16,13 @@ Create a local user with a specific UID.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create user tavric with UID 4111 and set its password…
-**System:** clientvm
+## Task 01 - Create user tavric with UID 4111 and set its (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 useradd -u 4111 tavric
 passwd tavric
@@ -34,7 +32,7 @@ id tavric
 
 ---
 
-### Verification
+## Verification
 ```bash
-id tavric
+id -u tavric | grep -qx '4111'
 ```

@@ -36,11 +36,15 @@
         "Make the target and service changes persistent."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Configure clientvm to boot into multi-user.target...",
+        "Ensure the rsyslog service is enabled and running",
+        "If postfix is installed, disable it and stop it"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "systemctl set-default multi-user.target"

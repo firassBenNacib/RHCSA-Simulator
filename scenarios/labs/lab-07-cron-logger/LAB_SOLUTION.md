@@ -1,7 +1,7 @@
 # Lab 07: Cron Scheduling
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-07-cron-logger` |
@@ -16,15 +16,13 @@ Schedule a recurring task for a specific user.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create user ferro if it does not exist and set its…
-**System:** clientvm
+## Task 01 - Create user ferro if it does not exist and set its (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 id ferro || useradd -m ferro
 passwd ferro
@@ -33,10 +31,8 @@ passwd ferro
 
 ---
 
-### Task 02 - Configure a cron job for ferro that runs every 2…
-**System:** clientvm
+## Task 02 - Configure a cron job for ferro that runs every 2 (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 crontab -e -u ferro
 */2 * * * * logger "Lab 07 running"
@@ -45,8 +41,8 @@ systemctl enable --now crond
 
 ---
 
-### Verification
+## Verification
 ```bash
-crontab -l -u ferro
-systemctl status crond --no-pager
+crontab -l -u ferro | grep -Fqx '*/2 * * * * logger "Lab 07 running"'
+systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active
 ```

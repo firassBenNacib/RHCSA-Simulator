@@ -26,17 +26,20 @@
         "Use ln for both tasks, with and without -s."
       ],
       "checks": [
-        "ls -li /root/linksource30 /root/linkhard30 /root/linksoft30",
-        "readlink -f /root/linksoft30"
+        "test \"$(stat -c '%i' /root/linksource30)\" = \"$(stat -c '%i' /root/linkhard30)\" && test \"$(stat -c '%h' /root/linksource30)\" -ge 2",
+        "test \"$(readlink -f /root/linksoft30)\" = '/root/linksource30' && grep -Fqx 'link-test' /root/linksource30"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02"
+        "Create the file /root/linksource30 containing the...",
+        "Create the hard link /root/linkhard30 and the..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "printf 'link-test\n' > /root/linksource30"

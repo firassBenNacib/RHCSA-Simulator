@@ -1,7 +1,7 @@
 # Lab 11: Time Synchronization
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-11-chrony-client` |
@@ -16,15 +16,13 @@ Configure clientvm to synchronize time from servervm.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Configure chrony on clientvm so it synchronizes only…
-**System:** clientvm
+## Task 01 - Configure chrony on clientvm so it synchronizes (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 vim /etc/chrony.conf
 server servervm iburst
@@ -35,8 +33,8 @@ chronyc sources -v
 
 ---
 
-### Verification
+## Verification
 ```bash
-chronyc sources -v
-systemctl status chronyd --no-pager
+awk '$1 ~ /^(server|pool)$/ { if ($2 != "servervm") bad=1; if ($1=="server" && $2=="servervm") good=1 } END { exit !(good && !bad) }' /etc/chrony.conf
+systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active
 ```

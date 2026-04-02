@@ -1,15 +1,22 @@
 # Vagrant / VM state
 .vagrant/
+.lab-state/
+.lab-disks/
 *.box
+output/
+builds/
+packer_cache/
 
 # Logs and temp files
 *.log
 *.tmp
+.tmp-parse.ps1
+*.test
+*.coverprofile
 *.swp
 *.swo
 .DS_Store
 Thumbs.db
-*.txt
 
 # Python cache
 __pycache__/
@@ -18,6 +25,11 @@ __pycache__/
 # Local archives
 *.zip
 *.iso
+
+# Go / TUI build output
+.build/
+rhcsa-tui
+rhcsa-tui.exe
 
 # Editor settings
 .vscode/

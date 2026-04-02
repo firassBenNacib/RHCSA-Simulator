@@ -29,8 +29,8 @@
         "Use vim to type the repository file manually."
       ],
       "checks": [
-        "dnf repolist",
-        "ssh admin@servervm sudo dnf repolist"
+        "dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'",
+        "ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-baseos|BaseOS' && ssh admin@servervm sudo dnf repolist | grep -Eq 'rhcsa-appstream|AppStream'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -40,7 +40,11 @@
         "Server Repositories",
         "Verify Repositories"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "vim /etc/yum.repos.d/rhcsa.repo",

@@ -1,7 +1,7 @@
 # Mock Exam G: DeltaForge Recovery Review
 
 ## Exam Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `mock-exam-g` |
@@ -17,14 +17,13 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, di
 | clientvm | Primary RHCSA workstation |
 | servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Read the whole handout before you begin so you can sequence cross-system work efficiently.
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-### Question 01 - Root Recovery
-**System:** clientvm
+## Question 01 - Root Recovery (clientvm) - 5 pts
 
 Recover root access on clientvm from the console.
 
@@ -32,8 +31,7 @@ Recover root access on clientvm from the console.
 
 ---
 
-### Question 02 - Client Network
-**System:** clientvm
+## Question 02 - Client Network (clientvm) - 5 pts
 
 Configure networking on clientvm with the following settings:
 
@@ -45,8 +43,7 @@ Configure networking on clientvm with the following settings:
 
 ---
 
-### Question 03 - Bootloader Kernel Argument
-**System:** clientvm
+## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
 Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
@@ -56,8 +53,7 @@ Configure the bootloader on clientvm so that every installed kernel boots with t
 
 ---
 
-### Question 04 - Repositories On Both Systems
-**System:** clientvm + servervm
+## Question 04 - Repositories On Both Systems (clientvm + servervm) - 5 pts
 
 On clientvm and servervm, configure a repository file with the following settings:
 
@@ -68,8 +64,7 @@ On clientvm and servervm, configure a repository file with the following setting
 
 ---
 
-### Question 05 - Apache Custom Docroot
-**System:** clientvm
+## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
 
 Configure the Apache HTTP server on clientvm so that it serves content from /srv/delta-web on TCP port 8086.
 
@@ -80,119 +75,102 @@ Configure the Apache HTTP server on clientvm so that it serves content from /srv
 
 ---
 
-### Question 06 - Users And Group
-**System:** clientvm
+## Question 06 - Users And Group (clientvm) - 5 pts
 
 Create group deltaops and users gwen and pavel with deltaops as a supplementary group. Create user sable with /sbin/nologin and no deltaops membership.
 
 ---
 
-### Question 07 - User Passwords
-**System:** clientvm
+## Question 07 - User Passwords (clientvm) - 5 pts
 
 Set the password of gwen, pavel, and sable to cinder9.
 
 ---
 
-### Question 08 - Delegated Sudo
-**System:** clientvm
+## Question 08 - Delegated Sudo (clientvm) - 5 pts
 
 Allow members of deltaops to run useradd through sudo, and allow gwen to run passwd for other users without a sudo password prompt.
 
 ---
 
-### Question 09 - Shared Directory With Default ACL
-**System:** clientvm
+## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
 
 Create user auditg with password cinder9. Then create /projects/delta with group ownership deltaops, mode 2770, and a default ACL that gives auditg read write execute access to new content.
 
 ---
 
-### Question 10 - User Umask
-**System:** clientvm
+## Question 10 - User Umask (clientvm) - 5 pts
 
 Configure user pavel so that new regular files are created with mode 0640 and new directories are created with mode 0750.
 
 ---
 
-### Question 11 - At Job
-**System:** clientvm
+## Question 11 - At Job (clientvm) - 5 pts
 
 Create a one-time at job as user pavel that appends the text Delta queued to /home/pavel/at-g.log two minutes from now. Ensure the atd service is enabled and running.
 
 ---
 
-### Question 12 - Chrony Client
-**System:** clientvm
+## Question 12 - Chrony Client (clientvm) - 5 pts
 
 Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
 
 ---
 
-### Question 13 - Direct NFS Mount
-**System:** clientvm
+## Question 13 - Direct NFS Mount (clientvm) - 4 pts
 
 - **Mount the server export servervm:** /exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.
 
 ---
 
-### Question 14 - SSH Key And Secure Copy
-**System:** servervm
+## Question 14 - SSH Key And Secure Copy (servervm) - 4 pts
 
 Create user copyg on both systems with password cinder9. Then configure key based SSH access for copyg from clientvm to servervm and copy /home/copyg/payload.txt to /home/copyg/inbox/ on servervm with scp.
 
 ---
 
-### Question 15 - Find And Copy
-**System:** clientvm
+## Question 15 - Find And Copy (clientvm) - 4 pts
 
 Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.
 
 ---
 
-### Question 16 - Grep Filter
-**System:** clientvm
+## Question 16 - Grep Filter (clientvm) - 4 pts
 
 Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.
 
 ---
 
-### Question 17 - Archive
-**System:** clientvm
+## Question 17 - Archive (clientvm) - 4 pts
 
 Create /root/etc-g.tar.bz2 containing /etc.
 
 ---
 
-### Question 18 - Persistent Journal
-**System:** clientvm
+## Question 18 - Persistent Journal (clientvm) - 4 pts
 
 Configure journald on clientvm so logs are stored persistently across reboots.
 
 ---
 
-### Question 19 - Process Renice And Kill
-**System:** clientvm
+## Question 19 - Process Renice And Kill (clientvm) - 4 pts
 
 User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.
 
 ---
 
-### Question 20 - Swap Space
-**System:** clientvm
+## Question 20 - Swap Space (clientvm) - 4 pts
 
 On /dev/sdb, create a 736 MiB swap partition and configure it persistently.
 
 ---
 
-### Question 21 - Create And Mount LV
-**System:** clientvm
+## Question 21 - Create And Mount LV (clientvm) - 4 pts
 
 On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.
 
 ---
 
-### Question 22 - Rootless Container Autostart
-**System:** clientvm
+## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
 
 As user solg, build localhost/delta-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile. Run the container as pdfg with /opt/ing mounted to /data/input and /opt/outg mounted to /data/output. Generate and enable a systemd user service for that container and enable lingering for solg.

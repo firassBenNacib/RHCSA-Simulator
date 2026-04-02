@@ -16,8 +16,6 @@ for key, value in [('PASS_MAX_DAYS', '99999'), ('PASS_MIN_DAYS', '0'), ('PASS_WA
             lines.append(line)
     if not replaced:
         lines.append(f'{key}	{value}')
-    text = '
-'.join(lines) + '
-'
+    text = '\n'.join(lines) + '\n'
 p.write_text(text)
 EOF

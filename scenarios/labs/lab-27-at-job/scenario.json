@@ -28,19 +28,23 @@
         "Use atq to verify that the job is queued."
       ],
       "checks": [
-        "systemctl is-enabled atd",
-        "systemctl is-active atd",
-        "atq"
+        "systemctl is-enabled atd | grep -qx enabled",
+        "systemctl is-active atd | grep -qx active",
+        "atq | grep -q queue27"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Create the user queue27 and set its password to...",
+        "Enable and start the atd service",
+        "schedule a one-time at job that appends the text..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "useradd -m queue27",

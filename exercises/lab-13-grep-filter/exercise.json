@@ -1,0 +1,41 @@
+{
+  "id": "lab-13-grep-filter",
+  "title": "Lab 13: Text Filtering With Grep",
+  "description": "Extract matching lines from a seeded words file.",
+  "time_limit_minutes": 15,
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-13-grep-filter/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-13-grep-filter/prompt.md",
+    "hint": "exercises/lab-13-grep-filter/hint.md",
+    "check": "exercises/lab-13-grep-filter/check.sh",
+    "solution": "exercises/lab-13-grep-filter/solution.md",
+    "metadata": "exercises/lab-13-grep-filter/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "From /usr/share/dict/words, extract the lines",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "From /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines.",
+      "solution_commands": [
+        "grep \"ich\" /usr/share/dict/words > /root/lines"
+      ]
+    }
+  ],
+  "hints": [
+    "The words file for this lab is preseeded if it was not present before."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "test -s /root/lines && grep -q 'ich' /root/lines && ! awk 'index($0,\"ich\")==0{print; exit 1}' /root/lines",
+      "command": "test -s /root/lines && grep -q 'ich' /root/lines && ! awk 'index($0,\"ich\")==0{print; exit 1}' /root/lines"
+    }
+  ]
+}

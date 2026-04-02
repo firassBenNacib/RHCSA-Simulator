@@ -70,7 +70,30 @@
         "Create And Mount LV",
         "Rootless Container Autostart"
       ],
-      "task_points": [],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
       "solution_commands": [
         [
           "# At the boot menu, edit the selected kernel entry.",
@@ -280,7 +303,14 @@
           "loginctl enable-linger solg"
         ]
       ],
-      "checks": []
+      "checks": [
+        "hostnamectl --static | grep -qx 'clientvm.deltaforge.lab'",
+        "grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
+        "curl -fsS http://localhost:8086 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8086\\b'",
+        "atq | grep -q pavel",
+        "findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$'",
+        "runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'"
+      ]
     }
   }
 }

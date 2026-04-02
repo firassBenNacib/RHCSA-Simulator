@@ -1,0 +1,64 @@
+{
+  "id": "lab-47-user-password-aging",
+  "title": "Lab 47: Per-User Password Aging",
+  "description": "Adjust password aging for an existing user account with chage.",
+  "time_limit_minutes": 25,
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-47-user-password-aging/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-47-user-password-aging/prompt.md",
+    "hint": "exercises/lab-47-user-password-aging/hint.md",
+    "check": "exercises/lab-47-user-password-aging/check.sh",
+    "solution": "exercises/lab-47-user-password-aging/solution.md",
+    "metadata": "exercises/lab-47-user-password-aging/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Create user cycle47 with password cinder9 if it",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Create user cycle47 with password cinder9 if it does not already exist.",
+      "solution_commands": [
+        "id cycle47 || useradd -m cycle47",
+        "passwd cycle47",
+        "# enter: cinder9"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Configure cycle47 with a maximum password age of 30",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.",
+      "solution_commands": [
+        "chage -M 30 -m 2 -W 7 cycle47"
+      ]
+    },
+    {
+      "index": 3,
+      "title": "Force cycle47 to change the password at the next login",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Force cycle47 to change the password at the next login.",
+      "solution_commands": [
+        "chage -d 0 cycle47",
+        "chage -l cycle47"
+      ]
+    }
+  ],
+  "hints": [
+    "Use chage, not manual edits to /etc/shadow."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "chage -l cycle47 | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l cycle47 | grep -Eq 'Maximum number of days between password change[^0-9]*30$' && chage -l cycle47 | grep -Eq 'Number of days of warning before password expires[^0-9]*7$' && chage -l cycle47 | grep -Eq 'Last password change[^:]*: password must be changed'",
+      "command": "chage -l cycle47 | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l cycle47 | grep -Eq 'Maximum number of days between password change[^0-9]*30$' && chage -l cycle47 | grep -Eq 'Number of days of warning before password expires[^0-9]*7$' && chage -l cycle47 | grep -Eq 'Last password change[^:]*: password must be changed'"
+    }
+  ]
+}

@@ -1,36 +1,36 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-require "fileutils"
 require "json"
 
 ISO_PATH = File.expand_path("rhel-9.7-x86_64-dvd.iso", __dir__)
 raise "Missing ISO: #{ISO_PATH}" unless File.exist?(ISO_PATH)
 
+SSH_COMMAND_CANDIDATES = [
+  File.join(ENV.fetch("SystemRoot", "C:/Windows"), "System32", "OpenSSH", "ssh.exe"),
+  "C:/Windows/System32/OpenSSH/ssh.exe",
+  "C:/Program Files/Git/usr/bin/ssh.exe",
+  "C:/Program Files/Git/bin/ssh.exe"
+].uniq
+
+SSH_COMMAND_PATH = SSH_COMMAND_CANDIDATES.find { |path| File.file?(path) }
+
 LAB_DISKS_DIR = File.join(__dir__, ".lab-disks")
-FileUtils.mkdir_p(LAB_DISKS_DIR)
 
-CLIENT_DISK1 = File.join(LAB_DISKS_DIR, "clientvm-disk1.vdi")
-CLIENT_DISK2 = File.join(LAB_DISKS_DIR, "clientvm-disk2.vdi")
-
-def ensure_vdi(vb, path, size_mb)
-  if File.exist?(path)
-    if !File.file?(path) || File.size(path) == 0
-      FileUtils.rm_f(path)
-    else
-      return
-    end
-  end
-
-  vb.customize [
-    "createmedium", "disk",
-    "--filename", path,
-    "--size", size_mb,
-    "--format", "VDI"
-  ]
+DISK_GENERATION_PATH = File.join(__dir__, ".lab-state", "disk-generation.txt")
+DISK_GENERATION = if File.file?(DISK_GENERATION_PATH)
+  File.read(DISK_GENERATION_PATH, encoding: "bom|utf-8").strip.gsub(/[^0-9A-Za-z_-]/, "")
+else
+  ""
 end
 
+DISK_SUFFIX = DISK_GENERATION.empty? ? "" : "-#{DISK_GENERATION}"
+CLIENT_DISK1 = File.join(LAB_DISKS_DIR, "clientvm-disk1#{DISK_SUFFIX}.vdi")
+CLIENT_DISK2 = File.join(LAB_DISKS_DIR, "clientvm-disk2#{DISK_SUFFIX}.vdi")
+
 ACTIVE_RUN_PATH = File.join(__dir__, ".lab-state", "active-run.json")
+CHECK_SERVER_SCRIPT = File.join(__dir__, ".lab-state", "check-server.sh")
+CHECK_CLIENT_SCRIPT = File.join(__dir__, ".lab-state", "check-client.sh")
 
 def load_active_run(path)
   return nil unless File.exist?(path)
@@ -81,6 +81,7 @@ Vagrant.configure("2") do |config|
   config.ssh.connect_timeout = 30
   config.ssh.connect_retries = 15
   config.ssh.connect_retry_delay = 2
+  config.ssh.ssh_command = SSH_COMMAND_PATH if SSH_COMMAND_PATH
   config.vm.boot_timeout = 900
   config.vm.graceful_halt_timeout = 60
   config.vm.synced_folder ".", "/vagrant", disabled: true
@@ -113,6 +114,12 @@ Vagrant.configure("2") do |config|
         run: "never",
         name: "scenario-server"
     end
+    if File.file?(CHECK_SERVER_SCRIPT)
+      server.vm.provision "shell",
+        path: CHECK_SERVER_SCRIPT,
+        run: "never",
+        name: "check-server"
+    end
   end
 
   config.vm.define "clientvm" do |client|
@@ -123,9 +130,6 @@ Vagrant.configure("2") do |config|
       vb.gui = false
       vb.memory = 2048
       vb.cpus = 2
-
-      ensure_vdi(vb, CLIENT_DISK1, 2048)
-      ensure_vdi(vb, CLIENT_DISK2, 2048)
 
       vb.customize [
         "storageattach", :id,
@@ -154,6 +158,12 @@ Vagrant.configure("2") do |config|
         env: SCENARIO_ENV,
         run: "never",
         name: "scenario-client"
+    end
+    if File.file?(CHECK_CLIENT_SCRIPT)
+      client.vm.provision "shell",
+        path: CHECK_CLIENT_SCRIPT,
+        run: "never",
+        name: "check-client"
     end
   end
 end

@@ -1,7 +1,7 @@
 # Lab 05: Users Groups And Sudo
 
 ## Lab Solution
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-05-users-groups-sudo` |
@@ -16,15 +16,13 @@ Create local users, a delegated admin group, and passwordless privileged access.
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create the group opsrune and the users brenor,…
-**System:** clientvm
+## Task 01 - Create the group opsrune and the users brenor, (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 groupadd opsrune
 useradd -m brenor
@@ -36,10 +34,8 @@ usermod -aG opsrune lyessa
 
 ---
 
-### Task 02 - Set the password of all three users to cinder9
-**System:** clientvm
+## Task 02 - Set the password of all three users to cinder9 (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 passwd brenor
 # enter: cinder9
@@ -51,10 +47,8 @@ passwd quillan
 
 ---
 
-### Task 03 - Allow members of opsrune to run useradd through sudo,…
-**System:** clientvm
+## Task 03 - Allow members of opsrune to run useradd through (clientvm) - 10 pts
 
-#### Command Flow
 ```bash
 visudo -f /etc/sudoers.d/opsrune
 %opsrune ALL=(root) /usr/sbin/useradd
@@ -64,11 +58,11 @@ brenor ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-### Verification
+## Verification
 ```bash
-id brenor
-id lyessa
-getent passwd quillan
-visudo -cf /etc/sudoers.d/opsrune
-visudo -cf /etc/sudoers.d/brenor-passwd
+id -nG brenor | tr ' ' '\n' | grep -qx opsrune && getent passwd brenor >/dev/null
+id -nG lyessa | tr ' ' '\n' | grep -qx opsrune && getent passwd lyessa >/dev/null
+getent passwd quillan | awk -F: '{exit !($7=="/sbin/nologin")}'
+visudo -cf /etc/sudoers.d/opsrune >/dev/null && grep -Eq '^%opsrune[[:space:]]+ALL=\(root\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers.d/opsrune
+visudo -cf /etc/sudoers.d/brenor-passwd >/dev/null && grep -Eq '^brenor[[:space:]]+ALL=\(root\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers.d/brenor-passwd
 ```

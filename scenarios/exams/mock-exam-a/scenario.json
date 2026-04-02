@@ -70,7 +70,30 @@
         "Rootless Container",
         "Container Autostart"
       ],
-      "task_points": [],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
       "solution_commands": [
         [
           "# At the boot menu, edit the selected kernel entry.",
@@ -234,7 +257,14 @@
           "loginctl enable-linger oriona"
         ]
       ],
-      "checks": []
+      "checks": [
+        "hostnamectl --static | grep -qx 'clientvm.opsedge.lab' && CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"; test \"$(nmcli -g ipv4.addresses connection show \"$CONN\")\" = '192.168.122.26/24'",
+        "grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
+        "curl -fsS http://localhost:8282 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8282\\b'",
+        "crontab -l -u amber | grep -Fqx '*/2 * * * * logger \"OpsEdge tick\"'",
+        "lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewa\" && $2==\"reviewvga\" && $3>=319 && $3<=321{f=1} END{exit !f}'",
+        "runuser -l oriona -c 'systemctl --user is-enabled container-pdfa.service' | grep -qx enabled && runuser -l oriona -c 'systemctl --user is-active container-pdfa.service' | grep -qx active && loginctl show-user oriona | grep -Eq '^Linger=yes$'"
+      ]
     }
   }
 }

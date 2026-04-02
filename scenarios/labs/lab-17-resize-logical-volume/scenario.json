@@ -26,16 +26,18 @@
         "Do not recreate the filesystem."
       ],
       "checks": [
-        "lvs",
-        "df -hT /mnt/reviewlv"
+        "lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewlv\" && $2==\"reviewvg\" && $3>=319 && $3<=321{found=1} END{exit !found}'",
+        "findmnt -no TARGET,SOURCE /mnt/reviewlv | grep -Eq '^/mnt/reviewlv /dev/mapper/reviewvg-reviewlv$'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01"
+        "Resize logical volume /dev/reviewvg/reviewlv so the..."
       ],
-      "task_points": [],
+      "task_points": [
+        10
+      ],
       "solution_commands": [
         [
           "lsblk -f",
@@ -43,9 +45,7 @@
           "lvextend -L 320M /dev/reviewvg/reviewlv",
           "blkid /dev/reviewvg/reviewlv",
           "# if the filesystem is ext4, run resize2fs /dev/reviewvg/reviewlv",
-          "# if the filesystem is xfs, run xfs_growfs /mnt/reviewlv"
-        ],
-        [
+          "# if the filesystem is xfs, run xfs_growfs /mnt/reviewlv",
           "df -hT /mnt/reviewlv"
         ]
       ]

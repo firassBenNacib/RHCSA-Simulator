@@ -1,0 +1,75 @@
+{
+  "id": "lab-39-ssh-key-rsync",
+  "title": "Lab 39: SSH Key Authentication and Rsync",
+  "description": "Configure key-based SSH access and securely transfer files between systems.",
+  "time_limit_minutes": 30,
+  "objective_tags": [
+    "users-sudo-ssh",
+    "essential-tools"
+  ],
+  "requires_servervm": true,
+  "source_manifest": "scenarios/labs/lab-39-ssh-key-rsync/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-39-ssh-key-rsync/prompt.md",
+    "hint": "exercises/lab-39-ssh-key-rsync/hint.md",
+    "check": "exercises/lab-39-ssh-key-rsync/check.sh",
+    "solution": "exercises/lab-39-ssh-key-rsync/solution.md",
+    "metadata": "exercises/lab-39-ssh-key-rsync/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Create the user mesh39 on both clientvm and",
+      "points": 10,
+      "system": "clientvm + servervm",
+      "prompt": "Create the user mesh39 on both clientvm and servervm. Set the password on both systems to cinder9.",
+      "solution_commands": [
+        "useradd -m mesh39",
+        "passwd mesh39",
+        "# repeat on servervm"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "generate an ED25519 SSH key pair with no passphrase",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "As user mesh39 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
+      "solution_commands": [
+        "runuser -l mesh39 -c \"ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519\""
+      ]
+    },
+    {
+      "index": 3,
+      "title": "Configure passwordless SSH access for mesh39 from",
+      "points": 10,
+      "system": "clientvm + servervm",
+      "prompt": "Configure passwordless SSH access for mesh39 from clientvm to servervm using public key authentication.",
+      "solution_commands": [
+        "runuser -l mesh39 -c \"ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3\""
+      ]
+    },
+    {
+      "index": 4,
+      "title": "Using rsync over SSH, copy the directory",
+      "points": 10,
+      "system": "servervm",
+      "prompt": "Using rsync over SSH, copy the directory /home/mesh39/client-data/ from clientvm to /home/mesh39/server-data/ on servervm.",
+      "solution_commands": [
+        "runuser -l mesh39 -c \"rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/\""
+      ]
+    }
+  ],
+  "hints": [
+    "Use the mesh39 account for the SSH key work.",
+    "Verify the transfer by checking the copied file on servervm through SSH."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 \"test -f /home/mesh39/server-data/file1.txt\"",
+      "command": "ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 \"test -f /home/mesh39/server-data/file1.txt\""
+    }
+  ]
+}

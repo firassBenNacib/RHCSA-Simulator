@@ -29,17 +29,21 @@
         "Populate authorized_keys for the target user."
       ],
       "checks": [
-        "runuser -l relay32 -c \"ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true\""
+        "runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Part 01",
-        "Part 02",
-        "Part 03"
+        "Create user relay32 on clientvm and user vault32 on...",
+        "Configure key-based SSH authentication so that user...",
+        "Do not disable PasswordAuthentication globally for..."
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "useradd -m relay32",

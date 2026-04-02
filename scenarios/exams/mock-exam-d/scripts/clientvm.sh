@@ -6,12 +6,8 @@ mkdir -p /root/.repo-backup-client-exam-d
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-d
 hostnamectl set-hostname clientvm
 rhcsa_remove_matching_lines 'mirror.summit.lab' /etc/hosts
-connection_name="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-if [[ -n "${connection_name:-}" ]]; then
-  nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.2/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes >/dev/null 2>&1 || true
-  nmcli connection down "$connection_name" >/dev/null 2>&1 || true
-  nmcli connection up "$connection_name" >/dev/null 2>&1 || true
-fi
+connection_name="$(rhcsa_get_lab_connection_name || true)"
+rhcsa_reset_lab_ipv4_profile "$connection_name"
 mkdir -p /srv/summit-web
 cat > /srv/summit-web/index.html <<'EOF'
 summit exam page
@@ -49,9 +45,7 @@ for key, value in [('PASS_MAX_DAYS', '99999'), ('PASS_MIN_DAYS', '0'), ('PASS_WA
             lines.append(line)
     if not done:
         lines.append(f'{key}	{value}')
-    text = '
-'.join(lines) + '
-'
+    text = '\n'.join(lines) + '\n'
 p.write_text(text)
 EOF
 automount -u >/dev/null 2>&1 || true
@@ -71,10 +65,8 @@ p.write_text('\n'.join(lines) + '\n')
 EOF
 id foragerd >/dev/null 2>&1 || useradd -m foragerd
 mkdir -p /opt/exam-d/find/a /opt/exam-d/find/b/sub
-printf 'd1
-' > /opt/exam-d/find/a/file1.txt
-printf 'd2
-' > /opt/exam-d/find/b/sub/file2.txt
+printf 'd1\n' > /opt/exam-d/find/a/file1.txt
+printf 'd2\n' > /opt/exam-d/find/b/sub/file2.txt
 chown -R foragerd:foragerd /opt/exam-d/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'

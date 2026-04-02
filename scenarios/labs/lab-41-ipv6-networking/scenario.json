@@ -27,9 +27,9 @@
         "Use nmcli so the change survives a reconnect."
       ],
       "checks": [
-        "nmcli -t -f NAME,DEVICE connection show --active",
-        "hostnamectl --static",
-        "getent hosts servervm.ipv6lab.local"
+        "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"; test -n \"$CONN\"; test \"$(nmcli -g ipv6.addresses connection show \"$CONN\")\" = 'fd00:122:41::25/64' && test \"$(nmcli -g ipv6.gateway connection show \"$CONN\")\" = 'fd00:122:41::1' && test \"$(nmcli -g ipv6.dns connection show \"$CONN\")\" = 'fd00:122:41::53' && test \"$(nmcli -g ipv6.method connection show \"$CONN\")\" = 'manual'",
+        "hostnamectl --static | grep -qx 'clientvm.ipv6lab.local'",
+        "getent hosts servervm.ipv6lab.local | grep -Fq 'fd00:122:41::3'"
       ],
       "solution_outline": [],
       "task_titles": [
@@ -37,7 +37,11 @@
         "Hostname And IPv6 Host Entry",
         "Preserve Existing IPv4 Settings"
       ],
-      "task_points": [],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
       "solution_commands": [
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",

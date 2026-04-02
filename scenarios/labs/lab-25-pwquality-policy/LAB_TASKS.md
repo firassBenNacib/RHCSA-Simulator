@@ -1,7 +1,7 @@
 # Lab 25: Pwquality Policy
 
 ## Lab Tasks
-### Overview
+## Overview
 | Field | Value |
 |---|---|
 | Scenario ID | `lab-25-pwquality-policy` |
@@ -16,13 +16,12 @@ Configure a persistent local password quality policy without editing PAM service
 |---|---|
 | clientvm | Primary RHCSA workstation |
 
-### General Instructions
+## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-### Task 01 - Create a persistent password quality policy in…
-**System:** clientvm
+## Task 01 - Create a persistent password quality policy in (clientvm) - 10 pts
 
 Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords must meet the following requirements:
 
@@ -31,16 +30,15 @@ Create a persistent password quality policy in /etc/security/pwquality.conf.d so
 
 ---
 
-### Task 02 - Do not edit any PAM service file for this task
-**System:** clientvm
+## Task 02 - Do not edit any PAM service file for this task (clientvm) - 10 pts
 
 Do not edit any PAM service file for this task.
 
-### Hints
+## Hints
 - Use a dedicated drop-in file.
 - Keep the configuration minimal.
 
-### Validation Commands
+## Validation Commands
 ```bash
-grep -R "minlen\|minclass" /etc/security/pwquality.conf.d
+grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d
 ```

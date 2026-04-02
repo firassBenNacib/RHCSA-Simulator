@@ -1,0 +1,52 @@
+{
+  "id": "lab-12-find-copy-preserve",
+  "title": "Lab 12: Find And Copy With Structure",
+  "description": "Locate recent files owned by a user and copy them while preserving directories.",
+  "time_limit_minutes": 25,
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "requires_servervm": false,
+  "source_manifest": "scenarios/labs/lab-12-find-copy-preserve/scenario.json",
+  "paths": {
+    "prompt": "exercises/lab-12-find-copy-preserve/prompt.md",
+    "hint": "exercises/lab-12-find-copy-preserve/hint.md",
+    "check": "exercises/lab-12-find-copy-preserve/check.sh",
+    "solution": "exercises/lab-12-find-copy-preserve/solution.md",
+    "metadata": "exercises/lab-12-find-copy-preserve/exercise.json"
+  },
+  "tasks": [
+    {
+      "index": 1,
+      "title": "Find all files owned by natfind and modified in the",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Find all files owned by natfind and modified in the last 24 hours under /opt/lab12/source.",
+      "solution_commands": [
+        "find /opt/lab12/source -type f -user natfind -mtime -1 -exec cp --parents {} /root/natfind-files \\;"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Copy them to /root/natfind-files and preserve the",
+      "points": 10,
+      "system": "clientvm",
+      "prompt": "Copy them to /root/natfind-files and preserve the original directory structure.",
+      "solution_commands": [
+        "find /root/natfind-files -type f | sort"
+      ]
+    }
+  ],
+  "hints": [
+    "Use find with a time test and --parents or an equivalent method.",
+    "Only copy regular files."
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "target": "clientvm",
+      "original_command": "diff -u <(find /opt/lab12/source -type f -user natfind -mtime -1 | sed 's#^/opt/lab12/source#/root/natfind-files#' | sort) <(find /root/natfind-files -type f | sort)",
+      "command": "diff -u <(find /opt/lab12/source -type f -user natfind -mtime -1 | sed 's#^/opt/lab12/source#/root/natfind-files#' | sort) <(find /root/natfind-files -type f | sort)"
+    }
+  ]
+}
