@@ -1,7 +1,7 @@
 {
   "id": "lab-45-restorecon-httpd",
   "title": "Lab 45: Restore Default SELinux Context",
-  "description": "Restore the default SELinux context on existing web content without disabling SELinux",
+  "description": "Restore the default SELinux context for a web file on servervm and keep httpd enforcing.",
   "objective_tags": [
     "selinux-and-default-perms"
   ],
@@ -10,43 +10,45 @@
   ],
   "time_limit_minutes": 25,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_servervm": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On clientvm, the file /var/www/html/index45.html has the wrong SELinux context. Restore the default context.",
-        "Ensure the httpd service is enabled and running. SELinux must remain enforcing."
+        "On servervm, the file /var/www/html/index45.html has the wrong SELinux context. Restore the default context.",
+        "Ensure the httpd service is enabled and running on servervm. SELinux must remain enforcing."
       ],
       "hints": [
-        "Do not use chcon for the final state."
+        "Use the default file-context policy instead of a custom override.",
+        "This lab now runs on servervm."
       ],
       "checks": [
-        "getenforce | grep -qx Enforcing",
-        "matchpathcon /var/www/html/index45.html | grep -Eq ':httpd_sys_content_t:' && ls -Z /var/www/html/index45.html | grep -Eq ':httpd_sys_content_t:'",
-        "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"
+        "ssh admin@servervm matchpathcon /var/www/html/index45.html | awk '{print $3}' | grep -qx httpd_sys_content_t",
+        "ssh admin@servervm getenforce | grep -qx Enforcing && ssh admin@servervm systemctl is-enabled httpd | grep -qx enabled && ssh admin@servervm systemctl is-active httpd | grep -qx active"
       ],
-      "solution_outline": [],
+      "solution_outline": [
+        "Restore the default context for index45.html.",
+        "Enable and start httpd while keeping SELinux enforcing."
+      ],
       "task_titles": [
-        "the file /var/www/html/index45.html has the wrong...",
-        "Ensure the httpd service is enabled and running...."
+        "Restore the default context on servervm",
+        "Enable httpd on servervm with SELinux enforcing"
       ],
       "task_points": [
-        10,
-        10
+        15,
+        15
       ],
       "solution_commands": [
         [
           "restorecon -v /var/www/html/index45.html"
         ],
         [
-          "systemctl enable --now httpd",
-          "getenforce",
-          "ls -Z /var/www/html/index45.html"
+          "setenforce 1\nsystemctl enable --now httpd"
         ]
       ]
     }

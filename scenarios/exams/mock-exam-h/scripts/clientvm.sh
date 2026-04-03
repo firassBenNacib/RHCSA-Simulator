@@ -3,6 +3,7 @@ set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /root/.repo-backup-client-exam-h
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-h
+useradd -D -f -1 >/dev/null 2>&1 || true
 hostnamectl set-hostname clientvm
 rhcsa_remove_matching_lines 'registry.silverpeak.lab' /etc/hosts
 connection_name="$(rhcsa_get_lab_connection_name || true)"
@@ -22,11 +23,11 @@ semanage port -d -t http_port_t -p tcp 8181 >/dev/null 2>&1 || true
 for u in iris daren hush agingh silverremote watcherh inspecth; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel silverops >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/silverops /etc/sudoers.d/iris-passwd /root/silver-lines /root/usr-local-h.tar.gz
-rm -rf /srv/silver /opt/exam-h /root/watcherh-files /silver /home/inspecth/workdir.txt
+rm -rf /srv/silver /srv/silver-drop /opt/exam-h /root/watcherh-files /silver /home/inspecth/workdir.txt
 python - <<'EOF'
 from pathlib import Path
 try:
-    Path('/etc/security/pwquality.conf.d/silver.conf').unlink()
+    Path('/etc/security/pwquality.conf.d/silverpeak.conf').unlink()
 except FileNotFoundError:
     pass
 EOF

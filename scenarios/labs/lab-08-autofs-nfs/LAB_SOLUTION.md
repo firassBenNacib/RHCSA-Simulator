@@ -30,7 +30,7 @@ mkdir -p /exports/vault8
 printf "autofs lab 08\n" > /exports/vault8/welcome.txt
 exportfs -arv
 # On clientvm
-useradd -m vault8
+useradd vault8
 passwd vault8
 # enter: cinder9
 ```

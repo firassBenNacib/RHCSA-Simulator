@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-c` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, selinux-and-default-perms, storage-lvm, containers |
+| Objectives | boot-and-recovery, filesystems-and-autofs, users-sudo-ssh, storage-lvm, containers |
 
-A third 22 task RHCSA style mock exam with another variable set and recovery workflow.
+A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.
 
 ### Systems
 | System | Use |
@@ -40,7 +40,6 @@ exec /sbin/init
 
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection show "$CONN"
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
@@ -53,142 +52,101 @@ hostnamectl set-hostname clientvm.northstar.lab
 
 ```bash
 grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
-grubby --info=ALL | grep -E "^kernel|^args"
 ```
 
 ---
 
-## Question 04 - Client Repositories (clientvm) - 5 pts
+## Question 04 - Host Entry (clientvm) - 5 pts
 
 ```bash
-vim /etc/yum.repos.d/northstar.repo
-[northstar-baseos]
-name=NorthStar BaseOS
-baseurl=http://servervm/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[northstar-appstream]
-name=NorthStar AppStream
-baseurl=http://servervm/repo/AppStream/
-enabled=1
-gpgcheck=0
+grep -q 'vault.northstar.lab' /etc/hosts || echo '192.168.122.3 vault.northstar.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 05 - Server Repositories (servervm) - 5 pts
+## Question 05 - Direct NFS Mount (clientvm) - 5 pts
 
 ```bash
-# Run on servervm
-vim /etc/yum.repos.d/northstar.repo
-[northstar-baseos]
-name=NorthStar BaseOS
-baseurl=http://servervm/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[northstar-appstream]
-name=NorthStar AppStream
-baseurl=http://servervm/repo/AppStream/
-enabled=1
-gpgcheck=0
+mkdir -p /mnt/bluec
+grep -q '/mnt/bluec' /etc/fstab || echo 'servervm:/exports/bluec /mnt/bluec nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
 ```
 
 ---
 
-## Question 06 - Apache Firewall SELinux (clientvm) - 5 pts
-
-```bash
-vim /etc/httpd/conf/httpd.conf
-Listen 8484
-systemctl enable --now httpd
-firewall-cmd --permanent --add-port=8484/tcp
-firewall-cmd --reload
-semanage port -a -t http_port_t -p tcp 8484
-systemctl restart httpd
-```
-
----
-
-## Question 07 - Users And Group (clientvm) - 5 pts
+## Question 06 - Users And Group (clientvm) - 5 pts
 
 ```bash
 groupadd infrac
-useradd -m talia
-useradd -m ren
-useradd -m -s /sbin/nologin sage
-usermod -aG infrac talia
-usermod -aG infrac ren
+useradd -G infrac talia
+useradd -G infrac ren
+echo cinder9 | passwd --stdin talia
+echo cinder9 | passwd --stdin ren
 ```
 
 ---
 
-## Question 08 - User Passwords (clientvm) - 5 pts
+## Question 07 - Default ACL Directory (clientvm) - 5 pts
 
 ```bash
-passwd talia
-# enter: cinder9
-passwd ren
-# enter: cinder9
-passwd sage
-# enter: cinder9
+install -d -m 2770 -o root -g infrac /srv/infrac
+setfacl -d -m g:infrac:rwx /srv/infrac
 ```
 
 ---
 
-## Question 09 - Delegated Sudo (clientvm) - 5 pts
+## Question 08 - No-Home User (clientvm) - 5 pts
 
 ```bash
-visudo -f /etc/sudoers.d/infrac
-%infrac ALL=(root) /usr/sbin/useradd
-visudo -f /etc/sudoers.d/talia-passwd
-talia ALL=(root) NOPASSWD: /usr/bin/passwd
+useradd -M -s /sbin/nologin remote63
 ```
 
 ---
 
-## Question 10 - Setgid Directory (clientvm) - 5 pts
+## Question 09 - At Job (clientvm) - 5 pts
 
 ```bash
-mkdir -p /srv/infrac
-chgrp infrac /srv/infrac
-chmod 2770 /srv/infrac
+echo 'echo "NorthStar audit" >> /root/northstar-at.log' | at now + 2 minutes
+systemctl enable --now atd
 ```
 
 ---
 
-## Question 11 - Cron Logger (clientvm) - 5 pts
+## Question 10 - Per-User Password Aging (clientvm) - 5 pts
 
 ```bash
-crontab -e -u ren
-*/5 * * * * logger "NorthStar exam"
+chage -M 45 -m 5 -W 7 talia
 ```
 
 ---
 
-## Question 12 - Chrony Client (clientvm) - 5 pts
+## Question 11 - Persistent Journal (servervm) - 5 pts
 
 ```bash
-vim /etc/chrony.conf
-server servervm iburst
-# remove any other server or pool lines
-systemctl enable --now chronyd
+# Run on servervm
+mkdir -p /var/log/journal
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
 ```
 
 ---
 
-## Question 13 - Autofs Map (clientvm) - 4 pts
+## Question 12 - User Umask (clientvm) - 5 pts
 
 ```bash
-useradd -m remote63
-passwd remote63
-# enter: cinder9
-vim /etc/auto.bluec
-remote63 -rw,sync servervm:/exports/bluec
-vim /etc/auto.master.d/bluec.autofs
-/bluec /etc/auto.bluec
-systemctl enable --now autofs
+echo 'umask 027' >> /home/ren/.bash_profile
+```
+
+---
+
+## Question 13 - Per-User Login Message (clientvm) - 4 pts
+
+```bash
+echo 'echo NorthStar access' >> /home/ren/.bash_profile
 ```
 
 ---
@@ -294,10 +252,10 @@ loginctl enable-linger eirac
 
 ## Verification
 ```bash
-hostnamectl --static | grep -qx 'clientvm.northstar.lab' && CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"; test "$(nmcli -g ipv4.addresses connection show "$CONN")" = '192.168.122.28/24'
-grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
-curl -fsS http://localhost:8484 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8484\b'
-crontab -l -u ren | grep -Fqx '*/5 * * * * logger "NorthStar exam"'
-lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewc" && $2=="reviewvgc" && $3>=339 && $3<=341{f=1} END{exit !f}'
-runuser -l eirac -c 'systemctl --user is-enabled container-pdfc.service' | grep -qx enabled && runuser -l eirac -c 'systemctl --user is-active container-pdfc.service' | grep -qx active && loginctl show-user eirac | grep -Eq '^Linger=yes$'
+hostnamectl --static | grep -qx 'clientvm.northstar.lab' && grep -Fqx '192.168.122.3 vault.northstar.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
+mount | grep -Eq 'servervm:/exports/bluec on /mnt/bluec type nfs' && grep -q '/mnt/bluec' /etc/fstab && getent group infrac >/dev/null && id -nG talia | tr ' ' '\n' | grep -qx infrac && id -nG ren | tr ' ' '\n' | grep -qx infrac && getfacl -p /srv/infrac | grep -Fq 'default:group:infrac:rwx' && getent passwd remote63 | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin'
+chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo NorthStar access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal
+getent passwd kian431 | awk -F: '{print $3}' | grep -qx '4431' && test -f /root/ren-files/opt/exam-c/find/a/file1.txt && grep -q 'orbit' /root/orbit-lines && test -f /root/etc-c.tar.bz2 && /usr/local/bin/northcheck >/dev/null && test -s /root/northstar-services.txt
+swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewc" && $2=="reviewvgc" && $3>=339 && $3<=341{f=1} END{exit !f}'
+runuser -l eirac -c 'podman ps --format {{.Names}}' | grep -qx pdfc && runuser -l eirac -c 'systemctl --user is-enabled container-pdfc.service' | grep -qx enabled && loginctl show-user eirac | grep -Eq '^Linger=yes$'
 ```

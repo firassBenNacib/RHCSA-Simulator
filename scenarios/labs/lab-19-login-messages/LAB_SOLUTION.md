@@ -9,39 +9,44 @@
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 
-Configure user specific and global shell greetings.
+Configure both a user-specific and a global login greeting with clearer host distribution.
 
 ### Systems
 | System | Use |
 |---|---|
 | clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure a login message for user orien19 that (clientvm) - 10 pts
+## Task 01 - Create the per-user greeting on servervm (servervm) - 15 pts
 
 ```bash
-id orien19 || useradd -m orien19
-vim /home/orien19/.bash_profile
-echo "Welcome to you, user Orien, you are amazing!"
+useradd -m orien19
+printf 'echo "Welcome to you, user Orien, you are amazing!"
+' >> /home/orien19/.bash_profile
+chown orien19:orien19 /home/orien19/.bash_profile
 ```
 
 ---
 
-## Task 02 - Configure a global login message so any user (clientvm) - 10 pts
+## Task 02 - Create the global login greeting on both systems (clientvm) - 15 pts
 
 ```bash
-vim /etc/profile.d/lab19-greeting.sh
+cat > /etc/profile.d/lab19-greeting.sh <<'EOF'
 echo "Welcome ${USER}, you are logged in!"
+EOF
+chmod 644 /etc/profile.d/lab19-greeting.sh
 ```
 
 ---
 
 ## Verification
 ```bash
-id orien19 >/dev/null && grep -Fqx 'echo "Welcome to you, user Orien, you are amazing!"' /home/orien19/.bash_profile
-grep -Fqx 'echo "Welcome ${USER}, you are logged in!"' /etc/profile.d/lab19-greeting.sh
+test -f /etc/profile.d/lab19-greeting.sh && grep -Fq 'Welcome ${USER}, you are logged in!' /etc/profile.d/lab19-greeting.sh
+ssh admin@servervm test -f /etc/profile.d/lab19-greeting.sh && ssh admin@servervm grep -Fq 'Welcome ${USER}, you are logged in!' /etc/profile.d/lab19-greeting.sh
+ssh admin@servervm test -f /home/orien19/.bash_profile && ssh admin@servervm grep -Fq 'Welcome to you, user Orien, you are amazing!' /home/orien19/.bash_profile
 ```

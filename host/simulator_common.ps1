@@ -9,6 +9,7 @@ $script:ValidObjectiveTags = @(
     'storage-lvm',
     'filesystems-and-autofs',
     'software-scheduling-time',
+    'software-management',
     'networking-and-firewall',
     'users-sudo-ssh',
     'selinux-and-default-perms',

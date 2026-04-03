@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-d` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, storage-lvm, users-sudo-ssh, containers |
+| Objectives | networking-and-firewall, users-sudo-ssh, software-management, storage-lvm |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds default ACLs, umask tuning, password aging, and a full create mount storage task.
+A 22 task RHCSA style mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.
 
 ### Systems
 | System | Use |
@@ -27,7 +27,6 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds default ACLs, umask tun
 
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection show "$CONN"
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
@@ -36,11 +35,10 @@ hostnamectl set-hostname clientvm.summit.lab
 
 ---
 
-## Question 02 - Static Host Entry (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 mirror.summit.lab
+grep -q 'mirror.summit.lab' /etc/hosts || echo '192.168.122.3 mirror.summit.lab' >> /etc/hosts
 ```
 
 ---
@@ -48,18 +46,20 @@ vim /etc/hosts
 ## Question 03 - Client Repositories (clientvm) - 5 pts
 
 ```bash
-vim /etc/yum.repos.d/summit.repo
-[BaseOS]
-name=BaseOS
+cat > /etc/yum.repos.d/summit.repo <<'EOF'
+[summit-baseos]
+name=Summit BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
-[AppStream]
-name=AppStream
+[summit-appstream]
+name=Summit AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
@@ -68,65 +68,46 @@ gpgcheck=0
 
 ```bash
 # Run on servervm
-# on servervm
-vim /etc/yum.repos.d/summit.repo
-[BaseOS]
-name=BaseOS
+cat > /etc/yum.repos.d/summit.repo <<'EOF'
+[summit-baseos]
+name=Summit BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
-[AppStream]
-name=AppStream
+[summit-appstream]
+name=Summit AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
+## Question 05 - Useradd Defaults (clientvm) - 5 pts
 
 ```bash
-vim /etc/httpd/conf.d/summit.conf
-<VirtualHost *:8085>
-    DocumentRoot /srv/summit-web
-    <Directory /srv/summit-web>
-        Require all granted
-    </Directory>
-</VirtualHost>
-semanage fcontext -a -t httpd_sys_content_t "/srv/summit-web(/.*)?"
-restorecon -Rv /srv/summit-web
-semanage port -a -t http_port_t -p tcp 8085
-firewall-cmd --permanent --add-port=8085/tcp
-firewall-cmd --reload
-systemctl enable --now httpd
+useradd -D -f 14
 ```
 
 ---
 
-## Question 06 - Users And Group (clientvm) - 5 pts
+## Question 06 - No-Home User (clientvm) - 5 pts
 
 ```bash
-groupadd summitops
-useradd -m kara
-useradd -m miles
-useradd -m -s /sbin/nologin zero
-usermod -aG summitops kara
-usermod -aG summitops miles
+useradd -M trainee54
+echo cinder9 | passwd --stdin trainee54
 ```
 
 ---
 
-## Question 07 - User Passwords (clientvm) - 5 pts
+## Question 07 - Admin User (clientvm) - 5 pts
 
 ```bash
-passwd kara
-# enter: cinder9
-passwd miles
-# enter: cinder9
-passwd zero
-# enter: cinder9
+useradd kara
+echo cinder9 | passwd --stdin kara
 ```
 
 ---
@@ -134,99 +115,95 @@ passwd zero
 ## Question 08 - Delegated Sudo (clientvm) - 5 pts
 
 ```bash
-visudo -f /etc/sudoers.d/summitops
-%summitops ALL=(root) /usr/sbin/useradd
-visudo -f /etc/sudoers.d/kara-passwd
-kara ALL=(root) NOPASSWD: /usr/bin/passwd
+visudo -f /etc/sudoers.d/kara-systemctl
+kara ALL=(root) NOPASSWD: /usr/bin/systemctl restart rsyslog, /usr/bin/systemctl status sshd
 ```
 
 ---
 
-## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
+## Question 09 - Server Login Messages (servervm) - 5 pts
 
 ```bash
-useradd -m auditord
-passwd auditord
-# enter: cinder9
-mkdir -p /projects/summit
-chown root:summitops /projects/summit
-chmod 2770 /projects/summit
-setfacl -m d:u:auditord:rwx /projects/summit
+# Run on servervm
+echo 'Summit maintenance host' > /etc/issue
+echo 'Summit maintenance host' > /etc/motd
 ```
 
 ---
 
-## Question 10 - User Umask (clientvm) - 5 pts
+## Question 10 - Server Default Target (servervm) - 5 pts
 
 ```bash
-vim /home/miles/.bashrc
-umask 027
-chown miles:miles /home/miles/.bashrc
+# Run on servervm
+systemctl set-default multi-user.target
+systemctl enable --now rsyslog
+systemctl disable --now postfix
 ```
 
 ---
 
-## Question 11 - Password Aging Defaults (clientvm) - 5 pts
+## Question 11 - Package Management (servervm) - 5 pts
 
 ```bash
-vim /etc/login.defs
-PASS_MAX_DAYS   45
-PASS_MIN_DAYS   2
-PASS_WARN_AGE   10
-useradd -m trainee54
-passwd trainee54
-# enter: cinder9
-chage -l trainee54
+# Run on servervm
+dnf install -y tree
+dnf remove -y dos2unix
 ```
 
 ---
 
-## Question 12 - Cron Logger (clientvm) - 5 pts
+## Question 12 - Password Aging Defaults (clientvm) - 5 pts
 
 ```bash
-crontab -e -u miles
-*/15 * * * * logger "Summit exam"
+sed -ri 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS	60/; s/^PASS_MIN_DAYS.*/PASS_MIN_DAYS	2/; s/^PASS_WARN_AGE.*/PASS_WARN_AGE	7/' /etc/login.defs
 ```
 
 ---
 
-## Question 13 - Chrony Client (clientvm) - 4 pts
+## Question 13 - Forced Password Change (clientvm) - 4 pts
 
 ```bash
-vim /etc/chrony.conf
-server servervm iburst
-systemctl enable --now chronyd
+useradd miles
+echo cinder9 | passwd --stdin miles
+chage -d 0 miles
 ```
 
 ---
 
-## Question 14 - Autofs Map (clientvm) - 4 pts
+## Question 14 - Fixed UID User (clientvm) - 4 pts
 
 ```bash
-useradd -m summitremote
-passwd summitremote
-# enter: cinder9
-dnf -y install autofs
-vim /etc/auto.master.d/summit.autofs
-/summit-home /etc/auto.summit
-vim /etc/auto.summit
-summitremote -rw servervm:/exports/summit-home
-systemctl enable --now autofs
+useradd -u 4540 cedar540
+echo cinder9 | passwd --stdin cedar540
 ```
 
 ---
 
-## Question 15 - Fixed UID User (clientvm) - 4 pts
+## Question 15 - User Umask (clientvm) - 4 pts
 
 ```bash
-useradd -u 4540 -m cedar540
-passwd cedar540
-# enter: cinder9
+echo 'umask 027' >> /home/miles/.bash_profile
 ```
 
 ---
 
-## Question 16 - Find And Copy (clientvm) - 4 pts
+## Question 16 - Audit Directory (clientvm) - 4 pts
+
+```bash
+install -d -m 0750 -o root -g root /srv/summit-audit
+```
+
+---
+
+## Question 17 - Audit Directory (clientvm) - 4 pts
+
+```bash
+install -d -m 0750 -o root -g root /srv/summit-audit
+```
+
+---
+
+## Question 18 - Find And Copy (clientvm) - 4 pts
 
 ```bash
 mkdir -p /root/miles-files
@@ -235,7 +212,7 @@ find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-## Question 17 - Grep Filter (clientvm) - 4 pts
+## Question 19 - Grep Filter (clientvm) - 4 pts
 
 ```bash
 grep alpha /usr/share/dict/words > /root/alpha-lines
@@ -243,7 +220,7 @@ grep alpha /usr/share/dict/words > /root/alpha-lines
 
 ---
 
-## Question 18 - Archive (clientvm) - 4 pts
+## Question 20 - Archive (clientvm) - 4 pts
 
 ```bash
 tar -czf /root/summit-etc.tar.gz /etc
@@ -251,7 +228,7 @@ tar -czf /root/summit-etc.tar.gz /etc
 
 ---
 
-## Question 19 - Shell Script (clientvm) - 4 pts
+## Question 21 - Shell Script (clientvm) - 4 pts
 
 ```bash
 vim /usr/local/bin/summit-scan
@@ -266,7 +243,7 @@ chmod +x /usr/local/bin/summit-scan
 
 ---
 
-## Question 20 - Swap Space (clientvm) - 4 pts
+## Question 22 - Swap Space (clientvm) - 4 pts
 
 ```bash
 fdisk /dev/sdb
@@ -281,45 +258,12 @@ UUID=<uuid> swap swap defaults 0 0
 
 ---
 
-## Question 21 - Create And Mount LV (clientvm) - 4 pts
-
-```bash
-fdisk /dev/sdc
-# create one Linux LVM partition that uses the disk
-partprobe /dev/sdc
-pvcreate /dev/sdc1
-vgcreate -s 16M summitvg /dev/sdc1
-lvcreate -n summitlv -l 40 summitvg
-mkfs.ext4 /dev/summitvg/summitlv
-mkdir -p /mnt/summitlv
-blkid /dev/summitvg/summitlv
-vim /etc/fstab
-UUID=<uuid> /mnt/summitlv ext4 defaults 0 0
-mount -a
-```
-
----
-
-## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
-
-```bash
-runuser -l neriad -c "cd /opt/rhcsa/workspaces/exam-d && podman build -t localhost/summit-web:latest ."
-runuser -l neriad -c "podman run -d --name pdfd -v /opt/ind:/data/input:Z -v /opt/outd:/data/output:Z localhost/summit-web:latest"
-runuser -l neriad -c "mkdir -p ~/.config/systemd/user"
-runuser -l neriad -c "cd ~/.config/systemd/user && podman generate systemd --name pdfd --files --new"
-runuser -l neriad -c "systemctl --user daemon-reload"
-runuser -l neriad -c "systemctl --user enable --now container-pdfd.service"
-loginctl enable-linger neriad
-```
-
----
-
 ## Verification
 ```bash
-getent hosts mirror.summit.lab | grep -Fq '192.168.122.3'
-curl -fsS http://localhost:8085 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8085\b'
-stat -c '%U:%G %a' /projects/summit | grep -qx 'root:summitops 2770' && getfacl -cp /projects/summit | grep -qx 'default:user:auditord:rwx'
-chage -l trainee54 | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l trainee54 | grep -Eq 'Maximum number of days between password change[^0-9]*45$' && chage -l trainee54 | grep -Eq 'Number of days of warning before password expires[^0-9]*10$'
-findmnt -no TARGET,SOURCE,FSTYPE /mnt/summitlv | grep -Eq '^/mnt/summitlv /dev/mapper/summitvg-summitlv ext4$'
-runuser -l neriad -c 'systemctl --user is-enabled container-pdfd.service' | grep -qx enabled && runuser -l neriad -c 'systemctl --user is-active container-pdfd.service' | grep -qx active && loginctl show-user neriad | grep -Eq '^Linger=yes$'
+hostnamectl --static | grep -qx 'clientvm.summit.lab' && grep -Fqx '192.168.122.3 mirror.summit.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
+useradd -D | grep -Eq 'INACTIVE=14' && getent passwd trainee54 | awk -F: '{print $6}' | grep -qx '' && getent passwd cedar540 | awk -F: '{print $3}' | grep -qx '4540' && grep -Eq '^kara .*NOPASSWD: /usr/bin/systemctl restart rsyslog, /usr/bin/systemctl status sshd$' /etc/sudoers.d/kara-systemctl && grep -Eq '^PASS_MAX_DAYS\s+60$' /etc/login.defs && grep -Eq '^PASS_MIN_DAYS\s+2$' /etc/login.defs && grep -Eq '^PASS_WARN_AGE\s+7$' /etc/login.defs && grep -Fqx 'umask 027' /home/miles/.bash_profile && stat -c '%a %U:%G' /srv/summit-audit | grep -qx '750 root:root'
+chage -l miles | grep -Eq 'Last password change.*password must be changed' || chage -l miles | grep -Eq 'Password expires.*password must be changed'
+test -f /root/foragerd-files/opt/exam-d/find/a/file1.txt && grep -q 'alpha' /root/alpha-lines && test -f /root/summit-etc.tar.gz && /usr/local/bin/summit-scan >/dev/null && test -s /root/summit-units.txt
+swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt /mnt/summitlv >/dev/null && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="summitlv" && $2=="summitvg" && $3>=255 && $3<=257{f=1} END{exit !f}'
+ssh admin@servervm sudo grep -Fqx 'Summit maintenance host' /etc/issue && ssh admin@servervm sudo grep -Fqx 'Summit maintenance host' /etc/motd && ssh admin@servervm systemctl get-default | grep -qx multi-user.target && ssh admin@servervm systemctl is-enabled rsyslog | grep -qx enabled && ssh admin@servervm systemctl is-enabled postfix | grep -qx disabled && ssh admin@servervm rpm -q tree >/dev/null && ! ssh admin@servervm rpm -q dos2unix >/dev/null 2>&1
 ```

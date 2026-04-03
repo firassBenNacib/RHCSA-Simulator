@@ -1,7 +1,7 @@
 {
   "id": "lab-19-login-messages",
   "title": "Lab 19: Login Greeting Messages",
-  "description": "Configure user specific and global shell greetings",
+  "description": "Configure both a user-specific and a global login greeting with clearer host distribution.",
   "objective_tags": [
     "users-sudo-ssh"
   ],
@@ -10,46 +10,46 @@
   ],
   "time_limit_minutes": 25,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_servervm": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure a login message for user orien19 that says: Welcome to you, user Orien, you are amazing!",
-        "Configure a global login message so any user receives: Welcome [username], you are logged in! with the actual login name."
+        "On servervm, configure a login message for user orien19 that says: Welcome to you, user Orien, you are amazing!",
+        "Configure a global login message on both clientvm and servervm so any user receives: Welcome [username], you are logged in! with the actual login name."
       ],
       "hints": [
-        "A profile script under /etc/profile.d is acceptable for the global message.",
-        "A user profile file is acceptable for the user specific message."
+        "Per-user shell startup content belongs in the user home.",
+        "A profile.d script is the cleanest way to apply the same greeting globally."
       ],
       "checks": [
-        "id orien19 >/dev/null && grep -Fqx 'echo \"Welcome to you, user Orien, you are amazing!\"' /home/orien19/.bash_profile",
-        "grep -Fqx 'echo \"Welcome ${USER}, you are logged in!\"' /etc/profile.d/lab19-greeting.sh"
+        "test -f /etc/profile.d/lab19-greeting.sh && grep -Fq 'Welcome ${USER}, you are logged in!' /etc/profile.d/lab19-greeting.sh",
+        "ssh admin@servervm test -f /etc/profile.d/lab19-greeting.sh && ssh admin@servervm grep -Fq 'Welcome ${USER}, you are logged in!' /etc/profile.d/lab19-greeting.sh",
+        "ssh admin@servervm test -f /home/orien19/.bash_profile && ssh admin@servervm grep -Fq 'Welcome to you, user Orien, you are amazing!' /home/orien19/.bash_profile"
       ],
       "solution_outline": [
-        "Use persistent configuration only."
+        "Create orien19 on servervm and add the user-specific message.",
+        "Deploy the same profile.d greeting script on both hosts."
       ],
       "task_titles": [
-        "Configure a login message for user orien19 that...",
-        "Configure a global login message so any user..."
+        "Create the per-user greeting on servervm",
+        "Create the global login greeting on both systems"
       ],
       "task_points": [
-        10,
-        10
+        15,
+        15
       ],
       "solution_commands": [
         [
-          "id orien19 || useradd -m orien19",
-          "vim /home/orien19/.bash_profile",
-          "echo \"Welcome to you, user Orien, you are amazing!\""
+          "useradd -m orien19\nprintf 'echo \"Welcome to you, user Orien, you are amazing!\"\n' >> /home/orien19/.bash_profile\nchown orien19:orien19 /home/orien19/.bash_profile"
         ],
         [
-          "vim /etc/profile.d/lab19-greeting.sh",
-          "echo \"Welcome ${USER}, you are logged in!\""
+          "cat > /etc/profile.d/lab19-greeting.sh <<'EOF'\necho \"Welcome ${USER}, you are logged in!\"\nEOF\nchmod 644 /etc/profile.d/lab19-greeting.sh"
         ]
       ]
     }

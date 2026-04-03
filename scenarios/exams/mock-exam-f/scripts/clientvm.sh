@@ -3,6 +3,7 @@ set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /root/.repo-backup-client-exam-f
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-f
+useradd -D -f -1 >/dev/null 2>&1 || true
 hostnamectl set-hostname clientvm
 rhcsa_remove_matching_lines 'db.aurora.lab' /etc/hosts
 connection_name="$(rhcsa_get_lab_connection_name || true)"
@@ -18,9 +19,9 @@ firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address="
 firewall-cmd --reload >/dev/null 2>&1 || true
 semanage port -d -t http_port_t -p tcp 9090 >/dev/null 2>&1 || true
 restorecon -Rv /srv/aurora-web >/dev/null 2>&1 || true
-for u in elio risa nox auditf aurorarem pine560 seekerf opsf solf; do userdel -r "$u" >/dev/null 2>&1 || true; done
+for u in elio risa nox auditf pine560 seekerf opsf solf; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel auroraops >/dev/null 2>&1 || true
-rm -f /etc/sudoers.d/auroraops /etc/sudoers.d/elio-passwd
+rm -f /etc/sudoers.d/elio-firewalld
 rm -rf /data/aurora /root/seekerf-files /aurora/home /usr/local/bin/aurora-report /root/aurora-units.txt /root/comet-lines /root/usr-local-f.tar.gz /opt/exam-f
 python - <<'EOF'
 from pathlib import Path
@@ -50,6 +51,7 @@ printf 'f1
 ' > /opt/exam-f/find/a/file1.txt
 printf 'f2
 ' > /opt/exam-f/find/c/sub/file2.txt
+printf 'aurora payload\n' > /opt/exam-f/aurora-report.txt
 chown -R seekerf:seekerf /opt/exam-f/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'
@@ -73,20 +75,4 @@ umount /mnt/auroralv >/dev/null 2>&1 || true
 lvremove -fy /dev/auroravg/auroralv >/dev/null 2>&1 || true
 vgremove -fy auroravg >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
-podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
-id solf >/dev/null 2>&1 || useradd -m solf
-runuser -l solf -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
-mkdir -p /opt/inf /opt/outf /opt/rhcsa/workspaces/exam-f/site-content
-cat > /opt/rhcsa/workspaces/exam-f/site-content/index.html <<'EOF'
-exam f container
-EOF
-cat > /opt/rhcsa/workspaces/exam-f/Containerfile <<'EOF'
-FROM localhost/rhcsa-httpd-base:latest
-COPY site-content/ /var/www/html/
-EOF
-chown -R solf:solf /opt/rhcsa/workspaces/exam-f /opt/inf /opt/outf
-runuser -l solf -c 'podman rm -f pdff >/dev/null 2>&1 || true'
-runuser -l solf -c 'podman rmi -f localhost/aurora-web:latest >/dev/null 2>&1 || true'
-rm -rf /home/solf/.config/systemd/user
-loginctl disable-linger solf >/dev/null 2>&1 || true
 userdel -r backupf >/dev/null 2>&1 || true

@@ -1,4 +1,4 @@
-# Mock Exam E: HarborGrid Recovery Review
+# Mock Exam E: HarborGrid Services Review
 
 ## Exam Tasks
 ## Overview
@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-e` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, software-scheduling-time, storage-lvm, selinux-and-default-perms |
+| Objectives | networking-and-firewall, software-management, filesystems-and-autofs, users-sudo-ssh, storage-lvm |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at scheduling, tuned, and an existing logical volume resize.
+A 22 task RHCSA style mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.
 
 ### Systems
 | System | Use |
@@ -23,15 +23,7 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at schedulin
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Root Recovery (clientvm) - 5 pts
-
-Recover root access on clientvm from the console.
-
-- **Set the root password to:** cinder9
-
----
-
-## Question 02 - Client Network (clientvm) - 5 pts
+## Question 01 - Client Network (clientvm) - 5 pts
 
 Configure networking on clientvm with the following settings:
 
@@ -39,108 +31,96 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.harbor.lab
+- **Hostname:** clientvm.harborgrid.lab
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
-Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
-**Requirements**
-- The change must persist across reboots.
-- Do not rely on a one-time edit at the GRUB menu.
+Add a persistent hosts entry so registry.harbor.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 04 - Client Repositories (clientvm) - 5 pts
+## Question 03 - Client Repositories (clientvm) - 5 pts
 
-Configure a repository file on clientvm with the following settings:
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+Configure a repository file on clientvm with BaseOS and AppStream served from servervm, enabled, and with gpgcheck disabled.
 
 ---
 
-## Question 05 - Server Repositories (servervm) - 5 pts
+## Question 04 - Server Repositories (servervm) - 5 pts
 
 Configure the same repository file on servervm.
 
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
-
 ---
 
-## Question 06 - Apache SELinux Port (clientvm) - 5 pts
+## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
 
-Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8181.
+Configure Apache on clientvm so it serves /srv/harbor-web on TCP port 8181.
 
 **Requirements**
-- Start the service automatically at boot.
+- Start automatically at boot.
 - Open the port permanently in the firewall.
-- Make the SELinux change required for the new port.
-- Do not alter the existing site content.
+- Apply the SELinux changes needed for the custom document root and port.
 
 ---
 
-## Question 07 - Users And Group (clientvm) - 5 pts
+## Question 06 - Harbor Users (clientvm) - 5 pts
 
-Create group harborops and users lena and ivor with harborops as a supplementary group. Create user hush with /sbin/nologin and no harborops membership.
-
----
-
-## Question 08 - User Passwords (clientvm) - 5 pts
-
-Set the password of lena, ivor, and hush to cinder9.
+Create group harborops and create users lena and ivor with harborops as a supplementary group at creation time. Set the password of both users to cinder9.
 
 ---
 
-## Question 09 - Delegated Sudo (clientvm) - 5 pts
+## Question 07 - Password Aging (clientvm) - 5 pts
 
-Allow members of harborops to run useradd through sudo, and allow lena to restart httpd through sudo without a password prompt.
-
----
-
-## Question 10 - Setgid Directory (clientvm) - 5 pts
-
-Create /srv/harbor with group ownership harborops, permissions 2770, and inherited group ownership for new files.
+Set password aging for ivor to maximum 30 days, minimum 2 days, and warning 7 days.
 
 ---
 
-## Question 11 - Pwquality Policy (clientvm) - 5 pts
+## Question 08 - Default ACL Directory (clientvm) - 5 pts
 
-Configure a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12 and at least 3 character classes.
-
----
-
-## Question 12 - At Job (clientvm) - 5 pts
-
-Create a one-time at job as user ivor that appends the text Harbor queued to /home/ivor/at.log two minutes from now. Ensure the atd service is enabled and running.
+Create /srv/harbor-drop owned by root:harborops with mode 2770 and a default ACL that grants harborops rwx on new files and directories.
 
 ---
 
-## Question 13 - Chrony Client (clientvm) - 4 pts
+## Question 09 - No-Home Remote User (clientvm) - 5 pts
 
-Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
+Create user harborremote without a home directory, with shell /sbin/nologin, and set its password to cinder9.
 
 ---
 
-## Question 14 - Autofs Map (clientvm) - 4 pts
+## Question 10 - Pwquality Policy (clientvm) - 5 pts
 
-Create user harborremote with password cinder9 and configure autofs so that the following mount becomes available on demand:
+Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.
 
-- **Local Path:** /harbor/home/harborremote
-- **Remote Export:** servervm:/exports/harborhome
+---
+
+## Question 11 - At Job (clientvm) - 5 pts
+
+Queue a one-time at job as user ivor that appends the message "HarborGrid tick" to /root/harbor-at.log in 2 minutes.
+
+---
+
+## Question 12 - Direct NFS Mount (clientvm) - 5 pts
+
+- **Persistently mount servervm:** /exports/harborhome on /mnt/harborhome using /etc/fstab.
+
+---
+
+## Question 13 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 14 - Per-User Login Message (clientvm) - 4 pts
+
+Append a login message for ivor to ~/.bash_profile that prints "HarborGrid access" when ivor logs in.
 
 ---
 
 ## Question 15 - Fixed UID User (clientvm) - 4 pts
 
-Create user maple551 with UID 4551 and set its password to cinder9.
+Create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.
 
 ---
 

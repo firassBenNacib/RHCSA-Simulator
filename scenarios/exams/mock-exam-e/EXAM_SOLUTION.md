@@ -1,4 +1,4 @@
-# Mock Exam E: HarborGrid Recovery Review
+# Mock Exam E: HarborGrid Services Review
 
 ## Exam Solution
 ## Overview
@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-e` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, software-scheduling-time, storage-lvm, selinux-and-default-perms |
+| Objectives | networking-and-firewall, software-management, filesystems-and-autofs, users-sudo-ssh, storage-lvm |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at scheduling, tuned, and an existing logical volume resize.
+A 22 task RHCSA style mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.
 
 ### Systems
 | System | Use |
@@ -23,87 +23,83 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds pwquality, at schedulin
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Root Recovery (clientvm) - 5 pts
-
-```bash
-# At the boot menu, edit the selected kernel entry.
-# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
-passwd root
-# enter: cinder9
-touch /.autorelabel
-exec /sbin/init
-```
-
----
-
-## Question 02 - Client Network (clientvm) - 5 pts
+## Question 01 - Client Network (clientvm) - 5 pts
 
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection show "$CONN"
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
-hostnamectl set-hostname clientvm.harbor.lab
+hostnamectl set-hostname clientvm.harborgrid.lab
 ```
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
-grubby --info=ALL | grep -E "^kernel|^args"
+grep -q 'registry.harbor.lab' /etc/hosts || echo '192.168.122.3 registry.harbor.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 04 - Client Repositories (clientvm) - 5 pts
+## Question 03 - Client Repositories (clientvm) - 5 pts
 
 ```bash
-vim /etc/yum.repos.d/harbor.repo
-[BaseOS]
-name=BaseOS
+cat > /etc/yum.repos.d/harborgrid.repo <<'EOF'
+[harbor-baseos]
+name=HarborGrid BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
-[AppStream]
-name=AppStream
+[harbor-appstream]
+name=HarborGrid AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 05 - Server Repositories (servervm) - 5 pts
+## Question 04 - Server Repositories (servervm) - 5 pts
 
 ```bash
 # Run on servervm
-# on servervm
-vim /etc/yum.repos.d/harbor.repo
-[BaseOS]
-name=BaseOS
+cat > /etc/yum.repos.d/harborgrid.repo <<'EOF'
+[harbor-baseos]
+name=HarborGrid BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
-[AppStream]
-name=AppStream
+[harbor-appstream]
+name=HarborGrid AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 06 - Apache SELinux Port (clientvm) - 5 pts
+## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
 
 ```bash
-vim /etc/httpd/conf/httpd.conf
-Listen 8181
-semanage port -a -t http_port_t -p tcp 8181
+dnf install -y httpd
+mkdir -p /srv/harbor-web
+printf 'HarborGrid portal\n' > /srv/harbor-web/index.html
+sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf
+cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'
+<VirtualHost *:8181>
+    DocumentRoot "/srv/harbor-web"
+</VirtualHost>
+EOF
+semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?' || semanage fcontext -m -t httpd_sys_content_t '/srv/harbor-web(/.*)?'
+restorecon -Rv /srv/harbor-web
 firewall-cmd --permanent --add-port=8181/tcp
 firewall-cmd --reload
 systemctl enable --now httpd
@@ -111,98 +107,94 @@ systemctl enable --now httpd
 
 ---
 
-## Question 07 - Users And Group (clientvm) - 5 pts
+## Question 06 - Harbor Users (clientvm) - 5 pts
 
 ```bash
 groupadd harborops
-useradd -m lena
-useradd -m ivor
-useradd -m -s /sbin/nologin hush
-usermod -aG harborops lena
-usermod -aG harborops ivor
+useradd -G harborops lena
+useradd -G harborops ivor
+echo cinder9 | passwd --stdin lena
+echo cinder9 | passwd --stdin ivor
 ```
 
 ---
 
-## Question 08 - User Passwords (clientvm) - 5 pts
+## Question 07 - Password Aging (clientvm) - 5 pts
 
 ```bash
-passwd lena
-# enter: cinder9
-passwd ivor
-# enter: cinder9
-passwd hush
-# enter: cinder9
+chage -M 30 -m 2 -W 7 ivor
 ```
 
 ---
 
-## Question 09 - Delegated Sudo (clientvm) - 5 pts
+## Question 08 - Default ACL Directory (clientvm) - 5 pts
 
 ```bash
-visudo -f /etc/sudoers.d/harborops
-%harborops ALL=(root) /usr/sbin/useradd
-visudo -f /etc/sudoers.d/lena-httpd
-lena ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
+install -d -m 2770 -o root -g harborops /srv/harbor-drop
+setfacl -d -m g:harborops:rwx /srv/harbor-drop
 ```
 
 ---
 
-## Question 10 - Setgid Directory (clientvm) - 5 pts
+## Question 09 - No-Home Remote User (clientvm) - 5 pts
 
 ```bash
-mkdir -p /srv/harbor
-chown root:harborops /srv/harbor
-chmod 2770 /srv/harbor
+useradd -M -s /sbin/nologin harborremote
+echo cinder9 | passwd --stdin harborremote
 ```
 
 ---
 
-## Question 11 - Pwquality Policy (clientvm) - 5 pts
+## Question 10 - Pwquality Policy (clientvm) - 5 pts
 
 ```bash
 mkdir -p /etc/security/pwquality.conf.d
-vim /etc/security/pwquality.conf.d/exam-e.conf
+cat > /etc/security/pwquality.conf.d/harborgrid.conf <<'EOF'
 minlen = 12
 minclass = 3
+EOF
 ```
 
 ---
 
-## Question 12 - At Job (clientvm) - 5 pts
+## Question 11 - At Job (clientvm) - 5 pts
 
 ```bash
+runuser -l ivor -c 'echo "echo HarborGrid tick >> /root/harbor-at.log" | at now + 2 minutes'
 systemctl enable --now atd
-runuser -l ivor -c 'cat <<"EOF" | at now + 2 minutes
-echo Harbor queued >> /home/ivor/at.log
-EOF'
-atq
 ```
 
 ---
 
-## Question 13 - Chrony Client (clientvm) - 4 pts
+## Question 12 - Direct NFS Mount (clientvm) - 5 pts
 
 ```bash
-vim /etc/chrony.conf
-server servervm iburst
-systemctl enable --now chronyd
+mkdir -p /mnt/harborhome
+grep -q '/mnt/harborhome' /etc/fstab || echo 'servervm:/exports/harborhome /mnt/harborhome nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
 ```
 
 ---
 
-## Question 14 - Autofs Map (clientvm) - 4 pts
+## Question 13 - Persistent Journal (servervm) - 4 pts
 
 ```bash
-useradd -m harborremote
-passwd harborremote
-# enter: cinder9
-dnf -y install autofs
-vim /etc/auto.master.d/harbor.autofs
-/harbor/home /etc/auto.harbor
-vim /etc/auto.harbor
-harborremote -rw servervm:/exports/harborhome
-systemctl enable --now autofs
+# Run on servervm
+mkdir -p /var/log/journal
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 14 - Per-User Login Message (clientvm) - 4 pts
+
+```bash
+echo 'echo HarborGrid access' >> /home/ivor/.bash_profile
 ```
 
 ---
@@ -210,9 +202,8 @@ systemctl enable --now autofs
 ## Question 15 - Fixed UID User (clientvm) - 4 pts
 
 ```bash
-useradd -u 4551 -m maple551
-passwd maple551
-# enter: cinder9
+useradd -M -u 4551 -s /sbin/nologin maple551
+echo cinder9 | passwd --stdin maple551
 ```
 
 ---
@@ -292,9 +283,10 @@ tuned-adm profile <recommended-profile>
 
 ## Verification
 ```bash
-getent hosts registry.harbor.lab | grep -Fq '192.168.122.3'
-grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d
-atq | grep -q ivor
-lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewe" && $2=="reviewvge" && $3>=359 && $3<=361{f=1} END{exit !f}' && findmnt -no TARGET /mnt/reviewe | grep -qx /mnt/reviewe
-rec="$(tuned-adm recommended | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
+hostnamectl --static | grep -qx 'clientvm.harborgrid.lab' && grep -Fqx '192.168.122.3 registry.harbor.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
+curl -fsS http://localhost:8181 | grep -Fq 'HarborGrid portal' && findmnt -no TARGET,SOURCE /mnt/harborhome | grep -Eq '^/mnt/harborhome servervm:/exports/harborhome$'
+getent group harborops >/dev/null && id -nG lena | tr ' ' '\n' | grep -qx harborops && id -nG ivor | tr ' ' '\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^minlen\s*=\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\s*=\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo HarborGrid access' /home/ivor/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal
+getent passwd maple551 | awk -F: '{print $3":"$6":"$7}' | grep -qx '4551::/sbin/nologin' && test -f /root/scoutte-files/opt/exam-e/find/a/file1.txt && grep -q 'beacon' /root/beacon-lines && test -f /root/var-tmp-harbor.tar.bz2 && /usr/local/bin/harbor-check >/dev/null && test -s /root/harbor-services.txt
+swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewe" && $2=="reviewvge" && $3>=359 && $3<=361{f=1} END{exit !f}'
+rec="$(tuned-adm recommend | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
 ```

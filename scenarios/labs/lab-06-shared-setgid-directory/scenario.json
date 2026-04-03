@@ -1,9 +1,10 @@
 {
   "id": "lab-06-shared-setgid-directory",
   "title": "Lab 06: Shared Setgid Directory",
-  "description": "Create a collaborative directory that preserves group ownership",
+  "description": "Build a collaborative directory that uses both setgid and sticky semantics.",
   "objective_tags": [
-    "filesystems-and-autofs"
+    "filesystems-and-autofs",
+    "selinux-and-default-perms"
   ],
   "supported_modes": [
     "lab"
@@ -19,24 +20,28 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /shared/analysts with group ownership of analystsx and allow access only to root and members of analystsx.",
-        "Set the directory so new files inherit the analystsx group automatically.",
+        "Create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.",
+        "Configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it.",
         "Verify the final directory permissions."
       ],
       "hints": [
-        "The group analystsx already exists for this lab.",
-        "The directory must keep the setgid bit."
+        "A collaborative drop directory often needs both setgid and sticky semantics.",
+        "Use a single chmod invocation to express the final mode cleanly."
       ],
       "checks": [
-        "stat -c '%A %a %G' /shared/analysts | grep -qx 'drwxrws--- 2770 analystsx'"
+        "getent group analystsx >/dev/null && stat -c '%U:%G %a' /shared/analysts | grep -qx 'root:analystsx 3770'",
+        "findmnt -n /shared >/dev/null 2>&1 || test -d /shared",
+        "stat -c %A /shared/analysts | grep -qx 'drwxrws--T'"
       ],
       "solution_outline": [
-        "Use persistent configuration only."
+        "Create the group and directory tree.",
+        "Apply the final ownership and mode 3770.",
+        "Verify the directory mode with stat or ls -ld."
       ],
       "task_titles": [
-        "Create /shared/analysts with group ownership of...",
-        "Set the directory so new files inherit the...",
-        "Verify the final directory permissions"
+        "Create the shared analysts directory",
+        "Enable setgid and sticky behavior on the directory",
+        "Verify the final permission string"
       ],
       "task_points": [
         10,
@@ -45,16 +50,13 @@
       ],
       "solution_commands": [
         [
-          "mkdir -p /shared/analysts",
-          "chgrp analystsx /shared/analysts",
-          "chmod 2770 /shared/analysts"
+          "groupadd -f analystsx\ninstall -d -o root -g analystsx /shared/analysts"
         ],
         [
-          "touch /shared/analysts/probe.txt",
-          "ls -l /shared/analysts/probe.txt"
+          "chmod 3770 /shared/analysts"
         ],
         [
-          "ls -ld /shared/analysts"
+          "stat -c %A /shared/analysts"
         ]
       ]
     }

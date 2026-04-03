@@ -1,12 +1,13 @@
 {
   "id": "mock-exam-g",
   "title": "Mock Exam G: DeltaForge Recovery Review",
-  "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, direct NFS mounting, secure copy, and process scheduling work.",
+  "description": "A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.",
   "objective_tags": [
     "boot-and-recovery",
-    "networking-and-firewall",
-    "processes-logs-tuning",
-    "storage-lvm"
+    "filesystems-and-autofs",
+    "users-sudo-ssh",
+    "storage-lvm",
+    "containers"
   ],
   "supported_modes": [
     "exam"
@@ -24,19 +25,19 @@
     "exam": {
       "tasks": [
         "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
-        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.46\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.deltaforge.lab",
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time edit at the GRUB menu.",
-        "On clientvm and servervm, configure a repository file with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
-        "Configure the Apache HTTP server on clientvm so that it serves content from /srv/delta-web on TCP port 8086.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Configure the SELinux file context and SELinux port label required for the new location and port.",
-        "Create group deltaops and users gwen and pavel with deltaops as a supplementary group. Create user sable with /sbin/nologin and no deltaops membership.",
-        "Set the password of gwen, pavel, and sable to cinder9.",
-        "Allow members of deltaops to run useradd through sudo, and allow gwen to run passwd for other users without a sudo password prompt.",
-        "Create user auditg with password cinder9. Then create /projects/delta with group ownership deltaops, mode 2770, and a default ACL that gives auditg read write execute access to new content.",
-        "Configure user pavel so that new regular files are created with mode 0640 and new directories are created with mode 0750.",
-        "Create a one-time at job as user pavel that appends the text Delta queued to /home/pavel/at-g.log two minutes from now. Ensure the atd service is enabled and running.",
-        "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.39\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.deltaforge.lab",
+        "Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
+        "Add a persistent hosts entry so vault.deltaforge.lab resolves to 192.168.122.3.",
         "Mount the server export servervm:/exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.",
-        "Create user copyg on both systems with password cinder9. Then configure key based SSH access for copyg from clientvm to servervm and copy /home/copyg/payload.txt to /home/copyg/inbox/ on servervm with scp.",
+        "Create group deltaops and create user pavel with deltaops as a supplementary group. Set the password of pavel to cinder9.",
+        "Create /projects/delta-drop owned by root:deltaops with mode 3770 so group ownership is inherited and only file owners can delete their own files.",
+        "Create user auditg without a home directory and with login shell /sbin/nologin.",
+        "Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.",
+        "Set a personal umask of 027 for pavel.",
+        "Create user copyg on both systems with password cinder9.",
+        "As copyg on clientvm, generate an ED25519 SSH key pair with no passphrase, install it on servervm, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on servervm.",
+        "Queue a one-time at job as user pavel that appends the message \"DeltaForge tick\" to /root/delta-at.log in 2 minutes.",
+        "Append a login message for pavel to ~/.bash_profile that prints \"DeltaForge access\" when pavel logs in.",
         "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.",
         "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.",
         "Create /root/etc-g.tar.bz2 containing /etc.",
@@ -50,17 +51,17 @@
         "Root Recovery",
         "Client Network",
         "Bootloader Kernel Argument",
-        "Repositories On Both Systems",
-        "Apache Custom Docroot",
-        "Users And Group",
-        "User Passwords",
-        "Delegated Sudo",
-        "Shared Directory With Default ACL",
-        "User Umask",
-        "At Job",
-        "Chrony Client",
+        "Host Entry",
         "Direct NFS Mount",
+        "Ops User And Group",
+        "Sticky Shared Directory",
+        "No-Home Audit User",
+        "Password Aging",
+        "User Umask",
+        "Copy User On Both Systems",
         "SSH Key And Secure Copy",
+        "At Job",
+        "Per-User Login Message",
         "Find And Copy",
         "Grep Filter",
         "Archive",
@@ -105,130 +106,58 @@
         ],
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.46/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.39/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"$CONN\"",
           "nmcli connection up \"$CONN\"",
           "hostnamectl set-hostname clientvm.deltaforge.lab"
         ],
         [
-          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
-          "grubby --info=ALL | grep -E \"^kernel|^args\""
+          "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\""
         ],
         [
-          "# On clientvm",
-          "vim /etc/yum.repos.d/delta.repo",
-          "[delta-baseos]",
-          "name=Delta BaseOS",
-          "baseurl=http://servervm/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[delta-appstream]",
-          "name=Delta AppStream",
-          "baseurl=http://servervm/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          ":wq",
-          "dnf clean all",
-          "# On servervm",
-          "vim /etc/yum.repos.d/delta.repo",
-          "[delta-baseos]",
-          "name=Delta BaseOS",
-          "baseurl=http://servervm/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[delta-appstream]",
-          "name=Delta AppStream",
-          "baseurl=http://servervm/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          ":wq",
-          "dnf clean all"
-        ],
-        [
-          "vim /etc/httpd/conf.d/delta.conf",
-          "Listen 8086",
-          "<VirtualHost *:8086>",
-          "DocumentRoot \"/srv/delta-web\"",
-          "<Directory \"/srv/delta-web\">",
-          "Require all granted",
-          "</Directory>",
-          "</VirtualHost>",
-          ":wq",
-          "semanage fcontext -a -t httpd_sys_content_t \"/srv/delta-web(/.*)?\"",
-          "restorecon -Rv /srv/delta-web",
-          "semanage port -a -t http_port_t -p tcp 8086",
-          "firewall-cmd --permanent --add-port=8086/tcp",
-          "firewall-cmd --reload",
-          "systemctl enable --now httpd"
-        ],
-        [
-          "groupadd deltaops",
-          "useradd -m gwen",
-          "useradd -m pavel",
-          "useradd -m -s /sbin/nologin sable",
-          "usermod -aG deltaops gwen",
-          "usermod -aG deltaops pavel"
-        ],
-        [
-          "passwd gwen",
-          "# enter: cinder9",
-          "passwd pavel",
-          "# enter: cinder9",
-          "passwd sable",
-          "# enter: cinder9"
-        ],
-        [
-          "visudo -f /etc/sudoers.d/deltaops",
-          "%deltaops ALL=(ALL) /usr/sbin/useradd",
-          ":wq",
-          "visudo -f /etc/sudoers.d/gwen-passwd",
-          "gwen ALL=(ALL) NOPASSWD: /usr/bin/passwd",
-          ":wq"
-        ],
-        [
-          "useradd -m auditg",
-          "passwd auditg",
-          "# enter: cinder9",
-          "mkdir -p /projects/delta",
-          "chgrp deltaops /projects/delta",
-          "chmod 2770 /projects/delta",
-          "setfacl -m u:auditg:rwx /projects/delta",
-          "setfacl -m d:u:auditg:rwx /projects/delta"
-        ],
-        [
-          "vim /home/pavel/.bashrc",
-          "umask 027",
-          ":wq"
-        ],
-        [
-          "systemctl enable --now atd",
-          "runuser -l pavel -c 'cat <<\"EOF\" | at now + 2 minutes\necho Delta queued >> /home/pavel/at-g.log\nEOF'",
-          "atq"
-        ],
-        [
-          "vim /etc/chrony.conf",
-          "# Comment any existing pool or server lines and add:",
-          "server servervm iburst",
-          ":wq",
-          "systemctl enable --now chronyd"
+          "grep -q 'vault.deltaforge.lab' /etc/hosts || echo '192.168.122.3 vault.deltaforge.lab' >> /etc/hosts"
         ],
         [
           "mkdir -p /mnt/delta-home",
-          "vim /etc/fstab",
-          "servervm:/exports/delta-home /mnt/delta-home nfs defaults 0 0",
-          ":wq",
+          "grep -q '/mnt/delta-home' /etc/fstab || echo 'servervm:/exports/delta-home /mnt/delta-home nfs defaults,_netdev 0 0' >> /etc/fstab",
           "mount -a"
         ],
         [
-          "# On both systems",
-          "useradd -m copyg",
-          "passwd copyg",
-          "# enter: cinder9",
-          "runuser -l copyg -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\"",
-          "runuser -l copyg -c \"ssh-copy-id -o StrictHostKeyChecking=no copyg@192.168.122.3\"",
-          "runuser -l copyg -c \"scp -o StrictHostKeyChecking=no /home/copyg/payload.txt copyg@192.168.122.3:/home/copyg/inbox/\""
+          "groupadd deltaops",
+          "useradd -G deltaops pavel",
+          "echo cinder9 | passwd --stdin pavel"
+        ],
+        [
+          "install -d -m 3770 -o root -g deltaops /projects/delta-drop"
+        ],
+        [
+          "useradd -M -s /sbin/nologin auditg"
+        ],
+        [
+          "chage -M 45 -m 5 -W 7 pavel"
+        ],
+        [
+          "echo 'umask 027' >> /home/pavel/.bash_profile"
+        ],
+        [
+          "useradd copyg",
+          "echo cinder9 | passwd --stdin copyg",
+          "# Run on servervm",
+          "useradd copyg",
+          "echo cinder9 | passwd --stdin copyg",
+          "install -d -m 0755 -o copyg -g copyg /home/copyg/inbox"
+        ],
+        [
+          "runuser -l copyg -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'",
+          "runuser -l copyg -c 'ssh-copy-id copyg@servervm'",
+          "runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copyg/inbox/payload.txt'"
+        ],
+        [
+          "runuser -l pavel -c 'echo \"echo DeltaForge tick >> /root/delta-at.log\" | at now + 2 minutes'",
+          "systemctl enable --now atd"
+        ],
+        [
+          "echo 'echo DeltaForge access' >> /home/pavel/.bash_profile"
         ],
         [
           "mkdir -p /root/trackerg-files",
@@ -304,12 +233,12 @@
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.deltaforge.lab'",
-        "grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
-        "curl -fsS http://localhost:8086 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8086\\b'",
-        "atq | grep -q pavel",
-        "findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$'",
-        "runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'"
+        "hostnamectl --static | grep -qx 'clientvm.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
+        "mount | grep -Eq 'servervm:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
+        "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo DeltaForge access' /home/pavel/.bash_profile && atq | grep -q pavel",
+        "runuser -l copyg -c 'ssh -o BatchMode=yes copyg@servervm true' && ssh admin@servervm test -f /home/copyg/inbox/payload.txt",
+        "test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p \"$(cat /home/workerg/cpu.pid)\" >/dev/null 2>&1 && ps -o ni= -p \"$(cat /home/workerg/sleep.pid)\" | tr -d ' ' | grep -qx '10'",
+        "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'"
       ]
     }
   }

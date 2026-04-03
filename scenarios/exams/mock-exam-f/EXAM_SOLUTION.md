@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-f` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, storage-lvm, users-sudo-ssh, containers |
+| Objectives | networking-and-firewall, users-sudo-ssh, processes-logs-tuning, storage-lvm |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a restrictive rich rule, an alternate umask, and another create mount container build workflow.
+A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.
 
 ### Systems
 | System | Use |
@@ -27,7 +27,6 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a
 
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection show "$CONN"
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
@@ -36,194 +35,150 @@ hostnamectl set-hostname clientvm.aurora.lab
 
 ---
 
-## Question 02 - Static Host Entry (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 db.aurora.lab
+grep -q 'db.aurora.lab' /etc/hosts || echo '192.168.122.3 db.aurora.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 03 - Client Repositories (clientvm) - 5 pts
-
-```bash
-vim /etc/yum.repos.d/aurora.repo
-[BaseOS]
-name=BaseOS
-baseurl=http://servervm/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[AppStream]
-name=AppStream
-baseurl=http://servervm/repo/AppStream/
-enabled=1
-gpgcheck=0
-```
-
----
-
-## Question 04 - Server Repositories (servervm) - 5 pts
+## Question 03 - Chrony Server (servervm) - 5 pts
 
 ```bash
 # Run on servervm
-# on servervm
-vim /etc/yum.repos.d/aurora.repo
-[BaseOS]
-name=BaseOS
-baseurl=http://servervm/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[AppStream]
-name=AppStream
-baseurl=http://servervm/repo/AppStream/
-enabled=1
-gpgcheck=0
-```
-
----
-
-## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
-
-```bash
-vim /etc/httpd/conf.d/aurora.conf
-<VirtualHost *:9090>
-    DocumentRoot /srv/aurora-web
-    <Directory /srv/aurora-web>
-        Require all granted
-    </Directory>
-</VirtualHost>
-semanage fcontext -a -t httpd_sys_content_t "/srv/aurora-web(/.*)?"
-restorecon -Rv /srv/aurora-web
-semanage port -a -t http_port_t -p tcp 9090
-firewall-cmd --permanent --add-port=9090/tcp
-firewall-cmd --reload
-systemctl enable --now httpd
-```
-
----
-
-## Question 06 - Users And Group (clientvm) - 5 pts
-
-```bash
-groupadd auroraops
-useradd -m elio
-useradd -m risa
-useradd -m -s /sbin/nologin nox
-usermod -aG auroraops elio
-usermod -aG auroraops risa
-```
-
----
-
-## Question 07 - User Passwords (clientvm) - 5 pts
-
-```bash
-passwd elio
-# enter: cinder9
-passwd risa
-# enter: cinder9
-passwd nox
-# enter: cinder9
-```
-
----
-
-## Question 08 - Delegated Sudo (clientvm) - 5 pts
-
-```bash
-visudo -f /etc/sudoers.d/auroraops
-%auroraops ALL=(root) /usr/sbin/useradd
-visudo -f /etc/sudoers.d/elio-passwd
-elio ALL=(root) NOPASSWD: /usr/bin/passwd
-```
-
----
-
-## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
-
-```bash
-useradd -m auditf
-passwd auditf
-# enter: cinder9
-mkdir -p /data/aurora
-chown root:auroraops /data/aurora
-chmod 2770 /data/aurora
-setfacl -m d:u:auditf:rwx /data/aurora
-```
-
----
-
-## Question 10 - User Umask (clientvm) - 5 pts
-
-```bash
-vim /home/risa/.bashrc
-umask 077
-chown risa:risa /home/risa/.bashrc
-```
-
----
-
-## Question 11 - SSH Key Authentication (clientvm + servervm) - 5 pts
-
-```bash
-useradd -m opsf
-passwd opsf
-# enter: cinder9
-# on servervm
-useradd -m backupf
-passwd backupf
-# enter: cinder9
-runuser -l opsf -c "ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa"
-runuser -l opsf -c "ssh-copy-id backupf@servervm"
-```
-
----
-
-## Question 12 - Firewalld Rich Rule (clientvm) - 5 pts
-
-```bash
-firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
-firewall-cmd --reload
-firewall-cmd --list-rich-rules
-```
-
----
-
-## Question 13 - Chrony Client (clientvm) - 4 pts
-
-```bash
-vim /etc/chrony.conf
-server servervm iburst
+cat > /etc/chrony.conf <<'EOF'
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+allow 192.168.122.0/24
+local stratum 10
+EOF
 systemctl enable --now chronyd
 ```
 
 ---
 
-## Question 14 - Autofs Map (clientvm) - 4 pts
+## Question 04 - Chrony Client (clientvm) - 5 pts
 
 ```bash
-useradd -m aurorarem
-passwd aurorarem
-# enter: cinder9
-dnf -y install autofs
-vim /etc/auto.master.d/aurora.autofs
-/aurora/home /etc/auto.aurora
-vim /etc/auto.aurora
-aurorarem -rw servervm:/exports/aurorahome
-systemctl enable --now autofs
+cat > /etc/chrony.conf <<'EOF'
+server servervm iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+EOF
+systemctl enable --now chronyd
 ```
 
 ---
 
-## Question 15 - Fixed UID User (clientvm) - 4 pts
+## Question 05 - SSH Port (servervm) - 5 pts
 
 ```bash
-useradd -u 4560 -m pine560
-passwd pine560
-# enter: cinder9
+# Run on servervm
+python3 - <<'EOF'
+from pathlib import Path
+import re
+p = Path('/etc/ssh/sshd_config')
+text = p.read_text()
+for key, val in [('Port', '2222'), ('PasswordAuthentication', 'yes'), ('PubkeyAuthentication', 'yes')]:
+    if re.search(rf'^\s*{key}\s+', text, flags=re.M):
+        text = re.sub(rf'^\s*{key}\s+.*$', f'{key} {val}', text, flags=re.M)
+    else:
+        text += f'\n{key} {val}\n'
+p.write_text(text)
+EOF
+systemctl restart sshd
+```
+
+---
+
+## Question 06 - Rich Rule (servervm) - 5 pts
+
+```bash
+# Run on servervm
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
+firewall-cmd --reload
+```
+
+---
+
+## Question 07 - Useradd Defaults (clientvm) - 5 pts
+
+```bash
+useradd -D -f 14
+```
+
+---
+
+## Question 08 - No-Home UID User (clientvm) - 5 pts
+
+```bash
+useradd -M -u 4560 -s /sbin/nologin pine560
+echo cinder9 | passwd --stdin pine560
+```
+
+---
+
+## Question 09 - Admin User (clientvm) - 5 pts
+
+```bash
+useradd elio
+echo cinder9 | passwd --stdin elio
+```
+
+---
+
+## Question 10 - Delegated Sudo (clientvm) - 5 pts
+
+```bash
+visudo -f /etc/sudoers.d/elio-firewalld
+elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
+```
+
+---
+
+## Question 11 - SSH Key Generation (clientvm) - 5 pts
+
+```bash
+runuser -l elio -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
+```
+
+---
+
+## Question 12 - Remote Account (servervm) - 5 pts
+
+```bash
+# Run on servervm
+useradd backupf
+echo cinder9 | passwd --stdin backupf
+install -d -m 0755 -o backupf -g backupf /home/backupf/inbox
+```
+
+---
+
+## Question 13 - Passwordless SSH (servervm) - 4 pts
+
+```bash
+runuser -l elio -c 'ssh-copy-id -p 2222 backupf@servervm'
+runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true'
+```
+
+---
+
+## Question 14 - Rsync Transfer (servervm) - 4 pts
+
+```bash
+runuser -l elio -c 'rsync -e "ssh -p 2222" /opt/exam-f/aurora-report.txt backupf@servervm:/home/backupf/inbox/report.txt'
+```
+
+---
+
+## Question 15 - User Umask (clientvm) - 4 pts
+
+```bash
+echo 'umask 027' >> /home/elio/.bash_profile
 ```
 
 ---
@@ -302,25 +257,20 @@ mount -a
 
 ---
 
-## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
+## Question 22 - Recommended Tuned Profile (clientvm) - 4 pts
 
 ```bash
-runuser -l solf -c "cd /opt/rhcsa/workspaces/exam-f && podman build -t localhost/aurora-web:latest ."
-runuser -l solf -c "podman run -d --name pdff -v /opt/inf:/data/input:Z -v /opt/outf:/data/output:Z localhost/aurora-web:latest"
-runuser -l solf -c "mkdir -p ~/.config/systemd/user"
-runuser -l solf -c "cd ~/.config/systemd/user && podman generate systemd --name pdff --files --new"
-runuser -l solf -c "systemctl --user daemon-reload"
-runuser -l solf -c "systemctl --user enable --now container-pdff.service"
-loginctl enable-linger solf
+tuned-adm profile "$(tuned-adm recommend)"
 ```
 
 ---
 
 ## Verification
 ```bash
-getent hosts db.aurora.lab | grep -Fq '192.168.122.3'
-firewall-cmd --list-rich-rules | grep -Fq 'source address="192.168.122.0/24"' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
-runuser -l opsf -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes backupf@servervm true'
-findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$'
-runuser -l solf -c 'systemctl --user is-enabled container-pdff.service' | grep -qx enabled && runuser -l solf -c 'systemctl --user is-active container-pdff.service' | grep -qx active && loginctl show-user solf | grep -Eq '^Linger=yes$'
+hostnamectl --static | grep -qx 'clientvm.aurora.lab' && grep -Fqx '192.168.122.3 db.aurora.lab' /etc/hosts
+grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
+useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3":"$6":"$7}' | grep -qx '4560::/sbin/nologin' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile
+runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true' && ssh admin@servervm test -f /home/backupf/inbox/report.txt
+test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt
+swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec="$(tuned-adm recommend | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
 ```

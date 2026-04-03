@@ -9,7 +9,7 @@
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 
-Adjust password aging for an existing user account with chage.
+Apply per-user password aging settings without adding extra account noise.
 
 ### Systems
 | System | Use |
@@ -21,26 +21,29 @@ Adjust password aging for an existing user account with chage.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create user cycle47 with password cinder9 if it (clientvm) - 10 pts
+## Task 01 - Create cycle47 (clientvm) - 10 pts
 
 Create user cycle47 with password cinder9 if it does not already exist.
 
 ---
 
-## Task 02 - Configure cycle47 with a maximum password age of 30 (clientvm) - 10 pts
+## Task 02 - Apply the requested password aging values (clientvm) - 10 pts
 
 Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.
 
 ---
 
-## Task 03 - Force cycle47 to change the password at the next login (clientvm) - 10 pts
+## Task 03 - Expire the password for the next login (clientvm) - 10 pts
 
 Force cycle47 to change the password at the next login.
 
 ## Hints
-- Use chage, not manual edits to /etc/shadow.
+- This lab is about chage, not about home-directory behavior.
+- Use chage -d 0 to force a change at next login.
 
 ## Validation Commands
 ```bash
-chage -l cycle47 | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l cycle47 | grep -Eq 'Maximum number of days between password change[^0-9]*30$' && chage -l cycle47 | grep -Eq 'Number of days of warning before password expires[^0-9]*7$' && chage -l cycle47 | grep -Eq 'Last password change[^:]*: password must be changed'
+getent passwd cycle47 >/dev/null
+chage -l cycle47 | grep -Fq 'Maximum number of days between password change			: 30' && chage -l cycle47 | grep -Fq 'Minimum number of days between password change			: 2' && chage -l cycle47 | grep -Fq 'Number of days of warning before password expires		: 7'
+chage -l cycle47 | grep -Fq 'Last password change				: password must be changed'
 ```

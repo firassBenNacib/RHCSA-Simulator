@@ -9,28 +9,35 @@
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |
 
-Configure clientvm to synchronize time from servervm.
+Configure servervm as a simple chrony source and point clientvm at it.
 
 ### Systems
 | System | Use |
 |---|---|
 | clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure chrony on clientvm so it synchronizes (clientvm) - 10 pts
+## Task 01 - Configure servervm as the chrony source (servervm) - 15 pts
 
-Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
+On servervm, configure chronyd so it serves time to the 192.168.122.0/24 lab network and starts automatically at boot.
+
+---
+
+## Task 02 - Configure clientvm to use only servervm for time (clientvm) - 15 pts
+
+On clientvm, configure chronyd so it synchronizes only with servervm and starts automatically at boot.
 
 ## Hints
-- Remove any other server or pool lines.
-- Use iburst on the server line.
+- servervm needs an allow rule before it can serve the lab subnet.
+- clientvm should use a single server line for this lab.
 
 ## Validation Commands
 ```bash
-awk '$1 ~ /^(server|pool)$/ { if ($2 != "servervm") bad=1; if ($1=="server" && $2=="servervm") good=1 } END { exit !(good && !bad) }' /etc/chrony.conf
-systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active
+systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^server servervm iburst$' /etc/chrony.d /etc/chrony.conf
+ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Rqs '^allow 192.168.122.0/24$' /etc/chrony.d /etc/chrony.conf
 ```

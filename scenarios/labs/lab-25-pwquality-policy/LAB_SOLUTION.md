@@ -9,7 +9,7 @@
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |
 
-Configure a persistent local password quality policy without editing PAM service files.
+Use a pwquality drop-in to enforce a stronger local password policy.
 
 ### Systems
 | System | Use |
@@ -21,26 +21,28 @@ Configure a persistent local password quality policy without editing PAM service
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create a persistent password quality policy in (clientvm) - 10 pts
+## Task 01 - Create the pwquality drop-in (clientvm) - 15 pts
 
 ```bash
-mkdir -p /etc/security/pwquality.conf.d
-vim /etc/security/pwquality.conf.d/lab25.conf
+cat > /etc/security/pwquality.conf.d/lab25.conf <<'EOF'
 minlen = 12
 minclass = 3
+maxrepeat = 2
+EOF
 ```
 
 ---
 
-## Task 02 - Do not edit any PAM service file for this task (clientvm) - 10 pts
+## Task 02 - Leave PAM service files unchanged (clientvm) - 15 pts
 
 ```bash
-grep -R "minlen\|minclass" /etc/security/pwquality.conf.d
+true
 ```
 
 ---
 
 ## Verification
 ```bash
-grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d
+grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf
+! grep -Rqs 'lab25' /etc/pam.d
 ```

@@ -9,7 +9,7 @@
 | Time limit | 30 minutes |
 | Objectives | filesystems-and-autofs, selinux-and-default-perms |
 
-Create a collaborative directory that combines setgid permissions with a default ACL.
+Use a default ACL for a named user without creating an unnecessary home directory.
 
 ### Systems
 | System | Use |
@@ -21,26 +21,29 @@ Create a collaborative directory that combines setgid permissions with a default
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create the group collab26 and the user probe26. Set (clientvm) - 10 pts
+## Task 01 - Create the collab26 group and probe26 user (clientvm) - 10 pts
 
-Create the group collab26 and the user probe26. Set the password of probe26 to cinder9.
+Create the group collab26 and the user probe26 without a home directory. Set the password of probe26 to cinder9.
 
 ---
 
-## Task 02 - Create the directory /shared/collab26 with owner (clientvm) - 10 pts
+## Task 02 - Create the shared directory with setgid semantics (clientvm) - 10 pts
 
 Create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.
 
 ---
 
-## Task 03 - Configure a default ACL so that user probe26 (clientvm) - 10 pts
+## Task 03 - Create the default ACL for probe26 (clientvm) - 10 pts
 
 Configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26.
 
 ## Hints
-- Use getfacl to confirm the effective and default entries.
+- probe26 does not need a home directory for this task.
+- Default ACL entries begin with default:.
 
 ## Validation Commands
 ```bash
-stat -c '%U:%G %a' /shared/collab26 | grep -qx 'root:collab26 2770' && getfacl -cp /shared/collab26 | grep -qx 'default:user:probe26:rwx'
+getent group collab26 >/dev/null && getent passwd probe26 >/dev/null && ! test -d /home/probe26
+stat -c '%U:%G %a' /shared/collab26 | grep -qx 'root:collab26 2770'
+getfacl -cp /shared/collab26 | grep -Eq '^default:user:probe26:rwx$'
 ```

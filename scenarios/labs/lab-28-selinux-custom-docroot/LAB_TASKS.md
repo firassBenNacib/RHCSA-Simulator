@@ -9,7 +9,7 @@
 | Time limit | 35 minutes |
 | Objectives | selinux-and-default-perms, networking-and-firewall |
 
-Serve a custom document root on a nonstandard HTTP port while keeping SELinux enforcing.
+Serve an existing custom document root on a non-default port with SELinux enforcing.
 
 ### Systems
 | System | Use |
@@ -21,29 +21,29 @@ Serve a custom document root on a nonstandard HTTP port while keeping SELinux en
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure Apache to serve content from (clientvm) - 10 pts
+## Task 01 - Serve the custom document root on port 8088 (clientvm) - 10 pts
 
-Configure Apache to serve content from /srv/lab28/site on TCP port 8088.
+Configure Apache on clientvm to serve content from /srv/lab28/site on TCP port 8088.
 
 ---
 
-## Task 02 - Keep SELinux enforcing, configure the correct file (clientvm) - 10 pts
+## Task 02 - Apply the required SELinux and firewall changes (clientvm) - 10 pts
 
 Keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.
 
 ---
 
-## Task 03 - Do not edit or remove /srv/lab28/site/index.html (clientvm) - 10 pts
+## Task 03 - Leave the provided content intact (clientvm) - 10 pts
 
 Do not edit or remove /srv/lab28/site/index.html.
 
 ## Hints
-- Create a dedicated configuration file in /etc/httpd/conf.d.
-- Use semanage fcontext and semanage port.
+- This lab needs both a file-context change and a port-label change.
+- The provided index file must stay in place.
 
 ## Validation Commands
 ```bash
-curl -fsS http://localhost:8088 >/dev/null
-semanage port -l | grep -Eq '^http_port_t\b.*\b8088\b' && firewall-cmd --permanent --query-port=8088/tcp && systemctl is-enabled httpd | grep -qx enabled
-matchpathcon /srv/lab28/site/index.html | grep -Eq ':httpd_sys_content_t:' && ls -Zd /srv/lab28/site | grep -Eq ':httpd_sys_content_t:'
+grep -Rqs 'DocumentRoot /srv/lab28/site' /etc/httpd/conf.d && grep -Rqs '^Listen 8088$' /etc/httpd/conf.d
+semanage port -l | grep -Eq '^http_port_t\b.*\b8088\b' && matchpathcon /srv/lab28/site/index.html | grep -Fq httpd_sys_content_t
+systemctl is-enabled httpd | grep -qx enabled && firewall-cmd --list-ports | grep -Eq '(^| )8088/tcp($| )'
 ```

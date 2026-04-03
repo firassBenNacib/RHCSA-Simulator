@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-a` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, networking-and-firewall, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
 
-A 22 task RHCSA style mock exam for RHEL 9 with recovery, repositories, SELinux, storage, and rootless containers.
+A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.
 
 ### Systems
 | System | Use |
@@ -45,11 +45,11 @@ Configure networking on clientvm with the following settings:
 
 ## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
-Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
+Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
 **Requirements**
 - The change must persist across reboots.
-- Do not rely on a one-time edit at the GRUB menu.
+- Do not rely on a one-time GRUB edit.
 
 ---
 
@@ -77,19 +77,19 @@ Configure the same repository file on servervm.
 
 ## Question 06 - Apache SELinux Port (clientvm) - 5 pts
 
-Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8282.
+Configure Apache on clientvm so it serves the existing site on TCP port 8282.
 
 **Requirements**
 - Start the service automatically at boot.
 - Open the port permanently in the firewall.
 - Make the SELinux change required for the new port.
-- Do not move or relabel the existing document root content.
+- Leave the existing document root content in place.
 
 ---
 
 ## Question 07 - Users And Group (clientvm) - 5 pts
 
-Create group sysopsa and users violet and amber with sysopsa as a supplementary group. Create user frost with /sbin/nologin and no sysopsa membership.
+Create group sysopsa and users violet and amber with sysopsa as a supplementary group at creation time. Create user frost without a home directory and with login shell /sbin/nologin.
 
 ---
 
@@ -101,13 +101,13 @@ Set the password of violet, amber, and frost to cinder9.
 
 ## Question 09 - Delegated Sudo (clientvm) - 5 pts
 
-Allow members of sysopsa to run useradd through sudo, and allow violet to run passwd for other users without a sudo password prompt.
+Allow members of sysopsa to run /usr/sbin/useradd through sudo. Allow violet to run /usr/bin/passwd for other users without a sudo password prompt. Use sudoers drop-ins.
 
 ---
 
 ## Question 10 - Setgid Directory (clientvm) - 5 pts
 
-Create /srv/sysopsa with group ownership sysopsa, no access for other users, and automatic group inheritance for new files.
+Create /srv/sysopsa owned by root:sysopsa with mode 2770 so new files inherit the sysopsa group.
 
 ---
 
@@ -117,52 +117,37 @@ Configure a cron job for amber that runs every 2 minutes and logs the message "O
 
 ---
 
-## Question 12 - Chrony Client (clientvm) - 5 pts
+## Question 12 - Host Entry (clientvm) - 5 pts
 
-Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
-
----
-
-## Question 13 - Autofs Map (clientvm) - 4 pts
-
-Create user netopsa with password cinder9 and configure autofs so that the following mount becomes available on demand:
-
-- **Local Path:** /researcha/netopsa
-- **Remote Export:** servervm:/exports/researcha
+Add a persistent hosts entry on clientvm so api.opsedge.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 14 - Fixed UID User (clientvm) - 4 pts
-
-Create user ash420 with UID 4420 and set its password to cinder9.
-
----
-
-## Question 15 - Find And Copy (clientvm) - 4 pts
+## Question 13 - Find And Copy (clientvm) - 4 pts
 
 Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours, then copy them to /root/amber-files while preserving the source directory structure.
 
 ---
 
-## Question 16 - Grep Filter (clientvm) - 4 pts
+## Question 14 - Grep Filter (clientvm) - 4 pts
 
 Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.
 
 ---
 
-## Question 17 - Archive (clientvm) - 4 pts
+## Question 15 - Archive (clientvm) - 4 pts
 
 Create /root/etc-opsa.tar.bz2 containing /etc.
 
 ---
 
-## Question 18 - Service Audit Script (clientvm) - 4 pts
+## Question 16 - Service Audit Script (clientvm) - 4 pts
 
 Create /usr/local/bin/opsa-report as an executable script that writes the status of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
 
 ---
 
-## Question 19 - Swap Space (clientvm) - 4 pts
+## Question 17 - Swap Space (clientvm) - 4 pts
 
 On /dev/sdb, create a 512 MiB swap partition.
 
@@ -172,18 +157,30 @@ On /dev/sdb, create a 512 MiB swap partition.
 
 ---
 
-## Question 20 - Resize Existing LV (clientvm) - 4 pts
+## Question 18 - Resize Existing LV (clientvm) - 4 pts
 
 Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing the existing filesystem data.
 
 ---
 
-## Question 21 - Rootless Container (clientvm) - 4 pts
+## Question 19 - Rootless Container (clientvm) - 4 pts
 
 As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/ina mounted to /data/input and /opt/outa mounted to /data/output.
 
 ---
 
-## Question 22 - Container Autostart (clientvm) - 4 pts
+## Question 20 - Container Autostart (clientvm) - 4 pts
 
 Generate and enable a systemd user service for container pdfa and enable lingering for oriona.
+
+---
+
+## Question 21 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 22 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.

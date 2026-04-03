@@ -3,6 +3,8 @@ set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /root/.repo-backup-server-scripts
 rhcsa_reset_repo_directory /root/.repo-backup-server-scripts
+rm -rf /var/log/journal
+rm -f /etc/systemd/journald.conf.d/persistent.conf
 mkdir -p /exports/researcha
 printf 'exam a research
 ' > /exports/researcha/brief.txt
@@ -12,3 +14,4 @@ cat > /etc/exports.d/exam-a.exports <<'EOF'
 EOF
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
+systemctl restart systemd-journald >/dev/null 2>&1 || true

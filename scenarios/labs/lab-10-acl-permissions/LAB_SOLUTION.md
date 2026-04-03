@@ -24,8 +24,8 @@ Apply fine grained access with POSIX ACLs.
 ## Task 01 - Copy /etc/fstab to /var/tmp/fstab-acl (clientvm) - 10 pts
 
 ```bash
-id natacl || useradd -m natacl
-id haracl || useradd -m haracl
+id natacl || useradd natacl
+id haracl || useradd haracl
 cp /etc/fstab /var/tmp/fstab-acl
 chown root:root /var/tmp/fstab-acl
 chmod 644 /var/tmp/fstab-acl

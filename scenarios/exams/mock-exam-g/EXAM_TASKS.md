@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-g` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, networking-and-firewall, processes-logs-tuning, storage-lvm |
+| Objectives | boot-and-recovery, filesystems-and-autofs, users-sudo-ssh, storage-lvm, containers |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds persistent journals, direct NFS mounting, secure copy, and process scheduling work.
+A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.
 
 ### Systems
 | System | Use |
@@ -35,7 +35,7 @@ Recover root access on clientvm from the console.
 
 Configure networking on clientvm with the following settings:
 
-- **IP Address:** 192.168.122.46
+- **IP Address:** 192.168.122.39
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
@@ -45,87 +45,73 @@ Configure networking on clientvm with the following settings:
 
 ## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
-Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
-**Requirements**
-- The change must persist across reboots.
-- Do not rely on a one-time edit at the GRUB menu.
+Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
 ---
 
-## Question 04 - Repositories On Both Systems (clientvm + servervm) - 5 pts
+## Question 04 - Host Entry (clientvm) - 5 pts
 
-On clientvm and servervm, configure a repository file with the following settings:
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+Add a persistent hosts entry so vault.deltaforge.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
-
-Configure the Apache HTTP server on clientvm so that it serves content from /srv/delta-web on TCP port 8086.
-
-**Requirements**
-- Start the service automatically at boot.
-- Open the port permanently in the firewall.
-- Configure the SELinux file context and SELinux port label required for the new location and port.
-
----
-
-## Question 06 - Users And Group (clientvm) - 5 pts
-
-Create group deltaops and users gwen and pavel with deltaops as a supplementary group. Create user sable with /sbin/nologin and no deltaops membership.
-
----
-
-## Question 07 - User Passwords (clientvm) - 5 pts
-
-Set the password of gwen, pavel, and sable to cinder9.
-
----
-
-## Question 08 - Delegated Sudo (clientvm) - 5 pts
-
-Allow members of deltaops to run useradd through sudo, and allow gwen to run passwd for other users without a sudo password prompt.
-
----
-
-## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
-
-Create user auditg with password cinder9. Then create /projects/delta with group ownership deltaops, mode 2770, and a default ACL that gives auditg read write execute access to new content.
-
----
-
-## Question 10 - User Umask (clientvm) - 5 pts
-
-Configure user pavel so that new regular files are created with mode 0640 and new directories are created with mode 0750.
-
----
-
-## Question 11 - At Job (clientvm) - 5 pts
-
-Create a one-time at job as user pavel that appends the text Delta queued to /home/pavel/at-g.log two minutes from now. Ensure the atd service is enabled and running.
-
----
-
-## Question 12 - Chrony Client (clientvm) - 5 pts
-
-Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
-
----
-
-## Question 13 - Direct NFS Mount (clientvm) - 4 pts
+## Question 05 - Direct NFS Mount (clientvm) - 5 pts
 
 - **Mount the server export servervm:** /exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.
 
 ---
 
-## Question 14 - SSH Key And Secure Copy (servervm) - 4 pts
+## Question 06 - Ops User And Group (clientvm) - 5 pts
 
-Create user copyg on both systems with password cinder9. Then configure key based SSH access for copyg from clientvm to servervm and copy /home/copyg/payload.txt to /home/copyg/inbox/ on servervm with scp.
+Create group deltaops and create user pavel with deltaops as a supplementary group. Set the password of pavel to cinder9.
+
+---
+
+## Question 07 - Sticky Shared Directory (clientvm) - 5 pts
+
+Create /projects/delta-drop owned by root:deltaops with mode 3770 so group ownership is inherited and only file owners can delete their own files.
+
+---
+
+## Question 08 - No-Home Audit User (clientvm) - 5 pts
+
+Create user auditg without a home directory and with login shell /sbin/nologin.
+
+---
+
+## Question 09 - Password Aging (clientvm) - 5 pts
+
+Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.
+
+---
+
+## Question 10 - User Umask (clientvm) - 5 pts
+
+Set a personal umask of 027 for pavel.
+
+---
+
+## Question 11 - Copy User On Both Systems (clientvm) - 5 pts
+
+Create user copyg on both systems with password cinder9.
+
+---
+
+## Question 12 - SSH Key And Secure Copy (clientvm + servervm) - 5 pts
+
+As copyg on clientvm, generate an ED25519 SSH key pair with no passphrase, install it on servervm, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on servervm.
+
+---
+
+## Question 13 - At Job (clientvm) - 4 pts
+
+Queue a one-time at job as user pavel that appends the message "DeltaForge tick" to /root/delta-at.log in 2 minutes.
+
+---
+
+## Question 14 - Per-User Login Message (clientvm) - 4 pts
+
+Append a login message for pavel to ~/.bash_profile that prints "DeltaForge access" when pavel logs in.
 
 ---
 

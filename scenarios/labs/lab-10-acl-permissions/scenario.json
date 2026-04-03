@@ -43,8 +43,8 @@
       ],
       "solution_commands": [
         [
-          "id natacl || useradd -m natacl",
-          "id haracl || useradd -m haracl",
+          "id natacl || useradd natacl",
+          "id haracl || useradd haracl",
           "cp /etc/fstab /var/tmp/fstab-acl",
           "chown root:root /var/tmp/fstab-acl",
           "chmod 644 /var/tmp/fstab-acl"

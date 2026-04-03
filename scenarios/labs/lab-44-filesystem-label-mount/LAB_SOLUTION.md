@@ -9,7 +9,7 @@
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |
 
-Create a filesystem, label it, and mount it persistently by label.
+Create an ext4 filesystem by label and mount it persistently.
 
 ### Systems
 | System | Use |
@@ -21,37 +21,32 @@ Create a filesystem, label it, and mount it persistently by label.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - On /dev/sdb, create a GPT partition of 600 MiB for (clientvm) - 10 pts
+## Task 01 - Create the 600 MiB partition on /dev/sdb (clientvm) - 10 pts
 
 ```bash
-fdisk /dev/sdb
-# g
-# n
-# <Enter>
-# <Enter>
-# +600M
-# w
+printf 'label: gpt
+,600MiB,L
+' | sfdisk /dev/sdb
+partprobe /dev/sdb
 ```
 
 ---
 
-## Task 02 - Format the new partition with the filesystem label (clientvm) - 10 pts
+## Task 02 - Format and mount the filesystem by label (clientvm) - 10 pts
 
 ```bash
 mkfs.ext4 -L DATA44 /dev/sdb1
 mkdir -p /data44
+mount LABEL=DATA44 /data44
 ```
 
 ---
 
-## Task 03 - Configure the mount persistently in /etc/fstab by (clientvm) - 10 pts
+## Task 03 - Persist the LABEL mount in fstab (clientvm) - 10 pts
 
 ```bash
-vim /etc/fstab
-LABEL=DATA44 /data44 ext4 defaults 0 0
-:wq
-mount -a
-findmnt /data44
+printf 'LABEL=DATA44 /data44 ext4 defaults 0 0
+' >> /etc/fstab
 ```
 
 ---
@@ -59,5 +54,6 @@ findmnt /data44
 ## Verification
 ```bash
 blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44
-findmnt -no TARGET,SOURCE /data44 | grep -Eq '^/data44 /dev/sdb1$|^/data44 /dev/mapper/.+$' && grep -Eq '^[^#]*LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4' /etc/fstab
+findmnt -n /data44 | grep -Fq '/data44'
+grep -Eq '^LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4[[:space:]]+defaults[[:space:]]+0[[:space:]]+0$' /etc/fstab
 ```

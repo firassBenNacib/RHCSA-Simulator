@@ -7,9 +7,9 @@
 | Scenario ID | `lab-06-shared-setgid-directory` |
 | Mode | Lab |
 | Time limit | 25 minutes |
-| Objectives | filesystems-and-autofs |
+| Objectives | filesystems-and-autofs, selinux-and-default-perms |
 
-Create a collaborative directory that preserves group ownership.
+Build a collaborative directory that uses both setgid and sticky semantics.
 
 ### Systems
 | System | Use |
@@ -21,34 +21,34 @@ Create a collaborative directory that preserves group ownership.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /shared/analysts with group ownership of (clientvm) - 10 pts
+## Task 01 - Create the shared analysts directory (clientvm) - 10 pts
 
 ```bash
-mkdir -p /shared/analysts
-chgrp analystsx /shared/analysts
-chmod 2770 /shared/analysts
+groupadd -f analystsx
+install -d -o root -g analystsx /shared/analysts
 ```
 
 ---
 
-## Task 02 - Set the directory so new files inherit the (clientvm) - 10 pts
+## Task 02 - Enable setgid and sticky behavior on the directory (clientvm) - 10 pts
 
 ```bash
-touch /shared/analysts/probe.txt
-ls -l /shared/analysts/probe.txt
+chmod 3770 /shared/analysts
 ```
 
 ---
 
-## Task 03 - Verify the final directory permissions (clientvm) - 10 pts
+## Task 03 - Verify the final permission string (clientvm) - 10 pts
 
 ```bash
-ls -ld /shared/analysts
+stat -c %A /shared/analysts
 ```
 
 ---
 
 ## Verification
 ```bash
-stat -c '%A %a %G' /shared/analysts | grep -qx 'drwxrws--- 2770 analystsx'
+getent group analystsx >/dev/null && stat -c '%U:%G %a' /shared/analysts | grep -qx 'root:analystsx 3770'
+findmnt -n /shared >/dev/null 2>&1 || test -d /shared
+stat -c %A /shared/analysts | grep -qx 'drwxrws--T'
 ```

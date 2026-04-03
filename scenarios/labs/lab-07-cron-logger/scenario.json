@@ -43,7 +43,7 @@
       ],
       "solution_commands": [
         [
-          "id ferro || useradd -m ferro",
+          "id ferro || useradd ferro",
           "passwd ferro",
           "# enter: cinder9"
         ],

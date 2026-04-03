@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
-rhcsa_configure_password_recovery disable
-rhcsa_configure_password_recovery enable
 mkdir -p /root/.repo-backup-client-exam-e
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-e
 hostnamectl set-hostname clientvm
@@ -17,15 +15,19 @@ if text:
     text = text.replace('Listen 8181', 'Listen 80')
     p.write_text(text)
 EOF
+rm -f /etc/httpd/conf.d/harborgrid.conf
+rm -rf /srv/harbor-web /srv/harbor-drop
 systemctl disable --now httpd >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-port=8181/tcp >/dev/null 2>&1 || true
 firewall-cmd --reload >/dev/null 2>&1 || true
 semanage port -d -t http_port_t -p tcp 8181 >/dev/null 2>&1 || true
+semanage fcontext -d '/srv/harbor-web(/.*)?' >/dev/null 2>&1 || true
+restorecon -Rv /srv >/dev/null 2>&1 || true
 for u in lena ivor hush harborremote maple551 scoutte; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel harborops >/dev/null 2>&1 || true
-rm -f /etc/sudoers.d/harborops /etc/sudoers.d/lena-httpd
-rm -rf /srv/harbor /root/scoutte-files /harbor/home /usr/local/bin/harbor-check /root/harbor-services.txt /root/beacon-lines /root/var-tmp-harbor.tar.bz2 /opt/exam-e
-rm -f /etc/security/pwquality.conf.d/exam-e.conf
+rm -rf /root/scoutte-files /usr/local/bin/harbor-check /root/harbor-services.txt /root/beacon-lines /root/var-tmp-harbor.tar.bz2 /opt/exam-e /mnt/harborhome
+sed -i '\#/mnt/harborhome#d' /etc/fstab
+rm -f /etc/security/pwquality.conf.d/harborgrid.conf
 while read -r job; do atrm "$job"; done < <(atq | awk '{print $1}')
 systemctl disable --now atd >/dev/null 2>&1 || true
 automount -u >/dev/null 2>&1 || true

@@ -1,7 +1,7 @@
 {
   "id": "lab-44-filesystem-label-mount",
   "title": "Lab 44: Filesystem By Label",
-  "description": "Create a filesystem, label it, and mount it persistently by label",
+  "description": "Create an ext4 filesystem by label and mount it persistently.",
   "objective_tags": [
     "storage-lvm"
   ],
@@ -24,17 +24,23 @@
         "Configure the mount persistently in /etc/fstab by using LABEL=DATA44."
       ],
       "hints": [
-        "Use blkid or lsblk -f to verify the label."
+        "The title already tells you the required persistence method.",
+        "Use LABEL=DATA44, not a device path or UUID."
       ],
       "checks": [
         "blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44",
-        "findmnt -no TARGET,SOURCE /data44 | grep -Eq '^/data44 /dev/sdb1$|^/data44 /dev/mapper/.+$' && grep -Eq '^[^#]*LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4' /etc/fstab"
+        "findmnt -n /data44 | grep -Fq '/data44'",
+        "grep -Eq '^LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4[[:space:]]+defaults[[:space:]]+0[[:space:]]+0$' /etc/fstab"
       ],
-      "solution_outline": [],
+      "solution_outline": [
+        "Partition /dev/sdb with a 600 MiB GPT partition.",
+        "Create an ext4 filesystem labeled DATA44 and mount it.",
+        "Persist the mount in /etc/fstab using LABEL=DATA44."
+      ],
       "task_titles": [
-        "On /dev/sdb, create a GPT partition of 600 MiB for...",
-        "Format the new partition with the filesystem label...",
-        "Configure the mount persistently in /etc/fstab by..."
+        "Create the 600 MiB partition on /dev/sdb",
+        "Format and mount the filesystem by label",
+        "Persist the LABEL mount in fstab"
       ],
       "task_points": [
         10,
@@ -43,24 +49,13 @@
       ],
       "solution_commands": [
         [
-          "fdisk /dev/sdb",
-          "# g",
-          "# n",
-          "# <Enter>",
-          "# <Enter>",
-          "# +600M",
-          "# w"
+          "printf 'label: gpt\n,600MiB,L\n' | sfdisk /dev/sdb\npartprobe /dev/sdb"
         ],
         [
-          "mkfs.ext4 -L DATA44 /dev/sdb1",
-          "mkdir -p /data44"
+          "mkfs.ext4 -L DATA44 /dev/sdb1\nmkdir -p /data44\nmount LABEL=DATA44 /data44"
         ],
         [
-          "vim /etc/fstab",
-          "LABEL=DATA44 /data44 ext4 defaults 0 0",
-          ":wq",
-          "mount -a",
-          "findmnt /data44"
+          "printf 'LABEL=DATA44 /data44 ext4 defaults 0 0\n' >> /etc/fstab"
         ]
       ]
     }

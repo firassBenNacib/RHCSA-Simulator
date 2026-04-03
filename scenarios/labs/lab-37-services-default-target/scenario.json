@@ -1,7 +1,7 @@
 {
   "id": "lab-37-services-default-target",
   "title": "Lab 37: Services and Default Target",
-  "description": "Control the default boot target and manage system services in a persistent way",
+  "description": "Manage the default target and key services on servervm.",
   "objective_tags": [
     "software-scheduling-time",
     "boot-and-recovery"
@@ -11,34 +11,38 @@
   ],
   "time_limit_minutes": 20,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_servervm": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure clientvm to boot into multi-user.target by default.",
-        "Ensure the rsyslog service is enabled and running.",
-        "If postfix is installed, disable it and stop it."
+        "Configure servervm to boot into multi-user.target by default.",
+        "Ensure the rsyslog service is enabled and running on servervm.",
+        "If postfix is installed on servervm, disable it and stop it."
       ],
       "hints": [
-        "Use systemctl for both target and service management."
+        "This lab belongs on servervm, not clientvm.",
+        "Treat postfix as conditional: only act if it is installed."
       ],
       "checks": [
-        "systemctl get-default | grep -qx multi-user.target",
-        "systemctl is-enabled rsyslog | grep -qx enabled",
-        "systemctl is-active rsyslog | grep -qx active"
+        "ssh admin@servervm systemctl get-default | grep -qx multi-user.target",
+        "ssh admin@servervm systemctl is-enabled rsyslog | grep -qx enabled && ssh admin@servervm systemctl is-active rsyslog | grep -qx active",
+        "ssh admin@servervm sh -lc 'rpm -q postfix >/dev/null 2>&1 || exit 0; systemctl is-enabled postfix 2>/dev/null | grep -qx disabled && systemctl is-active postfix 2>/dev/null | grep -qx inactive'"
       ],
       "solution_outline": [
-        "Make the target and service changes persistent."
+        "Set the default target to multi-user.target.",
+        "Enable and start rsyslog.",
+        "Disable postfix only if the package is present."
       ],
       "task_titles": [
-        "Configure clientvm to boot into multi-user.target...",
-        "Ensure the rsyslog service is enabled and running",
-        "If postfix is installed, disable it and stop it"
+        "Set the default boot target on servervm",
+        "Enable rsyslog on servervm",
+        "Disable postfix on servervm if present"
       ],
       "task_points": [
         10,
@@ -53,7 +57,7 @@
           "systemctl enable --now rsyslog"
         ],
         [
-          "systemctl disable --now postfix"
+          "rpm -q postfix >/dev/null 2>&1 && systemctl disable --now postfix || true"
         ]
       ]
     }

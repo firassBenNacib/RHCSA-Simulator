@@ -1,7 +1,7 @@
 {
   "id": "lab-25-pwquality-policy",
   "title": "Lab 25: Pwquality Policy",
-  "description": "Configure a persistent local password quality policy without editing PAM service files",
+  "description": "Use a pwquality drop-in to enforce a stronger local password policy.",
   "objective_tags": [
     "users-sudo-ssh"
   ],
@@ -19,36 +19,35 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords must meet the following requirements:\n\nMINIMUM LENGTH: 12\nMINIMUM CHARACTER CLASSES: 3",
+        "Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12, at least 3 character classes, and no more than 2 repeated characters in sequence.",
         "Do not edit any PAM service file for this task."
       ],
       "hints": [
-        "Use a dedicated drop-in file.",
-        "Keep the configuration minimal."
+        "Use a dedicated file under /etc/security/pwquality.conf.d.",
+        "This task is only about pwquality configuration, not PAM file edits."
       ],
       "checks": [
-        "grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d"
+        "grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf",
+        "! grep -Rqs 'lab25' /etc/pam.d"
       ],
       "solution_outline": [
-        "Use persistent configuration only."
+        "Create one pwquality drop-in with the requested values.",
+        "Do not modify files under /etc/pam.d."
       ],
       "task_titles": [
-        "Create a persistent password quality policy in...",
-        "Do not edit any PAM service file for this task"
+        "Create the pwquality drop-in",
+        "Leave PAM service files unchanged"
       ],
       "task_points": [
-        10,
-        10
+        15,
+        15
       ],
       "solution_commands": [
         [
-          "mkdir -p /etc/security/pwquality.conf.d",
-          "vim /etc/security/pwquality.conf.d/lab25.conf",
-          "minlen = 12",
-          "minclass = 3"
+          "cat > /etc/security/pwquality.conf.d/lab25.conf <<'EOF'\nminlen = 12\nminclass = 3\nmaxrepeat = 2\nEOF"
         ],
         [
-          "grep -R \"minlen\\|minclass\" /etc/security/pwquality.conf.d"
+          "true"
         ]
       ]
     }

@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-c` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, selinux-and-default-perms, storage-lvm, containers |
+| Objectives | boot-and-recovery, filesystems-and-autofs, users-sudo-ssh, storage-lvm, containers |
 
-A third 22 task RHCSA style mock exam with another variable set and recovery workflow.
+A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.
 
 ### Systems
 | System | Use |
@@ -45,90 +45,67 @@ Configure networking on clientvm with the following settings:
 
 ## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
 
-Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
-**Requirements**
-- The change must persist across reboots.
-- Do not rely on a one-time edit at the GRUB menu.
+Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
 ---
 
-## Question 04 - Client Repositories (clientvm) - 5 pts
+## Question 04 - Host Entry (clientvm) - 5 pts
 
-Configure a repository file on clientvm with the following settings:
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+Add a persistent hosts entry so vault.northstar.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 05 - Server Repositories (servervm) - 5 pts
+## Question 05 - Direct NFS Mount (clientvm) - 5 pts
 
-Configure the same repository file on servervm.
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+- **Persistently mount servervm:** /exports/bluec on /mnt/bluec using /etc/fstab.
 
 ---
 
-## Question 06 - Apache Firewall SELinux (clientvm) - 5 pts
+## Question 06 - Users And Group (clientvm) - 5 pts
 
-Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8484.
-
-**Requirements**
-- Start the service automatically at boot.
-- Open the port permanently in the firewall.
-- Allow the port in SELinux.
-- Do not alter the existing site content.
+Create group infrac and users talia and ren with infrac as a supplementary group. Set the password of both users to cinder9.
 
 ---
 
-## Question 07 - Users And Group (clientvm) - 5 pts
+## Question 07 - Default ACL Directory (clientvm) - 5 pts
 
-Create group infrac and users talia and ren with infrac as a supplementary group. Create user sage with /sbin/nologin and no infrac membership.
-
----
-
-## Question 08 - User Passwords (clientvm) - 5 pts
-
-Set the password of talia, ren, and sage to cinder9.
+- **Create /srv/infrac owned by root:** infrac with mode 2770 and a default ACL that grants group infrac rwx on new files and directories.
 
 ---
 
-## Question 09 - Delegated Sudo (clientvm) - 5 pts
+## Question 08 - No-Home User (clientvm) - 5 pts
 
-Allow members of infrac to run useradd with sudo, and allow talia to run passwd for other users without a sudo password prompt.
-
----
-
-## Question 10 - Setgid Directory (clientvm) - 5 pts
-
-Create /srv/infrac with group ownership infrac, mode 2770, and inherited group ownership for new files.
+Create user remote63 without a home directory and with login shell /sbin/nologin.
 
 ---
 
-## Question 11 - Cron Logger (clientvm) - 5 pts
+## Question 09 - At Job (clientvm) - 5 pts
 
-Configure a cron job for ren that runs every 5 minutes and logs the message "NorthStar exam".
-
----
-
-## Question 12 - Chrony Client (clientvm) - 5 pts
-
-Configure chrony on clientvm so it synchronizes only with servervm.
+Queue a one-time at job as user ren that appends the message "NorthStar audit" to /root/northstar-at.log in 2 minutes.
 
 ---
 
-## Question 13 - Autofs Map (clientvm) - 4 pts
+## Question 10 - Per-User Password Aging (clientvm) - 5 pts
 
-Create user remote63 with password cinder9 and configure autofs so that the following mount becomes available on demand:
+Set password aging for talia to maximum 45 days, minimum 5 days, warning 7 days.
 
-- **Local Path:** /bluec/remote63
-- **Remote Export:** servervm:/exports/bluec
+---
+
+## Question 11 - Persistent Journal (servervm) - 5 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 12 - User Umask (clientvm) - 5 pts
+
+Set a personal umask of 027 for user ren.
+
+---
+
+## Question 13 - Per-User Login Message (clientvm) - 4 pts
+
+Append a login message for ren to ~/.bash_profile that prints "NorthStar access" when ren logs in.
 
 ---
 

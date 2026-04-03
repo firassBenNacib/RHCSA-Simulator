@@ -1,7 +1,7 @@
 {
   "id": "lab-28-selinux-custom-docroot",
   "title": "Lab 28: SELinux Custom Document Root",
-  "description": "Serve a custom document root on a nonstandard HTTP port while keeping SELinux enforcing",
+  "description": "Serve an existing custom document root on a non-default port with SELinux enforcing.",
   "objective_tags": [
     "selinux-and-default-perms",
     "networking-and-firewall"
@@ -20,26 +20,28 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure Apache to serve content from /srv/lab28/site on TCP port 8088.",
+        "Configure Apache on clientvm to serve content from /srv/lab28/site on TCP port 8088.",
         "Keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.",
         "Do not edit or remove /srv/lab28/site/index.html."
       ],
       "hints": [
-        "Create a dedicated configuration file in /etc/httpd/conf.d.",
-        "Use semanage fcontext and semanage port."
+        "This lab needs both a file-context change and a port-label change.",
+        "The provided index file must stay in place."
       ],
       "checks": [
-        "curl -fsS http://localhost:8088 >/dev/null",
-        "semanage port -l | grep -Eq '^http_port_t\\b.*\\b8088\\b' && firewall-cmd --permanent --query-port=8088/tcp && systemctl is-enabled httpd | grep -qx enabled",
-        "matchpathcon /srv/lab28/site/index.html | grep -Eq ':httpd_sys_content_t:' && ls -Zd /srv/lab28/site | grep -Eq ':httpd_sys_content_t:'"
+        "grep -Rqs 'DocumentRoot /srv/lab28/site' /etc/httpd/conf.d && grep -Rqs '^Listen 8088$' /etc/httpd/conf.d",
+        "semanage port -l | grep -Eq '^http_port_t\\b.*\\b8088\\b' && matchpathcon /srv/lab28/site/index.html | grep -Fq httpd_sys_content_t",
+        "systemctl is-enabled httpd | grep -qx enabled && firewall-cmd --list-ports | grep -Eq '(^| )8088/tcp($| )'"
       ],
       "solution_outline": [
-        "Use persistent configuration only."
+        "Add an Apache drop-in for the custom root and port.",
+        "Set the SELinux file context and http_port_t label, then open the firewall.",
+        "Enable and start httpd without replacing the provided content."
       ],
       "task_titles": [
-        "Configure Apache to serve content from...",
-        "Keep SELinux enforcing, configure the correct file...",
-        "Do not edit or remove /srv/lab28/site/index.html"
+        "Serve the custom document root on port 8088",
+        "Apply the required SELinux and firewall changes",
+        "Leave the provided content intact"
       ],
       "task_points": [
         10,
@@ -48,24 +50,13 @@
       ],
       "solution_commands": [
         [
-          "vim /etc/httpd/conf.d/lab28.conf",
-          "<VirtualHost *:8088>",
-          "    DocumentRoot /srv/lab28/site",
-          "    <Directory /srv/lab28/site>",
-          "        Require all granted",
-          "    </Directory>",
-          "</VirtualHost>"
+          "cat > /etc/httpd/conf.d/lab28.conf <<'EOF'\nListen 8088\n<VirtualHost *:8088>\n    DocumentRoot /srv/lab28/site\n</VirtualHost>\nEOF"
         ],
         [
-          "semanage fcontext -a -t httpd_sys_content_t \"/srv/lab28/site(/.*)?\"",
-          "restorecon -Rv /srv/lab28/site",
-          "semanage port -a -t http_port_t -p tcp 8088",
-          "firewall-cmd --permanent --add-port=8088/tcp",
-          "firewall-cmd --reload",
+          "semanage fcontext -a -t httpd_sys_content_t '/srv/lab28/site(/.*)?'\nrestorecon -RF /srv/lab28/site\nsemanage port -a -t http_port_t -p tcp 8088\nfirewall-cmd --permanent --add-port=8088/tcp\nfirewall-cmd --reload"
+        ],
+        [
           "systemctl enable --now httpd"
-        ],
-        [
-          "curl -s http://localhost:8088"
         ]
       ]
     }

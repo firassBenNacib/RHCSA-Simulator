@@ -29,7 +29,7 @@ EOF
     semanage port -d -t http_port_t -p tcp 8282 >/dev/null 2>&1 || true
     for u in violet amber frost ash420; do userdel -r "$u" >/dev/null 2>&1 || true; done
     groupdel sysopsa >/dev/null 2>&1 || true
-    rm -f /etc/sudoers.d/sysopsa /etc/sudoers.d/violet-passwd
+    rm -f /etc/sudoers.d/sysopsa-useradd /etc/sudoers.d/violet-passwd
     rm -rf /srv/sysopsa /root/amber-files /opt/exam-a /researcha
     rm -f /etc/auto.opsa /etc/auto.master.d/opsa.autofs /root/delta-lines /root/etc-opsa.tar.bz2 /usr/local/bin/opsa-report
     automount -u >/dev/null 2>&1 || true

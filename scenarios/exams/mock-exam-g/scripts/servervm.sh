@@ -12,12 +12,7 @@ cat > /etc/exports.d/exam-g.exports <<'EOF'
 EOF
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
-id copyg >/dev/null 2>&1 || useradd -m copyg
-printf 'copyg:cinder9
-' | chpasswd
-rm -rf /home/copyg/.ssh /home/copyg/inbox
-mkdir -p /home/copyg/inbox
-chown -R copyg:copyg /home/copyg
+userdel -r copyg >/dev/null 2>&1 || true
 python - <<'EOF'
 from pathlib import Path
 import re

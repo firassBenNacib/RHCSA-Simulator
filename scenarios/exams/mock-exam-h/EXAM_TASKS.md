@@ -1,4 +1,4 @@
-# Mock Exam H: SilverPeak Services Review
+# Mock Exam H: SilverPeak Service Review
 
 ## Exam Tasks
 ## Overview
@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-h` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
+| Objectives | networking-and-firewall, software-management, users-sudo-ssh, processes-logs-tuning, storage-lvm, containers |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds package management, boot target work, rich rules, and image inspection.
+A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.
 
 ### Systems
 | System | Use |
@@ -27,7 +27,7 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds package management, boo
 
 Configure networking on clientvm with the following settings:
 
-- **IP Address:** 192.168.122.47
+- **IP Address:** 192.168.122.40
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
@@ -35,89 +35,80 @@ Configure networking on clientvm with the following settings:
 
 ---
 
-## Question 02 - Static Host Entry (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
 Add a persistent hosts entry so registry.silverpeak.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 03 - Repositories On Both Systems (clientvm + servervm) - 5 pts
+## Question 03 - Client Repositories (clientvm) - 5 pts
 
-On clientvm and servervm, configure a repository file with the following settings:
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+Configure a repository file on clientvm with BaseOS and AppStream served from servervm, enabled, and with gpgcheck disabled.
 
 ---
 
-## Question 04 - Apache SELinux Port (clientvm) - 5 pts
+## Question 04 - Server Repositories (servervm) - 5 pts
 
-Configure the Apache HTTP server on clientvm so that it serves the existing site on TCP port 8181.
+Configure the same repository file on servervm.
+
+---
+
+## Question 05 - Apache SELinux Port (clientvm) - 5 pts
+
+Configure Apache on clientvm so it serves the existing site on TCP port 8181.
 
 **Requirements**
-- Start the service automatically at boot.
+- Start automatically at boot.
 - Open the port permanently in the firewall.
-- Make the SELinux port label change required for the new port.
-- Do not move or relabel the existing document root content.
+- Apply the SELinux change required for the new port.
 
 ---
 
-## Question 05 - Users And Group (clientvm) - 5 pts
+## Question 06 - Pwquality Policy (clientvm) - 5 pts
 
-Create group silverops and users iris and daren with silverops as a supplementary group. Create user hush with /sbin/nologin and no silverops membership.
-
----
-
-## Question 06 - User Passwords (clientvm) - 5 pts
-
-Set the password of iris, daren, and hush to cinder9.
+Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.
 
 ---
 
-## Question 07 - Delegated Sudo (clientvm) - 5 pts
+## Question 07 - No-Home User (clientvm) - 5 pts
 
-Allow members of silverops to run useradd through sudo, and allow iris to run passwd for other users without a sudo password prompt.
-
----
-
-## Question 08 - Setgid Directory (clientvm) - 5 pts
-
-Create /srv/silver with group ownership silverops, permissions 2770, and inherited group ownership for new files.
+Create user agingh without a home directory, with shell /sbin/nologin, and set its password to cinder9.
 
 ---
 
-## Question 09 - Pwquality Policy (clientvm) - 5 pts
+## Question 08 - Per-User Password Aging (clientvm) - 5 pts
 
-Configure a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12 and at least 3 character classes.
+Set password aging for agingh to minimum 2 days, maximum 30 days, warning 7 days, and force a password change at the next login.
 
 ---
 
-## Question 10 - Per-User Password Aging (clientvm) - 5 pts
+## Question 09 - Sticky Directory (clientvm) - 5 pts
 
-Create user agingh with password cinder9 and configure the account with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days. Force the user to change the password at the next login.
+Create /srv/silver-drop as a sticky directory with ownership root:root and mode 1777.
+
+---
+
+## Question 10 - Chrony Server (servervm) - 5 pts
+
+Configure chronyd on servervm so it serves time to 192.168.122.0/24 and starts automatically at boot.
 
 ---
 
 ## Question 11 - Chrony Client (clientvm) - 5 pts
 
-Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
+Configure chronyd on clientvm so it synchronizes only with servervm and starts automatically at boot.
 
 ---
 
-## Question 12 - Autofs Map (clientvm) - 5 pts
+## Question 12 - Firewalld Rich Rule (clientvm) - 5 pts
 
-Create user silverremote with password cinder9 and configure autofs so that the following mount becomes available on demand:
-
-- **Local Path:** /silver/home/silverremote
-- **Remote Export:** servervm:/exports/silverhome
+On clientvm, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.
 
 ---
 
-## Question 13 - Firewalld Rich Rule (clientvm) - 4 pts
+## Question 13 - Useradd Defaults (clientvm) - 4 pts
 
-Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24.
+Set the default inactive period for newly created local users to 10 days.
 
 ---
 

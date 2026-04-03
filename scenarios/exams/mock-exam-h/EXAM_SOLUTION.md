@@ -1,4 +1,4 @@
-# Mock Exam H: SilverPeak Services Review
+# Mock Exam H: SilverPeak Service Review
 
 ## Exam Solution
 ## Overview
@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-h` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
+| Objectives | networking-and-firewall, software-management, users-sudo-ssh, processes-logs-tuning, storage-lvm, containers |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds package management, boot target work, rich rules, and image inspection.
+A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.
 
 ### Systems
 | System | Use |
@@ -27,7 +27,7 @@ A 22 question RHCSA style mock exam for RHEL 9 that adds package management, boo
 
 ```bash
 CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection modify "$CONN" ipv4.addresses 192.168.122.47/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection modify "$CONN" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
 hostnamectl set-hostname clientvm.silverpeak.lab
@@ -35,137 +35,120 @@ hostnamectl set-hostname clientvm.silverpeak.lab
 
 ---
 
-## Question 02 - Static Host Entry (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 registry.silverpeak.lab
-:wq
+grep -q 'registry.silverpeak.lab' /etc/hosts || echo '192.168.122.3 registry.silverpeak.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 03 - Repositories On Both Systems (clientvm + servervm) - 5 pts
+## Question 03 - Client Repositories (clientvm) - 5 pts
 
 ```bash
-# On clientvm
-vim /etc/yum.repos.d/silver.repo
+cat > /etc/yum.repos.d/silverpeak.repo <<'EOF'
 [silver-baseos]
-name=Silver BaseOS
+name=SilverPeak BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
 [silver-appstream]
-name=Silver AppStream
+name=SilverPeak AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
-:wq
-dnf clean all
-# On servervm
-vim /etc/yum.repos.d/silver.repo
-[silver-baseos]
-name=Silver BaseOS
-baseurl=http://servervm/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[silver-appstream]
-name=Silver AppStream
-baseurl=http://servervm/repo/AppStream/
-enabled=1
-gpgcheck=0
-:wq
+EOF
 dnf clean all
 ```
 
 ---
 
-## Question 04 - Apache SELinux Port (clientvm) - 5 pts
+## Question 04 - Server Repositories (servervm) - 5 pts
 
 ```bash
-vim /etc/httpd/conf/httpd.conf
-Listen 8181
-:wq
-systemctl enable --now httpd
+# Run on servervm
+cat > /etc/yum.repos.d/silverpeak.repo <<'EOF'
+[silver-baseos]
+name=SilverPeak BaseOS
+baseurl=http://servervm/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[silver-appstream]
+name=SilverPeak AppStream
+baseurl=http://servervm/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+```
+
+---
+
+## Question 05 - Apache SELinux Port (clientvm) - 5 pts
+
+```bash
+dnf install -y httpd
+sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf
 firewall-cmd --permanent --add-port=8181/tcp
 firewall-cmd --reload
-semanage port -a -t http_port_t -p tcp 8181
-systemctl restart httpd
+semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181
+systemctl enable --now httpd
 ```
 
 ---
 
-## Question 05 - Users And Group (clientvm) - 5 pts
-
-```bash
-groupadd silverops
-useradd -m iris
-useradd -m daren
-useradd -m -s /sbin/nologin hush
-usermod -aG silverops iris
-usermod -aG silverops daren
-```
-
----
-
-## Question 06 - User Passwords (clientvm) - 5 pts
-
-```bash
-passwd iris
-# enter: cinder9
-passwd daren
-# enter: cinder9
-passwd hush
-# enter: cinder9
-```
-
----
-
-## Question 07 - Delegated Sudo (clientvm) - 5 pts
-
-```bash
-visudo -f /etc/sudoers.d/silverops
-%silverops ALL=(ALL) /usr/sbin/useradd
-:wq
-visudo -f /etc/sudoers.d/iris-passwd
-iris ALL=(ALL) NOPASSWD: /usr/bin/passwd
-:wq
-```
-
----
-
-## Question 08 - Setgid Directory (clientvm) - 5 pts
-
-```bash
-mkdir -p /srv/silver
-chgrp silverops /srv/silver
-chmod 2770 /srv/silver
-```
-
----
-
-## Question 09 - Pwquality Policy (clientvm) - 5 pts
+## Question 06 - Pwquality Policy (clientvm) - 5 pts
 
 ```bash
 mkdir -p /etc/security/pwquality.conf.d
-vim /etc/security/pwquality.conf.d/silver.conf
+cat > /etc/security/pwquality.conf.d/silverpeak.conf <<'EOF'
 minlen = 12
 minclass = 3
-:wq
+EOF
 ```
 
 ---
 
-## Question 10 - Per-User Password Aging (clientvm) - 5 pts
+## Question 07 - No-Home User (clientvm) - 5 pts
 
 ```bash
-useradd -m agingh
-passwd agingh
-# enter: cinder9
-chage -M 30 -m 2 -W 7 agingh
+useradd -M -s /sbin/nologin agingh
+echo cinder9 | passwd --stdin agingh
+```
+
+---
+
+## Question 08 - Per-User Password Aging (clientvm) - 5 pts
+
+```bash
+chage -m 2 -M 30 -W 7 agingh
 chage -d 0 agingh
+```
+
+---
+
+## Question 09 - Sticky Directory (clientvm) - 5 pts
+
+```bash
+install -d -m 1777 -o root -g root /srv/silver-drop
+```
+
+---
+
+## Question 10 - Chrony Server (servervm) - 5 pts
+
+```bash
+# Run on servervm
+cat > /etc/chrony.conf <<'EOF'
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+allow 192.168.122.0/24
+local stratum 10
+EOF
+systemctl enable --now chronyd
 ```
 
 ---
@@ -173,37 +156,30 @@ chage -d 0 agingh
 ## Question 11 - Chrony Client (clientvm) - 5 pts
 
 ```bash
-vim /etc/chrony.conf
-# Comment any existing pool or server lines and add:
+cat > /etc/chrony.conf <<'EOF'
 server servervm iburst
-:wq
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+EOF
 systemctl enable --now chronyd
 ```
 
 ---
 
-## Question 12 - Autofs Map (clientvm) - 5 pts
+## Question 12 - Firewalld Rich Rule (clientvm) - 5 pts
 
 ```bash
-useradd -m silverremote
-passwd silverremote
-# enter: cinder9
-vim /etc/auto.silver
-silverremote -rw servervm:/exports/silverhome
-:wq
-vim /etc/auto.master.d/silver.autofs
-/silver/home /etc/auto.silver
-:wq
-systemctl enable --now autofs
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
+firewall-cmd --reload
 ```
 
 ---
 
-## Question 13 - Firewalld Rich Rule (clientvm) - 4 pts
+## Question 13 - Useradd Defaults (clientvm) - 4 pts
 
 ```bash
-firewall-cmd --permanent --add-rich-rule="rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept"
-firewall-cmd --reload
+useradd -D -f 10
 ```
 
 ---
@@ -309,10 +285,10 @@ tuned-adm active
 
 ## Verification
 ```bash
-getent hosts registry.silverpeak.lab | grep -Fq '192.168.122.3'
-curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8181\b'
-grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d
-chage -l agingh | grep -Eq 'Minimum number of days between password change[^0-9]*2$' && chage -l agingh | grep -Eq 'Maximum number of days between password change[^0-9]*30$' && chage -l agingh | grep -Eq 'Number of days of warning before password expires[^0-9]*7$' && chage -l agingh | grep -Eq 'Last password change[^:]*: password must be changed'
-runuser -l inspecth -c 'podman image exists localhost/rhcsa-httpd-base:latest' && test -s /home/inspecth/workdir.txt
-rec="$(tuned-adm recommended | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
+hostnamectl --static | grep -qx 'clientvm.silverpeak.lab' && grep -Fqx '192.168.122.3 registry.silverpeak.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
+curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8181\b' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
+grep -Eq '^minlen\s*=\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\s*=\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin' && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'
+grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled
+test -f /root/watcherh-files/opt/exam-h/find/a/file1.txt && grep -q 'silver' /root/silver-lines && test -f /root/usr-local-h.tar.gz && swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewh" && $2=="reviewvgh" && $3>=319 && $3<=321{f=1} END{exit !f}' && systemctl get-default | grep -qx multi-user.target && systemctl is-enabled rsyslog | grep -qx enabled && systemctl is-enabled postfix | grep -qx disabled && rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null 2>&1
+runuser -l inspecth -c 'podman image exists localhost/rhcsa-httpd-base:latest' && test -s /home/inspecth/workdir.txt && rec="$(tuned-adm recommend | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
 ```

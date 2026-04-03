@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-f` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, storage-lvm, users-sudo-ssh, containers |
+| Objectives | networking-and-firewall, users-sudo-ssh, processes-logs-tuning, storage-lvm |
 
-A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a restrictive rich rule, an alternate umask, and another create mount container build workflow.
+A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.
 
 ### Systems
 | System | Use |
@@ -35,106 +35,87 @@ Configure networking on clientvm with the following settings:
 
 ---
 
-## Question 02 - Static Host Entry (clientvm) - 5 pts
+## Question 02 - Host Entry (clientvm) - 5 pts
 
 Add a persistent hosts entry so db.aurora.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 03 - Client Repositories (clientvm) - 5 pts
+## Question 03 - Chrony Server (servervm) - 5 pts
 
-Configure a repository file on clientvm with the following settings:
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+Configure chronyd on servervm so it serves time to 192.168.122.0/24 and starts automatically at boot.
 
 ---
 
-## Question 04 - Server Repositories (servervm) - 5 pts
+## Question 04 - Chrony Client (clientvm) - 5 pts
 
-Configure the same repository file on servervm.
-
-- **BaseOS:** http://servervm/repo/BaseOS/
-- **AppStream:** http://servervm/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+Configure chronyd on clientvm so it synchronizes only with servervm and starts automatically at boot.
 
 ---
 
-## Question 05 - Apache Custom Docroot (clientvm) - 5 pts
+## Question 05 - SSH Port (servervm) - 5 pts
 
-Configure the Apache HTTP server on clientvm so that it serves content from /srv/aurora-web on TCP port 9090.
-
-**Requirements**
-- Start the service automatically at boot.
-- Open the port permanently in the firewall.
-- Configure the required SELinux file context and port label.
-- Do not modify /srv/aurora-web/index.html.
+On servervm, configure sshd to listen on TCP port 2222 and keep both password and public key authentication enabled.
 
 ---
 
-## Question 06 - Users And Group (clientvm) - 5 pts
+## Question 06 - Rich Rule (servervm) - 5 pts
 
-Create group auroraops and users elio and risa with auroraops as a supplementary group. Create user nox with /sbin/nologin and no auroraops membership.
-
----
-
-## Question 07 - User Passwords (clientvm) - 5 pts
-
-Set the password of elio, risa, and nox to cinder9.
+On servervm, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.
 
 ---
 
-## Question 08 - Delegated Sudo (clientvm) - 5 pts
+## Question 07 - Useradd Defaults (clientvm) - 5 pts
 
-Allow members of auroraops to run useradd through sudo, and allow elio to run passwd for other users without a sudo password prompt.
-
----
-
-## Question 09 - Shared Directory With Default ACL (clientvm) - 5 pts
-
-Create user auditf with password cinder9. Then create /data/aurora with group ownership auroraops, permissions 2770, inherited group ownership for new files, and a default ACL that grants auditf rwx on new content.
+Set the default inactive period for newly created local users to 14 days.
 
 ---
 
-## Question 10 - User Umask (clientvm) - 5 pts
+## Question 08 - No-Home UID User (clientvm) - 5 pts
 
-Configure user risa so that new regular files are created with mode 0600 and new directories are created with mode 0700 when the user logs in.
-
----
-
-## Question 11 - SSH Key Authentication (clientvm + servervm) - 5 pts
-
-Create user opsf on clientvm and user backupf on servervm. Set the password of both users to cinder9. Then configure key-based SSH authentication so opsf on clientvm can log in to backupf@servervm without a password prompt.
+Create user pine560 with UID 4560, no home directory, shell /sbin/nologin, and password cinder9.
 
 ---
 
-## Question 12 - Firewalld Rich Rule (clientvm) - 5 pts
+## Question 09 - Admin User (clientvm) - 5 pts
 
-Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24. Reload firewalld and verify the rule is active.
-
----
-
-## Question 13 - Chrony Client (clientvm) - 4 pts
-
-Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.
+Create user elio with a home directory and password cinder9.
 
 ---
 
-## Question 14 - Autofs Map (clientvm) - 4 pts
+## Question 10 - Delegated Sudo (clientvm) - 5 pts
 
-Create user aurorarem with password cinder9 and configure autofs so that the following mount becomes available on demand:
-
-- **Local Path:** /aurora/home/aurorarem
-- **Remote Export:** servervm:/exports/aurorahome
+Allow elio to restart firewalld on clientvm through sudo without a password prompt. Use a sudoers drop-in.
 
 ---
 
-## Question 15 - Fixed UID User (clientvm) - 4 pts
+## Question 11 - SSH Key Generation (clientvm) - 5 pts
 
-Create user pine560 with UID 4560 and set its password to cinder9.
+As elio on clientvm, generate an ED25519 SSH key pair with no passphrase.
+
+---
+
+## Question 12 - Remote Account (servervm) - 5 pts
+
+Create user backupf on servervm with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.
+
+---
+
+## Question 13 - Passwordless SSH (servervm) - 4 pts
+
+Install elio's public key for backupf on servervm and verify passwordless SSH access on port 2222.
+
+---
+
+## Question 14 - Rsync Transfer (servervm) - 4 pts
+
+Use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on servervm.
+
+---
+
+## Question 15 - User Umask (clientvm) - 4 pts
+
+Set a personal umask of 027 for elio.
 
 ---
 
@@ -178,6 +159,6 @@ On /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB
 
 ---
 
-## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
+## Question 22 - Recommended Tuned Profile (clientvm) - 4 pts
 
-As user solf, build localhost/aurora-web:latest from /opt/rhcsa/workspaces/exam-f/Containerfile, run container pdff with /opt/inf mounted to /data/input and /opt/outf mounted to /data/output, then generate and enable the systemd user service so it starts after reboot. Enable lingering for solf.
+Apply the recommended tuned profile and leave it active.

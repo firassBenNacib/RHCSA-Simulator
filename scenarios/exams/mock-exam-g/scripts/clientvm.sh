@@ -6,6 +6,7 @@ rhcsa_reset_repo_directory /root/.repo-backup-client-exam-g
 rhcsa_configure_password_recovery disable
 rhcsa_configure_password_recovery enable
 hostnamectl set-hostname clientvm
+rhcsa_remove_matching_lines 'vault.deltaforge.lab' /etc/hosts
 connection_name="$(rhcsa_get_lab_connection_name || true)"
 rhcsa_reset_lab_ipv4_profile "$connection_name"
 if command -v grubby >/dev/null 2>&1; then
@@ -23,7 +24,7 @@ restorecon -Rv /srv/delta-web >/dev/null 2>&1 || true
 for u in gwen pavel sable auditg trackerg workerg copyg solg; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel deltaops >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/deltaops /etc/sudoers.d/gwen-passwd /root/ember-lines /root/etc-g.tar.bz2
-rm -rf /projects/delta /opt/exam-g /root/trackerg-files /mnt/delta-home /mnt/deltalv /opt/ing /opt/outg /opt/rhcsa/workspaces/exam-g
+rm -rf /projects/delta /projects/delta-drop /opt/exam-g /root/trackerg-files /mnt/delta-home /mnt/deltalv /opt/ing /opt/outg /opt/rhcsa/workspaces/exam-g
 python - <<'EOF'
 from pathlib import Path
 p = Path('/home/pavel/.bashrc')
@@ -45,14 +46,10 @@ p.write_text('\n'.join(lines) + '\n')
 EOF
 umount /mnt/delta-home >/dev/null 2>&1 || true
 sed -i '\#/mnt/delta-home#d' /etc/fstab
-rm -f /home/copyg/.ssh/authorized_keys /root/.ssh/known_hosts >/dev/null 2>&1 || true
-id copyg >/dev/null 2>&1 || useradd -m copyg
-printf 'copyg:cinder9
-' | chpasswd
-rm -rf /home/copyg/.ssh /home/copyg/inbox
-printf 'copy g payload
-' > /home/copyg/payload.txt
-chown -R copyg:copyg /home/copyg
+rm -f /root/.ssh/known_hosts >/dev/null 2>&1 || true
+userdel -r copyg >/dev/null 2>&1 || true
+mkdir -p /opt/exam-g
+printf 'copy g payload\n' > /opt/exam-g/copyg-payload.txt
 id trackerg >/dev/null 2>&1 || useradd -m trackerg
 mkdir -p /opt/exam-g/find/a /opt/exam-g/find/b/sub
 printf 'g1

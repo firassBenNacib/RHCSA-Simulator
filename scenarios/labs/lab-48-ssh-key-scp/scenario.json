@@ -1,7 +1,7 @@
 {
   "id": "lab-48-ssh-key-scp",
   "title": "Lab 48: SSH Key Authentication And SCP",
-  "description": "Configure key-based SSH access and securely copy a file to the second system",
+  "description": "Use a key pair and scp between the two lab hosts.",
   "objective_tags": [
     "users-sudo-ssh"
   ],
@@ -26,17 +26,25 @@
         "Using scp over SSH, copy /home/bridge48/payload.txt from clientvm to /home/bridge48/inbox/ on servervm."
       ],
       "hints": [
-        "Use ssh-keygen, ssh-copy-id, and scp as the target user."
+        "This lab does need a home directory because the key pair lives under ~/.ssh.",
+        "ssh-copy-id is the quickest way to seed authorized_keys."
       ],
       "checks": [
-        "ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@192.168.122.3 \"test -f /home/bridge48/inbox/payload.txt\""
+        "getent passwd bridge48 >/dev/null && test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519",
+        "ssh bridge48@servervm true",
+        "ssh bridge48@servervm test -f /home/bridge48/inbox/payload.txt"
       ],
-      "solution_outline": [],
+      "solution_outline": [
+        "Create bridge48 on both systems and set the password.",
+        "Generate a no-passphrase ED25519 key pair on clientvm.",
+        "Install the public key on servervm and verify passwordless SSH.",
+        "Copy the payload file into the remote inbox directory."
+      ],
       "task_titles": [
-        "Create user bridge48 on both clientvm and servervm....",
-        "generate an ED25519 SSH key pair with no passphrase",
-        "Configure passwordless SSH access for bridge48 from...",
-        "Using scp over SSH, copy /home/bridge48/payload.txt..."
+        "Create bridge48 on both systems",
+        "Generate the ED25519 key pair",
+        "Enable passwordless SSH from clientvm to servervm",
+        "Copy the payload with scp"
       ],
       "task_points": [
         10,
@@ -46,19 +54,16 @@
       ],
       "solution_commands": [
         [
-          "# On both systems",
-          "useradd -m bridge48",
-          "passwd bridge48",
-          "# enter: cinder9"
+          "useradd -m bridge48\nprintf 'bridge48:cinder9\n' | chpasswd"
         ],
         [
-          "runuser -l bridge48 -c \"ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519\""
+          "runuser -l bridge48 -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'"
         ],
         [
-          "runuser -l bridge48 -c \"ssh-copy-id -o StrictHostKeyChecking=no bridge48@192.168.122.3\""
+          "runuser -l bridge48 -c 'ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm'"
         ],
         [
-          "runuser -l bridge48 -c \"scp -o StrictHostKeyChecking=no /home/bridge48/payload.txt bridge48@192.168.122.3:/home/bridge48/inbox/\""
+          "runuser -l bridge48 -c 'scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/'"
         ]
       ]
     }

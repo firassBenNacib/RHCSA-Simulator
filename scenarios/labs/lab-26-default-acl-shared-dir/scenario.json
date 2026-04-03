@@ -1,7 +1,7 @@
 {
   "id": "lab-26-default-acl-shared-dir",
   "title": "Lab 26: Default ACL Shared Directory",
-  "description": "Create a collaborative directory that combines setgid permissions with a default ACL",
+  "description": "Use a default ACL for a named user without creating an unnecessary home directory.",
   "objective_tags": [
     "filesystems-and-autofs",
     "selinux-and-default-perms"
@@ -20,23 +20,28 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the group collab26 and the user probe26. Set the password of probe26 to cinder9.",
+        "Create the group collab26 and the user probe26 without a home directory. Set the password of probe26 to cinder9.",
         "Create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.",
         "Configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26."
       ],
       "hints": [
-        "Use getfacl to confirm the effective and default entries."
+        "probe26 does not need a home directory for this task.",
+        "Default ACL entries begin with default:."
       ],
       "checks": [
-        "stat -c '%U:%G %a' /shared/collab26 | grep -qx 'root:collab26 2770' && getfacl -cp /shared/collab26 | grep -qx 'default:user:probe26:rwx'"
+        "getent group collab26 >/dev/null && getent passwd probe26 >/dev/null && ! test -d /home/probe26",
+        "stat -c '%U:%G %a' /shared/collab26 | grep -qx 'root:collab26 2770'",
+        "getfacl -cp /shared/collab26 | grep -Eq '^default:user:probe26:rwx$'"
       ],
       "solution_outline": [
-        "Use persistent configuration only."
+        "Create the group and the no-home user.",
+        "Create the shared directory with the requested ownership and mode.",
+        "Apply a default ACL for probe26."
       ],
       "task_titles": [
-        "Create the group collab26 and the user probe26. Set...",
-        "Create the directory /shared/collab26 with owner...",
-        "Configure a default ACL so that user probe26..."
+        "Create the collab26 group and probe26 user",
+        "Create the shared directory with setgid semantics",
+        "Create the default ACL for probe26"
       ],
       "task_points": [
         10,
@@ -45,19 +50,13 @@
       ],
       "solution_commands": [
         [
-          "groupadd collab26",
-          "useradd -m probe26",
-          "passwd probe26",
-          "# enter: cinder9"
+          "groupadd collab26\nuseradd -M probe26\nprintf 'probe26:cinder9\n' | chpasswd"
         ],
         [
-          "mkdir -p /shared/collab26",
-          "chown root:collab26 /shared/collab26",
-          "chmod 2770 /shared/collab26"
+          "install -d -o root -g collab26 -m 2770 /shared/collab26"
         ],
         [
-          "setfacl -m d:u:probe26:rwx /shared/collab26",
-          "getfacl /shared/collab26"
+          "setfacl -m d:u:probe26:rwx /shared/collab26"
         ]
       ]
     }

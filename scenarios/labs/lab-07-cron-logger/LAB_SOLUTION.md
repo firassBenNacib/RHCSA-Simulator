@@ -24,7 +24,7 @@ Schedule a recurring task for a specific user.
 ## Task 01 - Create user ferro if it does not exist and set its (clientvm) - 10 pts
 
 ```bash
-id ferro || useradd -m ferro
+id ferro || useradd ferro
 passwd ferro
 # enter: cinder9
 ```

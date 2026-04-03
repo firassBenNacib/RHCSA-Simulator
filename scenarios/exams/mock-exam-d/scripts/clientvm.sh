@@ -20,7 +20,7 @@ semanage port -d -t http_port_t -p tcp 8085 >/dev/null 2>&1 || true
 restorecon -Rv /srv/summit-web >/dev/null 2>&1 || true
 for u in kara miles zero auditord trainee54 summitremote cedar540 neriad foragerd; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel summitops >/dev/null 2>&1 || true
-rm -f /etc/sudoers.d/summitops /etc/sudoers.d/kara-passwd
+rm -f /etc/sudoers.d/kara-systemctl
 rm -rf /projects/summit /root/miles-files /summit-home /usr/local/bin/summit-scan /root/summit-units.txt /root/alpha-lines /root/summit-etc.tar.gz /opt/exam-d
 python - <<'EOF'
 from pathlib import Path

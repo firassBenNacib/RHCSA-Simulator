@@ -6,6 +6,7 @@ source /usr/local/lib/rhcsa-scenario-helpers.sh
 
     mkdir -p /root/.repo-backup-client-exam-b
     rhcsa_reset_repo_directory /root/.repo-backup-client-exam-b
+    useradd -D -f -1 >/dev/null 2>&1 || true
     hostnamectl set-hostname clientvm
     rhcsa_remove_matching_lines 'registry.coremesh.lab' /etc/hosts
     connection_name="$(rhcsa_get_lab_connection_name || true)"
@@ -24,7 +25,7 @@ EOF
     semanage port -d -t http_port_t -p tcp 8383 >/dev/null 2>&1 || true
     for u in mira jonas noel cato421; do userdel -r "$u" >/dev/null 2>&1 || true; done
     groupdel platformb >/dev/null 2>&1 || true
-    rm -f /etc/sudoers.d/platformb /etc/sudoers.d/mira-systemctl
+    rm -f /etc/sudoers.d/mira-firewalld
     rm -rf /srv/platformb /root/mira-files /opt/exam-b /meshb
     rm -f /etc/auto.meshb /etc/auto.master.d/meshb.autofs /root/proto-lines /root/usr-local-b.tar.bz2 /usr/local/bin/corecheck
     automount -u >/dev/null 2>&1 || true
@@ -36,6 +37,7 @@ EOF
 ' > /opt/exam-b/find/a/file1.txt
     printf 'b2
 ' > /opt/exam-b/find/b/sub/file2.txt
+    printf 'coremesh report\n' > /opt/exam-b/report.txt
     chown -R mira:mira /opt/exam-b/find
     mkdir -p /usr/share/dict
     cat > /usr/share/dict/words <<'EOF'

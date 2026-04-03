@@ -3,6 +3,18 @@ set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /root/.repo-backup-server-exam-h
 rhcsa_reset_repo_directory /root/.repo-backup-server-exam-h
+systemctl disable --now chronyd >/dev/null 2>&1 || true
+python - <<'EOF'
+from pathlib import Path
+p = Path('/etc/chrony.conf')
+lines = []
+for line in p.read_text().splitlines():
+    stripped = line.strip()
+    if stripped.startswith('server ') or stripped.startswith('pool ') or stripped.startswith('allow ') or stripped.startswith('local stratum'):
+        continue
+    lines.append(line)
+p.write_text('\n'.join(lines) + '\n')
+EOF
 mkdir -p /exports/silverhome
 printf 'silver export
 ' > /exports/silverhome/brief.txt

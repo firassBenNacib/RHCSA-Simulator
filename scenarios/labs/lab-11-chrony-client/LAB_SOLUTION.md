@@ -9,32 +9,47 @@
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |
 
-Configure clientvm to synchronize time from servervm.
+Configure servervm as a simple chrony source and point clientvm at it.
 
 ### Systems
 | System | Use |
 |---|---|
 | clientvm | Primary RHCSA workstation |
+| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure chrony on clientvm so it synchronizes (clientvm) - 10 pts
+## Task 01 - Configure servervm as the chrony source (servervm) - 15 pts
 
 ```bash
-vim /etc/chrony.conf
-server servervm iburst
-# remove any other server or pool lines
+printf 'allow 192.168.122.0/24
+' > /etc/chrony.d/lab11-server.conf
 systemctl enable --now chronyd
-chronyc sources -v
+```
+
+---
+
+## Task 02 - Configure clientvm to use only servervm for time (clientvm) - 15 pts
+
+```bash
+printf 'server servervm iburst
+' > /etc/chrony.d/lab11-client.conf
+python - <<'EOF'
+from pathlib import Path
+p = Path('/etc/chrony.conf')
+lines = [line for line in p.read_text().splitlines() if not line.strip().startswith(('server ', 'pool '))]
+p.write_text('\n'.join(lines) + '\n')
+EOF
+systemctl enable --now chronyd
 ```
 
 ---
 
 ## Verification
 ```bash
-awk '$1 ~ /^(server|pool)$/ { if ($2 != "servervm") bad=1; if ($1=="server" && $2=="servervm") good=1 } END { exit !(good && !bad) }' /etc/chrony.conf
-systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active
+systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^server servervm iburst$' /etc/chrony.d /etc/chrony.conf
+ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Rqs '^allow 192.168.122.0/24$' /etc/chrony.d /etc/chrony.conf
 ```

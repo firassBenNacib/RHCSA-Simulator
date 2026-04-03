@@ -9,7 +9,7 @@
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |
 
-Configure a persistent local password quality policy without editing PAM service files.
+Use a pwquality drop-in to enforce a stronger local password policy.
 
 ### Systems
 | System | Use |
@@ -21,24 +21,22 @@ Configure a persistent local password quality policy without editing PAM service
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create a persistent password quality policy in (clientvm) - 10 pts
+## Task 01 - Create the pwquality drop-in (clientvm) - 15 pts
 
-Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords must meet the following requirements:
-
-- **Minimum Length:** 12
-- **Minimum Character Classes:** 3
+Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12, at least 3 character classes, and no more than 2 repeated characters in sequence.
 
 ---
 
-## Task 02 - Do not edit any PAM service file for this task (clientvm) - 10 pts
+## Task 02 - Leave PAM service files unchanged (clientvm) - 15 pts
 
 Do not edit any PAM service file for this task.
 
 ## Hints
-- Use a dedicated drop-in file.
-- Keep the configuration minimal.
+- Use a dedicated file under /etc/security/pwquality.conf.d.
+- This task is only about pwquality configuration, not PAM file edits.
 
 ## Validation Commands
 ```bash
-grep -R -Eq '^[[:space:]]*minlen[[:space:]]*=[[:space:]]*12[[:space:]]*$' /etc/security/pwquality.conf.d && grep -R -Eq '^[[:space:]]*minclass[[:space:]]*=[[:space:]]*3[[:space:]]*$' /etc/security/pwquality.conf.d
+grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf
+! grep -Rqs 'lab25' /etc/pam.d
 ```

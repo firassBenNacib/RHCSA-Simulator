@@ -1,12 +1,12 @@
 {
   "id": "mock-exam-f",
   "title": "Mock Exam F: AuroraPath Access Review",
-  "description": "A 22 question RHCSA style mock exam for RHEL 9 that adds key based SSH access, a restrictive rich rule, an alternate umask, and another create mount container build workflow.",
+  "description": "A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.",
   "objective_tags": [
     "networking-and-firewall",
-    "storage-lvm",
     "users-sudo-ssh",
-    "containers"
+    "processes-logs-tuning",
+    "storage-lvm"
   ],
   "supported_modes": [
     "exam"
@@ -25,50 +25,50 @@
       "tasks": [
         "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.38\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.aurora.lab",
         "Add a persistent hosts entry so db.aurora.lab resolves to 192.168.122.3.",
-        "Configure a repository file on clientvm with the following settings:\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
-        "Configure the same repository file on servervm.\n\nBaseOS: http://servervm/repo/BaseOS/\nAppStream: http://servervm/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
-        "Configure the Apache HTTP server on clientvm so that it serves content from /srv/aurora-web on TCP port 9090.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Configure the required SELinux file context and port label.\n- Do not modify /srv/aurora-web/index.html.",
-        "Create group auroraops and users elio and risa with auroraops as a supplementary group. Create user nox with /sbin/nologin and no auroraops membership.",
-        "Set the password of elio, risa, and nox to cinder9.",
-        "Allow members of auroraops to run useradd through sudo, and allow elio to run passwd for other users without a sudo password prompt.",
-        "Create user auditf with password cinder9. Then create /data/aurora with group ownership auroraops, permissions 2770, inherited group ownership for new files, and a default ACL that grants auditf rwx on new content.",
-        "Configure user risa so that new regular files are created with mode 0600 and new directories are created with mode 0700 when the user logs in.",
-        "Create user opsf on clientvm and user backupf on servervm. Set the password of both users to cinder9. Then configure key-based SSH authentication so opsf on clientvm can log in to backupf@servervm without a password prompt.",
-        "Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24. Reload firewalld and verify the rule is active.",
-        "Configure chrony on clientvm so it synchronizes only with servervm and starts automatically at boot.",
-        "Create user aurorarem with password cinder9 and configure autofs so that the following mount becomes available on demand:\n\nLOCAL PATH: /aurora/home/aurorarem\nREMOTE EXPORT: servervm:/exports/aurorahome",
-        "Create user pine560 with UID 4560 and set its password to cinder9.",
+        "Configure chronyd on servervm so it serves time to 192.168.122.0/24 and starts automatically at boot.",
+        "Configure chronyd on clientvm so it synchronizes only with servervm and starts automatically at boot.",
+        "On servervm, configure sshd to listen on TCP port 2222 and keep both password and public key authentication enabled.",
+        "On servervm, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
+        "Set the default inactive period for newly created local users to 14 days.",
+        "Create user pine560 with UID 4560, no home directory, shell /sbin/nologin, and password cinder9.",
+        "Create user elio with a home directory and password cinder9.",
+        "Allow elio to restart firewalld on clientvm through sudo without a password prompt. Use a sudoers drop-in.",
+        "As elio on clientvm, generate an ED25519 SSH key pair with no passphrase.",
+        "Create user backupf on servervm with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.",
+        "Install elio's public key for backupf on servervm and verify passwordless SSH access on port 2222.",
+        "Use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on servervm.",
+        "Set a personal umask of 027 for elio.",
         "Find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.",
         "Extract lines containing comet from /usr/share/dict/words into /root/comet-lines.",
         "Create /root/usr-local-f.tar.gz containing /usr/local.",
         "Create executable script /usr/local/bin/aurora-report that writes the active state of each unit listed in /usr/local/share/exam-f/units.lst to /root/aurora-units.txt.",
         "On /dev/sdb, create a 704 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
         "On /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB and a logical volume auroralv of 50 extents. Format it with xfs and mount it persistently on /mnt/auroralv.",
-        "As user solf, build localhost/aurora-web:latest from /opt/rhcsa/workspaces/exam-f/Containerfile, run container pdff with /opt/inf mounted to /data/input and /opt/outf mounted to /data/output, then generate and enable the systemd user service so it starts after reboot. Enable lingering for solf."
+        "Apply the recommended tuned profile and leave it active."
       ],
       "task_titles": [
         "Client Network",
-        "Static Host Entry",
-        "Client Repositories",
-        "Server Repositories",
-        "Apache Custom Docroot",
-        "Users And Group",
-        "User Passwords",
-        "Delegated Sudo",
-        "Shared Directory With Default ACL",
-        "User Umask",
-        "SSH Key Authentication",
-        "Firewalld Rich Rule",
+        "Host Entry",
+        "Chrony Server",
         "Chrony Client",
-        "Autofs Map",
-        "Fixed UID User",
+        "SSH Port",
+        "Rich Rule",
+        "Useradd Defaults",
+        "No-Home UID User",
+        "Admin User",
+        "Delegated Sudo",
+        "SSH Key Generation",
+        "Remote Account",
+        "Passwordless SSH",
+        "Rsync Transfer",
+        "User Umask",
         "Find And Copy",
         "Grep Filter",
         "Archive",
         "Shell Script",
         "Swap Space",
         "Create And Mount LV",
-        "Rootless Container Autostart"
+        "Recommended Tuned Profile"
       ],
       "task_points": [
         5,
@@ -97,133 +97,88 @@
       "solution_commands": [
         [
           "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection show \"$CONN\"",
           "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"$CONN\"",
           "nmcli connection up \"$CONN\"",
           "hostnamectl set-hostname clientvm.aurora.lab"
         ],
         [
-          "vim /etc/hosts",
-          "192.168.122.3 db.aurora.lab"
-        ],
-        [
-          "vim /etc/yum.repos.d/aurora.repo",
-          "[BaseOS]",
-          "name=BaseOS",
-          "baseurl=http://servervm/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[AppStream]",
-          "name=AppStream",
-          "baseurl=http://servervm/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0"
+          "grep -q 'db.aurora.lab' /etc/hosts || echo '192.168.122.3 db.aurora.lab' >> /etc/hosts"
         ],
         [
           "# Run on servervm",
-          "# on servervm",
-          "vim /etc/yum.repos.d/aurora.repo",
-          "[BaseOS]",
-          "name=BaseOS",
-          "baseurl=http://servervm/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[AppStream]",
-          "name=AppStream",
-          "baseurl=http://servervm/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0"
-        ],
-        [
-          "vim /etc/httpd/conf.d/aurora.conf",
-          "<VirtualHost *:9090>",
-          "    DocumentRoot /srv/aurora-web",
-          "    <Directory /srv/aurora-web>",
-          "        Require all granted",
-          "    </Directory>",
-          "</VirtualHost>",
-          "semanage fcontext -a -t httpd_sys_content_t \"/srv/aurora-web(/.*)?\"",
-          "restorecon -Rv /srv/aurora-web",
-          "semanage port -a -t http_port_t -p tcp 9090",
-          "firewall-cmd --permanent --add-port=9090/tcp",
-          "firewall-cmd --reload",
-          "systemctl enable --now httpd"
-        ],
-        [
-          "groupadd auroraops",
-          "useradd -m elio",
-          "useradd -m risa",
-          "useradd -m -s /sbin/nologin nox",
-          "usermod -aG auroraops elio",
-          "usermod -aG auroraops risa"
-        ],
-        [
-          "passwd elio",
-          "# enter: cinder9",
-          "passwd risa",
-          "# enter: cinder9",
-          "passwd nox",
-          "# enter: cinder9"
-        ],
-        [
-          "visudo -f /etc/sudoers.d/auroraops",
-          "%auroraops ALL=(root) /usr/sbin/useradd",
-          "visudo -f /etc/sudoers.d/elio-passwd",
-          "elio ALL=(root) NOPASSWD: /usr/bin/passwd"
-        ],
-        [
-          "useradd -m auditf",
-          "passwd auditf",
-          "# enter: cinder9",
-          "mkdir -p /data/aurora",
-          "chown root:auroraops /data/aurora",
-          "chmod 2770 /data/aurora",
-          "setfacl -m d:u:auditf:rwx /data/aurora"
-        ],
-        [
-          "vim /home/risa/.bashrc",
-          "umask 077",
-          "chown risa:risa /home/risa/.bashrc"
-        ],
-        [
-          "useradd -m opsf",
-          "passwd opsf",
-          "# enter: cinder9",
-          "# on servervm",
-          "useradd -m backupf",
-          "passwd backupf",
-          "# enter: cinder9",
-          "runuser -l opsf -c \"ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa\"",
-          "runuser -l opsf -c \"ssh-copy-id backupf@servervm\""
-        ],
-        [
-          "firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.0/24\" port protocol=\"tcp\" port=\"2222\" accept'",
-          "firewall-cmd --reload",
-          "firewall-cmd --list-rich-rules"
-        ],
-        [
-          "vim /etc/chrony.conf",
-          "server servervm iburst",
+          "cat > /etc/chrony.conf <<'EOF'",
+          "driftfile /var/lib/chrony/drift",
+          "makestep 1.0 3",
+          "rtcsync",
+          "allow 192.168.122.0/24",
+          "local stratum 10",
+          "EOF",
           "systemctl enable --now chronyd"
         ],
         [
-          "useradd -m aurorarem",
-          "passwd aurorarem",
-          "# enter: cinder9",
-          "dnf -y install autofs",
-          "vim /etc/auto.master.d/aurora.autofs",
-          "/aurora/home /etc/auto.aurora",
-          "vim /etc/auto.aurora",
-          "aurorarem -rw servervm:/exports/aurorahome",
-          "systemctl enable --now autofs"
+          "cat > /etc/chrony.conf <<'EOF'",
+          "server servervm iburst",
+          "driftfile /var/lib/chrony/drift",
+          "makestep 1.0 3",
+          "rtcsync",
+          "EOF",
+          "systemctl enable --now chronyd"
         ],
         [
-          "useradd -u 4560 -m pine560",
-          "passwd pine560",
-          "# enter: cinder9"
+          "# Run on servervm",
+          "python3 - <<'EOF'",
+          "from pathlib import Path",
+          "import re",
+          "p = Path('/etc/ssh/sshd_config')",
+          "text = p.read_text()",
+          "for key, val in [('Port', '2222'), ('PasswordAuthentication', 'yes'), ('PubkeyAuthentication', 'yes')]:",
+          "    if re.search(rf'^\\s*{key}\\s+', text, flags=re.M):",
+          "        text = re.sub(rf'^\\s*{key}\\s+.*$', f'{key} {val}', text, flags=re.M)",
+          "    else:",
+          "        text += f'\\n{key} {val}\\n'",
+          "p.write_text(text)",
+          "EOF",
+          "systemctl restart sshd"
+        ],
+        [
+          "# Run on servervm",
+          "firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.0/24\" port protocol=\"tcp\" port=\"2222\" accept'",
+          "firewall-cmd --reload"
+        ],
+        [
+          "useradd -D -f 14"
+        ],
+        [
+          "useradd -M -u 4560 -s /sbin/nologin pine560",
+          "echo cinder9 | passwd --stdin pine560"
+        ],
+        [
+          "useradd elio",
+          "echo cinder9 | passwd --stdin elio"
+        ],
+        [
+          "visudo -f /etc/sudoers.d/elio-firewalld",
+          "elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld"
+        ],
+        [
+          "runuser -l elio -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'"
+        ],
+        [
+          "# Run on servervm",
+          "useradd backupf",
+          "echo cinder9 | passwd --stdin backupf",
+          "install -d -m 0755 -o backupf -g backupf /home/backupf/inbox"
+        ],
+        [
+          "runuser -l elio -c 'ssh-copy-id -p 2222 backupf@servervm'",
+          "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true'"
+        ],
+        [
+          "runuser -l elio -c 'rsync -e \"ssh -p 2222\" /opt/exam-f/aurora-report.txt backupf@servervm:/home/backupf/inbox/report.txt'"
+        ],
+        [
+          "echo 'umask 027' >> /home/elio/.bash_profile"
         ],
         [
           "mkdir -p /root/seekerf-files",
@@ -270,21 +225,16 @@
           "mount -a"
         ],
         [
-          "runuser -l solf -c \"cd /opt/rhcsa/workspaces/exam-f && podman build -t localhost/aurora-web:latest .\"",
-          "runuser -l solf -c \"podman run -d --name pdff -v /opt/inf:/data/input:Z -v /opt/outf:/data/output:Z localhost/aurora-web:latest\"",
-          "runuser -l solf -c \"mkdir -p ~/.config/systemd/user\"",
-          "runuser -l solf -c \"cd ~/.config/systemd/user && podman generate systemd --name pdff --files --new\"",
-          "runuser -l solf -c \"systemctl --user daemon-reload\"",
-          "runuser -l solf -c \"systemctl --user enable --now container-pdff.service\"",
-          "loginctl enable-linger solf"
+          "tuned-adm profile \"$(tuned-adm recommend)\""
         ]
       ],
       "checks": [
-        "getent hosts db.aurora.lab | grep -Fq '192.168.122.3'",
-        "firewall-cmd --list-rich-rules | grep -Fq 'source address=\"192.168.122.0/24\"' && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
-        "runuser -l opsf -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes backupf@servervm true'",
-        "findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$'",
-        "runuser -l solf -c 'systemctl --user is-enabled container-pdff.service' | grep -qx enabled && runuser -l solf -c 'systemctl --user is-active container-pdff.service' | grep -qx active && loginctl show-user solf | grep -Eq '^Linger=yes$'"
+        "hostnamectl --static | grep -qx 'clientvm.aurora.lab' && grep -Fqx '192.168.122.3 db.aurora.lab' /etc/hosts",
+        "grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
+        "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4560::/sbin/nologin' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
+        "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true' && ssh admin@servervm test -f /home/backupf/inbox/report.txt",
+        "test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt",
+        "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
       ]
     }
   }

@@ -1,7 +1,7 @@
 {
   "id": "lab-05-users-groups-sudo",
   "title": "Lab 05: Users Groups And Sudo",
-  "description": "Create local users, a delegated admin group, and passwordless privileged access",
+  "description": "Create local users on servervm with minimal useradd usage and delegated sudo rules.",
   "objective_tags": [
     "users-sudo-ssh"
   ],
@@ -10,37 +10,40 @@
   ],
   "time_limit_minutes": 40,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "clientvm": "scripts/clientvm.sh",
+    "servervm": "scripts/servervm.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_servervm": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create the group opsrune and the users brenor, lyessa, and quillan. Put brenor and lyessa in opsrune as a supplementary group. Sarahx must have /sbin/nologin and must not be in opsrune.",
-        "Set the password of all three users to cinder9.",
-        "Allow members of opsrune to run useradd through sudo, and allow brenor to run passwd for other users without a sudo password prompt."
+        "On servervm, create the group opsrune and the users brenor, lyessa, and quillan. Create brenor and lyessa with opsrune as a supplementary group at creation time. Create sarahx without a home directory and with the shell /sbin/nologin.",
+        "Set the passwords of brenor, lyessa, and quillan to cinder9.",
+        "On servervm, allow members of opsrune to run /usr/sbin/useradd through sudo, and allow brenor to run /usr/bin/passwd for other users without a sudo password prompt."
       ],
       "hints": [
-        "Use useradd and usermod only.",
-        "Create sudo policy files under /etc/sudoers.d and validate them with visudo."
+        "Use useradd -G when the supplementary group is known at account creation time.",
+        "Keep sudo rules in /etc/sudoers.d/ and validate each drop-in with visudo -f."
       ],
       "checks": [
-        "id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && getent passwd brenor >/dev/null",
-        "id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && getent passwd lyessa >/dev/null",
-        "getent passwd quillan | awk -F: '{exit !($7==\"/sbin/nologin\")}'",
-        "visudo -cf /etc/sudoers.d/opsrune >/dev/null && grep -Eq '^%opsrune[[:space:]]+ALL=\\(root\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers.d/opsrune",
-        "visudo -cf /etc/sudoers.d/brenor-passwd >/dev/null && grep -Eq '^brenor[[:space:]]+ALL=\\(root\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers.d/brenor-passwd"
+        "ssh admin@servervm id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && ssh admin@servervm getent passwd brenor >/dev/null",
+        "ssh admin@servervm id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && ssh admin@servervm getent passwd lyessa >/dev/null",
+        "ssh admin@servervm getent passwd sarahx | awk -F: '{exit !($6==\"/nonexistent\" || $6==\"/\" || $6==\"\")}' && ssh admin@servervm getent passwd sarahx | awk -F: '{exit !($7==\"/sbin/nologin\")}'",
+        "ssh admin@servervm sudo visudo -cf /etc/sudoers.d/opsrune >/dev/null && ssh admin@servervm sudo grep -Eq '^%opsrune[[:space:]]+ALL=\\(root\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers.d/opsrune",
+        "ssh admin@servervm sudo visudo -cf /etc/sudoers.d/brenor-passwd >/dev/null && ssh admin@servervm sudo grep -Eq '^brenor[[:space:]]+ALL=\\(root\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers.d/brenor-passwd"
       ],
       "solution_outline": [
-        "Use persistent configuration only."
+        "Create the group and all four accounts on servervm.",
+        "Set passwords only for the interactive accounts.",
+        "Write two sudo drop-ins and validate them with visudo."
       ],
       "task_titles": [
-        "Create the group opsrune and the users brenor,...",
-        "Set the password of all three users to cinder9",
-        "Allow members of opsrune to run useradd through..."
+        "Create opsrune and the required users on servervm",
+        "Set the interactive user passwords to cinder9",
+        "Create the required sudo rules on servervm"
       ],
       "task_points": [
         10,
@@ -49,26 +52,13 @@
       ],
       "solution_commands": [
         [
-          "groupadd opsrune",
-          "useradd -m brenor",
-          "useradd -m lyessa",
-          "useradd -m -s /sbin/nologin quillan",
-          "usermod -aG opsrune brenor",
-          "usermod -aG opsrune lyessa"
+          "groupadd opsrune\nuseradd -G opsrune brenor\nuseradd -G opsrune lyessa\nuseradd quillan\nuseradd -M -s /sbin/nologin sarahx"
         ],
         [
-          "passwd brenor",
-          "# enter: cinder9",
-          "passwd lyessa",
-          "# enter: cinder9",
-          "passwd quillan",
-          "# enter: cinder9"
+          "printf 'brenor:cinder9\nlyessa:cinder9\nquillan:cinder9\n' | chpasswd"
         ],
         [
-          "visudo -f /etc/sudoers.d/opsrune",
-          "%opsrune ALL=(root) /usr/sbin/useradd",
-          "visudo -f /etc/sudoers.d/brenor-passwd",
-          "brenor ALL=(root) NOPASSWD: /usr/bin/passwd"
+          "printf '%%opsrune ALL=(root) /usr/sbin/useradd\n' > /etc/sudoers.d/opsrune\nvisudo -f /etc/sudoers.d/opsrune -c\nprintf 'brenor ALL=(root) NOPASSWD: /usr/bin/passwd\n' > /etc/sudoers.d/brenor-passwd\nvisudo -f /etc/sudoers.d/brenor-passwd -c"
         ]
       ]
     }

@@ -9,7 +9,7 @@
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 
-Configure key-based SSH access and securely copy a file to the second system.
+Use a key pair and scp between the two lab hosts.
 
 ### Systems
 | System | Use |
@@ -22,42 +22,43 @@ Configure key-based SSH access and securely copy a file to the second system.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create user bridge48 on both clientvm and servervm (clientvm) - 10 pts
+## Task 01 - Create bridge48 on both systems (clientvm) - 10 pts
 
 ```bash
-# On both systems
 useradd -m bridge48
-passwd bridge48
-# enter: cinder9
+printf 'bridge48:cinder9
+' | chpasswd
 ```
 
 ---
 
-## Task 02 - generate an ED25519 SSH key pair with no passphrase (clientvm) - 10 pts
+## Task 02 - Generate the ED25519 key pair (clientvm) - 10 pts
 
 ```bash
-runuser -l bridge48 -c "ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519"
+runuser -l bridge48 -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
 ```
 
 ---
 
-## Task 03 - Configure passwordless SSH access for bridge48 from (clientvm) - 10 pts
+## Task 03 - Enable passwordless SSH from clientvm to servervm (clientvm) - 10 pts
 
 ```bash
-runuser -l bridge48 -c "ssh-copy-id -o StrictHostKeyChecking=no bridge48@192.168.122.3"
+runuser -l bridge48 -c 'ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm'
 ```
 
 ---
 
-## Task 04 - Using scp over SSH, copy /home/bridge48/payload.txt (servervm) - 10 pts
+## Task 04 - Copy the payload with scp (servervm) - 10 pts
 
 ```bash
-runuser -l bridge48 -c "scp -o StrictHostKeyChecking=no /home/bridge48/payload.txt bridge48@192.168.122.3:/home/bridge48/inbox/"
+runuser -l bridge48 -c 'scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/'
 ```
 
 ---
 
 ## Verification
 ```bash
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@192.168.122.3 "test -f /home/bridge48/inbox/payload.txt"
+getent passwd bridge48 >/dev/null && test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519
+ssh bridge48@servervm true
+ssh bridge48@servervm test -f /home/bridge48/inbox/payload.txt
 ```
