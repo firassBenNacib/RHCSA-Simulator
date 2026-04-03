@@ -24,7 +24,7 @@ Schedule a recurring task for a specific user.
 ## Task 01 - Create user ferro if it does not exist and set its (clientvm) - 10 pts
 
 ```bash
-id ferro || useradd ferro
+useradd ferro
 passwd ferro
 # enter: cinder9
 ```
@@ -37,12 +37,4 @@ passwd ferro
 crontab -e -u ferro
 */2 * * * * logger "Lab 07 running"
 systemctl enable --now crond
-```
-
----
-
-## Verification
-```bash
-crontab -l -u ferro | grep -Fqx '*/2 * * * * logger "Lab 07 running"'
-systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active
 ```

@@ -97,14 +97,16 @@
       ],
       "solution_commands": [
         [
-          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"$CONN\"",
-          "nmcli connection up \"$CONN\"",
+          "nmcli device status",
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"System eth1\"",
+          "nmcli connection up \"System eth1\"",
           "hostnamectl set-hostname clientvm.exam-e.lab"
         ],
         [
-          "grep -q 'registry.exam-e.lab' /etc/hosts || echo '192.168.122.3 registry.exam-e.lab' >> /etc/hosts"
+          "vim /etc/hosts",
+          "192.168.122.3 registry.exam-e.lab"
         ],
         [
           "cat > /etc/yum.repos.d/exam-e.repo <<'EOF'",
@@ -113,7 +115,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[harbor-appstream]",
           "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -130,7 +131,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[harbor-appstream]",
           "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -143,13 +143,14 @@
           "dnf install -y httpd",
           "mkdir -p /srv/harbor-web",
           "printf 'exam-e portal\\n' > /srv/harbor-web/index.html",
-          "sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf",
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8181",
           "cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'",
           "<VirtualHost *:8181>",
           "    DocumentRoot \"/srv/harbor-web\"",
           "</VirtualHost>",
           "EOF",
-          "semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?' || semanage fcontext -m -t httpd_sys_content_t '/srv/harbor-web(/.*)?'",
+          "semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?'",
           "restorecon -Rv /srv/harbor-web",
           "firewall-cmd --permanent --add-port=8181/tcp",
           "firewall-cmd --reload",
@@ -166,8 +167,8 @@
           "chage -M 30 -m 2 -W 7 ivor"
         ],
         [
-          "install -d -m 2770 -o root -g harborops /srv/harbor-drop",
-          "setfacl -d -m g:harborops:rwx /srv/harbor-drop"
+          "chmod 770 /srv/harbor-drop",
+          "chmod g+s /srv/harbor-drop"
         ],
         [
           "useradd -M -s /sbin/nologin harborremote",
@@ -186,7 +187,8 @@
         ],
         [
           "mkdir -p /mnt/harborhome",
-          "grep -q '/mnt/harborhome' /etc/fstab || echo 'servervm:/exports/harborhome /mnt/harborhome nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "vim /etc/fstab",
+          "servervm:/exports/harborhome /mnt/harborhome nfs defaults,_netdev 0 0",
           "mount -a"
         ],
         [

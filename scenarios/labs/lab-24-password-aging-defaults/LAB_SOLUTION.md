@@ -61,12 +61,3 @@ useradd drift24
 printf 'drift24:cinder9
 ' | chpasswd
 ```
-
----
-
-## Verification
-```bash
-grep -Eq '^PASS_MAX_DAYS[[:space:]]+60$' /etc/login.defs && grep -Eq '^PASS_MIN_DAYS[[:space:]]+7$' /etc/login.defs && grep -Eq '^PASS_WARN_AGE[[:space:]]+10$' /etc/login.defs
-useradd -D | grep -Eq '^INACTIVE=15$'
-getent passwd drift24 >/dev/null && chage -l drift24 | grep -Fq 'Maximum number of days between password change			: 60' && chage -l drift24 | grep -Fq 'Minimum number of days between password change			: 7' && chage -l drift24 | grep -Fq 'Number of days of warning before password expires		: 10'
-```

@@ -24,7 +24,7 @@ Build and tag a local container image from a provided Containerfile.
 ## Task 01 - build an image named localhost/text2pdf20:latest (clientvm) - 10 pts
 
 ```bash
-id builder20 || useradd -m builder20
+useradd -m builder20
 passwd builder20
 # enter: cinder9
 su - builder20
@@ -40,11 +40,4 @@ exit
 
 ```bash
 runuser -l builder20 -c "podman images"
-```
-
----
-
-## Verification
-```bash
-runuser -l builder20 -c 'podman image exists localhost/text2pdf20:latest'
 ```

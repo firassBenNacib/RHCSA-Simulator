@@ -35,11 +35,3 @@ dnf install -y tree dos2unix
 dnf remove -y dos2unix
 rpm -q tree
 ```
-
----
-
-## Verification
-```bash
-rpm -q tree
-! rpm -q dos2unix
-```

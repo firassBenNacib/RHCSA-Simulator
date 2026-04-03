@@ -39,10 +39,11 @@ exec /sbin/init
 ## Question 02 - Client Network (clientvm) - 5 pts
 
 ```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection modify "$CONN" ipv4.addresses 192.168.122.39/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "$CONN"
-nmcli connection up "$CONN"
+nmcli device status
+nmcli connection show "System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.39/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "System eth1"
+nmcli connection up "System eth1"
 hostnamectl set-hostname clientvm.deltaforge.lab
 ```
 
@@ -59,7 +60,8 @@ grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 ## Question 04 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'vault.deltaforge.lab' /etc/hosts || echo '192.168.122.3 vault.deltaforge.lab' >> /etc/hosts
+vim /etc/hosts
+192.168.122.3 vault.deltaforge.lab
 ```
 
 ---
@@ -68,7 +70,8 @@ grep -q 'vault.deltaforge.lab' /etc/hosts || echo '192.168.122.3 vault.deltaforg
 
 ```bash
 mkdir -p /mnt/delta-home
-grep -q '/mnt/delta-home' /etc/fstab || echo 'servervm:/exports/delta-home /mnt/delta-home nfs defaults,_netdev 0 0' >> /etc/fstab
+vim /etc/fstab
+servervm:/exports/delta-home /mnt/delta-home nfs defaults,_netdev 0 0
 mount -a
 ```
 
@@ -87,7 +90,8 @@ echo cinder9 | passwd --stdin pavel
 ## Question 07 - Sticky Shared Directory (clientvm) - 5 pts
 
 ```bash
-install -d -m 3770 -o root -g deltaops /projects/delta-drop
+chmod 770 /projects/delta-drop
+chmod g+s,+t /projects/delta-drop
 ```
 
 ---
@@ -124,7 +128,9 @@ echo cinder9 | passwd --stdin copyg
 # Run on servervm
 useradd copyg
 echo cinder9 | passwd --stdin copyg
-install -d -m 0755 -o copyg -g copyg /home/copyg/inbox
+mkdir -p /home/copyg/inbox
+chown copyg:copyg /home/copyg/inbox
+chmod 0755 /home/copyg/inbox
 ```
 
 ---
@@ -187,7 +193,6 @@ tar -cjf /root/etc-g.tar.bz2 /etc
 mkdir -p /var/log/journal
 vim /etc/systemd/journald.conf
 # Set: Storage=persistent
-:wq
 systemctl restart systemd-journald
 ```
 
@@ -209,7 +214,6 @@ fdisk /dev/sdb
 # g
 # n
 # <Enter>
-# <Enter>
 # +736M
 # t
 # 19
@@ -219,8 +223,6 @@ vim /etc/fstab
 blkid /dev/sdb1
 vim /etc/fstab
 # Add the swap entry with the UUID reported above
-:wq
-:wq
 swapon -a
 ```
 
@@ -232,7 +234,6 @@ swapon -a
 fdisk /dev/sdc
 # g
 # n
-# <Enter>
 # <Enter>
 # +700M
 # t
@@ -247,8 +248,6 @@ vim /etc/fstab
 blkid /dev/deltavg/deltalv
 vim /etc/fstab
 # Add the ext4 mount entry with the UUID reported above
-:wq
-:wq
 mount -a
 ```
 
@@ -264,16 +263,4 @@ runuser -l solg -c "cd ~/.config/systemd/user && podman generate systemd --name 
 runuser -l solg -c "systemctl --user daemon-reload"
 runuser -l solg -c "systemctl --user enable --now container-pdfg.service"
 loginctl enable-linger solg
-```
-
----
-
-## Verification
-```bash
-hostnamectl --static | grep -qx 'clientvm.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
-mount | grep -Eq 'servervm:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin'
-chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo exam-g access' /home/pavel/.bash_profile && atq | grep -q pavel
-runuser -l copyg -c 'ssh -o BatchMode=yes copyg@servervm true' && ssh admin@servervm test -f /home/copyg/inbox/payload.txt
-test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p "$(cat /home/workerg/cpu.pid)" >/dev/null 2>&1 && ps -o ni= -p "$(cat /home/workerg/sleep.pid)" | tr -d ' ' | grep -qx '10'
-swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'
 ```

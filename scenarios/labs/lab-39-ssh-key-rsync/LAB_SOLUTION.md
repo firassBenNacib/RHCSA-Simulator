@@ -53,10 +53,3 @@ runuser -l mesh39 -c "ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122
 ```bash
 runuser -l mesh39 -c "rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/"
 ```
-
----
-
-## Verification
-```bash
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 "test -f /home/mesh39/server-data/file1.txt"
-```

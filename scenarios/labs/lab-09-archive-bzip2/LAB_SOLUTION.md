@@ -26,10 +26,3 @@ Create a compressed archive in bzip2 format.
 ```bash
 tar -cjf /root/myetcbackup.tar.bz2 /etc
 ```
-
----
-
-## Verification
-```bash
-tar -tjf /root/myetcbackup.tar.bz2 | grep -Eq '^etc/$|^etc/'
-```

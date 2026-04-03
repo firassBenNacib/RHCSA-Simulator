@@ -96,14 +96,16 @@
       ],
       "solution_commands": [
         [
-          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"$CONN\"",
-          "nmcli connection up \"$CONN\"",
+          "nmcli device status",
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"System eth1\"",
+          "nmcli connection up \"System eth1\"",
           "hostnamectl set-hostname clientvm.exam-f.lab"
         ],
         [
-          "grep -q 'db.exam-f.lab' /etc/hosts || echo '192.168.122.3 db.exam-f.lab' >> /etc/hosts"
+          "vim /etc/hosts",
+          "192.168.122.3 db.exam-f.lab"
         ],
         [
           "# Run on servervm",
@@ -127,18 +129,10 @@
         ],
         [
           "# Run on servervm",
-          "python3 - <<'EOF'",
-          "from pathlib import Path",
-          "import re",
-          "p = Path('/etc/ssh/sshd_config')",
-          "text = p.read_text()",
-          "for key, val in [('Port', '2222'), ('PasswordAuthentication', 'yes'), ('PubkeyAuthentication', 'yes')]:",
-          "    if re.search(rf'^\\s*{key}\\s+', text, flags=re.M):",
-          "        text = re.sub(rf'^\\s*{key}\\s+.*$', f'{key} {val}', text, flags=re.M)",
-          "    else:",
-          "        text += f'\\n{key} {val}\\n'",
-          "p.write_text(text)",
-          "EOF",
+          "vim /etc/ssh/sshd_config",
+          "Port 2222",
+          "PasswordAuthentication yes",
+          "PubkeyAuthentication yes",
           "systemctl restart sshd"
         ],
         [
@@ -168,7 +162,9 @@
           "# Run on servervm",
           "useradd backupf",
           "echo cinder9 | passwd --stdin backupf",
-          "install -d -m 0755 -o backupf -g backupf /home/backupf/inbox"
+          "mkdir -p /home/backupf/inbox",
+          "chown backupf:backupf /home/backupf/inbox",
+          "chmod 0755 /home/backupf/inbox"
         ],
         [
           "runuser -l elio -c 'ssh-copy-id -p 2222 backupf@servervm'",

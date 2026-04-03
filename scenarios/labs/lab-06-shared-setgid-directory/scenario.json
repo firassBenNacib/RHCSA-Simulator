@@ -50,10 +50,13 @@
       ],
       "solution_commands": [
         [
-          "groupadd -f analystsx\ninstall -d -o root -g analystsx /shared/analysts"
+          "groupadd -f analystsx",
+          "mkdir -p /shared/analysts",
+          "chown root:analystsx /shared/analysts"
         ],
         [
-          "chmod 3770 /shared/analysts"
+          "chmod 770 /shared/analysts",
+          "chmod g+s,+t /shared/analysts"
         ],
         [
           "stat -c %A /shared/analysts"

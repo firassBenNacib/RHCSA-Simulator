@@ -34,12 +34,3 @@ vim /etc/fstab
 UUID=<uuid-of-sdb1> swap swap defaults 0 0
 swapon --show
 ```
-
----
-
-## Verification
-```bash
-swapon --noheadings --show=NAME | grep -qx '/dev/sdb1'
-blkid -o value -s TYPE /dev/sdb1 | grep -qx swap
-uuid="$(blkid -o value -s UUID /dev/sdb1)"; grep -Eq "^UUID=${uuid}[[:space:]]+swap[[:space:]]+swap[[:space:]]+" /etc/fstab
-```

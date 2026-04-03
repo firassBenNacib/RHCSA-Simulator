@@ -41,12 +41,3 @@ echo "Welcome ${USER}, you are logged in!"
 EOF
 chmod 644 /etc/profile.d/lab19-greeting.sh
 ```
-
----
-
-## Verification
-```bash
-test -f /etc/profile.d/lab19-greeting.sh && grep -Fq 'Welcome ${USER}, you are logged in!' /etc/profile.d/lab19-greeting.sh
-ssh admin@servervm test -f /etc/profile.d/lab19-greeting.sh && ssh admin@servervm grep -Fq 'Welcome ${USER}, you are logged in!' /etc/profile.d/lab19-greeting.sh
-ssh admin@servervm test -f /home/orien19/.bash_profile && ssh admin@servervm grep -Fq 'Welcome to you, user Orien, you are amazing!' /home/orien19/.bash_profile
-```

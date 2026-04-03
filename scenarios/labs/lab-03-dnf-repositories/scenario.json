@@ -53,13 +53,11 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[rhcsa-appstream]",
           "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
           "gpgcheck=0",
-          ":wq",
           "dnf clean all"
         ],
         [
@@ -70,13 +68,11 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[rhcsa-appstream]",
           "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
           "gpgcheck=0",
-          ":wq",
           "dnf clean all"
         ],
         [

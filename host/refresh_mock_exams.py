@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from scenario_solution_normalizer import normalize_command_list
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMS_DIR = ROOT / "scenarios" / "exams"
@@ -36,7 +37,7 @@ def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: 
     data["flags"]["password_recovery"] = password_recovery
     exam["task_titles"] = [item[0] for item in blocks]
     exam["tasks"] = [item[1] for item in blocks]
-    exam["solution_commands"] = [item[2] for item in blocks]
+    exam["solution_commands"] = [normalize_command_list(item[2]) for item in blocks]
     exam["task_points"] = POINTS
     exam["checks"] = checks
     save_exam(exam_id, data)

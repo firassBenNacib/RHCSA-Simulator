@@ -98,14 +98,16 @@
       ],
       "solution_commands": [
         [
-          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"$CONN\"",
-          "nmcli connection up \"$CONN\"",
+          "nmcli device status",
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"System eth1\"",
+          "nmcli connection up \"System eth1\"",
           "hostnamectl set-hostname clientvm.exam-h.lab"
         ],
         [
-          "grep -q 'registry.exam-h.lab' /etc/hosts || echo '192.168.122.3 registry.exam-h.lab' >> /etc/hosts"
+          "vim /etc/hosts",
+          "192.168.122.3 registry.exam-h.lab"
         ],
         [
           "cat > /etc/yum.repos.d/exam-h.repo <<'EOF'",
@@ -114,7 +116,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[silver-appstream]",
           "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -131,7 +132,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[silver-appstream]",
           "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -142,10 +142,11 @@
         ],
         [
           "dnf install -y httpd",
-          "sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf",
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8181",
           "firewall-cmd --permanent --add-port=8181/tcp",
           "firewall-cmd --reload",
-          "semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181",
+          "semanage port -a -t http_port_t -p tcp 8181",
           "systemctl enable --now httpd"
         ],
         [
@@ -164,7 +165,8 @@
           "chage -d 0 agingh"
         ],
         [
-          "install -d -m 1777 -o root -g root /srv/silver-drop"
+          "chmod 777 /srv/silver-drop",
+          "chmod +t /srv/silver-drop"
         ],
         [
           "# Run on servervm",
@@ -208,7 +210,6 @@
           "# g",
           "# n",
           "# <Enter>",
-          "# <Enter>",
           "# +672M",
           "# t",
           "# 19",
@@ -218,8 +219,6 @@
           "blkid /dev/sdb1",
           "vim /etc/fstab",
           "# Add the swap entry with the UUID reported above",
-          ":wq",
-          ":wq",
           "swapon -a"
         ],
         [
@@ -237,7 +236,7 @@
           "rpm -q tree"
         ],
         [
-          "id inspecth || useradd -m inspecth",
+          "useradd -m inspecth",
           "passwd inspecth",
           "# enter: cinder9",
           "runuser -l inspecth -c \"podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar\"",

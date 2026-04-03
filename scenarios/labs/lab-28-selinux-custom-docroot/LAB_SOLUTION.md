@@ -51,12 +51,3 @@ firewall-cmd --reload
 ```bash
 systemctl enable --now httpd
 ```
-
----
-
-## Verification
-```bash
-grep -Rqs 'DocumentRoot /srv/lab28/site' /etc/httpd/conf.d && grep -Rqs '^Listen 8088$' /etc/httpd/conf.d
-semanage port -l | grep -Eq '^http_port_t\b.*\b8088\b' && matchpathcon /srv/lab28/site/index.html | grep -Fq httpd_sys_content_t
-systemctl is-enabled httpd | grep -qx enabled && firewall-cmd --list-ports | grep -Eq '(^| )8088/tcp($| )'
-```

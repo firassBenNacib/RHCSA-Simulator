@@ -51,12 +51,3 @@ PasswordAuthentication yes
 PermitRootLogin yes
 systemctl restart sshd
 ```
-
----
-
-## Verification
-```bash
-getenforce | grep -qx Enforcing
-ls -Zd /root | grep -Eq '(^| )[^ ]+:object_r:admin_home_t:s0($| )'
-grep -Eq '^[[:space:]]*PasswordAuthentication[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config && grep -Eq '^[[:space:]]*PermitRootLogin[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config
-```

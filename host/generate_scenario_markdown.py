@@ -220,10 +220,7 @@ def render_solution(tasks, task_titles, task_points, solution_commands, checks, 
         sections.append("")
         sections.append("---")
         sections.append("")
-    if checks:
-        sections.append("## Verification")
-        sections.append(code_block(checks))
-    elif sections and sections[-2:] == ["---", ""]:
+    if sections and sections[-2:] == ["---", ""]:
         sections = sections[:-2]
     return "\n".join(sections).rstrip()
 

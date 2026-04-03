@@ -26,10 +26,3 @@ Extract matching lines from a seeded words file.
 ```bash
 grep "ich" /usr/share/dict/words > /root/lines
 ```
-
----
-
-## Verification
-```bash
-test -s /root/lines && grep -q 'ich' /root/lines && ! awk 'index($0,"ich")==0{print; exit 1}' /root/lines
-```

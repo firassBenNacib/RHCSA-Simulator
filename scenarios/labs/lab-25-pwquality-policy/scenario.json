@@ -44,7 +44,11 @@
       ],
       "solution_commands": [
         [
-          "cat > /etc/security/pwquality.conf.d/lab25.conf <<'EOF'\nminlen = 12\nminclass = 3\nmaxrepeat = 2\nEOF"
+          "cat > /etc/security/pwquality.conf.d/lab25.conf <<'EOF'",
+          "minlen = 12",
+          "minclass = 3",
+          "maxrepeat = 2",
+          "EOF"
         ],
         [
           "true"

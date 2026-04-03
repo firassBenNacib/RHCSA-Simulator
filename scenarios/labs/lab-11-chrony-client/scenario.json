@@ -45,10 +45,20 @@
       ],
       "solution_commands": [
         [
-          "printf 'allow 192.168.122.0/24\n' > /etc/chrony.d/lab11-server.conf\nsystemctl enable --now chronyd"
+          "printf 'allow 192.168.122.0/24",
+          "' > /etc/chrony.d/lab11-server.conf",
+          "systemctl enable --now chronyd"
         ],
         [
-          "printf 'server servervm iburst\n' > /etc/chrony.d/lab11-client.conf\npython - <<'EOF'\nfrom pathlib import Path\np = Path('/etc/chrony.conf')\nlines = [line for line in p.read_text().splitlines() if not line.strip().startswith(('server ', 'pool '))]\np.write_text('\\n'.join(lines) + '\\n')\nEOF\nsystemctl enable --now chronyd"
+          "printf 'server servervm iburst",
+          "' > /etc/chrony.d/lab11-client.conf",
+          "python - <<'EOF'",
+          "from pathlib import Path",
+          "p = Path('/etc/chrony.conf')",
+          "lines = [line for line in p.read_text().splitlines() if not line.strip().startswith(('server ', 'pool '))]",
+          "p.write_text('\\n'.join(lines) + '\\n')",
+          "EOF",
+          "systemctl enable --now chronyd"
         ]
       ]
     }

@@ -45,12 +45,3 @@ systemctl enable --now atd
 runuser -l queue27 -c "echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes"
 atq
 ```
-
----
-
-## Verification
-```bash
-systemctl is-enabled atd | grep -qx enabled
-systemctl is-active atd | grep -qx active
-atq | grep -q queue27
-```

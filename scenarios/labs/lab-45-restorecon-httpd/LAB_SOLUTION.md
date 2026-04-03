@@ -36,11 +36,3 @@ restorecon -v /var/www/html/index45.html
 setenforce 1
 systemctl enable --now httpd
 ```
-
----
-
-## Verification
-```bash
-ssh admin@servervm matchpathcon /var/www/html/index45.html | awk '{print $3}' | grep -qx httpd_sys_content_t
-ssh admin@servervm getenforce | grep -qx Enforcing && ssh admin@servervm systemctl is-enabled httpd | grep -qx enabled && ssh admin@servervm systemctl is-active httpd | grep -qx active
-```

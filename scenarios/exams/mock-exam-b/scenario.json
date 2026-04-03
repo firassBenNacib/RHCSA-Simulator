@@ -42,9 +42,9 @@
         "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.",
         "On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
         "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.",
-        "Install mira's public key for user meshremote on servervm and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 to copy /home/mira/report.txt to /home/meshremote/inbox/report.txt on servervm.",
-        "Find all files under /opt/exam-b/find that are owned by mira and were modified in the last 24 hours, then copy them to /root/mira-files while preserving the directory structure."
+        "On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
+        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.",
+        "On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222."
       ],
       "task_titles": [
         "Client Network",
@@ -68,7 +68,7 @@
         "Rsync Transfer",
         "Passwordless SSH",
         "Rsync Transfer",
-        "Find And Copy"
+        "Passwordless SSH"
       ],
       "task_points": [
         5,
@@ -96,14 +96,16 @@
       ],
       "solution_commands": [
         [
-          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"$CONN\"",
-          "nmcli connection up \"$CONN\"",
+          "nmcli device status",
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"System eth1\"",
+          "nmcli connection up \"System eth1\"",
           "hostnamectl set-hostname clientvm.exam-b.lab"
         ],
         [
-          "grep -q 'registry.exam-b.lab' /etc/hosts || echo '192.168.122.3 registry.exam-b.lab' >> /etc/hosts"
+          "vim /etc/hosts",
+          "192.168.122.3 registry.exam-b.lab"
         ],
         [
           "# Run on servervm",
@@ -154,18 +156,10 @@
         ],
         [
           "# Run on servervm",
-          "python3 - <<'EOF'",
-          "from pathlib import Path",
-          "import re",
-          "p = Path('/etc/ssh/sshd_config')",
-          "text = p.read_text()",
-          "for key, val in [('Port', '2222'), ('PasswordAuthentication', 'yes'), ('PubkeyAuthentication', 'yes')]:",
-          "    if re.search(rf'^\\s*{key}\\s+', text, flags=re.M):",
-          "        text = re.sub(rf'^\\s*{key}\\s+.*$', f'{key} {val}', text, flags=re.M)",
-          "    else:",
-          "        text += f'\\n{key} {val}\\n'",
-          "p.write_text(text)",
-          "EOF",
+          "vim /etc/ssh/sshd_config",
+          "Port 2222",
+          "PasswordAuthentication yes",
+          "PubkeyAuthentication yes",
           "systemctl restart sshd"
         ],
         [
@@ -178,9 +172,11 @@
         ],
         [
           "# Run on servervm",
-          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "useradd meshremote",
           "echo cinder9 | passwd --stdin meshremote",
-          "install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
           "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
           "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
         ],
@@ -189,9 +185,11 @@
         ],
         [
           "# Run on servervm",
-          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "useradd meshremote",
           "echo cinder9 | passwd --stdin meshremote",
-          "install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
           "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
           "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
         ],
@@ -200,9 +198,11 @@
         ],
         [
           "# Run on servervm",
-          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "useradd meshremote",
           "echo cinder9 | passwd --stdin meshremote",
-          "install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
           "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
           "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
         ],
@@ -210,14 +210,27 @@
           "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
         ],
         [
+          "# Run on servervm",
+          "useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
           "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
           "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
         ],
         [
-          "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /home/mira/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
+          "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
         ],
         [
-          "find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \\;"
+          "# Run on servervm",
+          "useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
+          "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
         ]
       ],
       "checks": [

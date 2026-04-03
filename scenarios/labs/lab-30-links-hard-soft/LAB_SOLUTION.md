@@ -36,11 +36,3 @@ printf 'link-test
 ln /root/linksource30 /root/linkhard30
 ln -s /root/linksource30 /root/linksoft30
 ```
-
----
-
-## Verification
-```bash
-test "$(stat -c '%i' /root/linksource30)" = "$(stat -c '%i' /root/linkhard30)" && test "$(stat -c '%h' /root/linksource30)" -ge 2
-test "$(readlink -f /root/linksoft30)" = '/root/linksource30' && grep -Fqx 'link-test' /root/linksource30
-```

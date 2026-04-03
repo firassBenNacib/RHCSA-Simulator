@@ -28,7 +28,6 @@ Mount a remote NFS export persistently using /etc/fstab.
 mkdir -p /mnt/direct36
 vim /etc/fstab
 192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0
-:wq
 ```
 
 ---
@@ -45,13 +44,4 @@ mount -a
 
 ```bash
 ls /mnt/direct36
-```
-
----
-
-## Verification
-```bash
-grep -Eq '^[^#].*192\.168\.122\.3:/exports/direct36[[:space:]]+/mnt/direct36[[:space:]]+nfs[[:space:]]+ro,sync' /etc/fstab
-mountpoint -q /mnt/direct36
-test -f /mnt/direct36/nfs36.txt
 ```

@@ -26,10 +26,11 @@ A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chr
 ## Question 01 - Client Network (clientvm) - 5 pts
 
 ```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection modify "$CONN" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "$CONN"
-nmcli connection up "$CONN"
+nmcli device status
+nmcli connection show "System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "System eth1"
+nmcli connection up "System eth1"
 hostnamectl set-hostname clientvm.exam-h.lab
 ```
 
@@ -38,7 +39,8 @@ hostnamectl set-hostname clientvm.exam-h.lab
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'registry.exam-h.lab' /etc/hosts || echo '192.168.122.3 registry.exam-h.lab' >> /etc/hosts
+vim /etc/hosts
+192.168.122.3 registry.exam-h.lab
 ```
 
 ---
@@ -52,7 +54,6 @@ name=RHCSA BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
-
 [silver-appstream]
 name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
@@ -74,7 +75,6 @@ name=RHCSA BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
-
 [silver-appstream]
 name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
@@ -90,10 +90,11 @@ dnf clean all
 
 ```bash
 dnf install -y httpd
-sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf
+vim /etc/httpd/conf/httpd.conf
+Listen 8181
 firewall-cmd --permanent --add-port=8181/tcp
 firewall-cmd --reload
-semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181
+semanage port -a -t http_port_t -p tcp 8181
 systemctl enable --now httpd
 ```
 
@@ -132,7 +133,8 @@ chage -d 0 agingh
 ## Question 09 - Sticky Directory (clientvm) - 5 pts
 
 ```bash
-install -d -m 1777 -o root -g root /srv/silver-drop
+chmod 777 /srv/silver-drop
+chmod +t /srv/silver-drop
 ```
 
 ---
@@ -216,7 +218,6 @@ fdisk /dev/sdb
 # g
 # n
 # <Enter>
-# <Enter>
 # +672M
 # t
 # 19
@@ -226,8 +227,6 @@ vim /etc/fstab
 blkid /dev/sdb1
 vim /etc/fstab
 # Add the swap entry with the UUID reported above
-:wq
-:wq
 swapon -a
 ```
 
@@ -265,7 +264,7 @@ rpm -q tree
 ## Question 21 - Inspect Container Image (clientvm) - 4 pts
 
 ```bash
-id inspecth || useradd -m inspecth
+useradd -m inspecth
 passwd inspecth
 # enter: cinder9
 runuser -l inspecth -c "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
@@ -279,16 +278,4 @@ runuser -l inspecth -c "podman image inspect localhost/rhcsa-httpd-base:latest -
 ```bash
 tuned-adm profile $(tuned-adm recommend)
 tuned-adm active
-```
-
----
-
-## Verification
-```bash
-hostnamectl --static | grep -qx 'clientvm.exam-h.lab' && grep -Fqx '192.168.122.3 registry.exam-h.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
-curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8181\b' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
-grep -Eq '^minlen\s*=\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\s*=\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin' && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'
-grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled
-test -f /root/watcherh-files/opt/exam-h/find/a/file1.txt && grep -q 'silver' /root/silver-lines && test -f /root/usr-local-h.tar.gz && swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewh" && $2=="reviewvgh" && $3>=319 && $3<=321{f=1} END{exit !f}' && systemctl get-default | grep -qx multi-user.target && systemctl is-enabled rsyslog | grep -qx enabled && systemctl is-enabled postfix | grep -qx disabled && rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null 2>&1
-runuser -l inspecth -c 'podman image exists localhost/rhcsa-httpd-base:latest' && test -s /home/inspecth/workdir.txt && rec="$(tuned-adm recommend | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
 ```

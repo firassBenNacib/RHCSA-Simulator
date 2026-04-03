@@ -35,10 +35,3 @@ firewall-cmd --reload
 ```bash
 firewall-cmd --list-rich-rules
 ```
-
----
-
-## Verification
-```bash
-firewall-cmd --list-rich-rules | grep -Fq 'source address="192.168.122.0/24"' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
-```

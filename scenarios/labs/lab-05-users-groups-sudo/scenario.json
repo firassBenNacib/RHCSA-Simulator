@@ -52,13 +52,25 @@
       ],
       "solution_commands": [
         [
-          "groupadd opsrune\nuseradd -G opsrune brenor\nuseradd -G opsrune lyessa\nuseradd quillan\nuseradd -M -s /sbin/nologin sarahx"
+          "groupadd opsrune",
+          "useradd -G opsrune brenor",
+          "useradd -G opsrune lyessa",
+          "useradd quillan",
+          "useradd -M -s /sbin/nologin sarahx"
         ],
         [
-          "printf 'brenor:cinder9\nlyessa:cinder9\nquillan:cinder9\n' | chpasswd"
+          "printf 'brenor:cinder9",
+          "lyessa:cinder9",
+          "quillan:cinder9",
+          "' | chpasswd"
         ],
         [
-          "printf '%%opsrune ALL=(root) /usr/sbin/useradd\n' > /etc/sudoers.d/opsrune\nvisudo -f /etc/sudoers.d/opsrune -c\nprintf 'brenor ALL=(root) NOPASSWD: /usr/bin/passwd\n' > /etc/sudoers.d/brenor-passwd\nvisudo -f /etc/sudoers.d/brenor-passwd -c"
+          "printf '%%opsrune ALL=(root) /usr/sbin/useradd",
+          "' > /etc/sudoers.d/opsrune",
+          "visudo -f /etc/sudoers.d/opsrune -c",
+          "printf 'brenor ALL=(root) NOPASSWD: /usr/bin/passwd",
+          "' > /etc/sudoers.d/brenor-passwd",
+          "visudo -f /etc/sudoers.d/brenor-passwd -c"
         ]
       ]
     }

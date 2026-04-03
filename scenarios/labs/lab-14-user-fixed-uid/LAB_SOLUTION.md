@@ -29,10 +29,3 @@ passwd tavric
 # enter: cinder9
 id tavric
 ```
-
----
-
-## Verification
-```bash
-id -u tavric | grep -qx '4111'
-```

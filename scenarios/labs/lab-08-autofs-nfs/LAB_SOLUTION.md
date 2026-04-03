@@ -55,12 +55,3 @@ systemctl enable --now autofs
 ls -l /netdir/vault8
 cat /netdir/vault8/welcome.txt
 ```
-
----
-
-## Verification
-```bash
-showmount -e servervm | grep -Eq '(^|[[:space:]])/exports/vault8([[:space:]]|$)'
-mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs'
-test -f /netdir/vault8/welcome.txt && grep -Fqx 'autofs lab 08' /netdir/vault8/welcome.txt
-```

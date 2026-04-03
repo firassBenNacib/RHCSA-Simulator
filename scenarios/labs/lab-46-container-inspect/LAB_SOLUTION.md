@@ -24,7 +24,7 @@ Load a provided container image into user storage and inspect its metadata with 
 ## Task 01 - Create user scope46 with password cinder9 if it (clientvm) - 10 pts
 
 ```bash
-id scope46 || useradd -m scope46
+useradd -m scope46
 passwd scope46
 # enter: cinder9
 ```
@@ -51,11 +51,4 @@ runuser -l scope46 -c "podman image inspect localhost/rhcsa-httpd-base:latest --
 
 ```bash
 runuser -l scope46 -c "sh -c 'u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); printf %s \"${u:-root}\" > ~/user.txt'"
-```
-
----
-
-## Verification
-```bash
-runuser -l scope46 -c "test -s ~/workdir.txt && test -s ~/user.txt"
 ```

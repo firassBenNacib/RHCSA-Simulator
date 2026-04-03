@@ -34,11 +34,3 @@ kill "$(cat /home/worker42/cpu.pid)"
 ```bash
 renice 10 -p "$(cat /home/worker42/sleep.pid)"
 ```
-
----
-
-## Verification
-```bash
-[ ! -d "/proc/$(cat /home/worker42/cpu.pid)" ]
-ps -o ni= -p "$(cat /home/worker42/sleep.pid)" | tr -d ' ' | grep -qx 10
-```

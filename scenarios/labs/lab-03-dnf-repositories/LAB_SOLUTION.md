@@ -31,13 +31,11 @@ name=RHCSA BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
-
 [rhcsa-appstream]
 name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
-:wq
 dnf clean all
 ```
 
@@ -53,13 +51,11 @@ name=RHCSA BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
-
 [rhcsa-appstream]
 name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
-:wq
 dnf clean all
 ```
 
@@ -71,12 +67,4 @@ dnf clean all
 dnf repolist
 # Run on servervm
 dnf repolist
-```
-
----
-
-## Verification
-```bash
-grep -ERq '^\[rhcsa-baseos\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://servervm/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^enabled=1$' /etc/yum.repos.d && grep -ERq '^gpgcheck=0$' /etc/yum.repos.d && grep -ERq '^\[rhcsa-appstream\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://servervm/repo/AppStream/?$' /etc/yum.repos.d && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
-ssh admin@servervm sudo grep -ERq '^\[rhcsa-baseos\]$' /etc/yum.repos.d && ssh admin@servervm sudo grep -ERq '^baseurl=http://servervm/repo/BaseOS/?$' /etc/yum.repos.d && ssh admin@servervm sudo grep -ERq '^enabled=1$' /etc/yum.repos.d && ssh admin@servervm sudo grep -ERq '^gpgcheck=0$' /etc/yum.repos.d && ssh admin@servervm sudo grep -ERq '^\[rhcsa-appstream\]$' /etc/yum.repos.d && ssh admin@servervm sudo grep -ERq '^baseurl=http://servervm/repo/AppStream/?$' /etc/yum.repos.d && ssh admin@servervm sudo curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
 ```

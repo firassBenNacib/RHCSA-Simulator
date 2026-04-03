@@ -34,10 +34,3 @@ find /opt/lab12/source -type f -user natfind -mtime -1 -exec cp --parents {} /ro
 ```bash
 find /root/natfind-files -type f | sort
 ```
-
----
-
-## Verification
-```bash
-diff -u <(find /opt/lab12/source -type f -user natfind -mtime -1 | sed 's#^/opt/lab12/source#/root/natfind-files#' | sort) <(find /root/natfind-files -type f | sort)
-```

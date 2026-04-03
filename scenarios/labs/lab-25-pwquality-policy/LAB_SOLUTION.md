@@ -38,11 +38,3 @@ EOF
 ```bash
 true
 ```
-
----
-
-## Verification
-```bash
-grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf
-! grep -Rqs 'lab25' /etc/pam.d
-```

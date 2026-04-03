@@ -24,7 +24,7 @@ Run a rootless container as a persistent user service.
 ## Task 01 - Run The Container (clientvm) - 10 pts
 
 ```bash
-id merin22 || useradd -m merin22
+useradd -m merin22
 passwd merin22
 # enter: cinder9
 runuser -l merin22 -c "podman run -d --name render22 -v /opt/inbox22:/data/input:Z -v /opt/outbox22:/data/output:Z localhost/fluxpdf22:latest"
@@ -48,13 +48,4 @@ runuser -l merin22 -c "systemctl --user enable --now container-render22.service"
 ```bash
 loginctl enable-linger merin22
 runuser -l merin22 -c "systemctl --user status container-render22.service --no-pager"
-```
-
----
-
-## Verification
-```bash
-loginctl show-user merin22 | grep -Eq '^Linger=yes$'
-runuser -l merin22 -c 'systemctl --user is-enabled container-render22.service' | grep -qx enabled
-runuser -l merin22 -c 'systemctl --user is-active container-render22.service' | grep -qx active
 ```

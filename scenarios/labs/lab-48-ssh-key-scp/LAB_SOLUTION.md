@@ -53,12 +53,3 @@ runuser -l bridge48 -c 'ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm'
 ```bash
 runuser -l bridge48 -c 'scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/'
 ```
-
----
-
-## Verification
-```bash
-getent passwd bridge48 >/dev/null && test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519
-ssh bridge48@servervm true
-ssh bridge48@servervm test -f /home/bridge48/inbox/payload.txt
-```

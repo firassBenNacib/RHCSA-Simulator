@@ -49,7 +49,9 @@
       ],
       "solution_commands": [
         [
-          "dnf install -y tuned\nsystemctl enable --now tuned\ntuned-adm profile throughput-performance"
+          "dnf install -y tuned",
+          "systemctl enable --now tuned",
+          "tuned-adm profile throughput-performance"
         ],
         [
           "sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid"

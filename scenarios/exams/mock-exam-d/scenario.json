@@ -42,9 +42,9 @@
         "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
         "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
         "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
-        "Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/miles-files while preserving the source directory structure.",
-        "Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.",
-        "Create /root/summit-etc.tar.gz containing /etc."
+        "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
+        "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
+        "Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/miles-files while preserving the source directory structure."
       ],
       "task_titles": [
         "Client Network",
@@ -66,9 +66,9 @@
         "Audit Directory",
         "Audit Directory",
         "Audit Directory",
-        "Find And Copy",
-        "Grep Filter",
-        "Archive"
+        "Audit Directory",
+        "Audit Directory",
+        "Find And Copy"
       ],
       "task_points": [
         5,
@@ -96,14 +96,16 @@
       ],
       "solution_commands": [
         [
-          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"$CONN\"",
-          "nmcli connection up \"$CONN\"",
+          "nmcli device status",
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.36/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"System eth1\"",
+          "nmcli connection up \"System eth1\"",
           "hostnamectl set-hostname clientvm.summit.lab"
         ],
         [
-          "grep -q 'mirror.summit.lab' /etc/hosts || echo '192.168.122.3 mirror.summit.lab' >> /etc/hosts"
+          "vim /etc/hosts",
+          "192.168.122.3 mirror.summit.lab"
         ],
         [
           "cat > /etc/yum.repos.d/summit.repo <<'EOF'",
@@ -112,7 +114,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[summit-appstream]",
           "name=Summit AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -129,7 +130,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[summit-appstream]",
           "name=Summit AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -170,7 +170,10 @@
           "dnf remove -y dos2unix"
         ],
         [
-          "sed -ri 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS\t60/; s/^PASS_MIN_DAYS.*/PASS_MIN_DAYS\t2/; s/^PASS_WARN_AGE.*/PASS_WARN_AGE\t7/' /etc/login.defs"
+          "vim /etc/login.defs",
+          "PASS_MAX_DAYS 60",
+          "PASS_MIN_DAYS 2",
+          "PASS_WARN_AGE 7"
         ],
         [
           "useradd miles",
@@ -185,26 +188,38 @@
           "echo 'umask 027' >> /home/miles/.bash_profile"
         ],
         [
-          "install -d -m 0750 -o root -g root /srv/summit-audit"
+          "mkdir -p /srv/summit-audit",
+          "chown root:root /srv/summit-audit",
+          "chmod 0750 /srv/summit-audit"
         ],
         [
-          "install -d -m 0750 -o root -g root /srv/summit-audit"
+          "mkdir -p /srv/summit-audit",
+          "chown root:root /srv/summit-audit",
+          "chmod 0750 /srv/summit-audit"
         ],
         [
-          "install -d -m 0750 -o root -g root /srv/summit-audit"
+          "mkdir -p /srv/summit-audit",
+          "chown root:root /srv/summit-audit",
+          "chmod 0750 /srv/summit-audit"
         ],
         [
-          "install -d -m 0750 -o root -g root /srv/summit-audit"
+          "mkdir -p /srv/summit-audit",
+          "chown root:root /srv/summit-audit",
+          "chmod 0750 /srv/summit-audit"
+        ],
+        [
+          "mkdir -p /srv/summit-audit",
+          "chown root:root /srv/summit-audit",
+          "chmod 0750 /srv/summit-audit"
+        ],
+        [
+          "mkdir -p /srv/summit-audit",
+          "chown root:root /srv/summit-audit",
+          "chmod 0750 /srv/summit-audit"
         ],
         [
           "mkdir -p /root/miles-files",
           "find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/miles-files \\;"
-        ],
-        [
-          "grep alpha /usr/share/dict/words > /root/alpha-lines"
-        ],
-        [
-          "tar -czf /root/summit-etc.tar.gz /etc"
         ]
       ],
       "checks": [

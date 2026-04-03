@@ -46,12 +46,3 @@ firewall-cmd --reload
 semanage port -a -t http_port_t -p tcp 9082
 systemctl restart httpd
 ```
-
----
-
-## Verification
-```bash
-ss -ltn '( sport = :9082 )' | grep -q ':9082' && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active
-firewall-cmd --permanent --query-port=9082/tcp
-curl -fsS http://localhost:9082 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b9082\b'
-```

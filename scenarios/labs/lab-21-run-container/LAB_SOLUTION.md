@@ -24,7 +24,7 @@ Run a container from a prepared local image with bind mounts.
 ## Task 01 - run a container named mycontainer21 from (clientvm) - 10 pts
 
 ```bash
-id runner21 || useradd -m runner21
+useradd -m runner21
 passwd runner21
 # enter: cinder9
 su - runner21
@@ -38,11 +38,4 @@ su - runner21
 podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest
 podman ps
 exit
-```
-
----
-
-## Verification
-```bash
-runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21
 ```

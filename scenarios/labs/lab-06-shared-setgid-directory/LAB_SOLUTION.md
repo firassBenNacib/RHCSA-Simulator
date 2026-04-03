@@ -25,7 +25,8 @@ Build a collaborative directory that uses both setgid and sticky semantics.
 
 ```bash
 groupadd -f analystsx
-install -d -o root -g analystsx /shared/analysts
+mkdir -p /shared/analysts
+chown root:analystsx /shared/analysts
 ```
 
 ---
@@ -33,7 +34,8 @@ install -d -o root -g analystsx /shared/analysts
 ## Task 02 - Enable setgid and sticky behavior on the directory (clientvm) - 10 pts
 
 ```bash
-chmod 3770 /shared/analysts
+chmod 770 /shared/analysts
+chmod g+s,+t /shared/analysts
 ```
 
 ---
@@ -42,13 +44,4 @@ chmod 3770 /shared/analysts
 
 ```bash
 stat -c %A /shared/analysts
-```
-
----
-
-## Verification
-```bash
-getent group analystsx >/dev/null && stat -c '%U:%G %a' /shared/analysts | grep -qx 'root:analystsx 3770'
-findmnt -n /shared >/dev/null 2>&1 || test -d /shared
-stat -c %A /shared/analysts | grep -qx 'drwxrws--T'
 ```

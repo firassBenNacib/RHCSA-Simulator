@@ -35,7 +35,8 @@ printf 'probe26:cinder9
 ## Task 02 - Create the shared directory with setgid semantics (clientvm) - 10 pts
 
 ```bash
-install -d -o root -g collab26 -m 2770 /shared/collab26
+chmod 770 /shared/collab26
+chmod g+s /shared/collab26
 ```
 
 ---
@@ -44,13 +45,4 @@ install -d -o root -g collab26 -m 2770 /shared/collab26
 
 ```bash
 setfacl -m d:u:probe26:rwx /shared/collab26
-```
-
----
-
-## Verification
-```bash
-getent group collab26 >/dev/null && getent passwd probe26 >/dev/null && ! test -d /home/probe26
-stat -c '%U:%G %a' /shared/collab26 | grep -qx 'root:collab26 2770'
-getfacl -cp /shared/collab26 | grep -Eq '^default:user:probe26:rwx$'
 ```

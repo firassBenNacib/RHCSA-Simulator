@@ -48,7 +48,8 @@
           "restorecon -v /var/www/html/index45.html"
         ],
         [
-          "setenforce 1\nsystemctl enable --now httpd"
+          "setenforce 1",
+          "systemctl enable --now httpd"
         ]
       ]
     }

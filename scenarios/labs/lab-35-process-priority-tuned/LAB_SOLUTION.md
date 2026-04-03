@@ -45,11 +45,3 @@ sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid
 ```bash
 renice -n 5 -p "$(cat /root/sleep35.pid)"
 ```
-
----
-
-## Verification
-```bash
-ssh admin@servervm sudo tuned-adm active | grep -Fq 'throughput-performance'
-ssh admin@servervm sudo test -s /root/sleep35.pid && ssh admin@servervm sudo ps -o ni= -p "$(ssh admin@servervm sudo cat /root/sleep35.pid)" | grep -qx ' 5'
-```

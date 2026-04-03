@@ -34,10 +34,3 @@ grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 ```bash
 grubby --info=ALL | grep -E "^kernel|^args"
 ```
-
----
-
-## Verification
-```bash
-grubby --info=ALL | grep -E "^args=" | grep -q "audit_backlog_limit=8192"
-```

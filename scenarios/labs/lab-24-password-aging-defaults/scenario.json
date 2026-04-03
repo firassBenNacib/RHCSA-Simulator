@@ -49,13 +49,32 @@
       ],
       "solution_commands": [
         [
-          "python - <<'EOF'\nfrom pathlib import Path\np = Path('/etc/login.defs')\ntext = p.read_text()\nfor key, value in [('PASS_MAX_DAYS', '60'), ('PASS_MIN_DAYS', '7'), ('PASS_WARN_AGE', '10')]:\n    lines = []\n    replaced = False\n    for line in text.splitlines():\n        if line.startswith(key):\n            lines.append(f'{key}\t{value}')\n            replaced = True\n        else:\n            lines.append(line)\n    if not replaced:\n        lines.append(f'{key}\t{value}')\n    text = '\\n'.join(lines) + '\\n'\np.write_text(text)\nEOF"
+          "python - <<'EOF'",
+          "from pathlib import Path",
+          "p = Path('/etc/login.defs')",
+          "text = p.read_text()",
+          "for key, value in [('PASS_MAX_DAYS', '60'), ('PASS_MIN_DAYS', '7'), ('PASS_WARN_AGE', '10')]:",
+          "    lines = []",
+          "    replaced = False",
+          "    for line in text.splitlines():",
+          "        if line.startswith(key):",
+          "            lines.append(f'{key}\t{value}')",
+          "            replaced = True",
+          "        else:",
+          "            lines.append(line)",
+          "    if not replaced:",
+          "        lines.append(f'{key}\t{value}')",
+          "    text = '\\n'.join(lines) + '\\n'",
+          "p.write_text(text)",
+          "EOF"
         ],
         [
           "useradd -D -f 15"
         ],
         [
-          "useradd drift24\nprintf 'drift24:cinder9\n' | chpasswd"
+          "useradd drift24",
+          "printf 'drift24:cinder9",
+          "' | chpasswd"
         ]
       ]
     }

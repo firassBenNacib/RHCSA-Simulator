@@ -51,8 +51,7 @@
         [
           "mkdir -p /mnt/direct36",
           "vim /etc/fstab",
-          "192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0",
-          ":wq"
+          "192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0"
         ],
         [
           "mount -a"

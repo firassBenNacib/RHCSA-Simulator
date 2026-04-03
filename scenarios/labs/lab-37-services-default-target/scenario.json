@@ -57,7 +57,7 @@
           "systemctl enable --now rsyslog"
         ],
         [
-          "rpm -q postfix >/dev/null 2>&1 && systemctl disable --now postfix || true"
+          "systemctl disable --now postfix"
         ]
       ]
     }

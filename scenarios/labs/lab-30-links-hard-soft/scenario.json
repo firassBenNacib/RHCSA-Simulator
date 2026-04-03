@@ -42,7 +42,8 @@
       ],
       "solution_commands": [
         [
-          "printf 'link-test\n' > /root/linksource30"
+          "printf 'link-test",
+          "' > /root/linksource30"
         ],
         [
           "ln /root/linksource30 /root/linkhard30",

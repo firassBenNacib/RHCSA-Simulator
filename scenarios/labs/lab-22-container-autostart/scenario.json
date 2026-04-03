@@ -47,7 +47,7 @@
       ],
       "solution_commands": [
         [
-          "id merin22 || useradd -m merin22",
+          "useradd -m merin22",
           "passwd merin22",
           "# enter: cinder9",
           "runuser -l merin22 -c \"podman run -d --name render22 -v /opt/inbox22:/data/input:Z -v /opt/outbox22:/data/output:Z localhost/fluxpdf22:latest\""

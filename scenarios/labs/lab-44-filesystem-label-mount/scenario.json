@@ -49,13 +49,18 @@
       ],
       "solution_commands": [
         [
-          "printf 'label: gpt\n,600MiB,L\n' | sfdisk /dev/sdb\npartprobe /dev/sdb"
+          "parted /dev/sdb --script mklabel gpt",
+          "parted /dev/sdb --script mkpart primary ext4 1MiB 600MiB",
+          "partprobe /dev/sdb"
         ],
         [
-          "mkfs.ext4 -L DATA44 /dev/sdb1\nmkdir -p /data44\nmount LABEL=DATA44 /data44"
+          "mkfs.ext4 -L DATA44 /dev/sdb1",
+          "mkdir -p /data44",
+          "mount LABEL=DATA44 /data44"
         ],
         [
-          "printf 'LABEL=DATA44 /data44 ext4 defaults 0 0\n' >> /etc/fstab"
+          "vim /etc/fstab",
+          "LABEL=DATA44 /data44 ext4 defaults 0 0"
         ]
       ]
     }

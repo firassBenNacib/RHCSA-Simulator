@@ -27,7 +27,6 @@ Configure persistent journal storage and a custom rsyslog drop-in for authentica
 mkdir -p /var/log/journal
 vim /etc/systemd/journald.conf
 # Set: Storage=persistent
-:wq
 systemctl restart systemd-journald
 ```
 
@@ -38,7 +37,6 @@ systemctl restart systemd-journald
 ```bash
 vim /etc/rsyslog.d/10-auth34.conf
 authpriv.warning    /var/log/auth34.log
-:wq
 ```
 
 ---
@@ -48,13 +46,4 @@ authpriv.warning    /var/log/auth34.log
 ```bash
 systemctl restart rsyslog
 systemctl enable rsyslog
-```
-
----
-
-## Verification
-```bash
-test -d /var/log/journal && grep -Eq '^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*$' /etc/systemd/journald.conf
-grep -Eq '^[[:space:]]*authpriv\.warning[[:space:]]+/var/log/auth34\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf
-systemctl is-active rsyslog | grep -qx active
 ```

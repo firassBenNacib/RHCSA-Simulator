@@ -50,10 +50,19 @@
       ],
       "solution_commands": [
         [
-          "cat > /etc/httpd/conf.d/lab28.conf <<'EOF'\nListen 8088\n<VirtualHost *:8088>\n    DocumentRoot /srv/lab28/site\n</VirtualHost>\nEOF"
+          "cat > /etc/httpd/conf.d/lab28.conf <<'EOF'",
+          "Listen 8088",
+          "<VirtualHost *:8088>",
+          "    DocumentRoot /srv/lab28/site",
+          "</VirtualHost>",
+          "EOF"
         ],
         [
-          "semanage fcontext -a -t httpd_sys_content_t '/srv/lab28/site(/.*)?'\nrestorecon -RF /srv/lab28/site\nsemanage port -a -t http_port_t -p tcp 8088\nfirewall-cmd --permanent --add-port=8088/tcp\nfirewall-cmd --reload"
+          "semanage fcontext -a -t httpd_sys_content_t '/srv/lab28/site(/.*)?'",
+          "restorecon -RF /srv/lab28/site",
+          "semanage port -a -t http_port_t -p tcp 8088",
+          "firewall-cmd --permanent --add-port=8088/tcp",
+          "firewall-cmd --reload"
         ],
         [
           "systemctl enable --now httpd"

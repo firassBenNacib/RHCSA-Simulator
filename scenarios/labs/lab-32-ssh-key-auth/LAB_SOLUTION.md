@@ -50,10 +50,3 @@ runuser -l relay32 -c "ssh-copy-id vault32@servervm"
 ```bash
 runuser -l relay32 -c "ssh -o StrictHostKeyChecking=no vault32@servervm true"
 ```
-
----
-
-## Verification
-```bash
-runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true'
-```

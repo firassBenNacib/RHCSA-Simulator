@@ -35,11 +35,3 @@ setsebool -P httpd_can_network_connect on
 getenforce
 getsebool httpd_can_network_connect
 ```
-
----
-
-## Verification
-```bash
-getsebool httpd_can_network_connect | grep -q "--> on"
-getenforce | grep -qx Enforcing
-```

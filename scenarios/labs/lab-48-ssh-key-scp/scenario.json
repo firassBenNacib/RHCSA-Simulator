@@ -54,7 +54,9 @@
       ],
       "solution_commands": [
         [
-          "useradd -m bridge48\nprintf 'bridge48:cinder9\n' | chpasswd"
+          "useradd -m bridge48",
+          "printf 'bridge48:cinder9",
+          "' | chpasswd"
         ],
         [
           "runuser -l bridge48 -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'"

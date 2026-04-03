@@ -50,10 +50,14 @@
       ],
       "solution_commands": [
         [
-          "groupadd collab26\nuseradd -M probe26\nprintf 'probe26:cinder9\n' | chpasswd"
+          "groupadd collab26",
+          "useradd -M probe26",
+          "printf 'probe26:cinder9",
+          "' | chpasswd"
         ],
         [
-          "install -d -o root -g collab26 -m 2770 /shared/collab26"
+          "chmod 770 /shared/collab26",
+          "chmod g+s /shared/collab26"
         ],
         [
           "setfacl -m d:u:probe26:rwx /shared/collab26"

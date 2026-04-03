@@ -51,13 +51,11 @@
           "mkdir -p /var/log/journal",
           "vim /etc/systemd/journald.conf",
           "# Set: Storage=persistent",
-          ":wq",
           "systemctl restart systemd-journald"
         ],
         [
           "vim /etc/rsyslog.d/10-auth34.conf",
-          "authpriv.warning    /var/log/auth34.log",
-          ":wq"
+          "authpriv.warning    /var/log/auth34.log"
         ],
         [
           "systemctl restart rsyslog",

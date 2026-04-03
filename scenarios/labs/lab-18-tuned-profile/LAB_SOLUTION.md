@@ -28,10 +28,3 @@ tuned-adm recommended
 tuned-adm profile <recommended-profile>
 tuned-adm active
 ```
-
----
-
-## Verification
-```bash
-rec="$(tuned-adm recommended | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
-```

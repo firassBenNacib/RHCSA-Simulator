@@ -145,16 +145,16 @@ Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/
 
 ## Question 20 - Passwordless SSH (servervm) - 4 pts
 
-Install mira's public key for user meshremote on servervm and verify passwordless SSH access on port 2222.
+On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
 
 ---
 
 ## Question 21 - Rsync Transfer (servervm) - 4 pts
 
-Use rsync over SSH port 2222 to copy /home/mira/report.txt to /home/meshremote/inbox/report.txt on servervm.
+Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.
 
 ---
 
-## Question 22 - Find And Copy (clientvm) - 4 pts
+## Question 22 - Passwordless SSH (servervm) - 4 pts
 
-Find all files under /opt/exam-b/find that are owned by mira and were modified in the last 24 hours, then copy them to /root/mira-files while preserving the directory structure.
+On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.

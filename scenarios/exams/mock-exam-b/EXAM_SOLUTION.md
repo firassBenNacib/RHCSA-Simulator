@@ -26,10 +26,11 @@ A 22 task RHCSA style mock exam emphasizing chrony, SSH hardening, user defaults
 ## Question 01 - Client Network (clientvm) - 5 pts
 
 ```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection modify "$CONN" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "$CONN"
-nmcli connection up "$CONN"
+nmcli device status
+nmcli connection show "System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "System eth1"
+nmcli connection up "System eth1"
 hostnamectl set-hostname clientvm.exam-b.lab
 ```
 
@@ -38,7 +39,8 @@ hostnamectl set-hostname clientvm.exam-b.lab
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'registry.exam-b.lab' /etc/hosts || echo '192.168.122.3 registry.exam-b.lab' >> /etc/hosts
+vim /etc/hosts
+192.168.122.3 registry.exam-b.lab
 ```
 
 ---
@@ -134,18 +136,10 @@ mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
 
 ```bash
 # Run on servervm
-python3 - <<'EOF'
-from pathlib import Path
-import re
-p = Path('/etc/ssh/sshd_config')
-text = p.read_text()
-for key, val in [('Port', '2222'), ('PasswordAuthentication', 'yes'), ('PubkeyAuthentication', 'yes')]:
-    if re.search(rf'^\s*{key}\s+', text, flags=re.M):
-        text = re.sub(rf'^\s*{key}\s+.*$', f'{key} {val}', text, flags=re.M)
-    else:
-        text += f'\n{key} {val}\n'
-p.write_text(text)
-EOF
+vim /etc/ssh/sshd_config
+Port 2222
+PasswordAuthentication yes
+PubkeyAuthentication yes
 systemctl restart sshd
 ```
 
@@ -173,9 +167,11 @@ runuser -l mira -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
 
 ```bash
 # Run on servervm
-id meshremote >/dev/null 2>&1 || useradd meshremote
+useradd meshremote
 echo cinder9 | passwd --stdin meshremote
-install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox
+mkdir -p /home/meshremote/inbox
+chown meshremote:meshremote /home/meshremote/inbox
+chmod 0755 /home/meshremote/inbox
 runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
 runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ```
@@ -194,9 +190,11 @@ runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@ser
 
 ```bash
 # Run on servervm
-id meshremote >/dev/null 2>&1 || useradd meshremote
+useradd meshremote
 echo cinder9 | passwd --stdin meshremote
-install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox
+mkdir -p /home/meshremote/inbox
+chown meshremote:meshremote /home/meshremote/inbox
+chmod 0755 /home/meshremote/inbox
 runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
 runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ```
@@ -215,9 +213,11 @@ runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@ser
 
 ```bash
 # Run on servervm
-id meshremote >/dev/null 2>&1 || useradd meshremote
+useradd meshremote
 echo cinder9 | passwd --stdin meshremote
-install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox
+mkdir -p /home/meshremote/inbox
+chown meshremote:meshremote /home/meshremote/inbox
+chmod 0755 /home/meshremote/inbox
 runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
 runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ```
@@ -235,6 +235,12 @@ runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@ser
 ## Question 20 - Passwordless SSH (servervm) - 4 pts
 
 ```bash
+# Run on servervm
+useradd meshremote
+echo cinder9 | passwd --stdin meshremote
+mkdir -p /home/meshremote/inbox
+chown meshremote:meshremote /home/meshremote/inbox
+chmod 0755 /home/meshremote/inbox
 runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
 runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ```
@@ -244,25 +250,20 @@ runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ## Question 21 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
-runuser -l mira -c 'rsync -e "ssh -p 2222" /home/mira/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
 ```
 
 ---
 
-## Question 22 - Find And Copy (clientvm) - 4 pts
+## Question 22 - Passwordless SSH (servervm) - 4 pts
 
 ```bash
-find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \;
-```
-
----
-
-## Verification
-```bash
-hostnamectl --static | grep -qx 'clientvm.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts
-grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled
-useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3":"$6}' | grep -qx '4421:' && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\s*=\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\s*=\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld
-ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true' && ssh admin@servervm test -f /home/meshremote/inbox/report.txt
-test -f /root/mira-files/opt/exam-b/find/a/file1.txt && grep -q 'proto' /root/proto-lines && test -f /root/usr-local-b.tar.bz2 && /usr/local/bin/corecheck >/dev/null && test -s /root/coremesh-units.txt
-swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewb" && $2=="reviewvgb" && $3>=299 && $3<=301{f=1} END{exit !f}' && tuned-adm active | grep -Eq 'virtual-guest|throughput-performance'
+# Run on servervm
+useradd meshremote
+echo cinder9 | passwd --stdin meshremote
+mkdir -p /home/meshremote/inbox
+chown meshremote:meshremote /home/meshremote/inbox
+chmod 0755 /home/meshremote/inbox
+runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
+runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ```

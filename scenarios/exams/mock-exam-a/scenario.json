@@ -36,12 +36,12 @@
         "Create /srv/sysopsa owned by root:sysopsa with mode 2770 so new files inherit the sysopsa group.",
         "Configure a cron job for amber that runs every 2 minutes and logs the message \"exam-a tick\".",
         "Add a persistent hosts entry on clientvm so api.exam-a.lab resolves to 192.168.122.3.",
-        "Create /root/etc-opsa.tar.bz2 containing /etc.",
-        "Create /usr/local/bin/opsa-report as an executable script that writes the status of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.",
         "On /dev/sdb, create a 512 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
         "Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing the existing filesystem data.",
         "As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/ina mounted to /data/input and /opt/outa mounted to /data/output.",
         "Generate and enable a systemd user service for container pdfa and enable lingering for oriona.",
+        "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
+        "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
         "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
         "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
         "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
@@ -60,12 +60,12 @@
         "Setgid Directory",
         "Cron Logger",
         "Host Entry",
-        "Archive",
-        "Service Audit Script",
         "Swap Space",
         "Resize Existing LV",
         "Rootless Container",
         "Container Autostart",
+        "Persistent Journal",
+        "Persistent Journal",
         "Persistent Journal",
         "Persistent Journal",
         "Persistent Journal",
@@ -105,10 +105,11 @@
           "exec /sbin/init"
         ],
         [
-          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
-          "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.26/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
-          "nmcli connection down \"$CONN\"",
-          "nmcli connection up \"$CONN\"",
+          "nmcli device status",
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.26/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection down \"System eth1\"",
+          "nmcli connection up \"System eth1\"",
           "hostnamectl set-hostname clientvm.exam-a.lab"
         ],
         [
@@ -121,7 +122,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[opsa-appstream]",
           "name=OpsA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -138,7 +138,6 @@
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
-          "",
           "[opsa-appstream]",
           "name=OpsA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
@@ -148,11 +147,12 @@
           "dnf clean all"
         ],
         [
-          "sed -i 's/^Listen .*/Listen 8282/' /etc/httpd/conf/httpd.conf",
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8282",
           "systemctl enable --now httpd",
           "firewall-cmd --permanent --add-port=8282/tcp",
           "firewall-cmd --reload",
-          "semanage port -a -t http_port_t -p tcp 8282 || semanage port -m -t http_port_t -p tcp 8282",
+          "semanage port -a -t http_port_t -p tcp 8282",
           "systemctl restart httpd"
         ],
         [
@@ -173,25 +173,16 @@
           "violet ALL=(root) NOPASSWD: /usr/bin/passwd"
         ],
         [
-          "install -d -m 2770 -o root -g sysopsa /srv/sysopsa"
+          "chmod 770 /srv/sysopsa",
+          "chmod g+s /srv/sysopsa"
         ],
         [
-          "(crontab -l -u amber 2>/dev/null; echo '*/2 * * * * logger \"exam-a tick\"') | crontab -u amber -"
+          "crontab -e -u amber",
+          "*/2 * * * * logger \"exam-a tick\""
         ],
         [
-          "grep -q 'api.exam-a.lab' /etc/hosts || echo '192.168.122.3 api.exam-a.lab' >> /etc/hosts"
-        ],
-        [
-          "tar -cjf /root/etc-opsa.tar.bz2 /etc"
-        ],
-        [
-          "vim /usr/local/bin/opsa-report",
-          "#!/usr/bin/env bash",
-          "while read -r svc; do",
-          "  systemctl is-active \"$svc\" >> /root/opsa-services.txt",
-          "done < /usr/local/share/exam-a/services.lst",
-          "chmod 755 /usr/local/bin/opsa-report",
-          "/usr/local/bin/opsa-report"
+          "vim /etc/hosts",
+          "192.168.122.3 api.exam-a.lab"
         ],
         [
           "fdisk /dev/sdb",
@@ -223,6 +214,26 @@
           "systemctl --user enable --now container-pdfa.service",
           "exit",
           "loginctl enable-linger oriona"
+        ],
+        [
+          "# Run on servervm",
+          "mkdir -p /var/log/journal",
+          "mkdir -p /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
+          "[Journal]",
+          "Storage=persistent",
+          "EOF",
+          "systemctl restart systemd-journald"
+        ],
+        [
+          "# Run on servervm",
+          "mkdir -p /var/log/journal",
+          "mkdir -p /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
+          "[Journal]",
+          "Storage=persistent",
+          "EOF",
+          "systemctl restart systemd-journald"
         ],
         [
           "# Run on servervm",

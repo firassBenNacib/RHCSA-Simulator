@@ -24,11 +24,11 @@ Configure persistent networking and hostname settings on clientvm in RHCSA style
 ## Task 01 - Client Network Configuration (clientvm) - 10 pts
 
 ```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection show "$CONN"
-nmcli connection modify "$CONN" ipv4.addresses 192.168.122.25/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "$CONN"
-nmcli connection up "$CONN"
+nmcli device status
+nmcli connection show "System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.25/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "System eth1"
+nmcli connection up "System eth1"
 hostnamectl set-hostname clientvm.netlab.local
 ```
 
@@ -46,18 +46,8 @@ vim /etc/hosts
 ## Task 03 - Reconnect Verification (clientvm) - 10 pts
 
 ```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection show "$CONN"
-nmcli connection show "$CONN"
+nmcli device status
+nmcli connection show "System eth1"
 hostnamectl status
 getent hosts repo.netlab.local
-```
-
----
-
-## Verification
-```bash
-hostnamectl --static | grep -qx 'clientvm.netlab.local'
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"; test -n "$CONN"; test "$(nmcli -g ipv4.addresses connection show "$CONN")" = '192.168.122.25/24' && test "$(nmcli -g ipv4.gateway connection show "$CONN")" = '192.168.122.1' && test "$(nmcli -g ipv4.dns connection show "$CONN")" = '192.168.122.3' && test "$(nmcli -g ipv4.method connection show "$CONN")" = 'manual'
-grep -Eq '^192\.168\.122\.3[[:space:]]+repo\.netlab\.local([[:space:]]|$)' /etc/hosts
 ```

@@ -45,14 +45,3 @@ UUID=<uuid-of-wsharex> /mnt/wsharex ext4 defaults 0 0
 mount -a
 findmnt /mnt/wsharex
 ```
-
----
-
-## Verification
-```bash
-pvs --noheadings -o pv_name,vg_name | awk '$1=="/dev/sdb1" && $2=="wgroupx"{found=1} END{exit !found}'
-vgs --noheadings -o vg_name,vg_extent_size --units m --nosuffix | awk '$1=="wgroupx" && int($2)==8{found=1} END{exit !found}'
-lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="wsharex" && $2=="wgroupx" && $3>=399 && $3<=401{found=1} END{exit !found}'
-blkid -o value -s TYPE /dev/wgroupx/wsharex | grep -qx ext4
-findmnt -no TARGET,SOURCE,FSTYPE /mnt/wsharex | grep -Eq '^/mnt/wsharex /dev/mapper/wgroupx-wsharex ext4$'
-```

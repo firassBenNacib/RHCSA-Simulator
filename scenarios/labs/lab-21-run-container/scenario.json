@@ -42,7 +42,7 @@
       ],
       "solution_commands": [
         [
-          "id runner21 || useradd -m runner21",
+          "useradd -m runner21",
           "passwd runner21",
           "# enter: cinder9",
           "su - runner21"

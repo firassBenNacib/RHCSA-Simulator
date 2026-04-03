@@ -67,7 +67,6 @@
           "fi"
         ],
         [
-          ":wq",
           "chmod 755 /usr/local/bin/usercheck40"
         ]
       ]

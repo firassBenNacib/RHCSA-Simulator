@@ -123,19 +123,7 @@ Add a persistent hosts entry on clientvm so api.exam-a.lab resolves to 192.168.1
 
 ---
 
-## Question 13 - Archive (clientvm) - 4 pts
-
-Create /root/etc-opsa.tar.bz2 containing /etc.
-
----
-
-## Question 14 - Service Audit Script (clientvm) - 4 pts
-
-Create /usr/local/bin/opsa-report as an executable script that writes the status of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
-
----
-
-## Question 15 - Swap Space (clientvm) - 4 pts
+## Question 13 - Swap Space (clientvm) - 4 pts
 
 On /dev/sdb, create a 512 MiB swap partition.
 
@@ -145,21 +133,33 @@ On /dev/sdb, create a 512 MiB swap partition.
 
 ---
 
-## Question 16 - Resize Existing LV (clientvm) - 4 pts
+## Question 14 - Resize Existing LV (clientvm) - 4 pts
 
 Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing the existing filesystem data.
 
 ---
 
-## Question 17 - Rootless Container (clientvm) - 4 pts
+## Question 15 - Rootless Container (clientvm) - 4 pts
 
 As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/ina mounted to /data/input and /opt/outa mounted to /data/output.
 
 ---
 
-## Question 18 - Container Autostart (clientvm) - 4 pts
+## Question 16 - Container Autostart (clientvm) - 4 pts
 
 Generate and enable a systemd user service for container pdfa and enable lingering for oriona.
+
+---
+
+## Question 17 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 18 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
 
 ---
 

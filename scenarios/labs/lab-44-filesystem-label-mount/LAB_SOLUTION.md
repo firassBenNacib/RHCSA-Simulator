@@ -24,9 +24,8 @@ Create an ext4 filesystem by label and mount it persistently.
 ## Task 01 - Create the 600 MiB partition on /dev/sdb (clientvm) - 10 pts
 
 ```bash
-printf 'label: gpt
-,600MiB,L
-' | sfdisk /dev/sdb
+parted /dev/sdb --script mklabel gpt
+parted /dev/sdb --script mkpart primary ext4 1MiB 600MiB
 partprobe /dev/sdb
 ```
 
@@ -45,15 +44,6 @@ mount LABEL=DATA44 /data44
 ## Task 03 - Persist the LABEL mount in fstab (clientvm) - 10 pts
 
 ```bash
-printf 'LABEL=DATA44 /data44 ext4 defaults 0 0
-' >> /etc/fstab
-```
-
----
-
-## Verification
-```bash
-blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44
-findmnt -n /data44 | grep -Fq '/data44'
-grep -Eq '^LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4[[:space:]]+defaults[[:space:]]+0[[:space:]]+0$' /etc/fstab
+vim /etc/fstab
+LABEL=DATA44 /data44 ext4 defaults 0 0
 ```

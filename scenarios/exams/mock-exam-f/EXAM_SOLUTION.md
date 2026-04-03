@@ -26,10 +26,11 @@ A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defau
 ## Question 01 - Client Network (clientvm) - 5 pts
 
 ```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"
-nmcli connection modify "$CONN" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "$CONN"
-nmcli connection up "$CONN"
+nmcli device status
+nmcli connection show "System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection down "System eth1"
+nmcli connection up "System eth1"
 hostnamectl set-hostname clientvm.exam-f.lab
 ```
 
@@ -38,7 +39,8 @@ hostnamectl set-hostname clientvm.exam-f.lab
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'db.exam-f.lab' /etc/hosts || echo '192.168.122.3 db.exam-f.lab' >> /etc/hosts
+vim /etc/hosts
+192.168.122.3 db.exam-f.lab
 ```
 
 ---
@@ -77,18 +79,10 @@ systemctl enable --now chronyd
 
 ```bash
 # Run on servervm
-python3 - <<'EOF'
-from pathlib import Path
-import re
-p = Path('/etc/ssh/sshd_config')
-text = p.read_text()
-for key, val in [('Port', '2222'), ('PasswordAuthentication', 'yes'), ('PubkeyAuthentication', 'yes')]:
-    if re.search(rf'^\s*{key}\s+', text, flags=re.M):
-        text = re.sub(rf'^\s*{key}\s+.*$', f'{key} {val}', text, flags=re.M)
-    else:
-        text += f'\n{key} {val}\n'
-p.write_text(text)
-EOF
+vim /etc/ssh/sshd_config
+Port 2222
+PasswordAuthentication yes
+PubkeyAuthentication yes
 systemctl restart sshd
 ```
 
@@ -153,7 +147,9 @@ runuser -l elio -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
 # Run on servervm
 useradd backupf
 echo cinder9 | passwd --stdin backupf
-install -d -m 0755 -o backupf -g backupf /home/backupf/inbox
+mkdir -p /home/backupf/inbox
+chown backupf:backupf /home/backupf/inbox
+chmod 0755 /home/backupf/inbox
 ```
 
 ---
@@ -261,16 +257,4 @@ mount -a
 
 ```bash
 tuned-adm profile "$(tuned-adm recommend)"
-```
-
----
-
-## Verification
-```bash
-hostnamectl --static | grep -qx 'clientvm.aurora.lab' && grep -Fqx '192.168.122.3 db.aurora.lab' /etc/hosts
-grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
-useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3":"$6":"$7}' | grep -qx '4560::/sbin/nologin' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile
-runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true' && ssh admin@servervm test -f /home/backupf/inbox/report.txt
-test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt
-swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec="$(tuned-adm recommend | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
 ```

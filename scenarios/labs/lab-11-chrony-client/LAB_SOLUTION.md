@@ -45,11 +45,3 @@ p.write_text('\n'.join(lines) + '\n')
 EOF
 systemctl enable --now chronyd
 ```
-
----
-
-## Verification
-```bash
-systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^server servervm iburst$' /etc/chrony.d /etc/chrony.conf
-ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Rqs '^allow 192.168.122.0/24$' /etc/chrony.d /etc/chrony.conf
-```

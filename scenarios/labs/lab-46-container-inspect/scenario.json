@@ -45,7 +45,7 @@
       ],
       "solution_commands": [
         [
-          "id scope46 || useradd -m scope46",
+          "useradd -m scope46",
           "passwd scope46",
           "# enter: cinder9"
         ],

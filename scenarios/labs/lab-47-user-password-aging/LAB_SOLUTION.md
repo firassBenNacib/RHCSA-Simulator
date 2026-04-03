@@ -44,12 +44,3 @@ chage -M 30 -m 2 -W 7 cycle47
 ```bash
 chage -d 0 cycle47
 ```
-
----
-
-## Verification
-```bash
-getent passwd cycle47 >/dev/null
-chage -l cycle47 | grep -Fq 'Maximum number of days between password change			: 30' && chage -l cycle47 | grep -Fq 'Minimum number of days between password change			: 2' && chage -l cycle47 | grep -Fq 'Number of days of warning before password expires		: 7'
-chage -l cycle47 | grep -Fq 'Last password change				: password must be changed'
-```
