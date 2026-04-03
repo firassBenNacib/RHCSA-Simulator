@@ -457,7 +457,6 @@ function Get-HelpOutput {
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 repo'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
             )

@@ -40,20 +40,32 @@ function Get-LabStateRoot {
     return (Join-Path $ProjectRoot '.lab-state')
 }
 
-function Get-ExercisesRoot {
+function Get-GeneratedRuntimeRoot {
     param(
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    return (Join-Path $ProjectRoot 'exercises')
+    return (Join-Path (Get-LabStateRoot -ProjectRoot $ProjectRoot) 'generated')
 }
 
-function Get-ExamsCatalogPath {
+function Get-GeneratedLabRuntimeRoot {
     param(
+        [Parameter(Mandatory = $true)]
+        [string]$ScenarioId,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    return (Join-Path (Get-ExercisesRoot -ProjectRoot $ProjectRoot) 'exams.json')
+    return (Join-Path (Get-GeneratedRuntimeRoot -ProjectRoot $ProjectRoot) $ScenarioId)
+}
+
+function Get-GeneratedLabMetadataPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ScenarioId,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return (Join-Path (Get-GeneratedLabRuntimeRoot -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot) 'exercise.json')
 }
 
 function Get-ActiveRunPath {
@@ -139,8 +151,9 @@ function Initialize-LabStateLayout {
 
     $stateRoot = Get-LabStateRoot -ProjectRoot $ProjectRoot
     $runsRoot = Join-Path $stateRoot 'runs'
+    $generatedRoot = Join-Path $stateRoot 'generated'
 
-    foreach ($path in @($stateRoot, $runsRoot)) {
+    foreach ($path in @($stateRoot, $runsRoot, $generatedRoot)) {
         if (-not (Test-Path $path)) {
             New-Item -ItemType Directory -Path $path | Out-Null
         }
@@ -674,6 +687,190 @@ function ConvertTo-ExerciseCheckEntry {
     }
 }
 
+function Normalize-ScenarioText {
+    param(
+        [AllowEmptyString()]
+        [string]$Text
+    )
+
+    if ($null -eq $Text) {
+        return ''
+    }
+
+    $normalized = ($Text -replace "`r`n", "`n").Trim("`n")
+    $lines = @($normalized -split "`n" | ForEach-Object { $_.TrimEnd() })
+    if ($lines.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($lines[0])) {
+        if ($lines[0][-1] -notin @('.', ':', '!', '?')) {
+            $lines[0] += '.'
+        }
+    }
+
+    return (($lines -join "`n").Trim())
+}
+
+function Get-ScenarioLabHintsMarkdown {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Manifest
+    )
+
+    $lines = @(
+        "# $($Manifest.Title) Hints",
+        ''
+    )
+
+    $hints = @($Manifest.Content.Lab.Hints)
+    if ($hints.Count -eq 0) {
+        $lines += '- No hints are defined for this lab.'
+        return (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
+    }
+
+    foreach ($hint in $hints) {
+        $text = Normalize-ScenarioText -Text ([string]$hint)
+        $text = $text.TrimEnd('.')
+        $lines += "- $text."
+    }
+
+    return (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
+}
+
+function Get-ScenarioLabCheckScript {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Manifest,
+        [Parameter(Mandatory = $true)]
+        [object[]]$Checks
+    )
+
+    $lines = @(
+        '#!/usr/bin/env bash',
+        'set -euo pipefail',
+        '',
+        "# Generated from $($Manifest.RelativeManifestPath)",
+        '# Use ./RHCSA.ps1 check on the host to run these on the correct VM automatically.',
+        ''
+    )
+
+    if ($Checks.Count -eq 0) {
+        $lines += '# No automated checks are defined for this lab.'
+        $lines += 'echo "No automated checks are defined for this lab."'
+        return (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
+    }
+
+    foreach ($check in $Checks) {
+        $lines += ('# Check {0:d2} [{1}]' -f [int]$check.Index, [string]$check.Target)
+        if ([string]$check.Command -ne [string]$check.OriginalCommand) {
+            $lines += "# Source: $([string]$check.OriginalCommand)"
+        }
+        $lines += [string]$check.Command
+        $lines += ''
+    }
+
+    return (($lines -join [Environment]::NewLine).TrimEnd() + [Environment]::NewLine)
+}
+
+function Get-ScenarioSourceHash {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    return [string](Get-FileHash -Path $Path -Algorithm SHA256).Hash
+}
+
+function Ensure-LabExerciseCache {
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Manifest,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    if ([string]$Manifest.Category -ne 'labs') {
+        throw "Scenario '$($Manifest.Id)' is not a lab exercise."
+    }
+
+    Initialize-LabStateLayout -ProjectRoot $ProjectRoot | Out-Null
+    $runtimeRoot = Get-GeneratedLabRuntimeRoot -ScenarioId $Manifest.Id -ProjectRoot $ProjectRoot
+    if (-not (Test-Path -LiteralPath $runtimeRoot)) {
+        New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
+    }
+
+    $promptPath = Join-Path $runtimeRoot 'prompt.md'
+    $hintPath = Join-Path $runtimeRoot 'hint.md'
+    $checkPath = Join-Path $runtimeRoot 'check.sh'
+    $solutionPath = Join-Path $runtimeRoot 'solution.md'
+    $metadataPath = Join-Path $runtimeRoot 'exercise.json'
+    $sourceHash = Get-ScenarioSourceHash -Path $Manifest.ManifestPath
+
+    $existingMetadata = $null
+    if (Test-Path -LiteralPath $metadataPath -PathType Leaf) {
+        try {
+            $rawMetadata = Get-Content -LiteralPath $metadataPath -Raw
+            if ($rawMetadata.Length -gt 0 -and [int][char]$rawMetadata[0] -eq 0xFEFF) {
+                $rawMetadata = $rawMetadata.Substring(1)
+            }
+            $existingMetadata = $rawMetadata | ConvertFrom-Json
+        }
+        catch {
+            $existingMetadata = $null
+        }
+    }
+
+    $pathsReady = @($promptPath, $hintPath, $checkPath, $solutionPath) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+    $cacheFresh = $null -ne $existingMetadata -and
+        [string](Get-OptionalPropertyValue -Object $existingMetadata -Name 'source_hash') -eq $sourceHash -and
+        $pathsReady.Count -eq 4
+
+    if (-not $cacheFresh) {
+        Copy-Item -LiteralPath $Manifest.Docs.LabTasks -Destination $promptPath -Force
+        Copy-Item -LiteralPath $Manifest.Docs.LabSolution -Destination $solutionPath -Force
+
+        $checks = @()
+        $checkIndex = 0
+        foreach ($checkCommand in @($Manifest.Content.Lab.Checks)) {
+            $checkIndex++
+            $checks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex
+        }
+
+        Set-Utf8NoBomFile -Path $hintPath -Content (Get-ScenarioLabHintsMarkdown -Manifest $Manifest)
+        Set-Utf8NoBomFile -Path $checkPath -Content (Get-ScenarioLabCheckScript -Manifest $Manifest -Checks $checks)
+
+        $metadata = [ordered]@{
+            id = $Manifest.Id
+            title = $Manifest.Title
+            description = $Manifest.Description
+            time_limit_minutes = [int]$Manifest.TimeLimitMinutes
+            objective_tags = @($Manifest.ObjectiveTags)
+            requires_servervm = [bool]$Manifest.Flags.RequiresServervm
+            source_manifest = $Manifest.RelativeManifestPath
+            source_hash = $sourceHash
+            paths = [ordered]@{
+                prompt = Get-ProjectRelativePath -Path $promptPath -ProjectRoot $ProjectRoot
+                hint = Get-ProjectRelativePath -Path $hintPath -ProjectRoot $ProjectRoot
+                check = Get-ProjectRelativePath -Path $checkPath -ProjectRoot $ProjectRoot
+                solution = Get-ProjectRelativePath -Path $solutionPath -ProjectRoot $ProjectRoot
+                metadata = Get-ProjectRelativePath -Path $metadataPath -ProjectRoot $ProjectRoot
+            }
+            checks = @(
+                foreach ($check in $checks) {
+                    [ordered]@{
+                        index = [int]$check.Index
+                        target = [string]$check.Target
+                        original_command = [string]$check.OriginalCommand
+                        command = [string]$check.Command
+                    }
+                }
+            )
+        }
+
+        Set-Utf8NoBomFile -Path $metadataPath -Content (($metadata | ConvertTo-Json -Depth 8) + [Environment]::NewLine)
+        $existingMetadata = $metadata | ConvertTo-Json -Depth 8 | ConvertFrom-Json
+    }
+
+    return $existingMetadata
+}
+
 function Get-LabExerciseDefinition {
     param(
         [Parameter(Mandatory = $true)]
@@ -686,72 +883,32 @@ function Get-LabExerciseDefinition {
         throw "Scenario '$ScenarioId' is not a lab exercise."
     }
 
-    $exerciseRoot = Join-Path (Get-ExercisesRoot -ProjectRoot $ProjectRoot) $ScenarioId
-    $metadataPath = Join-Path $exerciseRoot 'exercise.json'
-    $promptRelativePath = "exercises/$ScenarioId/prompt.md"
-    $hintRelativePath = "exercises/$ScenarioId/hint.md"
-    $checkRelativePath = "exercises/$ScenarioId/check.sh"
-    $solutionRelativePath = "exercises/$ScenarioId/solution.md"
-    $metadataRelativePath = "exercises/$ScenarioId/exercise.json"
-
-    if (Test-Path $metadataPath -PathType Leaf) {
-        $rawMetadata = Get-Content $metadataPath -Raw
-        if ($rawMetadata.Length -gt 0 -and [int][char]$rawMetadata[0] -eq 0xFEFF) {
-            $rawMetadata = $rawMetadata.Substring(1)
-        }
-
-        $metadata = $rawMetadata | ConvertFrom-Json
-        $exerciseChecks = @(
-            @($metadata.checks) | ForEach-Object {
-                [PSCustomObject]@{
-                    Index = [int]$_.index
-                    Target = [string]$_.target
-                    OriginalCommand = [string]$_.original_command
-                    Command = [string]$_.command
-                }
+    $metadata = Ensure-LabExerciseCache -Manifest $manifest -ProjectRoot $ProjectRoot
+    $exerciseChecks = @(
+        @($metadata.checks) | ForEach-Object {
+            [PSCustomObject]@{
+                Index = [int]$_.index
+                Target = [string]$_.target
+                OriginalCommand = [string]$_.original_command
+                Command = [string]$_.command
             }
-        )
-
-        return [PSCustomObject]@{
-            Id = [string]$metadata.id
-            Title = [string]$metadata.title
-            Description = [string]$metadata.description
-            TimeLimitMinutes = [int]$metadata.time_limit_minutes
-            ObjectiveTags = @($metadata.objective_tags)
-            RequiresServervm = [bool]$metadata.requires_servervm
-            SourceManifest = [string]$metadata.source_manifest
-            Paths = [PSCustomObject]@{
-                Prompt = [string]$metadata.paths.prompt
-                Hint = [string]$metadata.paths.hint
-                Check = [string]$metadata.paths.check
-                Solution = [string]$metadata.paths.solution
-                Metadata = [string]$metadata.paths.metadata
-            }
-            Checks = $exerciseChecks
         }
-    }
-
-    $exerciseChecks = @()
-    $checkIndex = 0
-    foreach ($checkCommand in @($manifest.Content.Lab.Checks)) {
-        $checkIndex++
-        $exerciseChecks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex
-    }
+    )
 
     return [PSCustomObject]@{
-        Id = $manifest.Id
-        Title = $manifest.Title
-        Description = $manifest.Description
-        TimeLimitMinutes = $manifest.TimeLimitMinutes
-        ObjectiveTags = @($manifest.ObjectiveTags)
-        RequiresServervm = [bool]$manifest.Flags.RequiresServervm
-        SourceManifest = $manifest.RelativeManifestPath
+        Id = [string]$metadata.id
+        Title = [string]$metadata.title
+        Description = [string]$metadata.description
+        TimeLimitMinutes = [int]$metadata.time_limit_minutes
+        ObjectiveTags = @($metadata.objective_tags)
+        RequiresServervm = [bool]$metadata.requires_servervm
+        SourceManifest = [string]$metadata.source_manifest
         Paths = [PSCustomObject]@{
-            Prompt = $promptRelativePath
-            Hint = $hintRelativePath
-            Check = $checkRelativePath
-            Solution = $solutionRelativePath
-            Metadata = $metadataRelativePath
+            Prompt = [string]$metadata.paths.prompt
+            Hint = [string]$metadata.paths.hint
+            Check = [string]$metadata.paths.check
+            Solution = [string]$metadata.paths.solution
+            Metadata = [string]$metadata.paths.metadata
         }
         Checks = $exerciseChecks
     }
@@ -2824,6 +2981,9 @@ function Start-ScenarioRun {
     $runArtifact = Export-RunArtifact -Manifest $manifest -Mode $modeLower -StartedAt $startedAt -EndsAt $endsAt -ProjectRoot $ProjectRoot
     try {
         Export-ActiveRunState -Manifest $manifest -Mode $modeLower -RunArtifact $runArtifact -StartedAt $startedAt -EndsAt $endsAt -ProjectRoot $ProjectRoot | Out-Null
+        if ($modeLower -eq 'lab') {
+            $null = Ensure-LabExerciseCache -Manifest $manifest -ProjectRoot $ProjectRoot
+        }
 
         try {
             Invoke-BaseSnapshotRestore -ProjectRoot $ProjectRoot

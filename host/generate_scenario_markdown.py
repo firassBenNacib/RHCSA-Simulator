@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
-import sys
 import textwrap
 from pathlib import Path
 
@@ -352,5 +350,3 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
     else:
         remove_if_exists(scenario_root / "EXAM_TASKS.md")
         remove_if_exists(scenario_root / "EXAM_SOLUTION.md")
-
-subprocess.run([sys.executable, str(ROOT / "host" / "generate_exercises.py")], check=True)

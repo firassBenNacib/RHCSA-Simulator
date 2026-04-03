@@ -41,6 +41,10 @@ Scenarios are discovered automatically from the labs and exams folders.
 
 Only one run is active at a time.
 
+Scenario source files live under `scenarios/`.
+
+Generated runtime cache is written locally under `.lab-state/generated/`, is created on demand, and is not part of the repo.
+
 ### Quick start
 
 **1) Build the baseline**
@@ -133,6 +137,7 @@ Commands
   reset       Reset the active run
   status      Show baseline, VMs, and the active scenario
   vms         Show VM state
+  repo        Run the offline repository self-test
   ssh         Open an SSH session
   ssh-config  Print SSH config for external clients
   tui         Open the interactive TUI
