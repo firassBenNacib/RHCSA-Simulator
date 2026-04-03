@@ -24,11 +24,3 @@ Apply the system recommended tuned profile.
 ## Task 01 - Apply the recommended tuned profile and leave it (clientvm) - 10 pts
 
 Apply the recommended tuned profile and leave it active after reboot.
-
-## Hints
-- Use tuned-adm recommended to see the target profile.
-
-## Validation Commands
-```bash
-rec="$(tuned-adm recommended | awk '{print $1}')"; act="$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\1/')"; test -n "$rec" && test "$act" = "$rec"
-```

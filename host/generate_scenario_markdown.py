@@ -207,16 +207,6 @@ def render_tasks(tasks, task_titles, task_points, requires_servervm, label):
     return "\n".join(sections).rstrip()
 
 
-def render_hints(hints):
-    lines = ["## Hints"]
-    if not hints:
-        lines.append("- No additional hints.")
-        return "\n".join(lines)
-    for hint in hints:
-        lines.append(f"- {clean_text(hint).rstrip('.')}.")
-    return "\n".join(lines)
-
-
 def render_solution(tasks, task_titles, task_points, solution_commands, checks, requires_servervm, label):
     sections = []
     for index, task in enumerate(tasks, start=1):
@@ -311,11 +301,6 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
             "## Lab Tasks",
             *metadata_lines(data, "Lab"),
             render_tasks(lab.get("tasks", []), lab.get("task_titles", []), lab.get("task_points", []), requires_servervm, "Task"),
-            "",
-            render_hints(lab.get("hints", [])),
-            "",
-            "## Validation Commands",
-            code_block(lab.get("checks", [])),
         ])
         lab_solution_md = "\n".join([
             f"# {data['title']}",

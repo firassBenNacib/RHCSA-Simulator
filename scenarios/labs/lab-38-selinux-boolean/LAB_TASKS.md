@@ -30,12 +30,3 @@ On clientvm, configure the SELinux boolean httpd_can_network_connect so it is en
 ## Task 02 - SELinux must remain in enforcing mode (clientvm) - 10 pts
 
 SELinux must remain in enforcing mode.
-
-## Hints
-- Use a persistent SELinux boolean command.
-
-## Validation Commands
-```bash
-getsebool httpd_can_network_connect | grep -q "--> on"
-getenforce | grep -qx Enforcing
-```

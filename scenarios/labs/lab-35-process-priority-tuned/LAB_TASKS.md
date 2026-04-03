@@ -37,13 +37,3 @@ Start the command sleep 3600 in the background on servervm and save its PID in /
 ## Task 03 - Renice the process to 5 (clientvm) - 10 pts
 
 Adjust the nice value of that process so it becomes 5.
-
-## Hints
-- Keep the tuning task on servervm, not clientvm.
-- Store the PID before changing the nice value.
-
-## Validation Commands
-```bash
-ssh admin@servervm sudo tuned-adm active | grep -Fq 'throughput-performance'
-ssh admin@servervm sudo test -s /root/sleep35.pid && ssh admin@servervm sudo ps -o ni= -p "$(ssh admin@servervm sudo cat /root/sleep35.pid)" | grep -qx ' 5'
-```

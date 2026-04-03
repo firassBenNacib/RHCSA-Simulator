@@ -42,11 +42,3 @@ As user scope46, inspect localhost/rhcsa-httpd-base:latest and write the configu
 ## Task 04 - If the image has no explicit configured user, write (clientvm) - 10 pts
 
 If the image has no explicit configured user, write root to /home/scope46/user.txt. Otherwise write the configured user value.
-
-## Hints
-- Use podman image inspect with --format.
-
-## Validation Commands
-```bash
-runuser -l scope46 -c "test -s ~/workdir.txt && test -s ~/user.txt"
-```

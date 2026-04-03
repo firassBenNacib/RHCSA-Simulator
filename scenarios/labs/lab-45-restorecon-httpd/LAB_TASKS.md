@@ -31,13 +31,3 @@ On servervm, the file /var/www/html/index45.html has the wrong SELinux context. 
 ## Task 02 - Enable httpd on servervm with SELinux enforcing (servervm) - 15 pts
 
 Ensure the httpd service is enabled and running on servervm. SELinux must remain enforcing.
-
-## Hints
-- Use the default file-context policy instead of a custom override.
-- This lab now runs on servervm.
-
-## Validation Commands
-```bash
-ssh admin@servervm matchpathcon /var/www/html/index45.html | awk '{print $3}' | grep -qx httpd_sys_content_t
-ssh admin@servervm getenforce | grep -qx Enforcing && ssh admin@servervm systemctl is-enabled httpd | grep -qx enabled && ssh admin@servervm systemctl is-active httpd | grep -qx active
-```

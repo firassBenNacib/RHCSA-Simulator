@@ -30,12 +30,3 @@ As user runner21, run a container named mycontainer21 from localhost/text2pdf21:
 ## Task 02 - Bind mount /opt/file21 to /data/input and (clientvm) - 10 pts
 
 Bind mount /opt/file21 to /data/input and /opt/processed21 to /data/output.
-
-## Hints
-- The local image for this lab is prebuilt.
-- Use podman run with two bind mounts.
-
-## Validation Commands
-```bash
-runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21
-```

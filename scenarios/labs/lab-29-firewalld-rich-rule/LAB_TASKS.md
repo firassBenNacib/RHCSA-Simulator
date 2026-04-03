@@ -30,12 +30,3 @@ Configure a persistent firewalld rich rule that allows TCP port 2222 only from t
 ## Task 02 - Reload firewalld and verify that the rule is active (clientvm) - 10 pts
 
 Reload firewalld and verify that the rule is active.
-
-## Hints
-- Use firewall-cmd --permanent --add-rich-rule.
-- List the effective rich rules after reloading.
-
-## Validation Commands
-```bash
-firewall-cmd --list-rich-rules | grep -Fq 'source address="192.168.122.0/24"' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
-```

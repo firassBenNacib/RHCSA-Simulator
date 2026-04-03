@@ -45,14 +45,3 @@ Add a persistent hosts entry with the following value:
 ## Task 03 - Reconnect Verification (clientvm) - 10 pts
 
 Verify that the active connection comes back with the same values after reconnecting it.
-
-## Hints
-- Use nmcli or nmtui for the network profile.
-- Use hostnamectl for the persistent hostname.
-
-## Validation Commands
-```bash
-hostnamectl --static | grep -qx 'clientvm.netlab.local'
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"; test -n "$CONN"; test "$(nmcli -g ipv4.addresses connection show "$CONN")" = '192.168.122.25/24' && test "$(nmcli -g ipv4.gateway connection show "$CONN")" = '192.168.122.1' && test "$(nmcli -g ipv4.dns connection show "$CONN")" = '192.168.122.3' && test "$(nmcli -g ipv4.method connection show "$CONN")" = 'manual'
-grep -Eq '^192\.168\.122\.3[[:space:]]+repo\.netlab\.local([[:space:]]|$)' /etc/hosts
-```

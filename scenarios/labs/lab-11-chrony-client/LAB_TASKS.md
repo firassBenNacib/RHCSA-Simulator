@@ -31,13 +31,3 @@ On servervm, configure chronyd so it serves time to the 192.168.122.0/24 lab net
 ## Task 02 - Configure clientvm to use only servervm for time (clientvm) - 15 pts
 
 On clientvm, configure chronyd so it synchronizes only with servervm and starts automatically at boot.
-
-## Hints
-- servervm needs an allow rule before it can serve the lab subnet.
-- clientvm should use a single server line for this lab.
-
-## Validation Commands
-```bash
-systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^server servervm iburst$' /etc/chrony.d /etc/chrony.conf
-ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Rqs '^allow 192.168.122.0/24$' /etc/chrony.d /etc/chrony.conf
-```

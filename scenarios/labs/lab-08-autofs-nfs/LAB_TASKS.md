@@ -37,14 +37,3 @@ Configure autofs on clientvm so /netdir/vault8 is mounted on demand from serverv
 ## Task 03 - Verify Access (clientvm) - 10 pts
 
 Leave the configuration persistent across reboot.
-
-## Hints
-- Use an indirect map.
-- The export already contains a file named welcome.txt.
-
-## Validation Commands
-```bash
-showmount -e servervm | grep -Eq '(^|[[:space:]])/exports/vault8([[:space:]]|$)'
-mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs'
-test -f /netdir/vault8/welcome.txt && grep -Fqx 'autofs lab 08' /netdir/vault8/welcome.txt
-```

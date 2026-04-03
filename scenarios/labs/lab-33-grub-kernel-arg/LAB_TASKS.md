@@ -30,12 +30,3 @@ Configure the bootloader on clientvm so that every installed kernel boots with t
 ## Task 02 - The change must persist across reboots and must not (clientvm) - 10 pts
 
 The change must persist across reboots and must not require manual GRUB editing during startup.
-
-## Hints
-- Use a persistent bootloader tool rather than a one-time edit at the GRUB menu.
-- Verify the configured kernel arguments for all installed kernels.
-
-## Validation Commands
-```bash
-grubby --info=ALL | grep -E "^args=" | grep -q "audit_backlog_limit=8192"
-```

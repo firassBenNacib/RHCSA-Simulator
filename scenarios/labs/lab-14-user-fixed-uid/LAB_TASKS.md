@@ -24,11 +24,3 @@ Create a local user with a specific UID.
 ## Task 01 - Create user tavric with UID 4111 and set its (clientvm) - 10 pts
 
 Create user tavric with UID 4111 and set its password to cinder9.
-
-## Hints
-- Use passwd interactively.
-
-## Validation Commands
-```bash
-id -u tavric | grep -qx '4111'
-```

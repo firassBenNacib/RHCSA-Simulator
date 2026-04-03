@@ -42,14 +42,3 @@ The script must accept one username argument.
 ## Task 04 - If the user does not exist, print MISSING: username (clientvm) - 10 pts
 
 If the user does not exist, print MISSING: username to standard output and exit with status 1.
-
-## Hints
-- Use an if test against the passwd database or the id command.
-- Make the script executable.
-
-## Validation Commands
-```bash
-id script40 >/dev/null 2>&1
-/usr/local/bin/usercheck40 script40 | grep -qx 'EXISTS: script40'
-output="$(/usr/local/bin/usercheck40 nosuch40 2>/dev/null || true)"; test "$output" = 'MISSING: nosuch40'
-```

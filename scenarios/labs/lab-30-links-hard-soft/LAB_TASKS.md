@@ -30,12 +30,3 @@ Create the file /root/linksource30 containing the text link-test.
 ## Task 02 - Create the hard link /root/linkhard30 and the (clientvm) - 10 pts
 
 Create the hard link /root/linkhard30 and the symbolic link /root/linksoft30 to /root/linksource30.
-
-## Hints
-- Use ln for both tasks, with and without -s.
-
-## Validation Commands
-```bash
-test "$(stat -c '%i' /root/linksource30)" = "$(stat -c '%i' /root/linkhard30)" && test "$(stat -c '%h' /root/linksource30)" -ge 2
-test "$(readlink -f /root/linksoft30)" = '/root/linksource30' && grep -Fqx 'link-test' /root/linksource30
-```

@@ -24,14 +24,3 @@ Add a persistent swap partition on an extra disk.
 ## Task 01 - Create a 400 MiB swap partition on /dev/sdb, enable (clientvm) - 10 pts
 
 Create a 400 MiB swap partition on /dev/sdb, enable it, and make it persistent.
-
-## Hints
-- Use GPT partition type 19 for swap.
-- Use a UUID entry in /etc/fstab.
-
-## Validation Commands
-```bash
-swapon --noheadings --show=NAME | grep -qx '/dev/sdb1'
-blkid -o value -s TYPE /dev/sdb1 | grep -qx swap
-uuid="$(blkid -o value -s UUID /dev/sdb1)"; grep -Eq "^UUID=${uuid}[[:space:]]+swap[[:space:]]+swap[[:space:]]+" /etc/fstab
-```

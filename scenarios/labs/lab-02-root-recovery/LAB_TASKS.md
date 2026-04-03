@@ -36,14 +36,3 @@ After the system boots normally, confirm that SELinux relabeling completed and r
 ## Task 03 - Leave SSH password authentication working for root (clientvm) - 10 pts
 
 Leave SSH password authentication working for root and admin.
-
-## Hints
-- Use the boot menu edit path with rw init=/bin/bash.
-- Remember to touch /.autorelabel before starting the normal init process.
-
-## Validation Commands
-```bash
-getenforce | grep -qx Enforcing
-ls -Zd /root | grep -Eq '(^| )[^ ]+:object_r:admin_home_t:s0($| )'
-grep -Eq '^[[:space:]]*PasswordAuthentication[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config && grep -Eq '^[[:space:]]*PermitRootLogin[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config
-```

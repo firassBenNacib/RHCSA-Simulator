@@ -43,14 +43,3 @@ Configure passwordless SSH access for bridge48 from clientvm to servervm using t
 ## Task 04 - Copy the payload with scp (servervm) - 10 pts
 
 Using scp over SSH, copy /home/bridge48/payload.txt from clientvm to /home/bridge48/inbox/ on servervm.
-
-## Hints
-- This lab does need a home directory because the key pair lives under ~/.ssh.
-- ssh-copy-id is the quickest way to seed authorized_keys.
-
-## Validation Commands
-```bash
-getent passwd bridge48 >/dev/null && test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519
-ssh bridge48@servervm true
-ssh bridge48@servervm test -f /home/bridge48/inbox/payload.txt
-```

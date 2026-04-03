@@ -24,13 +24,3 @@ Extend an existing logical volume without losing data.
 ## Task 01 - Resize logical volume /dev/reviewvg/reviewlv so the (clientvm) - 10 pts
 
 Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot.
-
-## Hints
-- The logical volume already exists and is mounted on /mnt/reviewlv.
-- Do not recreate the filesystem.
-
-## Validation Commands
-```bash
-lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewlv" && $2=="reviewvg" && $3>=319 && $3<=321{found=1} END{exit !found}'
-findmnt -no TARGET,SOURCE /mnt/reviewlv | grep -Eq '^/mnt/reviewlv /dev/mapper/reviewvg-reviewlv$'
-```

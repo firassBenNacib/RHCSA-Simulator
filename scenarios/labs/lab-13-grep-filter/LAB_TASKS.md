@@ -24,11 +24,3 @@ Extract matching lines from a seeded words file.
 ## Task 01 - From /usr/share/dict/words, extract the lines (clientvm) - 10 pts
 
 From /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines.
-
-## Hints
-- The words file for this lab is preseeded if it was not present before.
-
-## Validation Commands
-```bash
-test -s /root/lines && grep -q 'ich' /root/lines && ! awk 'index($0,"ich")==0{print; exit 1}' /root/lines
-```

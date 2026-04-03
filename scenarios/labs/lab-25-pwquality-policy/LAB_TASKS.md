@@ -30,13 +30,3 @@ Create a persistent password quality policy in /etc/security/pwquality.conf.d so
 ## Task 02 - Leave PAM service files unchanged (clientvm) - 15 pts
 
 Do not edit any PAM service file for this task.
-
-## Hints
-- Use a dedicated file under /etc/security/pwquality.conf.d.
-- This task is only about pwquality configuration, not PAM file edits.
-
-## Validation Commands
-```bash
-grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf
-! grep -Rqs 'lab25' /etc/pam.d
-```

@@ -30,12 +30,3 @@ On clientvm, user worker42 has a CPU-bound process whose PID is stored in /home/
 ## Task 02 - User worker42 also has a long-running sleep process (clientvm) - 10 pts
 
 User worker42 also has a long-running sleep process whose PID is stored in /home/worker42/sleep.pid. Change the nice value of that process to 10.
-
-## Hints
-- Use kill or pkill for the first process and renice for the second one.
-
-## Validation Commands
-```bash
-[ ! -d "/proc/$(cat /home/worker42/cpu.pid)" ]
-ps -o ni= -p "$(cat /home/worker42/sleep.pid)" | tr -d ' ' | grep -qx 10
-```

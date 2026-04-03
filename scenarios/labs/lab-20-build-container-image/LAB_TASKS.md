@@ -30,12 +30,3 @@ As user builder20, build an image named localhost/text2pdf20:latest from /opt/rh
 ## Task 02 - Verify that the image exists locally for that user (clientvm) - 10 pts
 
 Verify that the image exists locally for that user.
-
-## Hints
-- The Containerfile is already present in the workspace.
-- Use podman build.
-
-## Validation Commands
-```bash
-runuser -l builder20 -c 'podman image exists localhost/text2pdf20:latest'
-```

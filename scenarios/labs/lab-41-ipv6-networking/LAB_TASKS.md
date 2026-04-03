@@ -44,13 +44,3 @@ Set the following persistent identity and resolution settings on clientvm:
 ## Task 03 - Preserve Existing IPv4 Settings (clientvm) - 10 pts
 
 Leave the existing IPv4 configuration unchanged.
-
-## Hints
-- Use nmcli so the change survives a reconnect.
-
-## Validation Commands
-```bash
-CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && $2 != "lo" {print $1; exit}')"; test -n "$CONN"; test "$(nmcli -g ipv6.addresses connection show "$CONN")" = 'fd00:122:41::25/64' && test "$(nmcli -g ipv6.gateway connection show "$CONN")" = 'fd00:122:41::1' && test "$(nmcli -g ipv6.dns connection show "$CONN")" = 'fd00:122:41::53' && test "$(nmcli -g ipv6.method connection show "$CONN")" = 'manual'
-hostnamectl --static | grep -qx 'clientvm.ipv6lab.local'
-getent hosts servervm.ipv6lab.local | grep -Fq 'fd00:122:41::3'
-```

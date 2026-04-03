@@ -36,14 +36,3 @@ Create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with 
 ## Task 03 - Ensure the rsyslog service is active after your (clientvm) - 10 pts
 
 Ensure the rsyslog service is active after your changes.
-
-## Hints
-- Persistent journald storage requires the correct directory.
-- Reload or restart the affected logging services after you update their configuration.
-
-## Validation Commands
-```bash
-test -d /var/log/journal && grep -Eq '^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*$' /etc/systemd/journald.conf
-grep -Eq '^[[:space:]]*authpriv\.warning[[:space:]]+/var/log/auth34\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf
-systemctl is-active rsyslog | grep -qx active
-```

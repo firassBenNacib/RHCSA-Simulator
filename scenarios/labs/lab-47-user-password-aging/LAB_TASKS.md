@@ -36,14 +36,3 @@ Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 day
 ## Task 03 - Expire the password for the next login (clientvm) - 10 pts
 
 Force cycle47 to change the password at the next login.
-
-## Hints
-- This lab is about chage, not about home-directory behavior.
-- Use chage -d 0 to force a change at next login.
-
-## Validation Commands
-```bash
-getent passwd cycle47 >/dev/null
-chage -l cycle47 | grep -Fq 'Maximum number of days between password change			: 30' && chage -l cycle47 | grep -Fq 'Minimum number of days between password change			: 2' && chage -l cycle47 | grep -Fq 'Number of days of warning before password expires		: 7'
-chage -l cycle47 | grep -Fq 'Last password change				: password must be changed'
-```

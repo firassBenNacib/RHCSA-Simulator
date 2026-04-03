@@ -30,12 +30,3 @@ Find all files owned by natfind and modified in the last 24 hours under /opt/lab
 ## Task 02 - Copy them to /root/natfind-files and preserve the (clientvm) - 10 pts
 
 Copy them to /root/natfind-files and preserve the original directory structure.
-
-## Hints
-- Use find with a time test and --parents or an equivalent method.
-- Only copy regular files.
-
-## Validation Commands
-```bash
-diff -u <(find /opt/lab12/source -type f -user natfind -mtime -1 | sed 's#^/opt/lab12/source#/root/natfind-files#' | sort) <(find /root/natfind-files -type f | sort)
-```

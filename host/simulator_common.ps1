@@ -1298,9 +1298,7 @@ function Write-WorkflowStatus {
         $script:WorkflowProgressIndex = [Math]::Min(([int]$script:WorkflowProgressIndex + 1), [int]$script:WorkflowProgressTotal)
         $current = [int]$script:WorkflowProgressIndex
         $total = [int]$script:WorkflowProgressTotal
-        $completed = '#' * $current
-        $remaining = '-' * ([Math]::Max($total - $current, 0))
-        $progressPrefix = '[{0}{1}] ' -f $completed, $remaining
+        $progressPrefix = '[{0}/{1}] ' -f $current, $total
     }
 
     [Console]::Out.WriteLine(('{0}  {1}{2}' -f $prefix, $progressPrefix, $Message))
@@ -2799,7 +2797,7 @@ function Start-BaselineSession {
 
     $script:WorkflowProgressArea = 'baseline'
     $script:WorkflowProgressIndex = 0
-    $script:WorkflowProgressTotal = if ($NoProvision) { 3 } else { 4 }
+    $script:WorkflowProgressTotal = if ($NoProvision) { 3 } else { 5 }
 
     try {
         Write-WorkflowStatus -Area 'baseline' -Message 'Preparing lab environment'
@@ -2808,15 +2806,15 @@ function Start-BaselineSession {
             Push-Location $ProjectRoot
             try {
                 if ($NoProvision) {
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting servervm without guest provisioning'
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting servervm'
                     Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--no-provision', '--no-color') -FailureMessage "'vagrant up servervm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm startup after a transient SSH/provider failure'
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting clientvm without guest provisioning'
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting clientvm'
                     Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--no-provision', '--no-color') -FailureMessage "'vagrant up clientvm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm startup after a transient SSH/provider failure'
                 }
                 else {
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting and provisioning servervm'
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning servervm'
                     Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--provision', '--no-color') -FailureMessage "'vagrant up servervm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm provisioning after a transient SSH/provider failure'
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting and provisioning clientvm'
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning clientvm'
                     Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--provision', '--no-color') -FailureMessage "'vagrant up clientvm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm provisioning after a transient SSH/provider failure'
                 }
             }
@@ -2874,13 +2872,13 @@ function Start-BaselineSession {
             }
         }
         else {
-            Write-WorkflowStatus -Area 'baseline' -Message 'Creating clean baseline snapshots'
+            Write-WorkflowStatus -Area 'baseline' -Message 'Creating baseline snapshots'
             $createdBaseSnapshot = Invoke-BaseSnapshotInitialization -ProjectRoot $ProjectRoot -ForceRefresh
             $snapshotReady = $true
         }
 
         if (-not $NoProvision) {
-            Write-WorkflowStatus -Area 'baseline' -Message 'Validating offline package repo'
+            Write-WorkflowStatus -Area 'baseline' -Message 'Validating offline package repository'
             $repoHealth = Test-BaselineOfflineRepoHealth -ProjectRoot $ProjectRoot
             if (-not $repoHealth.Passed) {
                 $failedLabel = ($repoHealth.FailedMachines -join ', ')

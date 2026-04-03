@@ -30,12 +30,3 @@ Create an executable script /usr/local/bin/listlogs31 that loops over the files 
 ## Task 02 - Run the script once (clientvm) - 10 pts
 
 Run the script once.
-
-## Hints
-- A for loop is sufficient for this task.
-- Write one path per line.
-
-## Validation Commands
-```bash
-diff -u <(find /opt/lab31 -maxdepth 1 -type f -name '*.log' | sort) <(sort /root/listlogs31.out)
-```

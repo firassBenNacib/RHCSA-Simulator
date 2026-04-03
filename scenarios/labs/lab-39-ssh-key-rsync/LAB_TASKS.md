@@ -43,12 +43,3 @@ Configure passwordless SSH access for mesh39 from clientvm to servervm using pub
 ## Task 04 - Using rsync over SSH, copy the directory (servervm) - 10 pts
 
 Using rsync over SSH, copy the directory /home/mesh39/client-data/ from clientvm to /home/mesh39/server-data/ on servervm.
-
-## Hints
-- Use the mesh39 account for the SSH key work.
-- Verify the transfer by checking the copied file on servervm through SSH.
-
-## Validation Commands
-```bash
-ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 "test -f /home/mesh39/server-data/file1.txt"
-```

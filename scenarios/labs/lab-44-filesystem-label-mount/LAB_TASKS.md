@@ -36,14 +36,3 @@ Format the new partition with the filesystem label DATA44 and mount it at /data4
 ## Task 03 - Persist the LABEL mount in fstab (clientvm) - 10 pts
 
 Configure the mount persistently in /etc/fstab by using LABEL=DATA44.
-
-## Hints
-- The title already tells you the required persistence method.
-- Use LABEL=DATA44, not a device path or UUID.
-
-## Validation Commands
-```bash
-blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44
-findmnt -n /data44 | grep -Fq '/data44'
-grep -Eq '^LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4[[:space:]]+defaults[[:space:]]+0[[:space:]]+0$' /etc/fstab
-```

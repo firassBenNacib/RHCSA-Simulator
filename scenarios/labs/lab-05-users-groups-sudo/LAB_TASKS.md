@@ -37,16 +37,3 @@ Set the passwords of brenor, lyessa, and quillan to cinder9.
 ## Task 03 - Create the required sudo rules on servervm (servervm) - 10 pts
 
 On servervm, allow members of opsrune to run /usr/sbin/useradd through sudo, and allow brenor to run /usr/bin/passwd for other users without a sudo password prompt.
-
-## Hints
-- Use useradd -G when the supplementary group is known at account creation time.
-- Keep sudo rules in /etc/sudoers.d/ and validate each drop-in with visudo -f.
-
-## Validation Commands
-```bash
-ssh admin@servervm id -nG brenor | tr ' ' '\n' | grep -qx opsrune && ssh admin@servervm getent passwd brenor >/dev/null
-ssh admin@servervm id -nG lyessa | tr ' ' '\n' | grep -qx opsrune && ssh admin@servervm getent passwd lyessa >/dev/null
-ssh admin@servervm getent passwd sarahx | awk -F: '{exit !($6=="/nonexistent" || $6=="/" || $6=="")}' && ssh admin@servervm getent passwd sarahx | awk -F: '{exit !($7=="/sbin/nologin")}'
-ssh admin@servervm sudo visudo -cf /etc/sudoers.d/opsrune >/dev/null && ssh admin@servervm sudo grep -Eq '^%opsrune[[:space:]]+ALL=\(root\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers.d/opsrune
-ssh admin@servervm sudo visudo -cf /etc/sudoers.d/brenor-passwd >/dev/null && ssh admin@servervm sudo grep -Eq '^brenor[[:space:]]+ALL=\(root\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers.d/brenor-passwd
-```

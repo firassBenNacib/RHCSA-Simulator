@@ -36,14 +36,3 @@ As user merin22, generate a systemd user unit for that container and enable it.
 ## Task 03 - Enable Lingering (clientvm) - 10 pts
 
 Enable lingering for merin22 so the user service starts automatically after reboot.
-
-## Hints
-- Use podman generate systemd --files --new or podman generate systemd --new depending on the environment.
-- The user service must run without an active login session.
-
-## Validation Commands
-```bash
-loginctl show-user merin22 | grep -Eq '^Linger=yes$'
-runuser -l merin22 -c 'systemctl --user is-enabled container-render22.service' | grep -qx enabled
-runuser -l merin22 -c 'systemctl --user is-active container-render22.service' | grep -qx active
-```

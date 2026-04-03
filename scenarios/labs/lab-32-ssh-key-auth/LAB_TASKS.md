@@ -37,12 +37,3 @@ Configure key-based SSH authentication so that user relay32 on clientvm can log 
 ## Task 03 - Do not disable PasswordAuthentication globally for (clientvm) - 10 pts
 
 Do not disable PasswordAuthentication globally for this task.
-
-## Hints
-- Generate the key as the source user.
-- Populate authorized_keys for the target user.
-
-## Validation Commands
-```bash
-runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true'
-```

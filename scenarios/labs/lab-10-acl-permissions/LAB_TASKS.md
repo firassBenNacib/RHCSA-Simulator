@@ -30,13 +30,3 @@ Copy /etc/fstab to /var/tmp/fstab-acl.
 ## Task 02 - Set owner and group to root:root, remove all (clientvm) - 10 pts
 
 - **Set owner and group to root:** root, remove all execute bits, give natacl read-write, deny haracl all access, and allow others read only.
-
-## Hints
-- Create the users natacl and haracl if they are missing.
-- Use setfacl for the named user entries.
-
-## Validation Commands
-```bash
-stat -c '%U:%G %a' /var/tmp/fstab-acl | grep -qx 'root:root 644'
-getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:natacl:rw-' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:haracl:---' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'other::r--'
-```

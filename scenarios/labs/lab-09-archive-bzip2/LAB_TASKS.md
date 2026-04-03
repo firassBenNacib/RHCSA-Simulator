@@ -24,11 +24,3 @@ Create a compressed archive in bzip2 format.
 ## Task 01 - Create /root/myetcbackup.tar.bz2 containing the (clientvm) - 10 pts
 
 Create /root/myetcbackup.tar.bz2 containing the /etc directory.
-
-## Hints
-- Use tar with bzip2 compression directly.
-
-## Validation Commands
-```bash
-tar -tjf /root/myetcbackup.tar.bz2 | grep -Eq '^etc/$|^etc/'
-```

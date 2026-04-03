@@ -37,14 +37,3 @@ Use the mount options ro,sync.
 ## Task 03 - Ensure the mount is available after a reboot and (clientvm) - 10 pts
 
 Ensure the mount is available after a reboot and that the file nfs36.txt can be read from the mount point.
-
-## Hints
-- Use /etc/fstab for persistence.
-- Do not use autofs for this task.
-
-## Validation Commands
-```bash
-grep -Eq '^[^#].*192\.168\.122\.3:/exports/direct36[[:space:]]+/mnt/direct36[[:space:]]+nfs[[:space:]]+ro,sync' /etc/fstab
-mountpoint -q /mnt/direct36
-test -f /mnt/direct36/nfs36.txt
-```

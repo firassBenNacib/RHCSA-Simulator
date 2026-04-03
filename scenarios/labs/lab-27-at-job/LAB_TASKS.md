@@ -36,14 +36,3 @@ Enable and start the atd service.
 ## Task 03 - schedule a one-time at job that appends the text (clientvm) - 10 pts
 
 As user queue27, schedule a one-time at job that appends the text AT27 OK to /home/queue27/at27.log two minutes from now.
-
-## Hints
-- You can submit the job to at with standard input.
-- Use atq to verify that the job is queued.
-
-## Validation Commands
-```bash
-systemctl is-enabled atd | grep -qx enabled
-systemctl is-active atd | grep -qx active
-atq | grep -q queue27
-```

@@ -30,12 +30,3 @@ Use the prepared local repositories on clientvm to install the packages tree and
 ## Task 02 - Remove dos2unix and leave tree installed (clientvm) - 10 pts
 
 Remove dos2unix and leave tree installed.
-
-## Hints
-- The repositories are already defined for this lab. Focus on package management.
-
-## Validation Commands
-```bash
-rpm -q tree
-! rpm -q dos2unix
-```

@@ -36,14 +36,3 @@ Configure /shared/analysts so new files inherit the analystsx group and only the
 ## Task 03 - Verify the final permission string (clientvm) - 10 pts
 
 Verify the final directory permissions.
-
-## Hints
-- A collaborative drop directory often needs both setgid and sticky semantics.
-- Use a single chmod invocation to express the final mode cleanly.
-
-## Validation Commands
-```bash
-getent group analystsx >/dev/null && stat -c '%U:%G %a' /shared/analysts | grep -qx 'root:analystsx 3770'
-findmnt -n /shared >/dev/null 2>&1 || test -d /shared
-stat -c %A /shared/analysts | grep -qx 'drwxrws--T'
-```

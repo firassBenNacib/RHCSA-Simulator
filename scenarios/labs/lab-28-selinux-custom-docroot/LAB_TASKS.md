@@ -36,14 +36,3 @@ Keep SELinux enforcing, configure the correct file context and port label, open 
 ## Task 03 - Leave the provided content intact (clientvm) - 10 pts
 
 Do not edit or remove /srv/lab28/site/index.html.
-
-## Hints
-- This lab needs both a file-context change and a port-label change.
-- The provided index file must stay in place.
-
-## Validation Commands
-```bash
-grep -Rqs 'DocumentRoot /srv/lab28/site' /etc/httpd/conf.d && grep -Rqs '^Listen 8088$' /etc/httpd/conf.d
-semanage port -l | grep -Eq '^http_port_t\b.*\b8088\b' && matchpathcon /srv/lab28/site/index.html | grep -Fq httpd_sys_content_t
-systemctl is-enabled httpd | grep -qx enabled && firewall-cmd --list-ports | grep -Eq '(^| )8088/tcp($| )'
-```

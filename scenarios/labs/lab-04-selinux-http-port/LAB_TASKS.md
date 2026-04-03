@@ -36,14 +36,3 @@ Allow TCP port 9082 through the firewall permanently.
 ## Task 03 - Make the SELinux changes needed so Apache serves (clientvm) - 10 pts
 
 Make the SELinux changes needed so Apache serves the existing /var/www/html content on that port.
-
-## Hints
-- Do not disable SELinux.
-- Do not move the existing document root.
-
-## Validation Commands
-```bash
-ss -ltn '( sport = :9082 )' | grep -q ':9082' && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active
-firewall-cmd --permanent --query-port=9082/tcp
-curl -fsS http://localhost:9082 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b9082\b'
-```
