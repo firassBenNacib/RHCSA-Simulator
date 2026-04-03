@@ -688,7 +688,7 @@ function ConvertTo-ExerciseCheckEntry {
     }
 }
 
-function Normalize-ScenarioText {
+function Format-ScenarioText {
     param(
         [AllowEmptyString()]
         [string]$Text
@@ -727,7 +727,7 @@ function Get-ScenarioLabHintsMarkdown {
     }
 
     foreach ($hint in $hints) {
-        $text = Normalize-ScenarioText -Text ([string]$hint)
+        $text = Format-ScenarioText -Text ([string]$hint)
         $text = $text.TrimEnd('.')
         $lines += "- $text."
     }
@@ -779,7 +779,7 @@ function Get-ScenarioSourceHash {
     return [string](Get-FileHash -Path $Path -Algorithm SHA256).Hash
 }
 
-function Ensure-LabExerciseCache {
+function Initialize-LabExerciseCache {
     [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory = $true)]
@@ -884,7 +884,7 @@ function Get-LabExerciseDefinition {
         throw "Scenario '$ScenarioId' is not a lab exercise."
     }
 
-    $metadata = Ensure-LabExerciseCache -Manifest $manifest -ProjectRoot $ProjectRoot
+    $metadata = Initialize-LabExerciseCache -Manifest $manifest -ProjectRoot $ProjectRoot
     $exerciseChecks = @(
         @($metadata.checks) | ForEach-Object {
             [PSCustomObject]@{
@@ -2983,7 +2983,7 @@ function Start-ScenarioRun {
     try {
         Export-ActiveRunState -Manifest $manifest -Mode $modeLower -RunArtifact $runArtifact -StartedAt $startedAt -EndsAt $endsAt -ProjectRoot $ProjectRoot | Out-Null
         if ($modeLower -eq 'lab') {
-            $null = Ensure-LabExerciseCache -Manifest $manifest -ProjectRoot $ProjectRoot
+            $null = Initialize-LabExerciseCache -Manifest $manifest -ProjectRoot $ProjectRoot
         }
 
         try {
