@@ -125,10 +125,7 @@ func fitStyledLine(text string, width int) string {
 	if len(runes) <= width {
 		return plain
 	}
-	if width == 1 {
-		return string(runes[:1])
-	}
-	return string(runes[:width-1]) + "…"
+	return string(runes[:width])
 }
 
 func max(left, right int) int {

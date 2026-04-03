@@ -28,13 +28,17 @@ fi
 
 mkdir -p /var/www/html/repo
 sed -i '\#/var/www/html/repo #d' /etc/fstab
-if mountpoint -q /var/www/html/repo; then
-  :
-elif [ -d "${BOOTSTRAP_ISO_MOUNT}/BaseOS" ] && [ -d "${BOOTSTRAP_ISO_MOUNT}/AppStream" ]; then
-  mount --bind "${BOOTSTRAP_ISO_MOUNT}" /var/www/html/repo
-  mount -o remount,bind,ro /var/www/html/repo >/dev/null 2>&1 || true
+ROM_UUID="$(blkid -s UUID -o value "$ROM_DEV" 2>/dev/null || true)"
+if [ -n "${ROM_UUID:-}" ]; then
+  echo "UUID=${ROM_UUID} /var/www/html/repo auto ro,nofail 0 0" >> /etc/fstab
 else
-  mount_repo_source "$ROM_DEV"
+  echo "${ROM_DEV} /var/www/html/repo auto ro,nofail 0 0" >> /etc/fstab
+fi
+
+if mountpoint -q /var/www/html/repo; then
+  mount -o remount,ro /var/www/html/repo >/dev/null 2>&1 || true
+else
+  mount /var/www/html/repo >/dev/null 2>&1 || mount_repo_source "$ROM_DEV"
 fi
 
 mkdir -p /exports/direct /exports/indirect /exports/autofs/projects

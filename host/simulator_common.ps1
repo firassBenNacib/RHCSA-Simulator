@@ -660,7 +660,9 @@ function ConvertTo-ExerciseCheckEntry {
         $remoteCommand = ($remoteCommand -replace '^\s*sudo\s+', '').Trim()
         if (-not [string]::IsNullOrWhiteSpace($remoteCommand)) {
             $target = 'servervm'
-            $effectiveCommand = $remoteCommand
+            $effectiveCommand = $trimmedCommand
+            $effectiveCommand = $effectiveCommand -replace '(?i)(^|&&\s*)ssh\s+\S*servervm\S*\s+(?:sudo\s+)?', '$1'
+            $effectiveCommand = $effectiveCommand.Trim()
         }
     }
 
@@ -1906,6 +1908,25 @@ function Test-VagrantSshConnectivity {
         [int]$RetryDelaySeconds = 3
     )
 
+    $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $ProjectRoot | Where-Object { [string]$_.Name -eq $MachineName } | Select-Object -First 1)
+    if ($machineStatus.Count -gt 0) {
+        $stateHuman = [string]$machineStatus[0].StateHuman
+        switch ($stateHuman) {
+            'not created' {
+                throw "$MachineName is not created. Run .\RHCSA.ps1 up first."
+            }
+            'poweroff' {
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed."
+            }
+            'saved' {
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed."
+            }
+            'paused' {
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed."
+            }
+        }
+    }
+
     for ($attempt = 1; $attempt -le $RetryCount; $attempt++) {
         $launchSpec = $null
         try {
@@ -1972,6 +1993,41 @@ function Invoke-VagrantVmShellCommandCapture {
     finally {
         Pop-Location
         Clear-LabCheckScriptState -ProjectRoot $ProjectRoot
+    }
+}
+
+function Test-BaselineOfflineRepoHealth {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $repoCommand = 'curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null'
+
+    Test-VagrantSshConnectivity -MachineName 'servervm' -ProjectRoot $ProjectRoot
+    Test-VagrantSshConnectivity -MachineName 'clientvm' -ProjectRoot $ProjectRoot
+
+    $serverResult = Invoke-VagrantVmShellCommandCapture -MachineName 'servervm' -Command $repoCommand -ProjectRoot $ProjectRoot
+    $clientResult = Invoke-VagrantVmShellCommandCapture -MachineName 'clientvm' -Command $repoCommand -ProjectRoot $ProjectRoot
+
+    $results = @(
+        [PSCustomObject]@{
+            MachineName = 'servervm'
+            ExitCode = [int]$serverResult.ExitCode
+            Passed = ([int]$serverResult.ExitCode -eq 0)
+        }
+        [PSCustomObject]@{
+            MachineName = 'clientvm'
+            ExitCode = [int]$clientResult.ExitCode
+            Passed = ([int]$clientResult.ExitCode -eq 0)
+        }
+    )
+
+    $failedMachines = @($results | Where-Object { -not $_.Passed } | ForEach-Object { [string]$_.MachineName })
+
+    return [PSCustomObject]@{
+        Passed = ($failedMachines.Count -eq 0)
+        FailedMachines = $failedMachines
+        Results = $results
     }
 }
 
@@ -2663,6 +2719,29 @@ function Start-BaselineSession {
             Write-WorkflowStatus -Area 'baseline' -Message 'Creating clean baseline snapshots'
             $createdBaseSnapshot = Invoke-BaseSnapshotInitialization -ProjectRoot $ProjectRoot -ForceRefresh
             $snapshotReady = $true
+        }
+
+        if (-not $NoProvision) {
+            Write-WorkflowStatus -Area 'baseline' -Message 'Validating offline package repo'
+            $repoHealth = Test-BaselineOfflineRepoHealth -ProjectRoot $ProjectRoot
+            if (-not $repoHealth.Passed) {
+                $failedLabel = ($repoHealth.FailedMachines -join ', ')
+                if (-not $SkipEnvironmentRecovery) {
+                    $notices += "Detected an incomplete offline package repo baseline on $failedLabel. Rebuilding it from scratch."
+                    Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
+                    $recoveryResult = Start-BaselineSession `
+                        -NoProvision:$NoProvision `
+                        -NormalStart:$NormalStart `
+                        -HeadlessClient:$HeadlessClient `
+                        -RealisticMode:$RealisticMode `
+                        -SkipEnvironmentRecovery `
+                        -ProjectRoot $ProjectRoot
+                    $recoveryResult.Notices = @($notices + @($recoveryResult.Notices))
+                    return $recoveryResult
+                }
+
+                throw "The offline package repo baseline is unavailable on $failedLabel. Run .\RHCSA.ps1 destroy and then .\RHCSA.ps1 up."
+            }
         }
 
         $clearedActiveRun = $false

@@ -239,8 +239,9 @@ def extract_servervm_remote_command(command: str) -> str | None:
     match = re.match(r"^\s*ssh\s+(?P<host>\S*servervm\S*)\s+(?P<remote>.+?)\s*$", command)
     if not match:
         return None
-    remote = match.group("remote").strip()
-    remote = re.sub(r"^\s*sudo\s+", "", remote)
+    remote = command.strip()
+    remote = re.sub(r"(?i)(^|&&\s*)ssh\s+\S*servervm\S*\s+(?:sudo\s+)?", r"\1", remote)
+    remote = remote.strip()
     return remote or None
 
 

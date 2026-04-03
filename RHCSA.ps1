@@ -5,7 +5,7 @@ param(
         param($commandName, $parameterName, $wordToComplete)
         $null = $commandName, $parameterName
 
-        foreach ($value in @('help', 'up', 'destroy', 'list', 'start', 'reset', 'status', 'check', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', '-h', '--help')) {
+        foreach ($value in @('help', 'up', 'destroy', 'list', 'start', 'reset', 'status', 'check', 'repo', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', '-h', '--help')) {
             if ($value -like "$wordToComplete*") {
                 [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
             }
@@ -20,7 +20,7 @@ param(
 
         $area = [string]$fakeBoundParameters['Area']
         $candidates = switch ($area.ToLowerInvariant()) {
-            'help' { @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion') }
+            'help' { @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion') }
             'list' { @('all', 'labs', 'lab', 'exams', 'exam') }
             'ssh' { @('clientvm', 'servervm') }
             'ssh-config' { @('clientvm', 'servervm') }
@@ -236,6 +236,7 @@ function Get-RecommendedHelpCommand {
         'scenario/list' { return '.\RHCSA.ps1 help list' }
         'scenario/start' { return '.\RHCSA.ps1 help start' }
         'scenario/check' { return '.\RHCSA.ps1 help check' }
+        'baseline/repo' { return '.\RHCSA.ps1 help repo' }
         'scenario/reset' { return '.\RHCSA.ps1 help reset' }
         'dashboard/status' { return '.\RHCSA.ps1 help status' }
         'vm/status' { return '.\RHCSA.ps1 help vms' }
@@ -279,7 +280,7 @@ function Format-HelpEntryList {
 
 function Get-HelpOutput {
     param(
-        [ValidateSet('general', 'up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')]
+        [ValidateSet('general', 'up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')]
         [string]$Scope = 'general'
     )
 
@@ -346,6 +347,16 @@ function Get-HelpOutput {
                 '',
                 'Example:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 check')
+            )
+        }
+        'repo' {
+            return @(
+                (Get-UiHeading -Text 'repo'),
+                (Format-StyledText -Text 'Run the offline package repository self-test on servervm and clientvm.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 repo'),
+                '',
+                'Example:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 repo')
             )
         }
         'reset' {
@@ -424,6 +435,7 @@ function Get-HelpOutput {
                 [PSCustomObject]@{ Name = 'list'; Description = 'List labs and mock exams' }
                 [PSCustomObject]@{ Name = 'start'; Description = 'Start a lab or exam run' }
                 [PSCustomObject]@{ Name = 'check'; Description = 'Run checks for the active lab' }
+                [PSCustomObject]@{ Name = 'repo'; Description = 'Run the offline repo self-test' }
                 [PSCustomObject]@{ Name = 'reset'; Description = 'Reset the active run' }
                 [PSCustomObject]@{ Name = 'status'; Description = 'Show baseline, VMs, and active scenario' }
                 [PSCustomObject]@{ Name = 'vms'; Description = 'Show VM state' }
@@ -445,6 +457,7 @@ function Get-HelpOutput {
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 repo'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
             )
@@ -616,7 +629,7 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
     }
 
     if (`$tokens.Count -eq 0) {
-        Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', 'help')
+        Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', 'help')
         return
     }
 
@@ -625,7 +638,7 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
 
     switch (`$root) {
         'help' {
-            Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
+            Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
             return
         }
         'list' {
@@ -1067,6 +1080,24 @@ function Format-ScenarioResetOutput {
     )
 }
 
+function Get-ExerciseCheckSummaryLabel {
+    param(
+        [string]$Command
+    )
+
+    $lowered = ([string]$Command).ToLowerInvariant()
+    switch -Regex ($lowered) {
+        '/etc/yum\.repos\.d|dnf -q repolist|baseos|appstream' { return 'repository check failed' }
+        'hostnamectl|nmcli|/etc/hosts' { return 'network check failed' }
+        'systemctl' { return 'service check failed' }
+        'firewall-cmd|semanage|getenforce' { return 'security check failed' }
+        'podman|container' { return 'container check failed' }
+        'mount|findmnt|/etc/fstab|swapon' { return 'storage check failed' }
+        'useradd|groupadd|chage|getent passwd' { return 'user check failed' }
+        default { return 'check failed' }
+    }
+}
+
 function Format-ExerciseCheckOutput {
     param(
         [object]$CheckResult
@@ -1101,8 +1132,6 @@ function Format-ExerciseCheckOutput {
         }
     }
 
-    $heading = if ($CheckResult.Passed) { 'Progress check' } else { 'Progress check' }
-    $headingStyle = if ($CheckResult.Passed) { 'Success' } else { 'Warning' }
     $resultText = if ($CheckResult.Passed) {
         Format-StyledText -Text ("complete ({0}/{1})" -f $CheckResult.PassedCount, $CheckResult.TotalCount) -StyleName 'Success'
     }
@@ -1110,53 +1139,46 @@ function Format-ExerciseCheckOutput {
         Format-StyledText -Text ("incomplete ({0}/{1})" -f $CheckResult.PassedCount, $CheckResult.TotalCount) -StyleName 'Warning'
     }
     $lines = @(
-        (Get-UiHeading -Text $heading -StyleName $headingStyle),
         (Format-UiLabelValue -Label 'Lab' -Value $CheckResult.ScenarioId),
         (Format-UiLabelValue -Label 'Result' -Value $resultText)
     )
-
-    if (-not $CheckResult.Passed) {
-        $lines += (Format-StyledText -Text 'This returns a non-zero exit code until every task is finished.' -StyleName 'Muted')
-    }
 
     foreach ($result in @($CheckResult.Results)) {
         $statusText = if ($result.Passed) { '[ok]' } else { '[fail]' }
         $statusStyle = if ($result.Passed) { 'Success' } else { 'Warning' }
         $displayCommand = if ([string]::IsNullOrWhiteSpace([string]$result.OriginalCommand)) { [string]$result.Command } else { [string]$result.OriginalCommand }
-        $lines += ('{0} [{1}] {2}' -f (Format-StyledText -Text $statusText -StyleName $statusStyle), $result.Target, $displayCommand)
+        $summary = if ($result.Passed) { 'check passed' } else { Get-ExerciseCheckSummaryLabel -Command $displayCommand }
+        $lines += ('{0} [{1}] {2}' -f (Format-StyledText -Text $statusText -StyleName $statusStyle), $result.Target, $summary)
     }
 
-    if ($failedResults.Count -gt 0) {
-        $lines += ''
-        foreach ($failedResult in $failedResults) {
-            $lines += (Format-UiLabelValue -Label ("Fail {0}" -f $failedResult.Index) -Value ("[{0}] {1}" -f $failedResult.Target, $failedResult.OriginalCommand))
-            $transcript = @($failedResult.StdOut) + @($failedResult.StdErr)
-            $usedSyntheticPreview = $false
-            $preview = @(
-                $transcript |
-                    Where-Object {
-                        $text = [string]$_
-                        -not [string]::IsNullOrWhiteSpace($text) -and
-                        $text -notmatch '^\s*==>\s+\S+:\s+Running provisioner:' -and
-                        $text -notmatch '^\s+\S+:\s+Running:\s+script:' -and
-                        $text -notmatch '^The SSH command responded with a non-zero exit status\.' -and
-                        $text -notmatch '^assumes that this means the command failed\.' -and
-                        $text -notmatch '^should be in the log above\.' -and
-                        $text -notmatch '^went wrong\.$'
-                    } |
-                    Select-Object -First 8
-            )
-            if ($preview.Count -eq 0) {
-                $preview = @('Command returned a non-zero exit status.')
-                $usedSyntheticPreview = $true
-            }
-            foreach ($line in $preview) {
-                $lines += ('    {0}' -f $line)
-            }
-            if (-not $usedSyntheticPreview -and $transcript.Count -gt $preview.Count) {
-                $lines += '    ...'
-            }
-        }
+    return $lines
+}
+
+function Format-RepoHealthOutput {
+    param(
+        [object]$RepoHealthResult
+    )
+
+    if ($null -eq $RepoHealthResult) {
+        return @((Get-UiHeading -Text 'Repo check skipped' -StyleName 'Warning'))
+    }
+
+    $resultText = if ($RepoHealthResult.Passed) {
+        Format-StyledText -Text 'available' -StyleName 'Success'
+    }
+    else {
+        Format-StyledText -Text 'unavailable' -StyleName 'Warning'
+    }
+
+    $lines = @(
+        (Format-UiLabelValue -Label 'Repo' -Value $resultText)
+    )
+
+    foreach ($result in @($RepoHealthResult.Results)) {
+        $statusText = if ($result.Passed) { '[ok]' } else { '[fail]' }
+        $statusStyle = if ($result.Passed) { 'Success' } else { 'Warning' }
+        $summary = if ($result.Passed) { 'repo reachable' } else { 'repo unreachable' }
+        $lines += ('{0} [{1}] {2}' -f (Format-StyledText -Text $statusText -StyleName $statusStyle), $result.MachineName, $summary)
     }
 
     return $lines
@@ -1237,7 +1259,7 @@ function Resolve-CommandRoute {
 
     switch ($resolvedArea) {
         'help' {
-            if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
+            if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
                 $nextArea = $tokens[0].ToLowerInvariant()
                 $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
                 return [PSCustomObject]@{ Area = 'help'; Command = $nextArea; Item = $null; Extra = $remaining; Legacy = $false }
@@ -1251,6 +1273,7 @@ function Resolve-CommandRoute {
             return [PSCustomObject]@{ Area = 'scenario'; Command = 'list'; Item = $listItem; Extra = $remaining; Legacy = $false }
         }
         'start' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'start'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'repo' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'repo'; Item = $null; Extra = $tokens; Legacy = $false } }
         'reset' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'reset'; Item = $null; Extra = $tokens; Legacy = $false } }
         'status' { return [PSCustomObject]@{ Area = 'dashboard'; Command = 'status'; Item = $null; Extra = $tokens; Legacy = $false } }
         'check' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'check'; Item = $null; Extra = $tokens; Legacy = $false } }
@@ -1296,6 +1319,7 @@ if ($Help) {
         'list' { $helpScope = 'list' }
         'start' { $helpScope = 'start' }
         'check' { $helpScope = 'check' }
+        'repo' { $helpScope = 'repo' }
         'reset' { $helpScope = 'reset' }
         'status' { $helpScope = 'status' }
         'vms' { $helpScope = 'vms' }
@@ -1304,7 +1328,7 @@ if ($Help) {
         'tui' { $helpScope = 'tui' }
         'completion' { $helpScope = 'completion' }
         'help' {
-            $helpScope = if ($normalizedCommand -in @('up', 'destroy', 'list', 'start', 'check', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
+            $helpScope = if ($normalizedCommand -in @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
                 $normalizedCommand
             }
             else {
@@ -1389,6 +1413,39 @@ try {
                 $script:ShowWorkflowStatus = $previousWorkflowPreference
             }
             Format-BaselineStartOutput -BaselineResult $result -BaselineStatus (Get-BaselineStatus -ProjectRoot $projectRoot) | Write-Output
+            break
+        }
+        'baseline/repo' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'repo' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown repo argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown repo argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown repo argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown repo argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown repo argument '-Vm'."
+            }
+
+            $result = Test-BaselineOfflineRepoHealth -ProjectRoot $projectRoot
+            Format-RepoHealthOutput -RepoHealthResult $result | Write-Output
+            if (-not $result.Passed) {
+                exit 1
+            }
             break
         }
         'baseline/destroy' {
@@ -1722,7 +1779,7 @@ try {
             break
         }
         'completion/manage' {
-            $completionCommand = if ([string]::IsNullOrWhiteSpace($item)) { 'powershell' } else { $item.ToLowerInvariant() }
+            $completionCommand = if ([string]::IsNullOrWhiteSpace($item)) { 'help' } else { $item.ToLowerInvariant() }
             if ($remainingItem.Count -gt 0) {
                 throw "Unknown completion argument '$($remainingItem[0])'."
             }
