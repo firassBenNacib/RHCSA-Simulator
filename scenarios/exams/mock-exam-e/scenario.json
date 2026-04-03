@@ -1,6 +1,6 @@
 {
   "id": "mock-exam-e",
-  "title": "Mock Exam E: HarborGrid Services Review",
+  "title": "Mock Exam E",
   "description": "A 22 task RHCSA style mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.",
   "objective_tags": [
     "networking-and-firewall",
@@ -24,8 +24,8 @@
   "content": {
     "exam": {
       "tasks": [
-        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.harborgrid.lab",
-        "Add a persistent hosts entry so registry.harbor.lab resolves to 192.168.122.3.",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-e.lab",
+        "Add a persistent hosts entry so registry.exam-e.lab resolves to 192.168.122.3.",
         "Configure a repository file on clientvm with BaseOS and AppStream served from servervm, enabled, and with gpgcheck disabled.",
         "Configure the same repository file on servervm.",
         "Configure Apache on clientvm so it serves /srv/harbor-web on TCP port 8181.\n\nRequirements:\n- Start automatically at boot.\n- Open the port permanently in the firewall.\n- Apply the SELinux changes needed for the custom document root and port.",
@@ -34,10 +34,10 @@
         "Create /srv/harbor-drop owned by root:harborops with mode 2770 and a default ACL that grants harborops rwx on new files and directories.",
         "Create user harborremote without a home directory, with shell /sbin/nologin, and set its password to cinder9.",
         "Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
-        "Queue a one-time at job as user ivor that appends the message \"HarborGrid tick\" to /root/harbor-at.log in 2 minutes.",
+        "Queue a one-time at job as user ivor that appends the message \"exam-e tick\" to /root/exam-e-at.log in 2 minutes.",
         "Persistently mount servervm:/exports/harborhome on /mnt/harborhome using /etc/fstab.",
         "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
-        "Append a login message for ivor to ~/.bash_profile that prints \"HarborGrid access\" when ivor logs in.",
+        "Append a login message for ivor to ~/.bash_profile that prints \"exam-e access\" when ivor logs in.",
         "Create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.",
         "Find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.",
         "Extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.",
@@ -101,21 +101,21 @@
           "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"$CONN\"",
           "nmcli connection up \"$CONN\"",
-          "hostnamectl set-hostname clientvm.harborgrid.lab"
+          "hostnamectl set-hostname clientvm.exam-e.lab"
         ],
         [
-          "grep -q 'registry.harbor.lab' /etc/hosts || echo '192.168.122.3 registry.harbor.lab' >> /etc/hosts"
+          "grep -q 'registry.exam-e.lab' /etc/hosts || echo '192.168.122.3 registry.exam-e.lab' >> /etc/hosts"
         ],
         [
-          "cat > /etc/yum.repos.d/harborgrid.repo <<'EOF'",
+          "cat > /etc/yum.repos.d/exam-e.repo <<'EOF'",
           "[harbor-baseos]",
-          "name=HarborGrid BaseOS",
+          "name=RHCSA BaseOS",
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
           "",
           "[harbor-appstream]",
-          "name=HarborGrid AppStream",
+          "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
           "gpgcheck=0",
@@ -124,15 +124,15 @@
         ],
         [
           "# Run on servervm",
-          "cat > /etc/yum.repos.d/harborgrid.repo <<'EOF'",
+          "cat > /etc/yum.repos.d/exam-e.repo <<'EOF'",
           "[harbor-baseos]",
-          "name=HarborGrid BaseOS",
+          "name=RHCSA BaseOS",
           "baseurl=http://servervm/repo/BaseOS/",
           "enabled=1",
           "gpgcheck=0",
           "",
           "[harbor-appstream]",
-          "name=HarborGrid AppStream",
+          "name=RHCSA AppStream",
           "baseurl=http://servervm/repo/AppStream/",
           "enabled=1",
           "gpgcheck=0",
@@ -142,7 +142,7 @@
         [
           "dnf install -y httpd",
           "mkdir -p /srv/harbor-web",
-          "printf 'HarborGrid portal\\n' > /srv/harbor-web/index.html",
+          "printf 'exam-e portal\\n' > /srv/harbor-web/index.html",
           "sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf",
           "cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'",
           "<VirtualHost *:8181>",
@@ -181,7 +181,7 @@
           "EOF"
         ],
         [
-          "runuser -l ivor -c 'echo \"echo HarborGrid tick >> /root/harbor-at.log\" | at now + 2 minutes'",
+          "runuser -l ivor -c 'echo \"echo exam-e tick >> /root/exam-e-at.log\" | at now + 2 minutes'",
           "systemctl enable --now atd"
         ],
         [
@@ -200,7 +200,7 @@
           "systemctl restart systemd-journald"
         ],
         [
-          "echo 'echo HarborGrid access' >> /home/ivor/.bash_profile"
+          "echo 'echo exam-e access' >> /home/ivor/.bash_profile"
         ],
         [
           "useradd -M -u 4551 -s /sbin/nologin maple551",
@@ -246,9 +246,9 @@
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.harborgrid.lab' && grep -Fqx '192.168.122.3 registry.harbor.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
-        "curl -fsS http://localhost:8181 | grep -Fq 'HarborGrid portal' && findmnt -no TARGET,SOURCE /mnt/harborhome | grep -Eq '^/mnt/harborhome servervm:/exports/harborhome$'",
-        "getent group harborops >/dev/null && id -nG lena | tr ' ' '\\n' | grep -qx harborops && id -nG ivor | tr ' ' '\\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo HarborGrid access' /home/ivor/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
+        "hostnamectl --static | grep -qx 'clientvm.exam-e.lab' && grep -Fqx '192.168.122.3 registry.exam-e.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
+        "curl -fsS http://localhost:8181 | grep -Fq 'exam-e portal' && findmnt -no TARGET,SOURCE /mnt/harborhome | grep -Eq '^/mnt/harborhome servervm:/exports/harborhome$'",
+        "getent group harborops >/dev/null && id -nG lena | tr ' ' '\\n' | grep -qx harborops && id -nG ivor | tr ' ' '\\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo exam-e access' /home/ivor/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
         "getent passwd maple551 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4551::/sbin/nologin' && test -f /root/scoutte-files/opt/exam-e/find/a/file1.txt && grep -q 'beacon' /root/beacon-lines && test -f /root/var-tmp-harbor.tar.bz2 && /usr/local/bin/harbor-check >/dev/null && test -s /root/harbor-services.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewe\" && $2==\"reviewvge\" && $3>=359 && $3<=361{f=1} END{exit !f}'",
         "rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""

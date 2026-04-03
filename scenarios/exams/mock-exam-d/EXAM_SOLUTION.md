@@ -1,4 +1,4 @@
-# Mock Exam D: SummitLine Operations Review
+# Mock Exam D
 
 ## Exam Solution
 ## Overview
@@ -203,7 +203,23 @@ install -d -m 0750 -o root -g root /srv/summit-audit
 
 ---
 
-## Question 18 - Find And Copy (clientvm) - 4 pts
+## Question 18 - Audit Directory (clientvm) - 4 pts
+
+```bash
+install -d -m 0750 -o root -g root /srv/summit-audit
+```
+
+---
+
+## Question 19 - Audit Directory (clientvm) - 4 pts
+
+```bash
+install -d -m 0750 -o root -g root /srv/summit-audit
+```
+
+---
+
+## Question 20 - Find And Copy (clientvm) - 4 pts
 
 ```bash
 mkdir -p /root/miles-files
@@ -212,7 +228,7 @@ find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-## Question 19 - Grep Filter (clientvm) - 4 pts
+## Question 21 - Grep Filter (clientvm) - 4 pts
 
 ```bash
 grep alpha /usr/share/dict/words > /root/alpha-lines
@@ -220,40 +236,10 @@ grep alpha /usr/share/dict/words > /root/alpha-lines
 
 ---
 
-## Question 20 - Archive (clientvm) - 4 pts
+## Question 22 - Archive (clientvm) - 4 pts
 
 ```bash
 tar -czf /root/summit-etc.tar.gz /etc
-```
-
----
-
-## Question 21 - Shell Script (clientvm) - 4 pts
-
-```bash
-vim /usr/local/bin/summit-scan
-#!/bin/bash
-> /root/summit-units.txt
-for unit in $(cat /usr/local/share/exam-d/units.lst); do
-    systemctl is-active "$unit" >> /root/summit-units.txt
-done
-chmod +x /usr/local/bin/summit-scan
-/usr/local/bin/summit-scan
-```
-
----
-
-## Question 22 - Swap Space (clientvm) - 4 pts
-
-```bash
-fdisk /dev/sdb
-# create a 768 MiB partition and change the type to Linux swap
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-blkid /dev/sdb1
-vim /etc/fstab
-UUID=<uuid> swap swap defaults 0 0
 ```
 
 ---

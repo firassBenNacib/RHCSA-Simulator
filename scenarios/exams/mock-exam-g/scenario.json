@@ -1,6 +1,6 @@
 {
   "id": "mock-exam-g",
-  "title": "Mock Exam G: DeltaForge Recovery Review",
+  "title": "Mock Exam G",
   "description": "A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.",
   "objective_tags": [
     "boot-and-recovery",
@@ -36,8 +36,8 @@
         "Set a personal umask of 027 for pavel.",
         "Create user copyg on both systems with password cinder9.",
         "As copyg on clientvm, generate an ED25519 SSH key pair with no passphrase, install it on servervm, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on servervm.",
-        "Queue a one-time at job as user pavel that appends the message \"DeltaForge tick\" to /root/delta-at.log in 2 minutes.",
-        "Append a login message for pavel to ~/.bash_profile that prints \"DeltaForge access\" when pavel logs in.",
+        "Queue a one-time at job as user pavel that appends the message \"exam-g tick\" to /root/exam-g-at.log in 2 minutes.",
+        "Append a login message for pavel to ~/.bash_profile that prints \"exam-g access\" when pavel logs in.",
         "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.",
         "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.",
         "Create /root/etc-g.tar.bz2 containing /etc.",
@@ -153,11 +153,11 @@
           "runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copyg/inbox/payload.txt'"
         ],
         [
-          "runuser -l pavel -c 'echo \"echo DeltaForge tick >> /root/delta-at.log\" | at now + 2 minutes'",
+          "runuser -l pavel -c 'echo \"echo exam-g tick >> /root/exam-g-at.log\" | at now + 2 minutes'",
           "systemctl enable --now atd"
         ],
         [
-          "echo 'echo DeltaForge access' >> /home/pavel/.bash_profile"
+          "echo 'echo exam-g access' >> /home/pavel/.bash_profile"
         ],
         [
           "mkdir -p /root/trackerg-files",
@@ -235,7 +235,7 @@
       "checks": [
         "hostnamectl --static | grep -qx 'clientvm.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
         "mount | grep -Eq 'servervm:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
-        "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo DeltaForge access' /home/pavel/.bash_profile && atq | grep -q pavel",
+        "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo exam-g access' /home/pavel/.bash_profile && atq | grep -q pavel",
         "runuser -l copyg -c 'ssh -o BatchMode=yes copyg@servervm true' && ssh admin@servervm test -f /home/copyg/inbox/payload.txt",
         "test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p \"$(cat /home/workerg/cpu.pid)\" >/dev/null 2>&1 && ps -o ni= -p \"$(cat /home/workerg/sleep.pid)\" | tr -d ' ' | grep -qx '10'",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'"

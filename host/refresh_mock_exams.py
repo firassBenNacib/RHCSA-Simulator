@@ -56,7 +56,7 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-a",
-        title="Mock Exam A: OpsEdge Integrated Review",
+        title="Mock Exam A",
         description="A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.",
         objective_tags=["boot-and-recovery", "networking-and-firewall", "users-sudo-ssh", "storage-lvm", "containers"],
         password_recovery=True,
@@ -69,12 +69,12 @@ def main() -> int:
                 "touch /.autorelabel",
                 "exec /sbin/init",
             ]),
-            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.26\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.opsedge.lab", [
+            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.26\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-a.lab", [
                 "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
                 "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.26/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
                 "nmcli connection down \"$CONN\"",
                 "nmcli connection up \"$CONN\"",
-                "hostnamectl set-hostname clientvm.opsedge.lab",
+                "hostnamectl set-hostname clientvm.exam-a.lab",
             ]),
             block("Bootloader Kernel Argument", "Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time GRUB edit.", [
                 "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
@@ -140,9 +140,11 @@ def main() -> int:
             block("Setgid Directory", "Create /srv/sysopsa owned by root:sysopsa with mode 2770 so new files inherit the sysopsa group.", [
                 "install -d -m 2770 -o root -g sysopsa /srv/sysopsa",
             ]),
-            slice_blocks(exams["mock-exam-a"], 10, 11)[0],
-            block("Host Entry", "Add a persistent hosts entry on clientvm so api.opsedge.lab resolves to 192.168.122.3.", [
-                "grep -q 'api.opsedge.lab' /etc/hosts || echo '192.168.122.3 api.opsedge.lab' >> /etc/hosts",
+            block("Cron Logger", "Configure a cron job for amber that runs every 2 minutes and logs the message \"exam-a tick\".", [
+                "(crontab -l -u amber 2>/dev/null; echo '*/2 * * * * logger \"exam-a tick\"') | crontab -u amber -",
+            ]),
+            block("Host Entry", "Add a persistent hosts entry on clientvm so api.exam-a.lab resolves to 192.168.122.3.", [
+                "grep -q 'api.exam-a.lab' /etc/hosts || echo '192.168.122.3 api.exam-a.lab' >> /etc/hosts",
             ]),
             *slice_blocks(exams["mock-exam-a"], 13, 22),
             block("Persistent Journal", "On servervm, enable persistent systemd journal storage and restart systemd-journald.", [
@@ -157,9 +159,9 @@ def main() -> int:
             ]),
         ],
         checks=[
-            "hostnamectl --static | grep -qx 'clientvm.opsedge.lab' && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192' && grep -Fqx '192.168.122.3 api.opsedge.lab' /etc/hosts",
+            "hostnamectl --static | grep -qx 'clientvm.exam-a.lab' && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192' && grep -Fqx '192.168.122.3 api.exam-a.lab' /etc/hosts",
             "curl -fsS http://localhost:8282 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8282\\b' && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
-            "getent group sysopsa >/dev/null && id -nG violet | tr ' ' '\\n' | grep -qx sysopsa && id -nG amber | tr ' ' '\\n' | grep -qx sysopsa && getent passwd frost | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^%sysopsa .* /usr/sbin/useradd$' /etc/sudoers.d/sysopsa-useradd && grep -Eq '^violet .*NOPASSWD: /usr/bin/passwd$' /etc/sudoers.d/violet-passwd && stat -c '%U:%G %a' /srv/sysopsa | grep -qx 'root:sysopsa 2770' && crontab -l -u amber | grep -Fqx '*/2 * * * * logger \"OpsEdge tick\"'",
+            "getent group sysopsa >/dev/null && id -nG violet | tr ' ' '\\n' | grep -qx sysopsa && id -nG amber | tr ' ' '\\n' | grep -qx sysopsa && getent passwd frost | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^%sysopsa .* /usr/sbin/useradd$' /etc/sudoers.d/sysopsa-useradd && grep -Eq '^violet .*NOPASSWD: /usr/bin/passwd$' /etc/sudoers.d/violet-passwd && stat -c '%U:%G %a' /srv/sysopsa | grep -qx 'root:sysopsa 2770' && crontab -l -u amber | grep -Fqx '*/2 * * * * logger \"exam-a tick\"'",
             "getent passwd ash420 | awk -F: '{print $3}' | grep -qx '4420' && test -f /root/amber-files/opt/exam-a/find/a/file1.txt && grep -qx 'delta' /root/delta-lines && test -f /root/etc-opsa.tar.bz2 && /usr/local/bin/opsa-report >/dev/null && test -s /root/opsa-services.txt",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewa\" && $2==\"reviewvga\" && $3>=319 && $3<=321{f=1} END{exit !f}'",
             "runuser -l oriona -c 'podman ps --format {{.Names}}' | grep -qx pdfa && runuser -l oriona -c 'systemctl --user is-enabled container-pdfa.service' | grep -qx enabled && loginctl show-user oriona | grep -Eq '^Linger=yes$' && ssh admin@servervm sudo test -d /var/log/journal",
@@ -168,20 +170,20 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-b",
-        title="Mock Exam B: CoreMesh Service Review",
+        title="Mock Exam B",
         description="A 22 task RHCSA style mock exam emphasizing chrony, SSH hardening, user defaults, and storage administration.",
         objective_tags=["networking-and-firewall", "users-sudo-ssh", "processes-logs-tuning", "storage-lvm"],
         password_recovery=False,
         blocks=[
-            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.27\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.coremesh.lab", [
+            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.27\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-b.lab", [
                 "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
                 "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
                 "nmcli connection down \"$CONN\"",
                 "nmcli connection up \"$CONN\"",
-                "hostnamectl set-hostname clientvm.coremesh.lab",
+                "hostnamectl set-hostname clientvm.exam-b.lab",
             ]),
-            block("Host Entry", "Add a persistent hosts entry so registry.coremesh.lab resolves to 192.168.122.3.", [
-                "grep -q 'registry.coremesh.lab' /etc/hosts || echo '192.168.122.3 registry.coremesh.lab' >> /etc/hosts",
+            block("Host Entry", "Add a persistent hosts entry so registry.exam-b.lab resolves to 192.168.122.3.", [
+                "grep -q 'registry.exam-b.lab' /etc/hosts || echo '192.168.122.3 registry.exam-b.lab' >> /etc/hosts",
             ]),
             block("Chrony Server", "Configure chronyd on servervm so it serves time to 192.168.122.0/24 and starts automatically at boot.", [
                 "# Run on servervm",
@@ -268,7 +270,7 @@ def main() -> int:
             *slice_blocks(exams["mock-exam-b"], 13, 20),
         ],
         checks=[
-            "hostnamectl --static | grep -qx 'clientvm.coremesh.lab' && grep -Fqx '192.168.122.3 registry.coremesh.lab' /etc/hosts",
+            "hostnamectl --static | grep -qx 'clientvm.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts",
             "grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled",
             "useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3\":\"$6}' | grep -qx '4421:' && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld",
             "ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true' && ssh admin@servervm test -f /home/meshremote/inbox/report.txt",
@@ -279,7 +281,7 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-c",
-        title="Mock Exam C: NorthStar Recovery Review",
+        title="Mock Exam C",
         description="A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.",
         objective_tags=["boot-and-recovery", "filesystems-and-autofs", "users-sudo-ssh", "storage-lvm", "containers"],
         password_recovery=True,
@@ -292,18 +294,18 @@ def main() -> int:
                 "touch /.autorelabel",
                 "exec /sbin/init",
             ]),
-            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.northstar.lab", [
+            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-c.lab", [
                 "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
                 "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
                 "nmcli connection down \"$CONN\"",
                 "nmcli connection up \"$CONN\"",
-                "hostnamectl set-hostname clientvm.northstar.lab",
+                "hostnamectl set-hostname clientvm.exam-c.lab",
             ]),
             block("Bootloader Kernel Argument", "Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.", [
                 "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\"",
             ]),
-            block("Host Entry", "Add a persistent hosts entry so vault.northstar.lab resolves to 192.168.122.3.", [
-                "grep -q 'vault.northstar.lab' /etc/hosts || echo '192.168.122.3 vault.northstar.lab' >> /etc/hosts",
+            block("Host Entry", "Add a persistent hosts entry so vault.exam-c.lab resolves to 192.168.122.3.", [
+                "grep -q 'vault.exam-c.lab' /etc/hosts || echo '192.168.122.3 vault.exam-c.lab' >> /etc/hosts",
             ]),
             block("Direct NFS Mount", "Persistently mount servervm:/exports/bluec on /mnt/bluec using /etc/fstab.", [
                 "mkdir -p /mnt/bluec",
@@ -324,8 +326,8 @@ def main() -> int:
             block("No-Home User", "Create user remote63 without a home directory and with login shell /sbin/nologin.", [
                 "useradd -M -s /sbin/nologin remote63",
             ]),
-            block("At Job", "Queue a one-time at job as user ren that appends the message \"NorthStar audit\" to /root/northstar-at.log in 2 minutes.", [
-                "echo 'echo \"NorthStar audit\" >> /root/northstar-at.log' | at now + 2 minutes",
+            block("At Job", "Queue a one-time at job as user ren that appends the message \"exam-c audit\" to /root/exam-c-at.log in 2 minutes.", [
+                "echo 'echo \"exam-c audit\" >> /root/exam-c-at.log' | at now + 2 minutes",
                 "systemctl enable --now atd",
             ]),
             block("Per-User Password Aging", "Set password aging for talia to maximum 45 days, minimum 5 days, warning 7 days.", [
@@ -344,15 +346,15 @@ def main() -> int:
             block("User Umask", "Set a personal umask of 027 for user ren.", [
                 "echo 'umask 027' >> /home/ren/.bash_profile",
             ]),
-            block("Per-User Login Message", "Append a login message for ren to ~/.bash_profile that prints \"NorthStar access\" when ren logs in.", [
-                "echo 'echo NorthStar access' >> /home/ren/.bash_profile",
+            block("Per-User Login Message", "Append a login message for ren to ~/.bash_profile that prints \"exam-c access\" when ren logs in.", [
+                "echo 'echo exam-c access' >> /home/ren/.bash_profile",
             ]),
             *slice_blocks(exams["mock-exam-c"], 13, 22),
         ],
         checks=[
-            "hostnamectl --static | grep -qx 'clientvm.northstar.lab' && grep -Fqx '192.168.122.3 vault.northstar.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
+            "hostnamectl --static | grep -qx 'clientvm.exam-c.lab' && grep -Fqx '192.168.122.3 vault.exam-c.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
             "mount | grep -Eq 'servervm:/exports/bluec on /mnt/bluec type nfs' && grep -q '/mnt/bluec' /etc/fstab && getent group infrac >/dev/null && id -nG talia | tr ' ' '\\n' | grep -qx infrac && id -nG ren | tr ' ' '\\n' | grep -qx infrac && getfacl -p /srv/infrac | grep -Fq 'default:group:infrac:rwx' && getent passwd remote63 | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
-            "chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo NorthStar access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
+            "chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo exam-c access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
             "getent passwd kian431 | awk -F: '{print $3}' | grep -qx '4431' && test -f /root/ren-files/opt/exam-c/find/a/file1.txt && grep -q 'orbit' /root/orbit-lines && test -f /root/etc-c.tar.bz2 && /usr/local/bin/northcheck >/dev/null && test -s /root/northstar-services.txt",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewc\" && $2==\"reviewvgc\" && $3>=339 && $3<=341{f=1} END{exit !f}'",
             "runuser -l eirac -c 'podman ps --format {{.Names}}' | grep -qx pdfc && runuser -l eirac -c 'systemctl --user is-enabled container-pdfc.service' | grep -qx enabled && loginctl show-user eirac | grep -Eq '^Linger=yes$'",
@@ -361,7 +363,7 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-d",
-        title="Mock Exam D: SummitLine Operations Review",
+        title="Mock Exam D",
         description="A 22 task RHCSA style mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.",
         objective_tags=["networking-and-firewall", "users-sudo-ssh", "software-management", "storage-lvm"],
         password_recovery=False,
@@ -472,31 +474,31 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-e",
-        title="Mock Exam E: HarborGrid Services Review",
+        title="Mock Exam E",
         description="A 22 task RHCSA style mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.",
         objective_tags=["networking-and-firewall", "software-management", "filesystems-and-autofs", "users-sudo-ssh", "storage-lvm"],
         password_recovery=False,
         blocks=[
-            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.harborgrid.lab", [
+            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-e.lab", [
                 "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
                 "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
                 "nmcli connection down \"$CONN\"",
                 "nmcli connection up \"$CONN\"",
-                "hostnamectl set-hostname clientvm.harborgrid.lab",
+                "hostnamectl set-hostname clientvm.exam-e.lab",
             ]),
-            block("Host Entry", "Add a persistent hosts entry so registry.harbor.lab resolves to 192.168.122.3.", [
-                "grep -q 'registry.harbor.lab' /etc/hosts || echo '192.168.122.3 registry.harbor.lab' >> /etc/hosts",
+            block("Host Entry", "Add a persistent hosts entry so registry.exam-e.lab resolves to 192.168.122.3.", [
+                "grep -q 'registry.exam-e.lab' /etc/hosts || echo '192.168.122.3 registry.exam-e.lab' >> /etc/hosts",
             ]),
             block("Client Repositories", "Configure a repository file on clientvm with BaseOS and AppStream served from servervm, enabled, and with gpgcheck disabled.", [
-                "cat > /etc/yum.repos.d/harborgrid.repo <<'EOF'",
+                "cat > /etc/yum.repos.d/exam-e.repo <<'EOF'",
                 "[harbor-baseos]",
-                "name=HarborGrid BaseOS",
+                "name=RHCSA BaseOS",
                 "baseurl=http://servervm/repo/BaseOS/",
                 "enabled=1",
                 "gpgcheck=0",
                 "",
                 "[harbor-appstream]",
-                "name=HarborGrid AppStream",
+                "name=RHCSA AppStream",
                 "baseurl=http://servervm/repo/AppStream/",
                 "enabled=1",
                 "gpgcheck=0",
@@ -505,15 +507,15 @@ def main() -> int:
             ]),
             block("Server Repositories", "Configure the same repository file on servervm.", [
                 "# Run on servervm",
-                "cat > /etc/yum.repos.d/harborgrid.repo <<'EOF'",
+                "cat > /etc/yum.repos.d/exam-e.repo <<'EOF'",
                 "[harbor-baseos]",
-                "name=HarborGrid BaseOS",
+                "name=RHCSA BaseOS",
                 "baseurl=http://servervm/repo/BaseOS/",
                 "enabled=1",
                 "gpgcheck=0",
                 "",
                 "[harbor-appstream]",
-                "name=HarborGrid AppStream",
+                "name=RHCSA AppStream",
                 "baseurl=http://servervm/repo/AppStream/",
                 "enabled=1",
                 "gpgcheck=0",
@@ -523,7 +525,7 @@ def main() -> int:
             block("Apache Custom Docroot", "Configure Apache on clientvm so it serves /srv/harbor-web on TCP port 8181.\n\nRequirements:\n- Start automatically at boot.\n- Open the port permanently in the firewall.\n- Apply the SELinux changes needed for the custom document root and port.", [
                 "dnf install -y httpd",
                 "mkdir -p /srv/harbor-web",
-                "printf 'HarborGrid portal\\n' > /srv/harbor-web/index.html",
+                "printf 'exam-e portal\\n' > /srv/harbor-web/index.html",
                 "sed -i 's/^Listen .*/Listen 8181/' /etc/httpd/conf/httpd.conf",
                 "cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'",
                 "<VirtualHost *:8181>",
@@ -561,8 +563,8 @@ def main() -> int:
                 "minclass = 3",
                 "EOF",
             ]),
-            block("At Job", "Queue a one-time at job as user ivor that appends the message \"HarborGrid tick\" to /root/harbor-at.log in 2 minutes.", [
-                "runuser -l ivor -c 'echo \"echo HarborGrid tick >> /root/harbor-at.log\" | at now + 2 minutes'",
+            block("At Job", "Queue a one-time at job as user ivor that appends the message \"exam-e tick\" to /root/exam-e-at.log in 2 minutes.", [
+                "runuser -l ivor -c 'echo \"echo exam-e tick >> /root/exam-e-at.log\" | at now + 2 minutes'",
                 "systemctl enable --now atd",
             ]),
             block("Direct NFS Mount", "Persistently mount servervm:/exports/harborhome on /mnt/harborhome using /etc/fstab.", [
@@ -580,8 +582,8 @@ def main() -> int:
                 "EOF",
                 "systemctl restart systemd-journald",
             ]),
-            block("Per-User Login Message", "Append a login message for ivor to ~/.bash_profile that prints \"HarborGrid access\" when ivor logs in.", [
-                "echo 'echo HarborGrid access' >> /home/ivor/.bash_profile",
+            block("Per-User Login Message", "Append a login message for ivor to ~/.bash_profile that prints \"exam-e access\" when ivor logs in.", [
+                "echo 'echo exam-e access' >> /home/ivor/.bash_profile",
             ]),
             block("Fixed UID User", "Create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.", [
                 "useradd -M -u 4551 -s /sbin/nologin maple551",
@@ -590,9 +592,9 @@ def main() -> int:
             *slice_blocks(exams["mock-exam-e"], 15, 22),
         ],
         checks=[
-            "hostnamectl --static | grep -qx 'clientvm.harborgrid.lab' && grep -Fqx '192.168.122.3 registry.harbor.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
-            "curl -fsS http://localhost:8181 | grep -Fq 'HarborGrid portal' && findmnt -no TARGET,SOURCE /mnt/harborhome | grep -Eq '^/mnt/harborhome servervm:/exports/harborhome$'",
-            "getent group harborops >/dev/null && id -nG lena | tr ' ' '\\n' | grep -qx harborops && id -nG ivor | tr ' ' '\\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo HarborGrid access' /home/ivor/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
+            "hostnamectl --static | grep -qx 'clientvm.exam-e.lab' && grep -Fqx '192.168.122.3 registry.exam-e.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
+            "curl -fsS http://localhost:8181 | grep -Fq 'exam-e portal' && findmnt -no TARGET,SOURCE /mnt/harborhome | grep -Eq '^/mnt/harborhome servervm:/exports/harborhome$'",
+            "getent group harborops >/dev/null && id -nG lena | tr ' ' '\\n' | grep -qx harborops && id -nG ivor | tr ' ' '\\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo exam-e access' /home/ivor/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
             "getent passwd maple551 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4551::/sbin/nologin' && test -f /root/scoutte-files/opt/exam-e/find/a/file1.txt && grep -q 'beacon' /root/beacon-lines && test -f /root/var-tmp-harbor.tar.bz2 && /usr/local/bin/harbor-check >/dev/null && test -s /root/harbor-services.txt",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewe\" && $2==\"reviewvge\" && $3>=359 && $3<=361{f=1} END{exit !f}'",
             "rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\"",
@@ -601,20 +603,20 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-f",
-        title="Mock Exam F: AuroraPath Access Review",
+        title="Mock Exam F",
         description="A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.",
         objective_tags=["networking-and-firewall", "users-sudo-ssh", "processes-logs-tuning", "storage-lvm"],
         password_recovery=False,
         blocks=[
-            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.38\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.aurora.lab", [
+            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.38\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-f.lab", [
                 "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
                 "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
                 "nmcli connection down \"$CONN\"",
                 "nmcli connection up \"$CONN\"",
-                "hostnamectl set-hostname clientvm.aurora.lab",
+                "hostnamectl set-hostname clientvm.exam-f.lab",
             ]),
-            block("Host Entry", "Add a persistent hosts entry so db.aurora.lab resolves to 192.168.122.3.", [
-                "grep -q 'db.aurora.lab' /etc/hosts || echo '192.168.122.3 db.aurora.lab' >> /etc/hosts",
+            block("Host Entry", "Add a persistent hosts entry so db.exam-f.lab resolves to 192.168.122.3.", [
+                "grep -q 'db.exam-f.lab' /etc/hosts || echo '192.168.122.3 db.exam-f.lab' >> /etc/hosts",
             ]),
             block("Chrony Server", "Configure chronyd on servervm so it serves time to 192.168.122.0/24 and starts automatically at boot.", [
                 "# Run on servervm",
@@ -708,7 +710,7 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-g",
-        title="Mock Exam G: DeltaForge Recovery Review",
+        title="Mock Exam G",
         description="A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.",
         objective_tags=["boot-and-recovery", "filesystems-and-autofs", "users-sudo-ssh", "storage-lvm", "containers"],
         password_recovery=True,
@@ -769,19 +771,19 @@ def main() -> int:
                 "runuser -l copyg -c 'ssh-copy-id copyg@servervm'",
                 "runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copyg/inbox/payload.txt'",
             ]),
-            block("At Job", "Queue a one-time at job as user pavel that appends the message \"DeltaForge tick\" to /root/delta-at.log in 2 minutes.", [
-                "runuser -l pavel -c 'echo \"echo DeltaForge tick >> /root/delta-at.log\" | at now + 2 minutes'",
+            block("At Job", "Queue a one-time at job as user pavel that appends the message \"exam-g tick\" to /root/exam-g-at.log in 2 minutes.", [
+                "runuser -l pavel -c 'echo \"echo exam-g tick >> /root/exam-g-at.log\" | at now + 2 minutes'",
                 "systemctl enable --now atd",
             ]),
-            block("Per-User Login Message", "Append a login message for pavel to ~/.bash_profile that prints \"DeltaForge access\" when pavel logs in.", [
-                "echo 'echo DeltaForge access' >> /home/pavel/.bash_profile",
+            block("Per-User Login Message", "Append a login message for pavel to ~/.bash_profile that prints \"exam-g access\" when pavel logs in.", [
+                "echo 'echo exam-g access' >> /home/pavel/.bash_profile",
             ]),
             *slice_blocks(exams["mock-exam-g"], 14, 22),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'clientvm.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
             "mount | grep -Eq 'servervm:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
-            "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo DeltaForge access' /home/pavel/.bash_profile && atq | grep -q pavel",
+            "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo exam-g access' /home/pavel/.bash_profile && atq | grep -q pavel",
             "runuser -l copyg -c 'ssh -o BatchMode=yes copyg@servervm true' && ssh admin@servervm test -f /home/copyg/inbox/payload.txt",
             "test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p \"$(cat /home/workerg/cpu.pid)\" >/dev/null 2>&1 && ps -o ni= -p \"$(cat /home/workerg/sleep.pid)\" | tr -d ' ' | grep -qx '10'",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'",
@@ -790,31 +792,31 @@ def main() -> int:
 
     apply_blocks(
         "mock-exam-h",
-        title="Mock Exam H: SilverPeak Service Review",
+        title="Mock Exam H",
         description="A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.",
         objective_tags=["networking-and-firewall", "software-management", "users-sudo-ssh", "processes-logs-tuning", "storage-lvm", "containers"],
         password_recovery=False,
         blocks=[
-            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.40\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.silverpeak.lab", [
+            block("Client Network", "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.40\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-h.lab", [
                 "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"",
                 "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
                 "nmcli connection down \"$CONN\"",
                 "nmcli connection up \"$CONN\"",
-                "hostnamectl set-hostname clientvm.silverpeak.lab",
+                "hostnamectl set-hostname clientvm.exam-h.lab",
             ]),
-            block("Host Entry", "Add a persistent hosts entry so registry.silverpeak.lab resolves to 192.168.122.3.", [
-                "grep -q 'registry.silverpeak.lab' /etc/hosts || echo '192.168.122.3 registry.silverpeak.lab' >> /etc/hosts",
+            block("Host Entry", "Add a persistent hosts entry so registry.exam-h.lab resolves to 192.168.122.3.", [
+                "grep -q 'registry.exam-h.lab' /etc/hosts || echo '192.168.122.3 registry.exam-h.lab' >> /etc/hosts",
             ]),
             block("Client Repositories", "Configure a repository file on clientvm with BaseOS and AppStream served from servervm, enabled, and with gpgcheck disabled.", [
-                "cat > /etc/yum.repos.d/silverpeak.repo <<'EOF'",
+                "cat > /etc/yum.repos.d/exam-h.repo <<'EOF'",
                 "[silver-baseos]",
-                "name=SilverPeak BaseOS",
+                "name=RHCSA BaseOS",
                 "baseurl=http://servervm/repo/BaseOS/",
                 "enabled=1",
                 "gpgcheck=0",
                 "",
                 "[silver-appstream]",
-                "name=SilverPeak AppStream",
+                "name=RHCSA AppStream",
                 "baseurl=http://servervm/repo/AppStream/",
                 "enabled=1",
                 "gpgcheck=0",
@@ -823,15 +825,15 @@ def main() -> int:
             ]),
             block("Server Repositories", "Configure the same repository file on servervm.", [
                 "# Run on servervm",
-                "cat > /etc/yum.repos.d/silverpeak.repo <<'EOF'",
+                "cat > /etc/yum.repos.d/exam-h.repo <<'EOF'",
                 "[silver-baseos]",
-                "name=SilverPeak BaseOS",
+                "name=RHCSA BaseOS",
                 "baseurl=http://servervm/repo/BaseOS/",
                 "enabled=1",
                 "gpgcheck=0",
                 "",
                 "[silver-appstream]",
-                "name=SilverPeak AppStream",
+                "name=RHCSA AppStream",
                 "baseurl=http://servervm/repo/AppStream/",
                 "enabled=1",
                 "gpgcheck=0",
@@ -894,7 +896,7 @@ def main() -> int:
             *slice_blocks(exams["mock-exam-h"], 13, 22),
         ],
         checks=[
-            "hostnamectl --static | grep -qx 'clientvm.silverpeak.lab' && grep -Fqx '192.168.122.3 registry.silverpeak.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
+            "hostnamectl --static | grep -qx 'clientvm.exam-h.lab' && grep -Fqx '192.168.122.3 registry.exam-h.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null",
             "curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8181\\b' && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
             "grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'",
             "grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled",

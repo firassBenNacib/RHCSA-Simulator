@@ -1,4 +1,4 @@
-# Mock Exam C: NorthStar Recovery Review
+# Mock Exam C
 
 ## Exam Tasks
 ## Overview
@@ -39,7 +39,7 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.northstar.lab
+- **Hostname:** clientvm.exam-c.lab
 
 ---
 
@@ -51,7 +51,7 @@ Configure the bootloader on clientvm so every installed kernel boots with the ke
 
 ## Question 04 - Host Entry (clientvm) - 5 pts
 
-Add a persistent hosts entry so vault.northstar.lab resolves to 192.168.122.3.
+Add a persistent hosts entry so vault.exam-c.lab resolves to 192.168.122.3.
 
 ---
 
@@ -81,7 +81,7 @@ Create user remote63 without a home directory and with login shell /sbin/nologin
 
 ## Question 09 - At Job (clientvm) - 5 pts
 
-Queue a one-time at job as user ren that appends the message "NorthStar audit" to /root/northstar-at.log in 2 minutes.
+Queue a one-time at job as user ren that appends the message "exam-c audit" to /root/exam-c-at.log in 2 minutes.
 
 ---
 
@@ -105,7 +105,7 @@ Set a personal umask of 027 for user ren.
 
 ## Question 13 - Per-User Login Message (clientvm) - 4 pts
 
-Append a login message for ren to ~/.bash_profile that prints "NorthStar access" when ren logs in.
+Append a login message for ren to ~/.bash_profile that prints "exam-c access" when ren logs in.
 
 ---
 

@@ -1,4 +1,4 @@
-# Mock Exam D: SummitLine Operations Review
+# Mock Exam D
 
 ## Exam Tasks
 ## Overview
@@ -131,34 +131,30 @@ Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.
 
 ---
 
-## Question 18 - Find And Copy (clientvm) - 4 pts
+## Question 18 - Audit Directory (clientvm) - 4 pts
+
+Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.
+
+---
+
+## Question 19 - Audit Directory (clientvm) - 4 pts
+
+Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.
+
+---
+
+## Question 20 - Find And Copy (clientvm) - 4 pts
 
 Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/miles-files while preserving the source directory structure.
 
 ---
 
-## Question 19 - Grep Filter (clientvm) - 4 pts
+## Question 21 - Grep Filter (clientvm) - 4 pts
 
 Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.
 
 ---
 
-## Question 20 - Archive (clientvm) - 4 pts
+## Question 22 - Archive (clientvm) - 4 pts
 
 Create /root/summit-etc.tar.gz containing /etc.
-
----
-
-## Question 21 - Shell Script (clientvm) - 4 pts
-
-Create executable script /usr/local/bin/summit-scan that writes the active state of each unit listed in /usr/local/share/exam-d/units.lst to /root/summit-units.txt.
-
----
-
-## Question 22 - Swap Space (clientvm) - 4 pts
-
-On /dev/sdb, create a 768 MiB swap partition.
-
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.

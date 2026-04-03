@@ -1,4 +1,4 @@
-# Mock Exam E: HarborGrid Services Review
+# Mock Exam E
 
 ## Exam Tasks
 ## Overview
@@ -31,13 +31,13 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.harborgrid.lab
+- **Hostname:** clientvm.exam-e.lab
 
 ---
 
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
-Add a persistent hosts entry so registry.harbor.lab resolves to 192.168.122.3.
+Add a persistent hosts entry so registry.exam-e.lab resolves to 192.168.122.3.
 
 ---
 
@@ -96,7 +96,7 @@ Configure pwquality so passwords require a minimum length of 12 and at least 3 c
 
 ## Question 11 - At Job (clientvm) - 5 pts
 
-Queue a one-time at job as user ivor that appends the message "HarborGrid tick" to /root/harbor-at.log in 2 minutes.
+Queue a one-time at job as user ivor that appends the message "exam-e tick" to /root/exam-e-at.log in 2 minutes.
 
 ---
 
@@ -114,7 +114,7 @@ On servervm, enable persistent systemd journal storage and restart systemd-journ
 
 ## Question 14 - Per-User Login Message (clientvm) - 4 pts
 
-Append a login message for ivor to ~/.bash_profile that prints "HarborGrid access" when ivor logs in.
+Append a login message for ivor to ~/.bash_profile that prints "exam-e access" when ivor logs in.
 
 ---
 

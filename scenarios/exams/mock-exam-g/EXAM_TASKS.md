@@ -1,4 +1,4 @@
-# Mock Exam G: DeltaForge Recovery Review
+# Mock Exam G
 
 ## Exam Tasks
 ## Overview
@@ -105,13 +105,13 @@ As copyg on clientvm, generate an ED25519 SSH key pair with no passphrase, insta
 
 ## Question 13 - At Job (clientvm) - 4 pts
 
-Queue a one-time at job as user pavel that appends the message "DeltaForge tick" to /root/delta-at.log in 2 minutes.
+Queue a one-time at job as user pavel that appends the message "exam-g tick" to /root/exam-g-at.log in 2 minutes.
 
 ---
 
 ## Question 14 - Per-User Login Message (clientvm) - 4 pts
 
-Append a login message for pavel to ~/.bash_profile that prints "DeltaForge access" when pavel logs in.
+Append a login message for pavel to ~/.bash_profile that prints "exam-g access" when pavel logs in.
 
 ---
 

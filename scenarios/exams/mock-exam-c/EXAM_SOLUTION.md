@@ -1,4 +1,4 @@
-# Mock Exam C: NorthStar Recovery Review
+# Mock Exam C
 
 ## Exam Solution
 ## Overview
@@ -43,7 +43,7 @@ CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && 
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
-hostnamectl set-hostname clientvm.northstar.lab
+hostnamectl set-hostname clientvm.exam-c.lab
 ```
 
 ---
@@ -59,7 +59,7 @@ grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 ## Question 04 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'vault.northstar.lab' /etc/hosts || echo '192.168.122.3 vault.northstar.lab' >> /etc/hosts
+grep -q 'vault.exam-c.lab' /etc/hosts || echo '192.168.122.3 vault.exam-c.lab' >> /etc/hosts
 ```
 
 ---
@@ -106,7 +106,7 @@ useradd -M -s /sbin/nologin remote63
 ## Question 09 - At Job (clientvm) - 5 pts
 
 ```bash
-echo 'echo "NorthStar audit" >> /root/northstar-at.log' | at now + 2 minutes
+echo 'echo "exam-c audit" >> /root/exam-c-at.log' | at now + 2 minutes
 systemctl enable --now atd
 ```
 
@@ -146,7 +146,7 @@ echo 'umask 027' >> /home/ren/.bash_profile
 ## Question 13 - Per-User Login Message (clientvm) - 4 pts
 
 ```bash
-echo 'echo NorthStar access' >> /home/ren/.bash_profile
+echo 'echo exam-c access' >> /home/ren/.bash_profile
 ```
 
 ---
@@ -252,9 +252,9 @@ loginctl enable-linger eirac
 
 ## Verification
 ```bash
-hostnamectl --static | grep -qx 'clientvm.northstar.lab' && grep -Fqx '192.168.122.3 vault.northstar.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
+hostnamectl --static | grep -qx 'clientvm.exam-c.lab' && grep -Fqx '192.168.122.3 vault.exam-c.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
 mount | grep -Eq 'servervm:/exports/bluec on /mnt/bluec type nfs' && grep -q '/mnt/bluec' /etc/fstab && getent group infrac >/dev/null && id -nG talia | tr ' ' '\n' | grep -qx infrac && id -nG ren | tr ' ' '\n' | grep -qx infrac && getfacl -p /srv/infrac | grep -Fq 'default:group:infrac:rwx' && getent passwd remote63 | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin'
-chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo NorthStar access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal
+chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo exam-c access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal
 getent passwd kian431 | awk -F: '{print $3}' | grep -qx '4431' && test -f /root/ren-files/opt/exam-c/find/a/file1.txt && grep -q 'orbit' /root/orbit-lines && test -f /root/etc-c.tar.bz2 && /usr/local/bin/northcheck >/dev/null && test -s /root/northstar-services.txt
 swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1=="reviewc" && $2=="reviewvgc" && $3>=339 && $3<=341{f=1} END{exit !f}'
 runuser -l eirac -c 'podman ps --format {{.Names}}' | grep -qx pdfc && runuser -l eirac -c 'systemctl --user is-enabled container-pdfc.service' | grep -qx enabled && loginctl show-user eirac | grep -Eq '^Linger=yes$'

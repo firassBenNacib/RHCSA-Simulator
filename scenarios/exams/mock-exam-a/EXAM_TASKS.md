@@ -1,4 +1,4 @@
-# Mock Exam A: OpsEdge Integrated Review
+# Mock Exam A
 
 ## Exam Tasks
 ## Overview
@@ -39,7 +39,7 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.opsedge.lab
+- **Hostname:** clientvm.exam-a.lab
 
 ---
 
@@ -113,41 +113,29 @@ Create /srv/sysopsa owned by root:sysopsa with mode 2770 so new files inherit th
 
 ## Question 11 - Cron Logger (clientvm) - 5 pts
 
-Configure a cron job for amber that runs every 2 minutes and logs the message "OpsEdge tick".
+Configure a cron job for amber that runs every 2 minutes and logs the message "exam-a tick".
 
 ---
 
 ## Question 12 - Host Entry (clientvm) - 5 pts
 
-Add a persistent hosts entry on clientvm so api.opsedge.lab resolves to 192.168.122.3.
+Add a persistent hosts entry on clientvm so api.exam-a.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 13 - Find And Copy (clientvm) - 4 pts
-
-Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours, then copy them to /root/amber-files while preserving the source directory structure.
-
----
-
-## Question 14 - Grep Filter (clientvm) - 4 pts
-
-Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.
-
----
-
-## Question 15 - Archive (clientvm) - 4 pts
+## Question 13 - Archive (clientvm) - 4 pts
 
 Create /root/etc-opsa.tar.bz2 containing /etc.
 
 ---
 
-## Question 16 - Service Audit Script (clientvm) - 4 pts
+## Question 14 - Service Audit Script (clientvm) - 4 pts
 
 Create /usr/local/bin/opsa-report as an executable script that writes the status of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
 
 ---
 
-## Question 17 - Swap Space (clientvm) - 4 pts
+## Question 15 - Swap Space (clientvm) - 4 pts
 
 On /dev/sdb, create a 512 MiB swap partition.
 
@@ -157,21 +145,33 @@ On /dev/sdb, create a 512 MiB swap partition.
 
 ---
 
-## Question 18 - Resize Existing LV (clientvm) - 4 pts
+## Question 16 - Resize Existing LV (clientvm) - 4 pts
 
 Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing the existing filesystem data.
 
 ---
 
-## Question 19 - Rootless Container (clientvm) - 4 pts
+## Question 17 - Rootless Container (clientvm) - 4 pts
 
 As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/ina mounted to /data/input and /opt/outa mounted to /data/output.
 
 ---
 
-## Question 20 - Container Autostart (clientvm) - 4 pts
+## Question 18 - Container Autostart (clientvm) - 4 pts
 
 Generate and enable a systemd user service for container pdfa and enable lingering for oriona.
+
+---
+
+## Question 19 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 20 - Persistent Journal (servervm) - 4 pts
+
+On servervm, enable persistent systemd journal storage and restart systemd-journald.
 
 ---
 

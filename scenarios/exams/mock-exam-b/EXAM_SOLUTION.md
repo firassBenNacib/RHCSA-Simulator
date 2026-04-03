@@ -1,4 +1,4 @@
-# Mock Exam B: CoreMesh Service Review
+# Mock Exam B
 
 ## Exam Solution
 ## Overview
@@ -30,7 +30,7 @@ CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && 
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
-hostnamectl set-hostname clientvm.coremesh.lab
+hostnamectl set-hostname clientvm.exam-b.lab
 ```
 
 ---
@@ -38,7 +38,7 @@ hostnamectl set-hostname clientvm.coremesh.lab
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'registry.coremesh.lab' /etc/hosts || echo '192.168.122.3 registry.coremesh.lab' >> /etc/hosts
+grep -q 'registry.exam-b.lab' /etc/hosts || echo '192.168.122.3 registry.exam-b.lab' >> /etc/hosts
 ```
 
 ---
@@ -193,6 +193,10 @@ runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@ser
 ## Question 16 - Passwordless SSH (servervm) - 4 pts
 
 ```bash
+# Run on servervm
+id meshremote >/dev/null 2>&1 || useradd meshremote
+echo cinder9 | passwd --stdin meshremote
+install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox
 runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
 runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ```
@@ -202,12 +206,50 @@ runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ## Question 17 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
+runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+```
+
+---
+
+## Question 18 - Passwordless SSH (servervm) - 4 pts
+
+```bash
+# Run on servervm
+id meshremote >/dev/null 2>&1 || useradd meshremote
+echo cinder9 | passwd --stdin meshremote
+install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox
+runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
+runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+```
+
+---
+
+## Question 19 - Rsync Transfer (servervm) - 4 pts
+
+```bash
+runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+```
+
+---
+
+## Question 20 - Passwordless SSH (servervm) - 4 pts
+
+```bash
+runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
+runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+```
+
+---
+
+## Question 21 - Rsync Transfer (servervm) - 4 pts
+
+```bash
 runuser -l mira -c 'rsync -e "ssh -p 2222" /home/mira/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
 ```
 
 ---
 
-## Question 18 - Find And Copy (clientvm) - 4 pts
+## Question 22 - Find And Copy (clientvm) - 4 pts
 
 ```bash
 find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/mira-files \;
@@ -215,54 +257,9 @@ find /opt/exam-b/find -type f -user mira -mtime -1 -exec cp --parents {} /root/m
 
 ---
 
-## Question 19 - Grep Filter (clientvm) - 4 pts
-
-```bash
-grep proto /usr/share/dict/words > /root/proto-lines
-```
-
----
-
-## Question 20 - Archive (clientvm) - 4 pts
-
-```bash
-tar -cjf /root/usr-local-b.tar.bz2 /usr/local
-```
-
----
-
-## Question 21 - Unit Status Script (clientvm) - 4 pts
-
-```bash
-vim /usr/local/bin/corecheck
-#!/usr/bin/env bash
-while read -r unit; do
-  systemctl is-active "$unit" >> /root/coremesh-units.txt
-done < /usr/local/share/exam-b/units.lst
-chmod 755 /usr/local/bin/corecheck
-/usr/local/bin/corecheck
-```
-
----
-
-## Question 22 - Swap Space (clientvm) - 4 pts
-
-```bash
-fdisk /dev/sdb
-# create a 600M GPT partition and set the type to Linux swap
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-blkid /dev/sdb1
-vim /etc/fstab
-UUID=<uuid-of-sdb1> swap swap defaults 0 0
-```
-
----
-
 ## Verification
 ```bash
-hostnamectl --static | grep -qx 'clientvm.coremesh.lab' && grep -Fqx '192.168.122.3 registry.coremesh.lab' /etc/hosts
+hostnamectl --static | grep -qx 'clientvm.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts
 grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled
 useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3":"$6}' | grep -qx '4421:' && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\s*=\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\s*=\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld
 ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true' && ssh admin@servervm test -f /home/meshremote/inbox/report.txt

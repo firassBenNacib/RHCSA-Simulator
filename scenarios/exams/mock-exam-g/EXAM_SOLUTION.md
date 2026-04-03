@@ -1,4 +1,4 @@
-# Mock Exam G: DeltaForge Recovery Review
+# Mock Exam G
 
 ## Exam Solution
 ## Overview
@@ -142,7 +142,7 @@ runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copy
 ## Question 13 - At Job (clientvm) - 4 pts
 
 ```bash
-runuser -l pavel -c 'echo "echo DeltaForge tick >> /root/delta-at.log" | at now + 2 minutes'
+runuser -l pavel -c 'echo "echo exam-g tick >> /root/exam-g-at.log" | at now + 2 minutes'
 systemctl enable --now atd
 ```
 
@@ -151,7 +151,7 @@ systemctl enable --now atd
 ## Question 14 - Per-User Login Message (clientvm) - 4 pts
 
 ```bash
-echo 'echo DeltaForge access' >> /home/pavel/.bash_profile
+echo 'echo exam-g access' >> /home/pavel/.bash_profile
 ```
 
 ---
@@ -272,7 +272,7 @@ loginctl enable-linger solg
 ```bash
 hostnamectl --static | grep -qx 'clientvm.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'
 mount | grep -Eq 'servervm:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin'
-chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo DeltaForge access' /home/pavel/.bash_profile && atq | grep -q pavel
+chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo exam-g access' /home/pavel/.bash_profile && atq | grep -q pavel
 runuser -l copyg -c 'ssh -o BatchMode=yes copyg@servervm true' && ssh admin@servervm test -f /home/copyg/inbox/payload.txt
 test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p "$(cat /home/workerg/cpu.pid)" >/dev/null 2>&1 && ps -o ni= -p "$(cat /home/workerg/sleep.pid)" | tr -d ' ' | grep -qx '10'
 swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'

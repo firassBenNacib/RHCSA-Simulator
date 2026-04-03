@@ -1,6 +1,6 @@
 {
   "id": "mock-exam-c",
-  "title": "Mock Exam C: NorthStar Recovery Review",
+  "title": "Mock Exam C",
   "description": "A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.",
   "objective_tags": [
     "boot-and-recovery",
@@ -25,18 +25,18 @@
     "exam": {
       "tasks": [
         "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
-        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.northstar.lab",
+        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.28\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-c.lab",
         "Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
-        "Add a persistent hosts entry so vault.northstar.lab resolves to 192.168.122.3.",
+        "Add a persistent hosts entry so vault.exam-c.lab resolves to 192.168.122.3.",
         "Persistently mount servervm:/exports/bluec on /mnt/bluec using /etc/fstab.",
         "Create group infrac and users talia and ren with infrac as a supplementary group. Set the password of both users to cinder9.",
         "Create /srv/infrac owned by root:infrac with mode 2770 and a default ACL that grants group infrac rwx on new files and directories.",
         "Create user remote63 without a home directory and with login shell /sbin/nologin.",
-        "Queue a one-time at job as user ren that appends the message \"NorthStar audit\" to /root/northstar-at.log in 2 minutes.",
+        "Queue a one-time at job as user ren that appends the message \"exam-c audit\" to /root/exam-c-at.log in 2 minutes.",
         "Set password aging for talia to maximum 45 days, minimum 5 days, warning 7 days.",
         "On servervm, enable persistent systemd journal storage and restart systemd-journald.",
         "Set a personal umask of 027 for user ren.",
-        "Append a login message for ren to ~/.bash_profile that prints \"NorthStar access\" when ren logs in.",
+        "Append a login message for ren to ~/.bash_profile that prints \"exam-c access\" when ren logs in.",
         "Create user kian431 with UID 4431 and set its password to cinder9.",
         "Find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.",
         "Extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.",
@@ -109,13 +109,13 @@
           "nmcli connection modify \"$CONN\" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"$CONN\"",
           "nmcli connection up \"$CONN\"",
-          "hostnamectl set-hostname clientvm.northstar.lab"
+          "hostnamectl set-hostname clientvm.exam-c.lab"
         ],
         [
           "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\""
         ],
         [
-          "grep -q 'vault.northstar.lab' /etc/hosts || echo '192.168.122.3 vault.northstar.lab' >> /etc/hosts"
+          "grep -q 'vault.exam-c.lab' /etc/hosts || echo '192.168.122.3 vault.exam-c.lab' >> /etc/hosts"
         ],
         [
           "mkdir -p /mnt/bluec",
@@ -137,7 +137,7 @@
           "useradd -M -s /sbin/nologin remote63"
         ],
         [
-          "echo 'echo \"NorthStar audit\" >> /root/northstar-at.log' | at now + 2 minutes",
+          "echo 'echo \"exam-c audit\" >> /root/exam-c-at.log' | at now + 2 minutes",
           "systemctl enable --now atd"
         ],
         [
@@ -157,7 +157,7 @@
           "echo 'umask 027' >> /home/ren/.bash_profile"
         ],
         [
-          "echo 'echo NorthStar access' >> /home/ren/.bash_profile"
+          "echo 'echo exam-c access' >> /home/ren/.bash_profile"
         ],
         [
           "useradd -u 4431 kian431",
@@ -215,9 +215,9 @@
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.northstar.lab' && grep -Fqx '192.168.122.3 vault.northstar.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
+        "hostnamectl --static | grep -qx 'clientvm.exam-c.lab' && grep -Fqx '192.168.122.3 vault.exam-c.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
         "mount | grep -Eq 'servervm:/exports/bluec on /mnt/bluec type nfs' && grep -q '/mnt/bluec' /etc/fstab && getent group infrac >/dev/null && id -nG talia | tr ' ' '\\n' | grep -qx infrac && id -nG ren | tr ' ' '\\n' | grep -qx infrac && getfacl -p /srv/infrac | grep -Fq 'default:group:infrac:rwx' && getent passwd remote63 | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
-        "chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo NorthStar access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
+        "chage -l talia | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/ren/.bash_profile && grep -Fqx 'echo exam-c access' /home/ren/.bash_profile && ssh admin@servervm sudo test -d /var/log/journal",
         "getent passwd kian431 | awk -F: '{print $3}' | grep -qx '4431' && test -f /root/ren-files/opt/exam-c/find/a/file1.txt && grep -q 'orbit' /root/orbit-lines && test -f /root/etc-c.tar.bz2 && /usr/local/bin/northcheck >/dev/null && test -s /root/northstar-services.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewc\" && $2==\"reviewvgc\" && $3>=339 && $3<=341{f=1} END{exit !f}'",
         "runuser -l eirac -c 'podman ps --format {{.Names}}' | grep -qx pdfc && runuser -l eirac -c 'systemctl --user is-enabled container-pdfc.service' | grep -qx enabled && loginctl show-user eirac | grep -Eq '^Linger=yes$'"

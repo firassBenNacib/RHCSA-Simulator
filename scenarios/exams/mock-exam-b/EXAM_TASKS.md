@@ -1,4 +1,4 @@
-# Mock Exam B: CoreMesh Service Review
+# Mock Exam B
 
 ## Exam Tasks
 ## Overview
@@ -31,13 +31,13 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.coremesh.lab
+- **Hostname:** clientvm.exam-b.lab
 
 ---
 
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
-Add a persistent hosts entry so registry.coremesh.lab resolves to 192.168.122.3.
+Add a persistent hosts entry so registry.exam-b.lab resolves to 192.168.122.3.
 
 ---
 
@@ -121,44 +121,40 @@ Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/
 
 ## Question 16 - Passwordless SSH (servervm) - 4 pts
 
-Install mira's public key for user meshremote on servervm and verify passwordless SSH access on port 2222.
+On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
 
 ---
 
 ## Question 17 - Rsync Transfer (servervm) - 4 pts
 
+Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.
+
+---
+
+## Question 18 - Passwordless SSH (servervm) - 4 pts
+
+On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
+
+---
+
+## Question 19 - Rsync Transfer (servervm) - 4 pts
+
+Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.
+
+---
+
+## Question 20 - Passwordless SSH (servervm) - 4 pts
+
+Install mira's public key for user meshremote on servervm and verify passwordless SSH access on port 2222.
+
+---
+
+## Question 21 - Rsync Transfer (servervm) - 4 pts
+
 Use rsync over SSH port 2222 to copy /home/mira/report.txt to /home/meshremote/inbox/report.txt on servervm.
 
 ---
 
-## Question 18 - Find And Copy (clientvm) - 4 pts
+## Question 22 - Find And Copy (clientvm) - 4 pts
 
 Find all files under /opt/exam-b/find that are owned by mira and were modified in the last 24 hours, then copy them to /root/mira-files while preserving the directory structure.
-
----
-
-## Question 19 - Grep Filter (clientvm) - 4 pts
-
-Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.
-
----
-
-## Question 20 - Archive (clientvm) - 4 pts
-
-Create /root/usr-local-b.tar.bz2 containing /usr/local.
-
----
-
-## Question 21 - Unit Status Script (clientvm) - 4 pts
-
-Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.
-
----
-
-## Question 22 - Swap Space (clientvm) - 4 pts
-
-On /dev/sdb, create a 600 MiB swap partition.
-
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.

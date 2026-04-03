@@ -1,4 +1,4 @@
-# Mock Exam H: SilverPeak Service Review
+# Mock Exam H
 
 ## Exam Tasks
 ## Overview
@@ -31,13 +31,13 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.silverpeak.lab
+- **Hostname:** clientvm.exam-h.lab
 
 ---
 
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
-Add a persistent hosts entry so registry.silverpeak.lab resolves to 192.168.122.3.
+Add a persistent hosts entry so registry.exam-h.lab resolves to 192.168.122.3.
 
 ---
 

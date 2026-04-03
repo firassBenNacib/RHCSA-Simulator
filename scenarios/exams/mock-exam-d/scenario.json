@@ -1,6 +1,6 @@
 {
   "id": "mock-exam-d",
-  "title": "Mock Exam D: SummitLine Operations Review",
+  "title": "Mock Exam D",
   "description": "A 22 task RHCSA style mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.",
   "objective_tags": [
     "networking-and-firewall",
@@ -40,11 +40,11 @@
         "Set a personal umask of 027 for miles.",
         "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
         "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
+        "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
+        "Create /srv/summit-audit on clientvm with mode 0750 and ownership root:root.",
         "Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/miles-files while preserving the source directory structure.",
         "Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.",
-        "Create /root/summit-etc.tar.gz containing /etc.",
-        "Create executable script /usr/local/bin/summit-scan that writes the active state of each unit listed in /usr/local/share/exam-d/units.lst to /root/summit-units.txt.",
-        "On /dev/sdb, create a 768 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently."
+        "Create /root/summit-etc.tar.gz containing /etc."
       ],
       "task_titles": [
         "Client Network",
@@ -64,11 +64,11 @@
         "User Umask",
         "Audit Directory",
         "Audit Directory",
+        "Audit Directory",
+        "Audit Directory",
         "Find And Copy",
         "Grep Filter",
-        "Archive",
-        "Shell Script",
-        "Swap Space"
+        "Archive"
       ],
       "task_points": [
         5,
@@ -191,6 +191,12 @@
           "install -d -m 0750 -o root -g root /srv/summit-audit"
         ],
         [
+          "install -d -m 0750 -o root -g root /srv/summit-audit"
+        ],
+        [
+          "install -d -m 0750 -o root -g root /srv/summit-audit"
+        ],
+        [
           "mkdir -p /root/miles-files",
           "find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/miles-files \\;"
         ],
@@ -199,26 +205,6 @@
         ],
         [
           "tar -czf /root/summit-etc.tar.gz /etc"
-        ],
-        [
-          "vim /usr/local/bin/summit-scan",
-          "#!/bin/bash",
-          "> /root/summit-units.txt",
-          "for unit in $(cat /usr/local/share/exam-d/units.lst); do",
-          "    systemctl is-active \"$unit\" >> /root/summit-units.txt",
-          "done",
-          "chmod +x /usr/local/bin/summit-scan",
-          "/usr/local/bin/summit-scan"
-        ],
-        [
-          "fdisk /dev/sdb",
-          "# create a 768 MiB partition and change the type to Linux swap",
-          "partprobe /dev/sdb",
-          "mkswap /dev/sdb1",
-          "swapon /dev/sdb1",
-          "blkid /dev/sdb1",
-          "vim /etc/fstab",
-          "UUID=<uuid> swap swap defaults 0 0"
         ]
       ],
       "checks": [

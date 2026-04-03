@@ -1,4 +1,4 @@
-# Mock Exam F: AuroraPath Access Review
+# Mock Exam F
 
 ## Exam Solution
 ## Overview
@@ -30,7 +30,7 @@ CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && 
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
-hostnamectl set-hostname clientvm.aurora.lab
+hostnamectl set-hostname clientvm.exam-f.lab
 ```
 
 ---
@@ -38,7 +38,7 @@ hostnamectl set-hostname clientvm.aurora.lab
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'db.aurora.lab' /etc/hosts || echo '192.168.122.3 db.aurora.lab' >> /etc/hosts
+grep -q 'db.exam-f.lab' /etc/hosts || echo '192.168.122.3 db.exam-f.lab' >> /etc/hosts
 ```
 
 ---

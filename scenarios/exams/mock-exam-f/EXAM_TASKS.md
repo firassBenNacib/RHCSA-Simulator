@@ -1,4 +1,4 @@
-# Mock Exam F: AuroraPath Access Review
+# Mock Exam F
 
 ## Exam Tasks
 ## Overview
@@ -31,13 +31,13 @@ Configure networking on clientvm with the following settings:
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.aurora.lab
+- **Hostname:** clientvm.exam-f.lab
 
 ---
 
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
-Add a persistent hosts entry so db.aurora.lab resolves to 192.168.122.3.
+Add a persistent hosts entry so db.exam-f.lab resolves to 192.168.122.3.
 
 ---
 

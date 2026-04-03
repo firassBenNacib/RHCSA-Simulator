@@ -1,4 +1,4 @@
-# Mock Exam H: SilverPeak Service Review
+# Mock Exam H
 
 ## Exam Solution
 ## Overview
@@ -30,7 +30,7 @@ CONN="$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != "" && 
 nmcli connection modify "$CONN" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "$CONN"
 nmcli connection up "$CONN"
-hostnamectl set-hostname clientvm.silverpeak.lab
+hostnamectl set-hostname clientvm.exam-h.lab
 ```
 
 ---
@@ -38,7 +38,7 @@ hostnamectl set-hostname clientvm.silverpeak.lab
 ## Question 02 - Host Entry (clientvm) - 5 pts
 
 ```bash
-grep -q 'registry.silverpeak.lab' /etc/hosts || echo '192.168.122.3 registry.silverpeak.lab' >> /etc/hosts
+grep -q 'registry.exam-h.lab' /etc/hosts || echo '192.168.122.3 registry.exam-h.lab' >> /etc/hosts
 ```
 
 ---
@@ -46,15 +46,15 @@ grep -q 'registry.silverpeak.lab' /etc/hosts || echo '192.168.122.3 registry.sil
 ## Question 03 - Client Repositories (clientvm) - 5 pts
 
 ```bash
-cat > /etc/yum.repos.d/silverpeak.repo <<'EOF'
+cat > /etc/yum.repos.d/exam-h.repo <<'EOF'
 [silver-baseos]
-name=SilverPeak BaseOS
+name=RHCSA BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
 [silver-appstream]
-name=SilverPeak AppStream
+name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
@@ -68,15 +68,15 @@ dnf clean all
 
 ```bash
 # Run on servervm
-cat > /etc/yum.repos.d/silverpeak.repo <<'EOF'
+cat > /etc/yum.repos.d/exam-h.repo <<'EOF'
 [silver-baseos]
-name=SilverPeak BaseOS
+name=RHCSA BaseOS
 baseurl=http://servervm/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
 [silver-appstream]
-name=SilverPeak AppStream
+name=RHCSA AppStream
 baseurl=http://servervm/repo/AppStream/
 enabled=1
 gpgcheck=0
@@ -285,7 +285,7 @@ tuned-adm active
 
 ## Verification
 ```bash
-hostnamectl --static | grep -qx 'clientvm.silverpeak.lab' && grep -Fqx '192.168.122.3 registry.silverpeak.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
+hostnamectl --static | grep -qx 'clientvm.exam-h.lab' && grep -Fqx '192.168.122.3 registry.exam-h.lab' /etc/hosts && curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && ssh admin@servervm sudo curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null
 curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\b.*\b8181\b' && firewall-cmd --list-rich-rules | grep -Fq 'port port="2222" protocol="tcp" accept'
 grep -Eq '^minlen\s*=\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\s*=\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $6":"$7}' | grep -qx ':/sbin/nologin' && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'
 grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\.168\.122\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled
