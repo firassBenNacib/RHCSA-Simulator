@@ -81,7 +81,10 @@ def extract_servervm_remote_command(command: str) -> str | None:
     if not match:
         return None
     remote = command.strip()
-    remote = re.sub(r"(?i)(^|&&\s*)ssh\s+\S*servervm\S*\s+(?:sudo\s+)?", r"\1", remote)
+    remote = re.sub(r"(?i)ssh\s+\S*servervm\S*\s+(?:sudo\s+)?", "", remote)
+    remote = re.sub(r"\(\s+", "(", remote)
+    remote = re.sub(r"\s+\)", ")", remote)
+    remote = re.sub(r"\s{2,}", " ", remote)
     remote = remote.strip()
     return remote or None
 
@@ -100,14 +103,7 @@ def normalize_check_entry(command: str, index: int) -> CheckEntry:
 
 
 def render_check_script(source_manifest: str, checks: list[CheckEntry]) -> str:
-    lines = [
-        "#!/usr/bin/env bash",
-        "set -euo pipefail",
-        "",
-        f"# Generated from {source_manifest}",
-        "# Use ./RHCSA.ps1 check on the host to run these on the correct VM automatically.",
-        "",
-    ]
+    lines: list[str] = []
     if not checks:
         lines.append("# No automated checks are defined for this lab.")
         lines.append('echo "No automated checks are defined for this lab."')

@@ -27,8 +27,8 @@
         "Use setfacl for the named user entries."
       ],
       "checks": [
-        "stat -c '%U:%G %a' /var/tmp/fstab-acl | grep -qx 'root:root 644'",
-        "getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:natacl:rw-' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:haracl:---' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'other::r--'"
+        "cmp -s /etc/fstab /var/tmp/fstab-acl",
+        "stat -c '%U:%G' /var/tmp/fstab-acl | grep -qx 'root:root' && ! stat -c '%A' /var/tmp/fstab-acl | grep -q x && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:natacl:rw-' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:haracl:---' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'other::r--'"
       ],
       "solution_outline": [
         "Use persistent configuration only."

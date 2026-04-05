@@ -12,9 +12,7 @@
 Serve an existing custom document root on a non-default port with SELinux enforcing.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

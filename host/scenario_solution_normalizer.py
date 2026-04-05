@@ -59,6 +59,37 @@ def _expand_install_directory(cmd: str) -> list[str] | None:
     return expanded
 
 
+def _parse_runuser_command(cmd: str) -> tuple[str, str] | None:
+    try:
+        tokens = shlex.split(cmd)
+    except ValueError:
+        return None
+
+    if len(tokens) < 5 or tokens[0] != "runuser" or tokens[1] != "-l" or tokens[3] != "-c":
+        return None
+
+    user = tokens[2]
+    inner = " ".join(tokens[4:])
+    return user, inner
+
+
+def _unwrap_shell_command(cmd: str) -> str:
+    try:
+        tokens = shlex.split(cmd)
+    except ValueError:
+        return cmd
+
+    if len(tokens) >= 3 and tokens[0] in {"sh", "bash"} and tokens[1] in {"-c", "-lc"}:
+        return tokens[2]
+    return cmd
+
+
+def _restore_exam_style_quotes(cmd: str) -> str:
+    if "ssh-keygen" in cmd:
+        cmd = re.sub(r"(\s-N)\s+(-f\s+)", r'\1 "" \2', cmd)
+    return cmd
+
+
 def normalize_command_list(commands: list[str]) -> list[str]:
     flattened = _flatten_commands(commands)
     normalized: list[str] = []
@@ -186,7 +217,24 @@ def normalize_command_list(commands: list[str]) -> list[str]:
             i += 1
             continue
 
+        parsed_runuser = _parse_runuser_command(cmd)
+        if parsed_runuser:
+            user, inner = parsed_runuser
+            grouped = [_restore_exam_style_quotes(_unwrap_shell_command(inner))]
+            j = i + 1
+            while j < len(flattened):
+                next_parsed = _parse_runuser_command(flattened[j])
+                if not next_parsed or next_parsed[0] != user:
+                    break
+                grouped.append(_restore_exam_style_quotes(_unwrap_shell_command(next_parsed[1])))
+                j += 1
+            normalized.append(f"su - {user}")
+            normalized.extend(grouped)
+            i = j
+            continue
+
         cmd = cmd.replace('"$CONN"', '"System eth1"').replace("$CONN", "System eth1")
+        cmd = _restore_exam_style_quotes(cmd)
         normalized.append(cmd)
         i += 1
 

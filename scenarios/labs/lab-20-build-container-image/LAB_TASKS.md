@@ -12,9 +12,7 @@
 Build and tag a local container image from a provided Containerfile.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

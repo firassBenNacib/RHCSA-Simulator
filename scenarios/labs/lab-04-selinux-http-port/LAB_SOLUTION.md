@@ -12,9 +12,7 @@
 Fix Apache so it listens on a nonstandard port without disabling SELinux.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

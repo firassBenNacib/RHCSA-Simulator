@@ -12,10 +12,8 @@
 A 22 task RHCSA style mock exam emphasizing chrony, SSH hardening, user defaults, and storage administration.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -158,7 +156,8 @@ firewall-cmd --reload
 ## Question 13 - SSH Key Generation (clientvm) - 4 pts
 
 ```bash
-runuser -l mira -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
+su - mira
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 ```
 
 ---
@@ -172,8 +171,9 @@ echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
-runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
-runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+su - mira
+ssh-copy-id -p 2222 meshremote@servervm
+ssh -p 2222 -o BatchMode=yes meshremote@servervm true
 ```
 
 ---
@@ -181,7 +181,8 @@ runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ## Question 15 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
-runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+su - mira
+rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
 ```
 
 ---
@@ -195,8 +196,9 @@ echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
-runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
-runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+su - mira
+ssh-copy-id -p 2222 meshremote@servervm
+ssh -p 2222 -o BatchMode=yes meshremote@servervm true
 ```
 
 ---
@@ -204,7 +206,8 @@ runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ## Question 17 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
-runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+su - mira
+rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
 ```
 
 ---
@@ -218,8 +221,9 @@ echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
-runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
-runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+su - mira
+ssh-copy-id -p 2222 meshremote@servervm
+ssh -p 2222 -o BatchMode=yes meshremote@servervm true
 ```
 
 ---
@@ -227,7 +231,8 @@ runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ## Question 19 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
-runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+su - mira
+rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
 ```
 
 ---
@@ -241,8 +246,9 @@ echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
-runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
-runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+su - mira
+ssh-copy-id -p 2222 meshremote@servervm
+ssh -p 2222 -o BatchMode=yes meshremote@servervm true
 ```
 
 ---
@@ -250,7 +256,8 @@ runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
 ## Question 21 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
-runuser -l mira -c 'rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'
+su - mira
+rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
 ```
 
 ---
@@ -264,6 +271,7 @@ echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
-runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'
-runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'
+su - mira
+ssh-copy-id -p 2222 meshremote@servervm
+ssh -p 2222 -o BatchMode=yes meshremote@servervm true
 ```

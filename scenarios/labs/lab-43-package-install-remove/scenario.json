@@ -19,30 +19,24 @@
   "content": {
     "lab": {
       "tasks": [
-        "Use the prepared local repositories on clientvm to install the packages tree and dos2unix.",
-        "Remove dos2unix and leave tree installed."
+        "Use the prepared local repositories on clientvm to install tree, then remove dos2unix so tree remains installed."
       ],
       "hints": [
         "The repositories are already defined for this lab. Focus on package management."
       ],
       "checks": [
-        "rpm -q tree",
-        "! rpm -q dos2unix"
+        "rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null"
       ],
       "solution_outline": [],
       "task_titles": [
-        "Use the prepared local repositories on clientvm to...",
-        "Remove dos2unix and leave tree installed"
+        "Install tree and remove dos2unix"
       ],
       "task_points": [
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
-          "dnf install -y tree dos2unix"
-        ],
-        [
+          "dnf install -y tree dos2unix",
           "dnf remove -y dos2unix",
           "rpm -q tree"
         ]

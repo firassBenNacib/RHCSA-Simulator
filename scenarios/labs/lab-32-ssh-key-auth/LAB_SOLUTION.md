@@ -12,10 +12,8 @@
 Configure passwordless SSH login from clientvm to servervm using a key pair.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -39,8 +37,9 @@ passwd vault32
 ## Task 02 - Configure key-based SSH authentication so that user (clientvm) - 10 pts
 
 ```bash
-runuser -l relay32 -c "ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa"
-runuser -l relay32 -c "ssh-copy-id vault32@servervm"
+su - relay32
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+ssh-copy-id vault32@servervm
 ```
 
 ---
@@ -48,5 +47,6 @@ runuser -l relay32 -c "ssh-copy-id vault32@servervm"
 ## Task 03 - Do not disable PasswordAuthentication globally for (clientvm) - 10 pts
 
 ```bash
-runuser -l relay32 -c "ssh -o StrictHostKeyChecking=no vault32@servervm true"
+su - relay32
+ssh -o StrictHostKeyChecking=no vault32@servervm true
 ```

@@ -12,18 +12,16 @@
 Run a rootless container as a persistent user service.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Run The Container (clientvm) - 10 pts
+## Task 01 - Ensure merin22 exists and run the container (clientvm) - 10 pts
 
-Create user merin22 with password cinder9 if it does not already exist. Then, as that user, run a container named render22 from localhost/fluxpdf22:latest with /opt/inbox22 mounted to /data/input and /opt/outbox22 mounted to /data/output.
+Ensure user merin22 exists, set the password to cinder9, and then, as that user, run a container named render22 from localhost/fluxpdf22:latest with /opt/inbox22 mounted to /data/input and /opt/outbox22 mounted to /data/output.
 
 ---
 

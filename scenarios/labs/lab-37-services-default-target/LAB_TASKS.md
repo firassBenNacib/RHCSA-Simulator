@@ -12,17 +12,14 @@
 Manage the default target and key services on servervm.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Set the default boot target on servervm (clientvm) - 10 pts
+## Task 01 - Set the default boot target on servervm (servervm) - 10 pts
 
 Configure servervm to boot into multi-user.target by default.
 

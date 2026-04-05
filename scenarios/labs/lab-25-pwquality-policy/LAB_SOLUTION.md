@@ -12,16 +12,14 @@
 Use a pwquality drop-in to enforce a stronger local password policy.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create the pwquality drop-in (clientvm) - 15 pts
+## Task 01 - Create the pwquality drop-in without editing PAM (clientvm) - 30 pts
 
 ```bash
 cat > /etc/security/pwquality.conf.d/lab25.conf <<'EOF'
@@ -29,12 +27,4 @@ minlen = 12
 minclass = 3
 maxrepeat = 2
 EOF
-```
-
----
-
-## Task 02 - Leave PAM service files unchanged (clientvm) - 15 pts
-
-```bash
-true
 ```

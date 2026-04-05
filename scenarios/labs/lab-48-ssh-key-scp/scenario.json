@@ -20,7 +20,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user bridge48 on both clientvm and servervm. Set the password on both systems to cinder9.",
+        "Ensure user bridge48 exists on both clientvm and servervm, and set the password on both systems to cinder9.",
         "As user bridge48 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
         "Configure passwordless SSH access for bridge48 from clientvm to servervm using the public key.",
         "Using scp over SSH, copy /home/bridge48/payload.txt from clientvm to /home/bridge48/inbox/ on servervm."
@@ -30,7 +30,8 @@
         "ssh-copy-id is the quickest way to seed authorized_keys."
       ],
       "checks": [
-        "getent passwd bridge48 >/dev/null && test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519",
+        "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null && ssh admin@servervm sudo getent passwd bridge48 >/dev/null && ssh admin@servervm sudo getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub",
         "ssh bridge48@servervm true",
         "ssh bridge48@servervm test -f /home/bridge48/inbox/payload.txt"
       ],
@@ -41,7 +42,7 @@
         "Copy the payload file into the remote inbox directory."
       ],
       "task_titles": [
-        "Create bridge48 on both systems",
+        "Ensure bridge48 exists on both systems",
         "Generate the ED25519 key pair",
         "Enable passwordless SSH from clientvm to servervm",
         "Copy the payload with scp"
@@ -59,13 +60,16 @@
           "' | chpasswd"
         ],
         [
-          "runuser -l bridge48 -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'"
+          "su - bridge48",
+          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
         ],
         [
-          "runuser -l bridge48 -c 'ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm'"
+          "su - bridge48",
+          "ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm"
         ],
         [
-          "runuser -l bridge48 -c 'scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/'"
+          "su - bridge48",
+          "scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/"
         ]
       ]
     }

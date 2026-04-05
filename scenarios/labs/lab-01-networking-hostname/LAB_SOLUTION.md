@@ -12,9 +12,7 @@
 Configure persistent networking and hostname settings on clientvm in RHCSA style.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

@@ -12,9 +12,7 @@
 Use a persistent rich rule to restrict access to a custom port by source network.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

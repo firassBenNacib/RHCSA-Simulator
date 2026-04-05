@@ -239,8 +239,9 @@
           "useradd -m inspecth",
           "passwd inspecth",
           "# enter: cinder9",
-          "runuser -l inspecth -c \"podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar\"",
-          "runuser -l inspecth -c \"podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt\""
+          "su - inspecth",
+          "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar",
+          "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt"
         ],
         [
           "tuned-adm profile $(tuned-adm recommend)",

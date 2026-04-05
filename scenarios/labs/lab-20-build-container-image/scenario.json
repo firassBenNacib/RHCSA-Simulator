@@ -52,7 +52,8 @@
           "exit"
         ],
         [
-          "runuser -l builder20 -c \"podman images\""
+          "su - builder20",
+          "podman images"
         ]
       ]
     }

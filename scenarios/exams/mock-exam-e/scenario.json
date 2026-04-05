@@ -182,7 +182,8 @@
           "EOF"
         ],
         [
-          "runuser -l ivor -c 'echo \"echo exam-e tick >> /root/exam-e-at.log\" | at now + 2 minutes'",
+          "su - ivor",
+          "echo \"echo exam-e tick >> /root/exam-e-at.log\" | at now + 2 minutes",
           "systemctl enable --now atd"
         ],
         [

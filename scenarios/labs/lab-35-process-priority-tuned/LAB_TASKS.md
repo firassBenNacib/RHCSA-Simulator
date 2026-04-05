@@ -12,10 +12,7 @@
 Tune servervm and adjust the nice level of a long-running process there.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -34,6 +31,6 @@ Start the command sleep 3600 in the background on servervm and save its PID in /
 
 ---
 
-## Task 03 - Renice the process to 5 (clientvm) - 10 pts
+## Task 03 - Renice the process to 5 (servervm) - 10 pts
 
 Adjust the nice value of that process so it becomes 5.

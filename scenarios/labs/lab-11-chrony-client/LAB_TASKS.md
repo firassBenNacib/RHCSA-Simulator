@@ -12,10 +12,8 @@
 Configure servervm as a simple chrony source and point clientvm at it.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- servervm
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

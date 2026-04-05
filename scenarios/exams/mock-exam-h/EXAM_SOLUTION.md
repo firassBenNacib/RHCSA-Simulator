@@ -12,10 +12,8 @@
 A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -267,8 +265,9 @@ rpm -q tree
 useradd -m inspecth
 passwd inspecth
 # enter: cinder9
-runuser -l inspecth -c "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
-runuser -l inspecth -c "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt"
+su - inspecth
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
+podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt
 ```
 
 ---

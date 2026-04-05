@@ -12,10 +12,8 @@
 A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -136,7 +134,8 @@ elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
 ## Question 11 - SSH Key Generation (clientvm) - 5 pts
 
 ```bash
-runuser -l elio -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
+su - elio
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 ```
 
 ---
@@ -157,8 +156,9 @@ chmod 0755 /home/backupf/inbox
 ## Question 13 - Passwordless SSH (servervm) - 4 pts
 
 ```bash
-runuser -l elio -c 'ssh-copy-id -p 2222 backupf@servervm'
-runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true'
+su - elio
+ssh-copy-id -p 2222 backupf@servervm
+ssh -p 2222 -o BatchMode=yes backupf@servervm true
 ```
 
 ---
@@ -166,7 +166,8 @@ runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true'
 ## Question 14 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
-runuser -l elio -c 'rsync -e "ssh -p 2222" /opt/exam-f/aurora-report.txt backupf@servervm:/home/backupf/inbox/report.txt'
+su - elio
+rsync -e "ssh -p 2222" /opt/exam-f/aurora-report.txt backupf@servervm:/home/backupf/inbox/report.txt
 ```
 
 ---

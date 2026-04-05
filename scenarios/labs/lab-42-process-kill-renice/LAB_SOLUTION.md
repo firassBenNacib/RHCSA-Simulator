@@ -12,9 +12,7 @@
 Identify a running process, terminate it, and adjust the scheduling priority of another one.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

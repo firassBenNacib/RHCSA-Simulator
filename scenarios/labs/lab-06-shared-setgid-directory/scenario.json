@@ -29,8 +29,8 @@
         "Use a single chmod invocation to express the final mode cleanly."
       ],
       "checks": [
-        "getent group analystsx >/dev/null && stat -c '%U:%G %a' /shared/analysts | grep -qx 'root:analystsx 3770'",
-        "findmnt -n /shared >/dev/null 2>&1 || test -d /shared",
+        "getent group analystsx >/dev/null && stat -c '%F %U:%G' /shared/analysts | grep -qx 'directory root:analystsx'",
+        "stat -c %a /shared/analysts | grep -qx '3770'",
         "stat -c %A /shared/analysts | grep -qx 'drwxrws--T'"
       ],
       "solution_outline": [

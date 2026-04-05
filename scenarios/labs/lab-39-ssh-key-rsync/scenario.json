@@ -21,7 +21,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the user mesh39 on both clientvm and servervm. Set the password on both systems to cinder9.",
+        "Ensure the user mesh39 exists on both clientvm and servervm, and set the password on both systems to cinder9.",
         "As user mesh39 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
         "Configure passwordless SSH access for mesh39 from clientvm to servervm using public key authentication.",
         "Using rsync over SSH, copy the directory /home/mesh39/client-data/ from clientvm to /home/mesh39/server-data/ on servervm."
@@ -31,13 +31,16 @@
         "Verify the transfer by checking the copied file on servervm through SSH."
       ],
       "checks": [
+        "getent passwd mesh39 >/dev/null && getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null && ssh admin@servervm sudo getent passwd mesh39 >/dev/null && ssh admin@servervm sudo getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "test -f /home/mesh39/.ssh/id_ed25519 && test -f /home/mesh39/.ssh/id_ed25519.pub",
+        "ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 true",
         "ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 \"test -f /home/mesh39/server-data/file1.txt\""
       ],
       "solution_outline": [
         "Use ssh-keygen, authorized_keys, and rsync over SSH."
       ],
       "task_titles": [
-        "Create the user mesh39 on both clientvm and...",
+        "Ensure mesh39 exists on both systems",
         "generate an ED25519 SSH key pair with no passphrase",
         "Configure passwordless SSH access for mesh39 from...",
         "Using rsync over SSH, copy the directory..."
@@ -55,13 +58,16 @@
           "# repeat on servervm"
         ],
         [
-          "runuser -l mesh39 -c \"ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519\""
+          "su - mesh39",
+          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
         ],
         [
-          "runuser -l mesh39 -c \"ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3\""
+          "su - mesh39",
+          "ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3"
         ],
         [
-          "runuser -l mesh39 -c \"rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/\""
+          "su - mesh39",
+          "rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/"
         ]
       ]
     }

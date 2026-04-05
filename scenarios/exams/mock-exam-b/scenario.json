@@ -168,7 +168,8 @@
           "firewall-cmd --reload"
         ],
         [
-          "runuser -l mira -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'"
+          "su - mira",
+          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
         ],
         [
           "# Run on servervm",
@@ -177,24 +178,13 @@
           "mkdir -p /home/meshremote/inbox",
           "chown meshremote:meshremote /home/meshremote/inbox",
           "chmod 0755 /home/meshremote/inbox",
-          "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
-          "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@servervm",
+          "ssh -p 2222 -o BatchMode=yes meshremote@servervm true"
         ],
         [
-          "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
-        ],
-        [
-          "# Run on servervm",
-          "useradd meshremote",
-          "echo cinder9 | passwd --stdin meshremote",
-          "mkdir -p /home/meshremote/inbox",
-          "chown meshremote:meshremote /home/meshremote/inbox",
-          "chmod 0755 /home/meshremote/inbox",
-          "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
-          "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
-        ],
-        [
-          "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt"
         ],
         [
           "# Run on servervm",
@@ -203,24 +193,13 @@
           "mkdir -p /home/meshremote/inbox",
           "chown meshremote:meshremote /home/meshremote/inbox",
           "chmod 0755 /home/meshremote/inbox",
-          "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
-          "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@servervm",
+          "ssh -p 2222 -o BatchMode=yes meshremote@servervm true"
         ],
         [
-          "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
-        ],
-        [
-          "# Run on servervm",
-          "useradd meshremote",
-          "echo cinder9 | passwd --stdin meshremote",
-          "mkdir -p /home/meshremote/inbox",
-          "chown meshremote:meshremote /home/meshremote/inbox",
-          "chmod 0755 /home/meshremote/inbox",
-          "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
-          "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
-        ],
-        [
-          "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt'"
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt"
         ],
         [
           "# Run on servervm",
@@ -229,8 +208,39 @@
           "mkdir -p /home/meshremote/inbox",
           "chown meshremote:meshremote /home/meshremote/inbox",
           "chmod 0755 /home/meshremote/inbox",
-          "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@servervm'",
-          "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true'"
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@servervm",
+          "ssh -p 2222 -o BatchMode=yes meshremote@servervm true"
+        ],
+        [
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt"
+        ],
+        [
+          "# Run on servervm",
+          "useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@servervm",
+          "ssh -p 2222 -o BatchMode=yes meshremote@servervm true"
+        ],
+        [
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt"
+        ],
+        [
+          "# Run on servervm",
+          "useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@servervm",
+          "ssh -p 2222 -o BatchMode=yes meshremote@servervm true"
         ]
       ],
       "checks": [

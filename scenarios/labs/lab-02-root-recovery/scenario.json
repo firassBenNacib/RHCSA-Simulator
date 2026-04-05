@@ -30,7 +30,7 @@
       "checks": [
         "getenforce | grep -qx Enforcing",
         "ls -Zd /root | grep -Eq '(^| )[^ ]+:object_r:admin_home_t:s0($| )'",
-        "grep -Eq '^[[:space:]]*PasswordAuthentication[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config && grep -Eq '^[[:space:]]*PermitRootLogin[[:space:]]+yes[[:space:]]*$' /etc/ssh/sshd_config"
+        "sshd -T | grep -Eq '^passwordauthentication yes$' && sshd -T | grep -Eq '^permitrootlogin yes$'"
       ],
       "solution_outline": [
         "Use persistent configuration only."

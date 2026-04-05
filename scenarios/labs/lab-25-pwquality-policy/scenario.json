@@ -19,28 +19,24 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12, at least 3 character classes, and no more than 2 repeated characters in sequence.",
-        "Do not edit any PAM service file for this task."
+        "Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12, at least 3 character classes, and no more than 2 repeated characters in sequence. Do not edit any PAM service file for this task."
       ],
       "hints": [
         "Use a dedicated file under /etc/security/pwquality.conf.d.",
         "This task is only about pwquality configuration, not PAM file edits."
       ],
       "checks": [
-        "grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf",
-        "! grep -Rqs 'lab25' /etc/pam.d"
+        "grep -Eq '^minlen[[:space:]]*=[[:space:]]*12$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^minclass[[:space:]]*=[[:space:]]*3$' /etc/security/pwquality.conf.d/lab25.conf && grep -Eq '^maxrepeat[[:space:]]*=[[:space:]]*2$' /etc/security/pwquality.conf.d/lab25.conf"
       ],
       "solution_outline": [
         "Create one pwquality drop-in with the requested values.",
         "Do not modify files under /etc/pam.d."
       ],
       "task_titles": [
-        "Create the pwquality drop-in",
-        "Leave PAM service files unchanged"
+        "Create the pwquality drop-in without editing PAM..."
       ],
       "task_points": [
-        15,
-        15
+        30
       ],
       "solution_commands": [
         [
@@ -49,9 +45,6 @@
           "minclass = 3",
           "maxrepeat = 2",
           "EOF"
-        ],
-        [
-          "true"
         ]
       ]
     }

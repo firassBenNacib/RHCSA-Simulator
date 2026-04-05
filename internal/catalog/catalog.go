@@ -202,14 +202,7 @@ func renderHints(title string, hints []string) string {
 }
 
 func renderChecks(relativeManifest string, checks []string) string {
-	lines := []string{
-		"#!/usr/bin/env bash",
-		"set -euo pipefail",
-		"",
-		fmt.Sprintf("# Generated from %s", relativeManifest),
-		"# Use ./RHCSA.ps1 check on the host to run these on the correct VM automatically.",
-		"",
-	}
+	lines := []string{}
 	if len(checks) == 0 {
 		lines = append(lines, "# No automated checks are defined for this lab.", `echo "No automated checks are defined for this lab."`)
 		return strings.Join(lines, "\n")

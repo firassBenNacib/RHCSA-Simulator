@@ -31,7 +31,7 @@
       "checks": [
         "test -d /var/log/journal && grep -Eq '^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*$' /etc/systemd/journald.conf",
         "grep -Eq '^[[:space:]]*authpriv\\.warning[[:space:]]+/var/log/auth34\\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf",
-        "systemctl is-active rsyslog | grep -qx active"
+        "systemctl is-active rsyslog | grep -qx active && rm -f /var/log/auth34.log && logger -p authpriv.warning 'lab34 probe' && sleep 2 && grep -Fq 'lab34 probe' /var/log/auth34.log"
       ],
       "solution_outline": [
         "Configure journald and rsyslog persistently."

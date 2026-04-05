@@ -12,9 +12,7 @@
 Create and verify both a hard link and a symbolic link to the same source file.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

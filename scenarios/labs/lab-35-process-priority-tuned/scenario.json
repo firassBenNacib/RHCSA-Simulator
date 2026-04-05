@@ -30,7 +30,7 @@
       ],
       "checks": [
         "ssh admin@servervm sudo tuned-adm active | grep -Fq 'throughput-performance'",
-        "ssh admin@servervm sudo test -s /root/sleep35.pid && ssh admin@servervm sudo ps -o ni= -p \"$(ssh admin@servervm sudo cat /root/sleep35.pid)\" | grep -qx ' 5'"
+        "ssh admin@servervm sudo test -s /root/sleep35.pid && ssh admin@servervm sudo ps -o ni= -p \"$(cat /root/sleep35.pid)\" | grep -qx ' 5'"
       ],
       "solution_outline": [
         "Enable tuned and set throughput-performance on servervm.",

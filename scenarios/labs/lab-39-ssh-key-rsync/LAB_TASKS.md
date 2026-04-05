@@ -12,19 +12,17 @@
 Configure key-based SSH access and securely transfer files between systems.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create the user mesh39 on both clientvm and (clientvm) - 10 pts
+## Task 01 - Ensure mesh39 exists on both systems (clientvm) - 10 pts
 
-Create the user mesh39 on both clientvm and servervm. Set the password on both systems to cinder9.
+Ensure the user mesh39 exists on both clientvm and servervm, and set the password on both systems to cinder9.
 
 ---
 

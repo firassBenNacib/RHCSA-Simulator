@@ -12,9 +12,7 @@
 Create a small shell script that processes arguments and returns the correct exit status.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

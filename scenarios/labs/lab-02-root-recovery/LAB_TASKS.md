@@ -12,9 +12,7 @@
 Recover root access through the bootloader and restore normal access on clientvm.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

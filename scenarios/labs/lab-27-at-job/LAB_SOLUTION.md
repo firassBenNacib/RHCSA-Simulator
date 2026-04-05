@@ -12,9 +12,7 @@
 Schedule a one time task with at and verify that the at daemon is enabled.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -42,6 +40,7 @@ systemctl enable --now atd
 ## Task 03 - schedule a one-time at job that appends the text (clientvm) - 10 pts
 
 ```bash
-runuser -l queue27 -c "echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes"
+su - queue27
+echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes
 atq
 ```

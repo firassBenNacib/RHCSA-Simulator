@@ -316,6 +316,43 @@ rhcsa_prepare_workspace() {
   restorecon -RF "$target" >/dev/null 2>&1 || true
 }
 
+rhcsa_validate_container_archive() {
+  local archive_path="${1:-}"
+
+  [[ -n "${archive_path:-}" && -f "$archive_path" ]] || return 1
+  tar -tf "$archive_path" 2>/dev/null | grep -Eq '^(manifest.json|index.json)$'
+}
+
+rhcsa_rebuild_httpd_base_archive() {
+  local archive_path="/opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
+  local image_name="localhost/rhcsa-httpd-base:latest"
+
+  if ! podman image exists "$image_name" >/dev/null 2>&1; then
+    [[ -f "$archive_path" ]] || return 1
+    podman import \
+      --change 'CMD ["/usr/sbin/httpd","-DFOREGROUND"]' \
+      --change 'EXPOSE 80' \
+      --change 'STOPSIGNAL SIGWINCH' \
+      "$archive_path" \
+      "$image_name" >/dev/null 2>&1
+  fi
+
+  rm -f "$archive_path"
+  skopeo copy --insecure-policy "containers-storage:${image_name}" "docker-archive:${archive_path}:${image_name}" >/dev/null 2>&1
+  rhcsa_validate_container_archive "$archive_path"
+}
+
+rhcsa_ensure_httpd_base_archive() {
+  local archive_path="/opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
+
+  if rhcsa_validate_container_archive "$archive_path"; then
+    return 0
+  fi
+
+  rhcsa_log "rebuilding ${archive_path}"
+  rhcsa_rebuild_httpd_base_archive
+}
+
 rhcsa_configure_password_recovery() {
   local mode="$1"
 

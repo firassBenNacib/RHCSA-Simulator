@@ -1037,9 +1037,15 @@ function Format-ScenarioStartOutput {
 
     $tasksPath = if ($ScenarioResult.Mode -eq 'lab') { $ScenarioResult.Manifest.Docs.LabTasksRelative } else { $ScenarioResult.Manifest.Docs.ExamTasksRelative }
     $solutionPath = if ($ScenarioResult.Mode -eq 'lab') { $ScenarioResult.Manifest.Docs.LabSolutionRelative } else { $ScenarioResult.Manifest.Docs.ExamSolutionRelative }
+    $alreadyActive = $false
+    if ($ScenarioResult.PSObject.Properties.Match('AlreadyActive').Count -gt 0) {
+        $alreadyActive = [bool]$ScenarioResult.AlreadyActive
+    }
+    $headingTemplate = if ($alreadyActive) { 'Already active: {0}' } else { 'Started {0}' }
+    $headingStyle = if ($alreadyActive) { 'Info' } else { 'Success' }
 
     $lines = @(
-        (Get-UiHeading -Text ("Started {0}" -f $ScenarioResult.Manifest.Id) -StyleName 'Success'),
+        (Get-UiHeading -Text ($headingTemplate -f $ScenarioResult.Manifest.Id) -StyleName $headingStyle),
         (Format-UiLabelValue -Label 'Title' -Value $ScenarioResult.Manifest.Title),
         (Format-UiLabelValue -Label 'Mode' -Value $ScenarioResult.Mode),
         (Format-UiLabelValue -Label 'Brief' -Value $ScenarioResult.RunArtifact.GeneratedArtifact.RunBrief)
@@ -1051,11 +1057,17 @@ function Format-ScenarioStartOutput {
     }
 
     if ($null -ne $replacedActiveRun -and -not [string]::IsNullOrWhiteSpace([string]$replacedActiveRun.RunId)) {
-        $lines += (Format-UiLabelValue -Label 'Replaced' -Value $replacedActiveRun.ScenarioId)
+        if (-not $alreadyActive) {
+            $lines += (Format-UiLabelValue -Label 'Replaced' -Value $replacedActiveRun.ScenarioId)
+        }
     }
 
     $lines += (Format-UiLabelValue -Label 'Tasks' -Value $tasksPath)
     $lines += (Format-UiLabelValue -Label 'Solution' -Value $solutionPath)
+
+    if ($alreadyActive) {
+        $lines += (Format-StyledText -Text 'Use reset to restart the current scenario from a clean baseline.' -StyleName 'Info')
+    }
 
     if ($ScenarioResult.Manifest.Flags.PasswordRecovery) {
         $lines += (Format-StyledText -Text 'Recovery mode uses the clientvm GUI console.' -StyleName 'Warning')
@@ -1086,14 +1098,18 @@ function Get-ExerciseCheckSummaryLabel {
 
     $lowered = ([string]$Command).ToLowerInvariant()
     switch -Regex ($lowered) {
-        '/etc/yum\.repos\.d|dnf -q repolist|baseos|appstream' { return 'repository check failed' }
-        'hostnamectl|nmcli|/etc/hosts' { return 'network check failed' }
-        'systemctl' { return 'service check failed' }
-        'firewall-cmd|semanage|getenforce' { return 'security check failed' }
-        'podman|container' { return 'container check failed' }
-        'mount|findmnt|/etc/fstab|swapon' { return 'storage check failed' }
-        'useradd|groupadd|chage|getent passwd' { return 'user check failed' }
-        default { return 'check failed' }
+        'repomd\.xml|/etc/yum\.repos\.d|dnf -q repolist|baseos|appstream' { return 'repository check' }
+        'ls -zd /root|admin_home_t|restorecon|autorelabel' { return 'selinux relabel check' }
+        'passwordauthentication|permitrootlogin|/etc/ssh/sshd_config|sshd -t|sshd -T' { return 'ssh access check' }
+        'hostnamectl|--static' { return 'hostname check' }
+        '/etc/hosts|getent hosts' { return 'hosts entry check' }
+        'nmcli|ipv4\.addresses|ipv4\.gateway|ipv4\.dns|ipv4\.method|connection\.autoconnect' { return 'network profile check' }
+        'systemctl' { return 'service check' }
+        'firewall-cmd|semanage|getenforce' { return 'security check' }
+        'podman|container' { return 'container check' }
+        'mount|findmnt|/etc/fstab|swapon' { return 'storage check' }
+        'useradd|groupadd|chage|getent passwd' { return 'user check' }
+        default { return 'check' }
     }
 }
 
@@ -1146,7 +1162,8 @@ function Format-ExerciseCheckOutput {
         $statusText = if ($result.Passed) { '[ok]' } else { '[fail]' }
         $statusStyle = if ($result.Passed) { 'Success' } else { 'Warning' }
         $displayCommand = if ([string]::IsNullOrWhiteSpace([string]$result.OriginalCommand)) { [string]$result.Command } else { [string]$result.OriginalCommand }
-        $summary = if ($result.Passed) { 'check passed' } else { Get-ExerciseCheckSummaryLabel -Command $displayCommand }
+        $label = Get-ExerciseCheckSummaryLabel -Command $displayCommand
+        $summary = if ($result.Passed) { "$label passed" } else { "$label failed" }
         $lines += ('{0} [{1}] {2}' -f (Format-StyledText -Text $statusText -StyleName $statusStyle), $result.Target, $summary)
     }
 

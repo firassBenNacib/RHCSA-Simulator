@@ -296,7 +296,8 @@ EOF
     "$rootfs_tar" \
     "$image_name" >/dev/null 2>&1
   rm -f "$image_archive"
-  podman save -o "$image_archive" "$image_name" >/dev/null 2>&1
+  skopeo copy --insecure-policy "containers-storage:${image_name}" "docker-archive:${image_archive}:${image_name}" >/dev/null 2>&1
+  tar -tf "$image_archive" | grep -qx 'manifest.json'
 
   rm -f "$rootfs_tar"
   rm -rf "$build_root"

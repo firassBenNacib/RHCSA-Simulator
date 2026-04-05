@@ -156,7 +156,8 @@
           "elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld"
         ],
         [
-          "runuser -l elio -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'"
+          "su - elio",
+          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
         ],
         [
           "# Run on servervm",
@@ -167,11 +168,13 @@
           "chmod 0755 /home/backupf/inbox"
         ],
         [
-          "runuser -l elio -c 'ssh-copy-id -p 2222 backupf@servervm'",
-          "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true'"
+          "su - elio",
+          "ssh-copy-id -p 2222 backupf@servervm",
+          "ssh -p 2222 -o BatchMode=yes backupf@servervm true"
         ],
         [
-          "runuser -l elio -c 'rsync -e \"ssh -p 2222\" /opt/exam-f/aurora-report.txt backupf@servervm:/home/backupf/inbox/report.txt'"
+          "su - elio",
+          "rsync -e \"ssh -p 2222\" /opt/exam-f/aurora-report.txt backupf@servervm:/home/backupf/inbox/report.txt"
         ],
         [
           "echo 'umask 027' >> /home/elio/.bash_profile"
@@ -225,10 +228,10 @@
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.aurora.lab' && grep -Fqx '192.168.122.3 db.aurora.lab' /etc/hosts",
+        "hostnamectl --static | grep -qx 'clientvm.exam-f.lab' && grep -Fqx '192.168.122.3 db.exam-f.lab' /etc/hosts",
         "grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
-        "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4560::/sbin/nologin' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
-        "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true' && ssh admin@servervm test -f /home/backupf/inbox/report.txt",
+        "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4560::/sbin/nologin' && getent shadow pine560 | cut -d: -f2 | grep -Evq '^(!!?|\\*|LK|NP)$' && getent shadow elio | cut -d: -f2 | grep -Evq '^(!!?|\\*|LK|NP)$' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
+        "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@servervm true' && ssh admin@servervm sudo getent shadow backupf | cut -d: -f2 | grep -Evq '^(!!?|\\*|LK|NP)$' && ssh admin@servervm test -f /home/backupf/inbox/report.txt",
         "test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
       ]

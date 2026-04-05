@@ -12,18 +12,16 @@
 Load a provided container image into user storage and inspect its metadata with podman.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create user scope46 with password cinder9 if it (clientvm) - 10 pts
+## Task 01 - Create user scope46 and set the password (clientvm) - 10 pts
 
-Create user scope46 with password cinder9 if it does not already exist.
+Create user scope46 and set the password to cinder9.
 
 ---
 

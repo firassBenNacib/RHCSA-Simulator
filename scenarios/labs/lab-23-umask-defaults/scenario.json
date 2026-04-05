@@ -28,8 +28,8 @@
         "Verify the resulting umask by creating a test file and a test directory as the target user."
       ],
       "checks": [
-        "id veil23",
-        "runuser -l veil23 -c 'rm -rf ~/veil23-check && mkdir ~/veil23-check && touch ~/veil23-check/file && mkdir ~/veil23-check/dir && stat -c %a ~/veil23-check/file ~/veil23-check/dir'"
+        "getent passwd veil23 >/dev/null && getent shadow veil23 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "runuser -l veil23 -c 'rm -rf ~/veil23-check && mkdir ~/veil23-check && touch ~/veil23-check/file && mkdir ~/veil23-check/dir && test \"$(stat -c %a ~/veil23-check/file)\" = 640 && test \"$(stat -c %a ~/veil23-check/dir)\" = 750'"
       ],
       "solution_outline": [
         "Use persistent configuration only."

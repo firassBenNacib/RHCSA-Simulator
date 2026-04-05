@@ -12,10 +12,8 @@
 A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

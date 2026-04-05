@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
+if command -v rhcsa_ensure_httpd_base_archive >/dev/null 2>&1; then
+  rhcsa_ensure_httpd_base_archive
+else
+  archive="/opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
+  if ! tar -tf "$archive" 2>/dev/null | grep -Eq '^(manifest.json|index.json)$'; then
+    podman image exists localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || \
+      podman import --change 'CMD ["/usr/sbin/httpd","-DFOREGROUND"]' --change 'EXPOSE 80' --change 'STOPSIGNAL SIGWINCH' "$archive" localhost/rhcsa-httpd-base:latest >/dev/null 2>&1
+    skopeo copy --insecure-policy containers-storage:localhost/rhcsa-httpd-base:latest docker-archive:"$archive":localhost/rhcsa-httpd-base:latest >/dev/null 2>&1
+  fi
+fi
 mkdir -p /root/.repo-backup-client-exam-g
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-g
 rhcsa_configure_password_recovery disable
@@ -90,9 +100,8 @@ vgremove -fy deltavg >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
 wipefs -a /dev/sdc >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
-podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
 id solg >/dev/null 2>&1 || useradd -m solg
-runuser -l solg -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+runuser -l solg -c 'podman image exists localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1'
 mkdir -p /opt/ing /opt/outg /opt/rhcsa/workspaces/exam-g/site-content
 cat > /opt/rhcsa/workspaces/exam-g/site-content/index.html <<'EOF'
 exam g container

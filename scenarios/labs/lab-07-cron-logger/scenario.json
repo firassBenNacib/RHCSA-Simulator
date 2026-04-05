@@ -27,8 +27,8 @@
         "Leave crond enabled and running."
       ],
       "checks": [
-        "crontab -l -u ferro | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"'",
-        "systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
+        "getent passwd ferro >/dev/null && passwd -S ferro | awk '{exit !($2 ~ /^P/)}'",
+        "crontab -l -u ferro 2>/dev/null | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"' && systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
       ],
       "solution_outline": [
         "Use persistent configuration only."

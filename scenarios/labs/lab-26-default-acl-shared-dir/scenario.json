@@ -29,7 +29,7 @@
         "Default ACL entries begin with default:."
       ],
       "checks": [
-        "getent group collab26 >/dev/null && getent passwd probe26 >/dev/null && ! test -d /home/probe26",
+        "getent group collab26 >/dev/null && getent passwd probe26 >/dev/null && getent shadow probe26 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null && ! test -d /home/probe26",
         "stat -c '%U:%G %a' /shared/collab26 | grep -qx 'root:collab26 2770'",
         "getfacl -cp /shared/collab26 | grep -Eq '^default:user:probe26:rwx$'"
       ],

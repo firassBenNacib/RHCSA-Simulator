@@ -12,9 +12,7 @@
 Configure persistent journal storage and a custom rsyslog drop-in for authentication warnings.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

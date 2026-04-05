@@ -2,6 +2,16 @@
 set -euo pipefail
 
 source /usr/local/lib/rhcsa-scenario-helpers.sh
+if command -v rhcsa_ensure_httpd_base_archive >/dev/null 2>&1; then
+  rhcsa_ensure_httpd_base_archive
+else
+  archive="/opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
+  if ! tar -tf "$archive" 2>/dev/null | grep -Eq '^(manifest.json|index.json)$'; then
+    podman image exists localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || \
+      podman import --change 'CMD ["/usr/sbin/httpd","-DFOREGROUND"]' --change 'EXPOSE 80' --change 'STOPSIGNAL SIGWINCH' "$archive" localhost/rhcsa-httpd-base:latest >/dev/null 2>&1
+    skopeo copy --insecure-policy containers-storage:localhost/rhcsa-httpd-base:latest docker-archive:"$archive":localhost/rhcsa-httpd-base:latest >/dev/null 2>&1
+  fi
+fi
 
     grubby --update-kernel=ALL --remove-args="audit_backlog_limit=8192" >/dev/null 2>&1 || true
 

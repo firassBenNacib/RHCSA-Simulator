@@ -12,21 +12,18 @@
 Apply per-user password aging settings without adding extra account noise.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create cycle47 (clientvm) - 10 pts
+## Task 01 - Create cycle47 and set the password (clientvm) - 10 pts
 
 ```bash
 useradd cycle47
-printf 'cycle47:cinder9
-' | chpasswd
+printf 'cycle47:cinder9\n' | chpasswd
 ```
 
 ---

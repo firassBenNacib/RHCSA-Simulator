@@ -12,10 +12,8 @@
 A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -138,9 +136,10 @@ chmod 0755 /home/copyg/inbox
 ## Question 12 - SSH Key And Secure Copy (clientvm + servervm) - 5 pts
 
 ```bash
-runuser -l copyg -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
-runuser -l copyg -c 'ssh-copy-id copyg@servervm'
-runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copyg/inbox/payload.txt'
+su - copyg
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+ssh-copy-id copyg@servervm
+scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copyg/inbox/payload.txt
 ```
 
 ---
@@ -148,7 +147,8 @@ runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copy
 ## Question 13 - At Job (clientvm) - 4 pts
 
 ```bash
-runuser -l pavel -c 'echo "echo exam-g tick >> /root/exam-g-at.log" | at now + 2 minutes'
+su - pavel
+echo "echo exam-g tick >> /root/exam-g-at.log" | at now + 2 minutes
 systemctl enable --now atd
 ```
 
@@ -256,11 +256,12 @@ mount -a
 ## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
 
 ```bash
-runuser -l solg -c "cd /opt/rhcsa/workspaces/exam-g && podman build -t localhost/delta-web:latest ."
-runuser -l solg -c "podman run -d --name pdfg -v /opt/ing:/data/input:Z -v /opt/outg:/data/output:Z localhost/delta-web:latest"
-runuser -l solg -c "mkdir -p ~/.config/systemd/user"
-runuser -l solg -c "cd ~/.config/systemd/user && podman generate systemd --name pdfg --files --new"
-runuser -l solg -c "systemctl --user daemon-reload"
-runuser -l solg -c "systemctl --user enable --now container-pdfg.service"
+su - solg
+cd /opt/rhcsa/workspaces/exam-g && podman build -t localhost/delta-web:latest .
+podman run -d --name pdfg -v /opt/ing:/data/input:Z -v /opt/outg:/data/output:Z localhost/delta-web:latest
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user && podman generate systemd --name pdfg --files --new
+systemctl --user daemon-reload
+systemctl --user enable --now container-pdfg.service
 loginctl enable-linger solg
 ```

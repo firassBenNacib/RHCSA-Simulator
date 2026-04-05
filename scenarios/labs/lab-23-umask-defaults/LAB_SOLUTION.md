@@ -12,9 +12,7 @@
 Configure a user specific umask so new files and directories get the required default permissions.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

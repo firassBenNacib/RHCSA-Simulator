@@ -25,7 +25,7 @@
         "Use passwd interactively."
       ],
       "checks": [
-        "id -u tavric | grep -qx '4111'"
+        "id -u tavric | grep -qx '4111' && getent shadow tavric | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null"
       ],
       "solution_outline": [
         "Use persistent configuration only."

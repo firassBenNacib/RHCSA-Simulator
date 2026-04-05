@@ -191,11 +191,12 @@ function Get-ProjectRelativePath {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    $fullPath = (Resolve-Path $Path).Path
-    $rootWithSeparator = $ProjectRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $fullRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+    $rootWithSeparator = $fullRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
 
     if (-not $fullPath.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Path '$fullPath' is outside project root '$ProjectRoot'."
+        throw "Path '$fullPath' is outside project root '$fullRoot'."
     }
 
     return $fullPath.Substring($rootWithSeparator.Length).Replace('\', '/')
@@ -743,14 +744,7 @@ function Get-ScenarioLabCheckScript {
         [object[]]$Checks
     )
 
-    $lines = @(
-        '#!/usr/bin/env bash',
-        'set -euo pipefail',
-        '',
-        "# Generated from $($Manifest.RelativeManifestPath)",
-        '# Use ./RHCSA.ps1 check on the host to run these on the correct VM automatically.',
-        ''
-    )
+    $lines = @()
 
     if ($Checks.Count -eq 0) {
         $lines += '# No automated checks are defined for this lab.'
@@ -804,6 +798,24 @@ function Initialize-LabExerciseCache {
     $metadataPath = Join-Path $runtimeRoot 'exercise.json'
     $sourceHash = Get-ScenarioSourceHash -Path $Manifest.ManifestPath
 
+    $checks = @()
+    $checkIndex = 0
+    foreach ($checkCommand in @($Manifest.Content.Lab.Checks)) {
+        $checkIndex++
+        $checks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex
+    }
+
+    $expectedCheckMetadata = @(
+        foreach ($check in $checks) {
+            [ordered]@{
+                index = [int]$check.Index
+                target = [string]$check.Target
+                original_command = [string]$check.OriginalCommand
+                command = [string]$check.Command
+            }
+        }
+    )
+
     $existingMetadata = $null
     if (Test-Path -LiteralPath $metadataPath -PathType Leaf) {
         try {
@@ -819,20 +831,20 @@ function Initialize-LabExerciseCache {
     }
 
     $pathsReady = @($promptPath, $hintPath, $checkPath, $solutionPath) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+    $checksReady = $false
+    if ($null -ne $existingMetadata) {
+        $expectedChecksJson = ($expectedCheckMetadata | ConvertTo-Json -Depth 8 -Compress)
+        $existingChecksJson = (@($existingMetadata.checks) | ConvertTo-Json -Depth 8 -Compress)
+        $checksReady = $expectedChecksJson -eq $existingChecksJson
+    }
     $cacheFresh = $null -ne $existingMetadata -and
         [string](Get-OptionalPropertyValue -Object $existingMetadata -Name 'source_hash') -eq $sourceHash -and
-        $pathsReady.Count -eq 4
+        $pathsReady.Count -eq 4 -and
+        $checksReady
 
     if (-not $cacheFresh) {
         Copy-Item -LiteralPath $Manifest.Docs.LabTasks -Destination $promptPath -Force
         Copy-Item -LiteralPath $Manifest.Docs.LabSolution -Destination $solutionPath -Force
-
-        $checks = @()
-        $checkIndex = 0
-        foreach ($checkCommand in @($Manifest.Content.Lab.Checks)) {
-            $checkIndex++
-            $checks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex
-        }
 
         Set-Utf8NoBomFile -Path $hintPath -Content (Get-ScenarioLabHintsMarkdown -Manifest $Manifest)
         Set-Utf8NoBomFile -Path $checkPath -Content (Get-ScenarioLabCheckScript -Manifest $Manifest -Checks $checks)
@@ -853,16 +865,7 @@ function Initialize-LabExerciseCache {
                 solution = Get-ProjectRelativePath -Path $solutionPath -ProjectRoot $ProjectRoot
                 metadata = Get-ProjectRelativePath -Path $metadataPath -ProjectRoot $ProjectRoot
             }
-            checks = @(
-                foreach ($check in $checks) {
-                    [ordered]@{
-                        index = [int]$check.Index
-                        target = [string]$check.Target
-                        original_command = [string]$check.OriginalCommand
-                        command = [string]$check.Command
-                    }
-                }
-            )
+            checks = $expectedCheckMetadata
         }
 
         Set-Utf8NoBomFile -Path $metadataPath -Content (($metadata | ConvertTo-Json -Depth 8) + [Environment]::NewLine)
@@ -1499,6 +1502,89 @@ function Invoke-VagrantCommand {
         }
 
         return
+    }
+}
+
+function Start-VagrantMachineStep {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [switch]$Provision,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$RetryArea = 'baseline'
+    )
+
+    $upArgumentList = if ($Provision) {
+        @('up', $MachineName, '--provision', '--no-color')
+    }
+    else {
+        @('up', $MachineName, '--no-provision', '--no-color')
+    }
+
+    $upFailureMessage = if ($Provision) {
+        "'vagrant up $MachineName --provision' failed."
+    }
+    else {
+        "'vagrant up $MachineName --no-provision' failed."
+    }
+
+    $upRetryMessage = if ($Provision) {
+        "Retrying $MachineName provisioning after a transient SSH/provider failure"
+    }
+    else {
+        "Retrying $MachineName startup after a transient SSH/provider failure"
+    }
+
+    try {
+        Invoke-VagrantCommand -ArgumentList $upArgumentList -FailureMessage $upFailureMessage -RetryArea $RetryArea -RetryMessage $upRetryMessage
+        return
+    }
+    catch {
+        $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $ProjectRoot | Where-Object { [string]$_.Name -eq $MachineName } | Select-Object -First 1)
+        if ($machineStatus.Count -eq 0) {
+            throw
+        }
+
+        $stateHuman = [string]$machineStatus[0].StateHuman
+        switch ($stateHuman) {
+            'running' {
+                if (-not $Provision) {
+                    Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName startup; the VM is already running"
+                    return
+                }
+
+                Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName startup; resuming provisioning"
+                Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial startup recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
+                return
+            }
+            'poweroff' {
+                Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName import; resuming VM startup"
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
+                if ($Provision) {
+                    Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
+                }
+                return
+            }
+            'saved' {
+                Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName import; resuming VM startup"
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
+                if ($Provision) {
+                    Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
+                }
+                return
+            }
+            'paused' {
+                Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName import; resuming VM startup"
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
+                if ($Provision) {
+                    Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
+                }
+                return
+            }
+        }
+
+        throw
     }
 }
 
@@ -2548,7 +2634,35 @@ function Invoke-BaseSnapshotRestore {
 
         foreach ($machine in @('servervm', 'clientvm')) {
             $vmId = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
-            Invoke-VBoxSnapshotCommand -VmId $vmId -SnapshotArgumentList @('restore', 'base-clean') -FailureMessage "Failed to restore snapshot 'base-clean' for $machine." -VBoxManagePath $vboxManage
+            $restoreSucceeded = $false
+            $lastRestoreError = $null
+
+            for ($attempt = 1; $attempt -le 3 -and -not $restoreSucceeded; $attempt++) {
+                try {
+                    $currentState = Get-VBoxMachineState -VmId $vmId -VBoxManagePath $vboxManage
+                    if ($currentState -and $currentState.ToLowerInvariant() -notin @('poweroff', 'saved', 'aborted')) {
+                        Stop-VBoxMachineForSnapshot -MachineName $machine -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage -VagrantPath $vagrant
+                    }
+
+                    Invoke-VBoxSnapshotCommand -VmId $vmId -SnapshotArgumentList @('restore', 'base-clean') -FailureMessage "Failed to restore snapshot 'base-clean' for $machine." -VBoxManagePath $vboxManage
+                    $restoreSucceeded = $true
+                }
+                catch {
+                    $lastRestoreError = $_
+                    $message = $_.ToString()
+                    if ($attempt -lt 3 -and $message -match 'VBOX_E_INVALID_VM_STATE|machine state: Running') {
+                        Stop-VBoxMachineForSnapshot -MachineName $machine -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage -VagrantPath $vagrant
+                        Start-Sleep -Seconds (2 * $attempt)
+                        continue
+                    }
+
+                    throw
+                }
+            }
+
+            if (-not $restoreSucceeded -and $null -ne $lastRestoreError) {
+                throw $lastRestoreError
+            }
         }
 
         foreach ($machine in @('servervm', 'clientvm')) {
@@ -2807,15 +2921,15 @@ function Start-BaselineSession {
             try {
                 if ($NoProvision) {
                     Write-WorkflowStatus -Area 'baseline' -Message 'Starting servervm'
-                    Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--no-provision', '--no-color') -FailureMessage "'vagrant up servervm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm startup after a transient SSH/provider failure'
+                    Start-VagrantMachineStep -MachineName 'servervm' -ProjectRoot $ProjectRoot
                     Write-WorkflowStatus -Area 'baseline' -Message 'Starting clientvm'
-                    Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--no-provision', '--no-color') -FailureMessage "'vagrant up clientvm --no-provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm startup after a transient SSH/provider failure'
+                    Start-VagrantMachineStep -MachineName 'clientvm' -ProjectRoot $ProjectRoot
                 }
                 else {
                     Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning servervm'
-                    Invoke-VagrantCommand -ArgumentList @('up', 'servervm', '--provision', '--no-color') -FailureMessage "'vagrant up servervm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying servervm provisioning after a transient SSH/provider failure'
+                    Start-VagrantMachineStep -MachineName 'servervm' -Provision -ProjectRoot $ProjectRoot
                     Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning clientvm'
-                    Invoke-VagrantCommand -ArgumentList @('up', 'clientvm', '--provision', '--no-color') -FailureMessage "'vagrant up clientvm --provision' failed." -RetryArea 'baseline' -RetryMessage 'Retrying clientvm provisioning after a transient SSH/provider failure'
+                    Start-VagrantMachineStep -MachineName 'clientvm' -Provision -ProjectRoot $ProjectRoot
                 }
             }
             finally {
@@ -2929,6 +3043,7 @@ function Start-ScenarioRun {
         [Parameter(Mandatory = $true)]
         [ValidateSet('Lab', 'Exam')]
         [string]$Mode,
+        [switch]$ForceRestart,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
@@ -2946,6 +3061,27 @@ function Start-ScenarioRun {
     Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
 
     $previousActiveRun = Get-ScenarioStatus -ProjectRoot $ProjectRoot
+    if (-not $ForceRestart.IsPresent -and
+        $null -ne $previousActiveRun -and
+        $previousActiveRun.ScenarioId -eq $ScenarioId -and
+        $previousActiveRun.Mode -eq $modeLower) {
+        return [PSCustomObject]@{
+            Manifest = $manifest
+            Mode = $modeLower
+            RunArtifact = [PSCustomObject]@{
+                RunId = $previousActiveRun.RunId
+                GeneratedArtifact = [PSCustomObject]@{
+                    RunBrief = $previousActiveRun.RunBrief
+                }
+            }
+            StartedAt = [datetime]::Parse($previousActiveRun.StartedAt)
+            EndsAt = [datetime]::Parse($previousActiveRun.EndsAt)
+            BaselineResult = $null
+            RestoreMethod = 'already-active'
+            ReplacedActiveRun = $previousActiveRun
+            AlreadyActive = $true
+        }
+    }
 
     $needsBaselineBootstrap = $false
     foreach ($machine in @('servervm', 'clientvm')) {
@@ -3055,10 +3191,10 @@ function Test-IsAssertiveExerciseCheck {
 
     $trimmed = $Command.Trim()
     $assertivePatterns = @(
-        '(?i)\bgrep\b[^\r\n]*\s-q(?:\s|$)',
-        '(?i)\bgrep\b[^\r\n]*\s-E(?:\s|$)',
-        '(?i)\bgrep\b[^\r\n]*\s-F(?:\s|$)',
-        '(?i)\bgrep\b[^\r\n]*\s-x(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-[A-Za-z]*q[A-Za-z]*(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-[A-Za-z]*E[A-Za-z]*(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-[A-Za-z]*F[A-Za-z]*(?:\s|$)',
+        '(?i)\bgrep\b[^\r\n]*\s-[A-Za-z]*x[A-Za-z]*(?:\s|$)',
         '(^|\s)test\s',
         '(^|\s)\[\s',
         '(^|\s)\[\[\s',
@@ -3198,7 +3334,7 @@ function Reset-ScenarioRun {
     }
 
     $mode = ([string]$activeRun.mode).Substring(0, 1).ToUpperInvariant() + ([string]$activeRun.mode).Substring(1)
-    return Start-ScenarioRun -ScenarioId $activeRun.scenario.id -Mode $mode -ProjectRoot $ProjectRoot
+    return Start-ScenarioRun -ScenarioId $activeRun.scenario.id -Mode $mode -ForceRestart -ProjectRoot $ProjectRoot
 }
 
 function Get-VBoxMachineFolder {

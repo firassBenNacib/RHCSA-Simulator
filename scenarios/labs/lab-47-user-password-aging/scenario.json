@@ -19,7 +19,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user cycle47 with password cinder9 if it does not already exist.",
+        "Create user cycle47 and set the password to cinder9.",
         "Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.",
         "Force cycle47 to change the password at the next login."
       ],
@@ -28,9 +28,9 @@
         "Use chage -d 0 to force a change at next login."
       ],
       "checks": [
-        "getent passwd cycle47 >/dev/null",
-        "chage -l cycle47 | grep -Fq 'Maximum number of days between password change\t\t\t: 30' && chage -l cycle47 | grep -Fq 'Minimum number of days between password change\t\t\t: 2' && chage -l cycle47 | grep -Fq 'Number of days of warning before password expires\t\t: 7'",
-        "chage -l cycle47 | grep -Fq 'Last password change\t\t\t\t: password must be changed'"
+        "getent passwd cycle47 >/dev/null && passwd -S cycle47 2>/dev/null | awk '{print $2}' | grep -Eq '^(P|PS)$'",
+        "chage -l cycle47 | grep -Eq '^Maximum number of days between password change[[:space:]]*:[[:space:]]*30$' && chage -l cycle47 | grep -Eq '^Minimum number of days between password change[[:space:]]*:[[:space:]]*2$' && chage -l cycle47 | grep -Eq '^Number of days of warning before password expires[[:space:]]*:[[:space:]]*7$'",
+        "chage -l cycle47 | grep -Eq '^Last password change[[:space:]]*:[[:space:]]*password must be changed$'"
       ],
       "solution_outline": [
         "Create the user and set the password.",
@@ -38,7 +38,7 @@
         "Expire the password immediately."
       ],
       "task_titles": [
-        "Create cycle47",
+        "Create cycle47 and set the password",
         "Apply the requested password aging values",
         "Expire the password for the next login"
       ],
@@ -50,8 +50,7 @@
       "solution_commands": [
         [
           "useradd cycle47",
-          "printf 'cycle47:cinder9",
-          "' | chpasswd"
+          "printf 'cycle47:cinder9\\n' | chpasswd"
         ],
         [
           "chage -M 30 -m 2 -W 7 cycle47"

@@ -12,9 +12,7 @@
 Build and tag a local container image from a provided Containerfile.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -39,5 +37,6 @@ exit
 ## Task 02 - Verify that the image exists locally for that user (clientvm) - 10 pts
 
 ```bash
-runuser -l builder20 -c "podman images"
+su - builder20
+podman images
 ```

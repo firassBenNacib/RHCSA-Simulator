@@ -12,9 +12,7 @@
 Configure stronger new-user aging defaults, including inactive days.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
+- clientvm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -58,6 +56,5 @@ useradd -D -f 15
 
 ```bash
 useradd drift24
-printf 'drift24:cinder9
-' | chpasswd
+printf 'drift24:cinder9\n' | chpasswd
 ```

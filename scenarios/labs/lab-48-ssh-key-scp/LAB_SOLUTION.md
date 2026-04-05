@@ -12,17 +12,15 @@
 Use a key pair and scp between the two lab hosts.
 
 ### Systems
-| System | Use |
-|---|---|
-| clientvm | Primary RHCSA workstation |
-| servervm | Utility host for repos, NFS exports, time service, and cross-system tasks |
+- clientvm
+- servervm
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create bridge48 on both systems (clientvm) - 10 pts
+## Task 01 - Ensure bridge48 exists on both systems (clientvm) - 10 pts
 
 ```bash
 useradd -m bridge48
@@ -35,7 +33,8 @@ printf 'bridge48:cinder9
 ## Task 02 - Generate the ED25519 key pair (clientvm) - 10 pts
 
 ```bash
-runuser -l bridge48 -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
+su - bridge48
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 ```
 
 ---
@@ -43,7 +42,8 @@ runuser -l bridge48 -c 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519'
 ## Task 03 - Enable passwordless SSH from clientvm to servervm (clientvm) - 10 pts
 
 ```bash
-runuser -l bridge48 -c 'ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm'
+su - bridge48
+ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm
 ```
 
 ---
@@ -51,5 +51,6 @@ runuser -l bridge48 -c 'ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm'
 ## Task 04 - Copy the payload with scp (servervm) - 10 pts
 
 ```bash
-runuser -l bridge48 -c 'scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/'
+su - bridge48
+scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/
 ```

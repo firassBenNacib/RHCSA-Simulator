@@ -8,46 +8,56 @@ import (
 )
 
 type Theme struct {
-	Title      lipgloss.Style
-	Subtitle   lipgloss.Style
-	Tab        lipgloss.Style
-	ActiveTab  lipgloss.Style
-	Pane       lipgloss.Style
-	ActivePane lipgloss.Style
-	Footer     lipgloss.Style
-	Selected   lipgloss.Style
-	Running    lipgloss.Style
-	Muted      lipgloss.Style
-	Overlay    lipgloss.Style
-	DetailMeta lipgloss.Style
-	DetailH1   lipgloss.Style
-	DetailH2   lipgloss.Style
-	DetailH3   lipgloss.Style
-	DetailRule lipgloss.Style
-	DetailList lipgloss.Style
-	DetailCode lipgloss.Style
+	Title         lipgloss.Style
+	Subtitle      lipgloss.Style
+	Tab           lipgloss.Style
+	ActiveTab     lipgloss.Style
+	Pane          lipgloss.Style
+	ActivePane    lipgloss.Style
+	Footer        lipgloss.Style
+	Selected      lipgloss.Style
+	Running       lipgloss.Style
+	Muted         lipgloss.Style
+	Overlay       lipgloss.Style
+	DetailMeta    lipgloss.Style
+	DetailH1      lipgloss.Style
+	DetailH2      lipgloss.Style
+	DetailH3      lipgloss.Style
+	DetailRule    lipgloss.Style
+	DetailList    lipgloss.Style
+	DetailCode    lipgloss.Style
+	OutputError   lipgloss.Style
+	OutputWarning lipgloss.Style
+	OutputSuccess lipgloss.Style
+	OutputInfo    lipgloss.Style
+	OutputMuted   lipgloss.Style
 }
 
 func NewTheme() Theme {
 	return Theme{
-		Title:      lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("196")),
-		Subtitle:   lipgloss.NewStyle().Foreground(lipgloss.Color("246")),
-		Tab:        lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("248")).BorderForeground(lipgloss.Color("238")),
-		ActiveTab:  lipgloss.NewStyle().Padding(0, 1).Bold(true).Foreground(lipgloss.Color("255")).Background(lipgloss.Color("160")),
-		Pane:       lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("238")).Padding(0, 1),
-		ActivePane: lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("160")).Padding(0, 1),
-		Footer:     lipgloss.NewStyle().Foreground(lipgloss.Color("245")),
-		Selected:   lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
-		Running:    lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
-		Muted:      lipgloss.NewStyle().Foreground(lipgloss.Color("245")),
-		Overlay:    lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("160")).Padding(1, 2).Foreground(lipgloss.Color("255")).Background(lipgloss.Color("234")).Width(72),
-		DetailMeta: lipgloss.NewStyle().Foreground(lipgloss.Color("217")).Bold(true),
-		DetailH1:   lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
-		DetailH2:   lipgloss.NewStyle().Foreground(lipgloss.Color("210")).Bold(true),
-		DetailH3:   lipgloss.NewStyle().Foreground(lipgloss.Color("216")).Bold(true),
-		DetailRule: lipgloss.NewStyle().Foreground(lipgloss.Color("160")),
-		DetailList: lipgloss.NewStyle().Foreground(lipgloss.Color("252")),
-		DetailCode: lipgloss.NewStyle().Foreground(lipgloss.Color("250")),
+		Title:         lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("196")),
+		Subtitle:      lipgloss.NewStyle().Foreground(lipgloss.Color("246")),
+		Tab:           lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("248")).BorderForeground(lipgloss.Color("238")),
+		ActiveTab:     lipgloss.NewStyle().Padding(0, 1).Bold(true).Foreground(lipgloss.Color("255")).Background(lipgloss.Color("160")),
+		Pane:          lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("238")).Padding(0, 1),
+		ActivePane:    lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("160")).Padding(0, 1),
+		Footer:        lipgloss.NewStyle().Foreground(lipgloss.Color("245")),
+		Selected:      lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
+		Running:       lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
+		Muted:         lipgloss.NewStyle().Foreground(lipgloss.Color("245")),
+		Overlay:       lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("160")).Padding(1, 2).Foreground(lipgloss.Color("255")).Background(lipgloss.Color("234")).Width(72),
+		DetailMeta:    lipgloss.NewStyle().Foreground(lipgloss.Color("217")).Bold(true),
+		DetailH1:      lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
+		DetailH2:      lipgloss.NewStyle().Foreground(lipgloss.Color("210")).Bold(true),
+		DetailH3:      lipgloss.NewStyle().Foreground(lipgloss.Color("216")).Bold(true),
+		DetailRule:    lipgloss.NewStyle().Foreground(lipgloss.Color("160")),
+		DetailList:    lipgloss.NewStyle().Foreground(lipgloss.Color("252")),
+		DetailCode:    lipgloss.NewStyle().Foreground(lipgloss.Color("250")),
+		OutputError:   lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Bold(true),
+		OutputWarning: lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Bold(true),
+		OutputSuccess: lipgloss.NewStyle().Foreground(lipgloss.Color("114")).Bold(true),
+		OutputInfo:    lipgloss.NewStyle().Foreground(lipgloss.Color("117")),
+		OutputMuted:   lipgloss.NewStyle().Foreground(lipgloss.Color("245")),
 	}
 }
 
