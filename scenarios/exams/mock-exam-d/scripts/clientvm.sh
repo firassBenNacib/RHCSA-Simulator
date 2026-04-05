@@ -75,8 +75,8 @@ p.write_text('\n'.join(lines) + '\n')
 EOF
 id foragerd >/dev/null 2>&1 || useradd -m foragerd
 mkdir -p /opt/exam-d/find/a /opt/exam-d/find/b/sub
-printf 'd1\n' > /opt/exam-d/find/a/file1.txt
-printf 'd2\n' > /opt/exam-d/find/b/sub/file2.txt
+echo 'd1' > /opt/exam-d/find/a/file1.txt
+echo 'd2' > /opt/exam-d/find/b/sub/file2.txt
 chown -R foragerd:foragerd /opt/exam-d/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'

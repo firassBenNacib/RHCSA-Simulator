@@ -48,7 +48,7 @@ ensure_httpd_base_archive() {
     "$build_root/usr/share/man"
 
   mkdir -p "$build_root/run/httpd" "$build_root/var/www/html"
-  printf 'RHCSA local container base image\n' > "$build_root/var/www/html/index.html"
+  echo 'RHCSA local container base image' > "$build_root/var/www/html/index.html"
 
   tar -C "$build_root" -cf "$rootfs_tar" .
   podman import \

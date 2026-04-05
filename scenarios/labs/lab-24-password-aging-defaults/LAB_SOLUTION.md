@@ -56,5 +56,5 @@ useradd -D -f 15
 
 ```bash
 useradd drift24
-printf 'drift24:cinder9\n' | chpasswd
+echo 'drift24:cinder9' | chpasswd
 ```

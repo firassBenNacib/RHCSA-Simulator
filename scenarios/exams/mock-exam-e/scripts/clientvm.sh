@@ -47,10 +47,8 @@ p.write_text('\n'.join(lines) + '\n')
 EOF
 id scoutte >/dev/null 2>&1 || useradd -m scoutte
 mkdir -p /opt/exam-e/find/a /opt/exam-e/find/z/sub
-printf 'e1
-' > /opt/exam-e/find/a/file1.txt
-printf 'e2
-' > /opt/exam-e/find/z/sub/file2.txt
+echo 'e1' > /opt/exam-e/find/a/file1.txt
+echo 'e2' > /opt/exam-e/find/z/sub/file2.txt
 chown -R scoutte:scoutte /opt/exam-e/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'
@@ -84,8 +82,7 @@ lvcreate -n reviewe -L 180M reviewvge >/dev/null 2>&1
 mkfs.ext4 -F /dev/reviewvge/reviewe >/dev/null 2>&1
 mkdir -p /mnt/reviewe
 mount /dev/reviewvge/reviewe /mnt/reviewe
-printf 'exam e seed data
-' > /mnt/reviewe/keep.txt
+echo 'exam e seed data' > /mnt/reviewe/keep.txt
 uuid="$(blkid -s UUID -o value /dev/reviewvge/reviewe)"
 printf 'UUID=%s /mnt/reviewe ext4 defaults 0 0
 ' "$uuid" >> /etc/fstab

@@ -24,8 +24,7 @@ Use a default ACL for a named user without creating an unnecessary home director
 ```bash
 groupadd collab26
 useradd -M probe26
-printf 'probe26:cinder9
-' | chpasswd
+echo 'probe26:cinder9' | chpasswd
 ```
 
 ---

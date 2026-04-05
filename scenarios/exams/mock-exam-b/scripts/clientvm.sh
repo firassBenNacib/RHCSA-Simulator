@@ -43,11 +43,9 @@ EOF
     userdel -r meshremote >/dev/null 2>&1 || true
     id mira >/dev/null 2>&1 || useradd -m mira
     mkdir -p /opt/exam-b/find/a /opt/exam-b/find/b/sub
-    printf 'b1
-' > /opt/exam-b/find/a/file1.txt
-    printf 'b2
-' > /opt/exam-b/find/b/sub/file2.txt
-    printf 'coremesh report\n' > /opt/exam-b/report.txt
+    echo 'b1' > /opt/exam-b/find/a/file1.txt
+    echo 'b2' > /opt/exam-b/find/b/sub/file2.txt
+    echo 'coremesh report' > /opt/exam-b/report.txt
     chown -R mira:mira /opt/exam-b/find
     mkdir -p /usr/share/dict
     cat > /usr/share/dict/words <<'EOF'
@@ -93,8 +91,7 @@ umount /mnt/reviewb >/dev/null 2>&1 || true
         mkfs.ext4 -F /dev/reviewvgb/reviewb >/dev/null 2>&1
         mkdir -p /mnt/reviewb
         mount /dev/reviewvgb/reviewb /mnt/reviewb
-        printf 'exam-b seed data
-' > /mnt/reviewb/keep.txt
+        echo 'exam-b seed data' > /mnt/reviewb/keep.txt
         uuid="$(blkid -s UUID -o value /dev/reviewvgb/reviewb)"
         printf 'UUID=%s /mnt/reviewb ext4 defaults 0 0
 ' "$uuid" >> /etc/fstab

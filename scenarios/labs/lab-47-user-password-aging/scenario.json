@@ -50,7 +50,7 @@
       "solution_commands": [
         [
           "useradd cycle47",
-          "printf 'cycle47:cinder9\\n' | chpasswd"
+          "echo 'cycle47:cinder9' | chpasswd"
         ],
         [
           "chage -M 30 -m 2 -W 7 cycle47"

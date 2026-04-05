@@ -32,8 +32,7 @@ for line in p.read_text().splitlines():
 p.write_text('\n'.join(lines) + '\n')
 EOF
 mkdir -p /exports/meshb
-printf 'exam b mesh
-' > /exports/meshb/notes.txt
+echo 'exam b mesh' > /exports/meshb/notes.txt
 chown -R nobody:nobody /exports/meshb
 cat > /etc/exports.d/exam-b.exports <<'EOF'
 /exports/meshb 192.168.122.0/24(rw,sync,no_root_squash)

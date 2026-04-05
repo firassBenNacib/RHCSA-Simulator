@@ -49,10 +49,8 @@ EOF
     id violet >/dev/null 2>&1 || useradd -m violet
     id frost >/dev/null 2>&1 || useradd -m -s /sbin/nologin frost
     mkdir -p /opt/exam-a/find/a /opt/exam-a/find/b/sub
-    printf 'a1
-' > /opt/exam-a/find/a/file1.txt
-    printf 'a2
-' > /opt/exam-a/find/b/sub/file2.txt
+    echo 'a1' > /opt/exam-a/find/a/file1.txt
+    echo 'a2' > /opt/exam-a/find/b/sub/file2.txt
     chown -R amber:amber /opt/exam-a/find
     mkdir -p /usr/share/dict
     cat > /usr/share/dict/words <<'EOF'
@@ -100,8 +98,7 @@ umount /mnt/reviewa >/dev/null 2>&1 || true
         mkfs.ext4 -F /dev/reviewvga/reviewa >/dev/null 2>&1
         mkdir -p /mnt/reviewa
         mount /dev/reviewvga/reviewa /mnt/reviewa
-        printf 'exam-a seed data
-' > /mnt/reviewa/keep.txt
+        echo 'exam-a seed data' > /mnt/reviewa/keep.txt
         uuid="$(blkid -s UUID -o value /dev/reviewvga/reviewa)"
         printf 'UUID=%s /mnt/reviewa ext4 defaults 0 0
 ' "$uuid" >> /etc/fstab

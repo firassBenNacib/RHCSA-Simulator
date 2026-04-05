@@ -6,8 +6,7 @@ rhcsa_reset_repo_directory /root/.repo-backup-server-scripts
 rm -rf /var/log/journal
 rm -f /etc/systemd/journald.conf.d/persistent.conf
 mkdir -p /exports/harborhome
-printf 'harbor export
-' > /exports/harborhome/brief.txt
+echo 'harbor export' > /exports/harborhome/brief.txt
 chown -R nobody:nobody /exports/harborhome
 cat > /etc/exports.d/exam-e.exports <<'EOF'
 /exports/harborhome 192.168.122.0/24(rw,sync,no_root_squash)

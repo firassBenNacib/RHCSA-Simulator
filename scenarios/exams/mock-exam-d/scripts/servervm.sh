@@ -11,8 +11,7 @@ systemctl enable --now postfix >/dev/null 2>&1 || true
 dnf remove -y tree >/dev/null 2>&1 || true
 rpm -q dos2unix >/dev/null 2>&1 || dnf install -y dos2unix >/dev/null 2>&1 || true
 mkdir -p /exports/summit-home
-printf 'summit export
-' > /exports/summit-home/brief.txt
+echo 'summit export' > /exports/summit-home/brief.txt
 chown -R nobody:nobody /exports/summit-home
 cat > /etc/exports.d/exam-d.exports <<'EOF'
 /exports/summit-home 192.168.122.0/24(rw,sync,no_root_squash)

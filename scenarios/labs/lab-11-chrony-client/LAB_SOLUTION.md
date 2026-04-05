@@ -23,8 +23,7 @@ Configure servervm as a simple chrony source and point clientvm at it.
 ## Task 01 - Configure servervm as the chrony source (servervm) - 15 pts
 
 ```bash
-printf 'allow 192.168.122.0/24
-' > /etc/chrony.d/lab11-server.conf
+echo 'allow 192.168.122.0/24' > /etc/chrony.d/lab11-server.conf
 systemctl enable --now chronyd
 ```
 
@@ -33,8 +32,7 @@ systemctl enable --now chronyd
 ## Task 02 - Configure clientvm to use only servervm for time (clientvm) - 15 pts
 
 ```bash
-printf 'server servervm iburst
-' > /etc/chrony.d/lab11-client.conf
+echo 'server servervm iburst' > /etc/chrony.d/lab11-client.conf
 python - <<'EOF'
 from pathlib import Path
 p = Path('/etc/chrony.conf')

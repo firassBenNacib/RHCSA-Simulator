@@ -23,7 +23,7 @@ Apply per-user password aging settings without adding extra account noise.
 
 ```bash
 useradd cycle47
-printf 'cycle47:cinder9\n' | chpasswd
+echo 'cycle47:cinder9' | chpasswd
 ```
 
 ---

@@ -45,13 +45,11 @@
       ],
       "solution_commands": [
         [
-          "printf 'allow 192.168.122.0/24",
-          "' > /etc/chrony.d/lab11-server.conf",
+          "echo 'allow 192.168.122.0/24' > /etc/chrony.d/lab11-server.conf",
           "systemctl enable --now chronyd"
         ],
         [
-          "printf 'server servervm iburst",
-          "' > /etc/chrony.d/lab11-client.conf",
+          "echo 'server servervm iburst' > /etc/chrony.d/lab11-client.conf",
           "python - <<'EOF'",
           "from pathlib import Path",
           "p = Path('/etc/chrony.conf')",

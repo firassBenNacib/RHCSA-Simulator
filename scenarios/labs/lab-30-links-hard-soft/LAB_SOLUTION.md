@@ -22,8 +22,7 @@ Create and verify both a hard link and a symbolic link to the same source file.
 ## Task 01 - Create the file /root/linksource30 containing the (clientvm) - 10 pts
 
 ```bash
-printf 'link-test
-' > /root/linksource30
+echo 'link-test' > /root/linksource30
 ```
 
 ---

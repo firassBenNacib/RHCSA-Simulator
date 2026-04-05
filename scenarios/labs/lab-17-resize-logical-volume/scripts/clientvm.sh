@@ -21,8 +21,7 @@ lvcreate -n reviewlv -L 160M reviewvg >/dev/null 2>&1
 mkfs.ext4 -F /dev/reviewvg/reviewlv >/dev/null 2>&1
 mkdir -p /mnt/reviewlv
 mount /dev/reviewvg/reviewlv /mnt/reviewlv
-printf 'seed data
-' > /mnt/reviewlv/keep.txt
+echo 'seed data' > /mnt/reviewlv/keep.txt
 uuid="$(blkid -s UUID -o value /dev/reviewvg/reviewlv)"
 printf 'UUID=%s /mnt/reviewlv ext4 defaults 0 0
 ' "$uuid" >> /etc/fstab

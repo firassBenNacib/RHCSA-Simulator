@@ -2,7 +2,7 @@
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /exports/direct36
-printf 'nfs36\n' > /exports/direct36/nfs36.txt
+echo 'nfs36' > /exports/direct36/nfs36.txt
 chown -R nobody:nobody /exports/direct36
 rhcsa_ensure_packages nfs-utils >/dev/null 2>&1 || true
 cat > /etc/exports.d/direct36.exports <<'EOF'

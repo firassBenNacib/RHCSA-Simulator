@@ -24,8 +24,7 @@ Use a key pair and scp between the two lab hosts.
 
 ```bash
 useradd -m bridge48
-printf 'bridge48:cinder9
-' | chpasswd
+echo 'bridge48:cinder9' | chpasswd
 ```
 
 ---

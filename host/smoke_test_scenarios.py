@@ -32,6 +32,21 @@ class SmokeResult:
     fatal: bool = False
 
 
+def ensure_text(value: str | bytes | bytearray | memoryview | None) -> str:
+    if value is None:
+        return ""
+    elif isinstance(value, str):
+        return value
+    elif isinstance(value, memoryview):
+        value = value.tobytes()
+        return value.decode("utf-8", errors="replace")
+    elif isinstance(value, (bytes, bytearray)):
+        return bytes(value).decode("utf-8", errors="replace")
+    else:
+        # Fallback for type checker, should not be reached
+        return ""
+
+
 def windows_path(path: Path) -> str:
     if os.name == "nt":
         return str(path)
@@ -115,7 +130,7 @@ def run_smoke(kind: str, scenario_id: str) -> SmokeResult:
         start_timeout = 420 if kind == "exam" else 240
         start_proc = run_ps("start", "-Id", scenario_id, "-Mode", kind.capitalize(), timeout_seconds=start_timeout)
     except subprocess.TimeoutExpired as exc:
-        output = (exc.stdout or "") + (exc.stderr or "")
+        output = ensure_text(exc.stdout) + ensure_text(exc.stderr)
         return SmokeResult(scenario_id, kind, False, "timeout", 0, 0, output, fatal=True)
     if start_proc.returncode != 0:
         output = start_proc.stdout + start_proc.stderr
@@ -135,7 +150,7 @@ def run_smoke(kind: str, scenario_id: str) -> SmokeResult:
         try:
             reset_proc = run_ps("reset", timeout_seconds=start_timeout)
         except subprocess.TimeoutExpired as exc:
-            output = start_output + (exc.stdout or "") + (exc.stderr or "")
+            output = start_output + ensure_text(exc.stdout) + ensure_text(exc.stderr)
             return SmokeResult(scenario_id, kind, False, "timeout", 0, 0, output, fatal=True)
         if reset_proc.returncode != 0:
             output = start_output + reset_proc.stdout + reset_proc.stderr
@@ -157,7 +172,7 @@ def run_smoke(kind: str, scenario_id: str) -> SmokeResult:
     try:
         check_proc = run_ps("check", timeout_seconds=180)
     except subprocess.TimeoutExpired as exc:
-        output = start_output + (exc.stdout or "") + (exc.stderr or "")
+        output = start_output + ensure_text(exc.stdout) + ensure_text(exc.stderr)
         return SmokeResult(scenario_id, kind, False, "timeout", 0, 0, output, fatal=True)
     output = start_output + check_proc.stdout + check_proc.stderr
     try:

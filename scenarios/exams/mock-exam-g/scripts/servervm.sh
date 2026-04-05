@@ -4,8 +4,7 @@ source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /root/.repo-backup-server-exam-g
 rhcsa_reset_repo_directory /root/.repo-backup-server-exam-g
 mkdir -p /exports/delta-home
-printf 'delta home
-' > /exports/delta-home/brief.txt
+echo 'delta home' > /exports/delta-home/brief.txt
 chown -R nobody:nobody /exports/delta-home
 cat > /etc/exports.d/exam-g.exports <<'EOF'
 /exports/delta-home 192.168.122.0/24(rw,sync,no_root_squash)

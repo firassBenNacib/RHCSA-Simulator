@@ -47,11 +47,9 @@ p.write_text('\n'.join(lines) + '\n')
 EOF
 id seekerf >/dev/null 2>&1 || useradd -m seekerf
 mkdir -p /opt/exam-f/find/a /opt/exam-f/find/c/sub
-printf 'f1
-' > /opt/exam-f/find/a/file1.txt
-printf 'f2
-' > /opt/exam-f/find/c/sub/file2.txt
-printf 'aurora payload\n' > /opt/exam-f/aurora-report.txt
+echo 'f1' > /opt/exam-f/find/a/file1.txt
+echo 'f2' > /opt/exam-f/find/c/sub/file2.txt
+echo 'aurora payload' > /opt/exam-f/aurora-report.txt
 chown -R seekerf:seekerf /opt/exam-f/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'

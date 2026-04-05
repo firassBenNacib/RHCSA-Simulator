@@ -23,8 +23,7 @@ if command -v grubby >/dev/null 2>&1; then
   grubby --update-kernel=ALL --remove-args="audit_backlog_limit=8192" >/dev/null 2>&1 || true
 fi
 mkdir -p /srv/delta-web
-printf 'delta forge page
-' > /srv/delta-web/index.html
+echo 'delta forge page' > /srv/delta-web/index.html
 rm -f /etc/httpd/conf.d/delta.conf
 systemctl disable --now httpd >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-port=8086/tcp >/dev/null 2>&1 || true
@@ -59,13 +58,11 @@ sed -i '\#/mnt/delta-home#d' /etc/fstab
 rm -f /root/.ssh/known_hosts >/dev/null 2>&1 || true
 userdel -r copyg >/dev/null 2>&1 || true
 mkdir -p /opt/exam-g
-printf 'copy g payload\n' > /opt/exam-g/copyg-payload.txt
+echo 'copy g payload' > /opt/exam-g/copyg-payload.txt
 id trackerg >/dev/null 2>&1 || useradd -m trackerg
 mkdir -p /opt/exam-g/find/a /opt/exam-g/find/b/sub
-printf 'g1
-' > /opt/exam-g/find/a/file1.txt
-printf 'g2
-' > /opt/exam-g/find/b/sub/file2.txt
+echo 'g1' > /opt/exam-g/find/a/file1.txt
+echo 'g2' > /opt/exam-g/find/b/sub/file2.txt
 chown -R trackerg:trackerg /opt/exam-g/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'

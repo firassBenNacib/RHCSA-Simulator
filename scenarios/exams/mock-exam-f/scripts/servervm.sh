@@ -32,8 +32,7 @@ for line in p.read_text().splitlines():
 p.write_text('\n'.join(lines) + '\n')
 EOF
 mkdir -p /exports/aurorahome
-printf 'aurora export
-' > /exports/aurorahome/brief.txt
+echo 'aurora export' > /exports/aurorahome/brief.txt
 chown -R nobody:nobody /exports/aurorahome
 cat > /etc/exports.d/exam-f.exports <<'EOF'
 /exports/aurorahome 192.168.122.0/24(rw,sync,no_root_squash)

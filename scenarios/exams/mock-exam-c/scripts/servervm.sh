@@ -6,8 +6,7 @@ rhcsa_reset_repo_directory /root/.repo-backup-server-scripts
 rm -rf /var/log/journal
 rm -f /etc/systemd/journald.conf.d/persistent.conf
 mkdir -p /exports/bluec
-printf 'exam c blue
-' > /exports/bluec/info.txt
+echo 'exam c blue' > /exports/bluec/info.txt
 chown -R nobody:nobody /exports/bluec
 cat > /etc/exports.d/exam-c.exports <<'EOF'
 /exports/bluec 192.168.122.0/24(rw,sync,no_root_squash)

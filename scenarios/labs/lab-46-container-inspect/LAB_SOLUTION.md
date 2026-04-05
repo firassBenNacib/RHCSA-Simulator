@@ -51,5 +51,5 @@ podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.Workin
 
 ```bash
 su - scope46
-u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); printf %s "${u:-root}" > ~/user.txt
+u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); echo "${u:-root}" > ~/user.txt
 ```

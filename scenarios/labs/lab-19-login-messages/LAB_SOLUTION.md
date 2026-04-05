@@ -24,8 +24,7 @@ Configure both a user-specific and a global login greeting with clearer host dis
 
 ```bash
 useradd -m orien19
-printf 'echo "Welcome to you, user Orien, you are amazing!"
-' >> /home/orien19/.bash_profile
+echo 'echo "Welcome to you, user Orien, you are amazing!"' >> /home/orien19/.bash_profile
 chown orien19:orien19 /home/orien19/.bash_profile
 ```
 

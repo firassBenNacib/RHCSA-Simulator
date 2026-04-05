@@ -98,6 +98,7 @@ def normalize_command_list(commands: list[str]) -> list[str]:
 
     while i < len(flattened):
         cmd = flattened[i]
+        window2 = "\n".join(flattened[i : i + 2])
         window3 = "\n".join(flattened[i : i + 3])
 
         if cmd in {":wq", ":x"}:
@@ -127,6 +128,34 @@ def normalize_command_list(commands: list[str]) -> list[str]:
             ])
             i += 3
             continue
+
+        if match := re.fullmatch(r"""printf ['"](.+?)\\n['"] \| chpasswd""", cmd):
+            normalized.append(f"echo '{match.group(1)}' | chpasswd")
+            i += 1
+            continue
+
+        if match := re.fullmatch(r"""printf ['"](.+?)\n['"] \| chpasswd""", window2):
+            normalized.append(f"echo '{match.group(1)}' | chpasswd")
+            i += 2
+            continue
+
+        if match := re.fullmatch(r"""printf ['"](.+?)\\n['"] ([>]{1,2}) (\S+)""", cmd):
+            normalized.append(f"echo '{match.group(1)}' {match.group(2)} {match.group(3)}")
+            i += 1
+            continue
+
+        if match := re.fullmatch(r"""printf ['"](.+?)\n['"] ([>]{1,2}) (\S+)""", window2):
+            normalized.append(f"echo '{match.group(1)}' {match.group(2)} {match.group(3)}")
+            i += 2
+            continue
+
+        if match := re.fullmatch(r"""printf %s "([^"]+)" > (\S+)""", cmd):
+            normalized.append(f'echo "{match.group(1)}" > {match.group(2)}')
+            i += 1
+            continue
+
+        if "; printf %s " in cmd:
+            cmd = re.sub(r"""printf %s "([^"]+)" > (\S+)""", r'echo "\1" > \2', cmd)
 
         if match := re.fullmatch(r"printf '([^\\n]+)\n' >> (/etc/fstab)", window3):
             normalized.extend([

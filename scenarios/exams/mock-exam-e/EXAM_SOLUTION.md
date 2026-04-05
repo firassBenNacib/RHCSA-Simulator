@@ -89,7 +89,7 @@ dnf clean all
 ```bash
 dnf install -y httpd
 mkdir -p /srv/harbor-web
-printf 'exam-e portal\n' > /srv/harbor-web/index.html
+echo 'exam-e portal' > /srv/harbor-web/index.html
 vim /etc/httpd/conf/httpd.conf
 Listen 8181
 cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'

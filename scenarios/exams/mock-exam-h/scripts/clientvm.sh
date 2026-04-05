@@ -57,10 +57,8 @@ rm -f /etc/auto.silver /etc/auto.master.d/silver.autofs
 systemctl disable --now autofs >/dev/null 2>&1 || true
 id watcherh >/dev/null 2>&1 || useradd -m watcherh
 mkdir -p /opt/exam-h/find/a /opt/exam-h/find/b/sub
-printf 'h1
-' > /opt/exam-h/find/a/file1.txt
-printf 'h2
-' > /opt/exam-h/find/b/sub/file2.txt
+echo 'h1' > /opt/exam-h/find/a/file1.txt
+echo 'h2' > /opt/exam-h/find/b/sub/file2.txt
 chown -R watcherh:watcherh /opt/exam-h/find
 mkdir -p /usr/share/dict
 cat > /usr/share/dict/words <<'EOF'
@@ -90,8 +88,7 @@ lvcreate -n reviewh -L 180M reviewvgh >/dev/null 2>&1
 mkfs.ext4 -F /dev/reviewvgh/reviewh >/dev/null 2>&1
 mkdir -p /mnt/reviewh
 mount /dev/reviewvgh/reviewh /mnt/reviewh
-printf 'exam h seed data
-' > /mnt/reviewh/keep.txt
+echo 'exam h seed data' > /mnt/reviewh/keep.txt
 uuid="$(blkid -s UUID -o value /dev/reviewvgh/reviewh)"
 printf 'UUID=%s /mnt/reviewh ext4 defaults 0 0
 ' "$uuid" >> /etc/fstab
@@ -111,8 +108,7 @@ EOF
 dnf clean all >/dev/null 2>&1 || true
 dnf remove -y tree dos2unix >/dev/null 2>&1 || true
 id inspecth >/dev/null 2>&1 || useradd -m inspecth
-printf 'inspecth:cinder9
-' | chpasswd
+echo 'inspecth:cinder9' | chpasswd
 runuser -l inspecth -c 'podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true'
 rm -f /home/inspecth/workdir.txt
 systemctl set-default graphical.target >/dev/null 2>&1 || true

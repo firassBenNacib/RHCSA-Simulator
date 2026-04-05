@@ -25,7 +25,7 @@ Configure an indirect automount from servervm.
 ```bash
 # On servervm
 mkdir -p /exports/vault8
-printf "autofs lab 08\n" > /exports/vault8/welcome.txt
+echo 'autofs lab 08' > /exports/vault8/welcome.txt
 exportfs -arv
 # On clientvm
 useradd vault8

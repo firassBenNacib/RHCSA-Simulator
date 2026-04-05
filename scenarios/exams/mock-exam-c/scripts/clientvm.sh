@@ -45,10 +45,8 @@ EOF
     userdel -r remote63 >/dev/null 2>&1 || true
     id ren >/dev/null 2>&1 || useradd -m ren
     mkdir -p /opt/exam-c/find/a /opt/exam-c/find/b/sub
-    printf 'c1
-' > /opt/exam-c/find/a/file1.txt
-    printf 'c2
-' > /opt/exam-c/find/b/sub/file2.txt
+    echo 'c1' > /opt/exam-c/find/a/file1.txt
+    echo 'c2' > /opt/exam-c/find/b/sub/file2.txt
     chown -R ren:ren /opt/exam-c/find
     mkdir -p /usr/share/dict
     cat > /usr/share/dict/words <<'EOF'
@@ -94,8 +92,7 @@ umount /mnt/reviewc >/dev/null 2>&1 || true
         mkfs.ext4 -F /dev/reviewvgc/reviewc >/dev/null 2>&1
         mkdir -p /mnt/reviewc
         mount /dev/reviewvgc/reviewc /mnt/reviewc
-        printf 'exam-c seed data
-' > /mnt/reviewc/keep.txt
+        echo 'exam-c seed data' > /mnt/reviewc/keep.txt
         uuid="$(blkid -s UUID -o value /dev/reviewvgc/reviewc)"
         printf 'UUID=%s /mnt/reviewc ext4 defaults 0 0
 ' "$uuid" >> /etc/fstab

@@ -16,8 +16,7 @@ for line in p.read_text().splitlines():
 p.write_text('\n'.join(lines) + '\n')
 EOF
 mkdir -p /exports/silverhome
-printf 'silver export
-' > /exports/silverhome/brief.txt
+echo 'silver export' > /exports/silverhome/brief.txt
 chown -R nobody:nobody /exports/silverhome
 cat > /etc/exports.d/exam-h.exports <<'EOF'
 /exports/silverhome 192.168.122.0/24(rw,sync,no_root_squash)

@@ -5,8 +5,7 @@ source /usr/local/lib/rhcsa-scenario-helpers.sh
 
 
 mkdir -p /var/www/html
-printf 'SELinux port lab
-' > /var/www/html/index.html
+echo 'SELinux port lab' > /var/www/html/index.html
 if [[ -f /etc/httpd/conf/httpd.conf ]]; then
   python - <<'EOF'
 from pathlib import Path

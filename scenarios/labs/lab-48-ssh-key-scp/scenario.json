@@ -56,8 +56,7 @@
       "solution_commands": [
         [
           "useradd -m bridge48",
-          "printf 'bridge48:cinder9",
-          "' | chpasswd"
+          "echo 'bridge48:cinder9' | chpasswd"
         ],
         [
           "su - bridge48",
