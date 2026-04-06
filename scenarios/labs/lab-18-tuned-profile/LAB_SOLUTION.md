@@ -22,7 +22,7 @@ Apply the system recommended tuned profile.
 ## Task 01 - Apply the recommended tuned profile and leave it (clientvm) - 10 pts
 
 ```bash
-tuned-adm recommended
+tuned-adm recommend
 tuned-adm profile <recommended-profile>
 tuned-adm active
 ```

@@ -276,6 +276,6 @@ resize2fs /dev/reviewvge/reviewe
 ## Question 22 - Recommended Tuned Profile (clientvm) - 4 pts
 
 ```bash
-tuned-adm recommended
+tuned-adm recommend
 tuned-adm profile <recommended-profile>
 ```

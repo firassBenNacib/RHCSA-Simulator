@@ -22,10 +22,10 @@
         "Apply the recommended tuned profile and leave it active after reboot."
       ],
       "hints": [
-        "Use tuned-adm recommended to see the target profile."
+        "Use tuned-adm recommend to see the target profile."
       ],
       "checks": [
-        "rec=\"$(tuned-adm recommended | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
+        "rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -38,7 +38,7 @@
       ],
       "solution_commands": [
         [
-          "tuned-adm recommended",
+          "tuned-adm recommend",
           "tuned-adm profile <recommended-profile>",
           "tuned-adm active"
         ]
