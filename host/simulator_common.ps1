@@ -2686,10 +2686,10 @@ function Wait-VagrantGuestSshReady {
         [int]$StabilizationDelaySeconds = 3
     )
 
-    $connectionInfo = Get-VmSshConnectionInfo -MachineName $MachineName -ProjectRoot $ProjectRoot
     $consecutiveSuccesses = 0
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        $connectionInfo = Get-VmSshConnectionInfo -MachineName $MachineName -ProjectRoot $ProjectRoot
         if (Test-SshBannerReady -HostName $connectionInfo.HostName -Port $connectionInfo.Port) {
             $consecutiveSuccesses += 1
             if ($consecutiveSuccesses -ge $RequiredSuccesses) {
@@ -2714,6 +2714,46 @@ function Wait-VagrantGuestSshReady {
     }
 }
 
+function Confirm-VagrantGuestProvisionReadiness {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('servervm', 'clientvm')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [int]$MaxAttempts = 18,
+        [int]$DelaySeconds = 10,
+        [int]$RequiredSuccesses = 2,
+        [int]$StabilizationDelaySeconds = 3,
+        [switch]$AllowStartupRetry
+    )
+
+    try {
+        Wait-VagrantGuestSshReady `
+            -MachineName $MachineName `
+            -ProjectRoot $ProjectRoot `
+            -MaxAttempts $MaxAttempts `
+            -DelaySeconds $DelaySeconds `
+            -RequiredSuccesses $RequiredSuccesses `
+            -StabilizationDelaySeconds $StabilizationDelaySeconds
+        return
+    }
+    catch {
+        if (-not $AllowStartupRetry.IsPresent) {
+            throw
+        }
+
+        Write-WorkflowStatus -Area 'scenario' -Message "Retrying $MachineName startup after a transient post-restore SSH readiness failure"
+        Start-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea 'scenario'
+        Wait-VagrantGuestSshReady `
+            -MachineName $MachineName `
+            -ProjectRoot $ProjectRoot `
+            -MaxAttempts ([Math]::Max($MaxAttempts / 2, 8)) `
+            -DelaySeconds $DelaySeconds `
+            -RequiredSuccesses $RequiredSuccesses `
+            -StabilizationDelaySeconds $StabilizationDelaySeconds
+    }
+}
+
 function Invoke-ScenarioProvisioning {
     param(
         [Parameter(Mandatory = $true)]
@@ -2730,8 +2770,8 @@ function Invoke-ScenarioProvisioning {
         # Always wait for both guests to settle after a snapshot restore. Single-VM
         # overlays were more likely to fail because the other VM was not provisioned
         # first, which accidentally acted like an extra readiness delay.
-        Wait-VagrantGuestSshReady -MachineName 'servervm' -ProjectRoot $ProjectRoot
-        Wait-VagrantGuestSshReady -MachineName 'clientvm' -ProjectRoot $ProjectRoot
+        Confirm-VagrantGuestProvisionReadiness -MachineName 'servervm' -ProjectRoot $ProjectRoot -AllowStartupRetry
+        Confirm-VagrantGuestProvisionReadiness -MachineName 'clientvm' -ProjectRoot $ProjectRoot -AllowStartupRetry
 
         if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ServervmRelative)) {
             Write-WorkflowStatus -Area 'scenario' -Message "Applying the servervm overlay for '$($Manifest.Id)'"
@@ -2739,7 +2779,7 @@ function Invoke-ScenarioProvisioning {
         }
 
         if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ClientvmRelative)) {
-            Wait-VagrantGuestSshReady -MachineName 'clientvm' -ProjectRoot $ProjectRoot -MaxAttempts 6 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2
+            Confirm-VagrantGuestProvisionReadiness -MachineName 'clientvm' -ProjectRoot $ProjectRoot -MaxAttempts 6 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2 -AllowStartupRetry
             Write-WorkflowStatus -Area 'scenario' -Message "Applying the clientvm overlay for '$($Manifest.Id)'"
             Invoke-VagrantCommand -ArgumentList @('provision', 'clientvm', '--provision-with', 'scenario-client', '--no-color') -FailureMessage "Failed to apply client scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the clientvm overlay for '$($Manifest.Id)' after a transient SSH/provider failure" -RetryCount 3 -RetryDelaySeconds 10
         }

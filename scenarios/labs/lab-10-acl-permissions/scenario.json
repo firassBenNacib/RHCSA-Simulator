@@ -19,11 +19,11 @@
   "content": {
     "lab": {
       "tasks": [
-        "Copy /etc/fstab to /var/tmp/fstab-acl.",
-        "Set owner and group to root:root, remove all execute bits, give natacl read-write, deny haracl all access, and allow others read only."
+        "Copy /etc/fstab to /var/tmp/fstab-acl. Set the owner and group to root:root and remove all execute bits.",
+        "Give natacl read-write access, deny haracl all access, and allow others read only."
       ],
       "hints": [
-        "Create the users natacl and haracl if they are missing.",
+        "The users natacl and haracl are already present for this lab.",
         "Use setfacl for the named user entries."
       ],
       "checks": [
@@ -34,8 +34,8 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Copy /etc/fstab to /var/tmp/fstab-acl",
-        "Set owner and group to root:root, remove all..."
+        "Copy /etc/fstab and set the base ownership and mode",
+        "Apply the ACL entries"
       ],
       "task_points": [
         10,
@@ -43,8 +43,6 @@
       ],
       "solution_commands": [
         [
-          "useradd natacl",
-          "useradd haracl",
           "cp /etc/fstab /var/tmp/fstab-acl",
           "chown root:root /var/tmp/fstab-acl",
           "chmod 644 /var/tmp/fstab-acl"

@@ -45,4 +45,6 @@ passwd quillan
 
 ```bash
 visudo
+%opsrune ALL=(ALL) /usr/sbin/useradd
+brenor ALL=(ALL) NOPASSWD: /usr/bin/passwd
 ```

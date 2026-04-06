@@ -33,7 +33,8 @@ chown root:analystsx /shared/analysts
 
 ```bash
 chmod 770 /shared/analysts
-chmod g+s,+t /shared/analysts
+chmod g+s /shared/analysts
+chmod +t /shared/analysts
 ```
 
 ---
