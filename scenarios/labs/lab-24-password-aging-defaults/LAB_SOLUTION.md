@@ -22,24 +22,10 @@ Configure stronger new-user aging defaults, including inactive days.
 ## Task 01 - Set password aging defaults in login.defs (clientvm) - 10 pts
 
 ```bash
-python - <<'EOF'
-from pathlib import Path
-p = Path('/etc/login.defs')
-text = p.read_text()
-for key, value in [('PASS_MAX_DAYS', '60'), ('PASS_MIN_DAYS', '7'), ('PASS_WARN_AGE', '10')]:
-    lines = []
-    replaced = False
-    for line in text.splitlines():
-        if line.startswith(key):
-            lines.append(f'{key}	{value}')
-            replaced = True
-        else:
-            lines.append(line)
-    if not replaced:
-        lines.append(f'{key}	{value}')
-    text = '\n'.join(lines) + '\n'
-p.write_text(text)
-EOF
+vim /etc/login.defs
+PASS_MAX_DAYS 60
+PASS_MIN_DAYS 7
+PASS_WARN_AGE 10
 ```
 
 ---

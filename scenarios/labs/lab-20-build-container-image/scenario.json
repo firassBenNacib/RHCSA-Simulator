@@ -33,8 +33,8 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "build an image named localhost/text2pdf20:latest...",
-        "Verify that the image exists locally for that user"
+        "Build the text2pdf20 image as builder20",
+        "Confirm the image exists in builder20's store"
       ],
       "task_points": [
         10,
@@ -42,9 +42,6 @@
       ],
       "solution_commands": [
         [
-          "useradd -m builder20",
-          "passwd builder20",
-          "# enter: cinder9",
           "su - builder20",
           "cd /opt/rhcsa/workspaces/text2pdf20",
           "podman build -t localhost/text2pdf20:latest .",

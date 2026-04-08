@@ -27,6 +27,4 @@ COPY site-content/ /var/www/html/
 EOF
 runuser -l runner21 -c 'podman build -t localhost/text2pdf21:latest /tmp/lab21img >/dev/null'
 runuser -l runner21 -c 'podman rm -f mycontainer21 >/dev/null 2>&1 || true'
-runuser -l runner21 -c 'podman rmi -f localhost/text2pdf21:latest >/dev/null 2>&1 || true'
-podman build -t localhost/text2pdf21:latest /tmp/lab21img >/dev/null
 chown -R runner21:runner21 /opt/file21 /opt/processed21

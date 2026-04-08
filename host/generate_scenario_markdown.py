@@ -65,6 +65,12 @@ def _is_key_value_line(line: str) -> bool:
         return False
     if len(key) > 32:
         return False
+    if key.endswith((".", ",", ";", "!", "?")):
+        return False
+    if len(key.split()) > 4:
+        return False
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 /()_-]*", key):
+        return False
     return True
 
 
@@ -177,7 +183,7 @@ def infer_title_from_task(task_text: str) -> str:
     line = re.sub(r"(?i)^on\s+(clientvm|servervm),\s*", "", line)
     line = re.sub(r"(?i)^as\s+user\s+[^,]+,\s*", "", line)
     line = line.rstrip('.')
-    return textwrap.shorten(line, width=54, placeholder='…')
+    return textwrap.shorten(line, width=72, placeholder='…')
 
 
 def render_task_heading(index: int, title: str, system: str, points: int | None, label: str) -> str:
@@ -190,7 +196,7 @@ def render_task_heading(index: int, title: str, system: str, points: int | None,
 def get_task_title(task_titles: list[str], index: int, task_text: str) -> str:
     if index < len(task_titles):
         candidate = clean_text(task_titles[index]).rstrip('.')
-        if candidate and not _generic_title(candidate):
+        if candidate and not _generic_title(candidate) and not candidate.endswith(("...", "…")):
             return candidate
     return infer_title_from_task(task_text)
 

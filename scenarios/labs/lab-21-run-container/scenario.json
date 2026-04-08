@@ -33,8 +33,8 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "run a container named mycontainer21 from...",
-        "Bind mount /opt/file21 to /data/input and..."
+        "Run mycontainer21 as runner21",
+        "Bind mount the input and output directories"
       ],
       "task_points": [
         10,
@@ -42,9 +42,6 @@
       ],
       "solution_commands": [
         [
-          "useradd -m runner21",
-          "passwd runner21",
-          "# enter: cinder9",
           "su - runner21"
         ],
         [

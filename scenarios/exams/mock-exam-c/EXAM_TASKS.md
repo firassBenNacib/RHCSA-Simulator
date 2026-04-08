@@ -25,7 +25,7 @@ A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACL
 
 Recover root access on clientvm from the console.
 
-- **Set the root password to:** cinder9
+Set the root password to: cinder9
 
 ---
 
@@ -67,7 +67,7 @@ Create group infrac and users talia and ren with infrac as a supplementary group
 
 ## Question 07 - Default ACL Directory (clientvm) - 5 pts
 
-- **Create /srv/infrac owned by root:** infrac with mode 2770 and a default ACL that grants group infrac rwx on new files and directories.
+Create /srv/infrac owned by root:infrac with mode 2770 and a default ACL that grants group infrac rwx on new files and directories.
 
 ---
 

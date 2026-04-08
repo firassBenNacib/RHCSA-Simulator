@@ -25,7 +25,7 @@ A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo 
 
 Recover root access on clientvm from the console.
 
-- **Set the root password to:** cinder9
+Set the root password to: cinder9
 
 ---
 

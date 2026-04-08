@@ -25,12 +25,12 @@ Ensure user merin22 exists, set the password to cinder9, and then, as that user,
 
 ---
 
-## Task 02 - Generate User Service (clientvm) - 10 pts
+## Task 02 - Enable lingering for merin22 (clientvm) - 10 pts
 
-As user merin22, generate a systemd user unit for that container and enable it.
+Enable lingering for merin22 so the user service can start automatically after reboot.
 
 ---
 
-## Task 03 - Enable Lingering (clientvm) - 10 pts
+## Task 03 - Generate and enable the user service (clientvm) - 10 pts
 
-Enable lingering for merin22 so the user service starts automatically after reboot.
+As user merin22, generate a systemd user unit for that container and enable it.

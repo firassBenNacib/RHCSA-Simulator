@@ -27,8 +27,6 @@ COPY site-content/ /var/www/html/
 EOF
 runuser -l merin22 -c 'podman build -t localhost/fluxpdf22:latest /tmp/lab22img >/dev/null'
 runuser -l merin22 -c 'podman rm -f render22 >/dev/null 2>&1 || true'
-runuser -l merin22 -c 'podman rmi -f localhost/fluxpdf22:latest >/dev/null 2>&1 || true'
-podman build -t localhost/fluxpdf22:latest /tmp/lab22img >/dev/null
 rm -rf /home/merin22/.config/systemd/user
 loginctl disable-linger merin22 >/dev/null 2>&1 || true
 chown -R merin22:merin22 /opt/inbox22 /opt/outbox22

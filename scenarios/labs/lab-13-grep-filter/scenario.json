@@ -31,7 +31,7 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "From /usr/share/dict/words, extract the lines..."
+        "Extract the ich matches into /root/lines"
       ],
       "task_points": [
         10

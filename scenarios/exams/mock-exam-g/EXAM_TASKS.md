@@ -25,7 +25,7 @@ A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH
 
 Recover root access on clientvm from the console.
 
-- **Set the root password to:** cinder9
+Set the root password to: cinder9
 
 ---
 
@@ -55,7 +55,7 @@ Add a persistent hosts entry so vault.deltaforge.lab resolves to 192.168.122.3.
 
 ## Question 05 - Direct NFS Mount (clientvm) - 5 pts
 
-- **Mount the server export servervm:** /exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.
+Mount the server export servervm:/exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.
 
 ---
 

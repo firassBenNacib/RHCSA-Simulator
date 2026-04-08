@@ -33,7 +33,7 @@ The script must accept one username argument.
 
 ## Task 03 - If the user exists, print EXISTS: username to (clientvm) - 10 pts
 
-- **If the user exists, print EXISTS:** username to standard output and exit with status 0.
+If the user exists, print EXISTS: username to standard output and exit with status 0.
 
 ---
 

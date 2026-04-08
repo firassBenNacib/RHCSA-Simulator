@@ -20,8 +20,8 @@
     "lab": {
       "tasks": [
         "Ensure user merin22 exists, set the password to cinder9, and then, as that user, run a container named render22 from localhost/fluxpdf22:latest with /opt/inbox22 mounted to /data/input and /opt/outbox22 mounted to /data/output.",
-        "As user merin22, generate a systemd user unit for that container and enable it.",
-        "Enable lingering for merin22 so the user service starts automatically after reboot."
+        "Enable lingering for merin22 so the user service can start automatically after reboot.",
+        "As user merin22, generate a systemd user unit for that container and enable it."
       ],
       "hints": [
         "Use podman generate systemd --files --new or podman generate systemd --new depending on the environment.",
@@ -29,16 +29,16 @@
       ],
       "checks": [
         "getent passwd merin22 >/dev/null && getent shadow merin22 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null && runuser -l merin22 -c 'podman container exists render22'",
-        "runuser -l merin22 -c 'systemctl --user is-enabled container-render22.service' | grep -qx enabled",
-        "loginctl show-user merin22 | grep -Eq '^Linger=yes$' && runuser -l merin22 -c 'systemctl --user is-active container-render22.service' | grep -qx active"
+        "loginctl show-user merin22 | grep -Eq '^Linger=yes$'",
+        "uid=$(id -u merin22); runuser -l merin22 -c \"XDG_RUNTIME_DIR=/run/user/$uid systemctl --user is-enabled container-render22.service\" | grep -qx enabled && runuser -l merin22 -c \"XDG_RUNTIME_DIR=/run/user/$uid systemctl --user is-active container-render22.service\" | grep -qx active"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
         "Ensure merin22 exists and run the container",
-        "Generate User Service",
-        "Enable Lingering"
+        "Enable lingering for merin22",
+        "Generate and enable the user service"
       ],
       "task_points": [
         10,
@@ -47,23 +47,23 @@
       ],
       "solution_commands": [
         [
-          "useradd -m merin22",
           "passwd merin22",
           "# enter: cinder9",
           "su - merin22",
-          "podman run -d --name render22 -v /opt/inbox22:/data/input:Z -v /opt/outbox22:/data/output:Z localhost/fluxpdf22:latest"
+          "podman run -d --name render22 -v /opt/inbox22:/data/input:Z -v /opt/outbox22:/data/output:Z localhost/fluxpdf22:latest",
+          "exit"
+        ],
+        [
+          "loginctl enable-linger merin22"
         ],
         [
           "su - merin22",
+          "export XDG_RUNTIME_DIR=/run/user/$(id -u)",
           "mkdir -p ~/.config/systemd/user",
-          "cd ~/.config/systemd/user && podman generate systemd --name render22 --files --new",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name render22 --files --new",
           "systemctl --user daemon-reload",
           "systemctl --user enable --now container-render22.service"
-        ],
-        [
-          "loginctl enable-linger merin22",
-          "su - merin22",
-          "systemctl --user status container-render22.service --no-pager"
         ]
       ]
     }

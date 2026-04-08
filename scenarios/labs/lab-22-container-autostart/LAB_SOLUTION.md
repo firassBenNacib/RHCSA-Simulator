@@ -22,31 +22,31 @@ Run a rootless container as a persistent user service.
 ## Task 01 - Ensure merin22 exists and run the container (clientvm) - 10 pts
 
 ```bash
-useradd -m merin22
 passwd merin22
 # enter: cinder9
 su - merin22
 podman run -d --name render22 -v /opt/inbox22:/data/input:Z -v /opt/outbox22:/data/output:Z localhost/fluxpdf22:latest
+exit
 ```
 
 ---
 
-## Task 02 - Generate User Service (clientvm) - 10 pts
-
-```bash
-su - merin22
-mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user && podman generate systemd --name render22 --files --new
-systemctl --user daemon-reload
-systemctl --user enable --now container-render22.service
-```
-
----
-
-## Task 03 - Enable Lingering (clientvm) - 10 pts
+## Task 02 - Enable lingering for merin22 (clientvm) - 10 pts
 
 ```bash
 loginctl enable-linger merin22
+```
+
+---
+
+## Task 03 - Generate and enable the user service (clientvm) - 10 pts
+
+```bash
 su - merin22
-systemctl --user status container-render22.service --no-pager
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+podman generate systemd --name render22 --files --new
+systemctl --user daemon-reload
+systemctl --user enable --now container-render22.service
 ```
