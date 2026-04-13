@@ -26,12 +26,12 @@ An interactive PowerShell project for running RHCSA v9 practice labs and mock ex
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/bennacib/rhcsa_exam_vms/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/scripts/install.ps1 | iex
 ```
 
 **Linux/macOS (Bash):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bennacib/rhcsa_exam_vms/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/scripts/install.sh | bash
 ```
 
 ### Option 2: Clone the Repository

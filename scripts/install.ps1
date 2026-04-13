@@ -14,8 +14,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $BinaryName = "rhcsa-tui"
-$Repo = "bennacib/rhcsa_exam_vms"
-$Owner = "bennacib"
+$Repo = "firassBenNacib/rhcsa_exam_vms"
+$Owner = "firassBenNacib"
 
 function Get-LatestVersion {
     $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing

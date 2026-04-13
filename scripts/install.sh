@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="bennacib/rhcsa_exam_vms"
+REPO="firassBenNacib/rhcsa_exam_vms"
 BINARY="rhcsa-tui"
-OWNER="${OWNER:-bennacib}"
+OWNER="${OWNER:-firassBenNacib}"
 
 get_os() {
     os=$(uname -s | tr '[:upper:]' '[:lower:]')

@@ -52,13 +52,13 @@ func detectShell(scriptPath string) (string, []string, error) {
 		return path, []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath}, nil
 	}
 
-	if path, err := exec.LookPath("powershell.exe"); err == nil {
-		return path, []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath}, nil
-	}
-
 	if path, err := exec.LookPath("pwsh"); err == nil {
 		return path, []string{"-NoProfile", "-File", scriptPath}, nil
 	}
 
-	return "", nil, errors.New("PowerShell not found")
+	if path, err := exec.LookPath("powershell.exe"); err == nil {
+		return path, []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath}, nil
+	}
+
+	return "", nil, errors.New("PowerShell not found. Install PowerShell Core (pwsh) from https://github.com/PowerShell/PowerShell/releases")
 }
