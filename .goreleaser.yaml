@@ -18,30 +18,13 @@ builds:
       - arm64
     ldflags:
       - -s -w
-    targets:
-      - windows_amd64
-      - windows_arm64
-      - linux_amd64
-      - linux_arm64
-      - darwin_amd64
-      - darwin_arm64
 archives:
   - id: default
     format_overrides:
       - goos: windows
         format: zip
-    files:
-      - src: "**/*"
-        dest: rhcsa-tui/
-        strip_parent: true
-        except:
-          - "**/*.go"
-          - "go.mod"
-          - "go.sum"
-          - ".git/**"
-          - ".github/**"
+    strip_parent: true
 checksum:
-  name: checksums.txt
   algorithm: sha256
 snapshot:
   name_template: "{{ .Tag }}-next"
