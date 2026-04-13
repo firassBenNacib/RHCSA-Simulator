@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 BOOTSTRAP_ISO_MOUNT="/mnt/rhcsa-bootstrap-iso"

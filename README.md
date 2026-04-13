@@ -14,20 +14,44 @@ An interactive PowerShell project for running RHCSA v9 practice labs and mock ex
 
 ## Prerequisites
 
-* Windows 10 or 11
-* PowerShell 5.1 or newer
+* Windows 10 or 11, Linux, or macOS
+* PowerShell 5.1 or newer (Windows) / PowerShell Core (Linux/macOS)
 * [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * [rhel-9.7-x86_64-dvd.iso](https://developers.redhat.com/content-gateway/file/rhel/Red_Hat_Enterprise_Linux_9.7/rhel-9.7-x86_64-dvd.iso) in the project root, downloaded from [Red Hat Developer](https://developers.redhat.com/products/rhel/download) or the Red Hat Customer Portal
-* [Go](https://go.dev/dl/) installed and on **PATH** if you want to use the TUI
 
 ## Installation
 
-Clone:
+### Option 1: Download Pre-built Binary (Recommended)
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/bennacib/rhcsa_exam_vms/main/scripts/install.ps1 | iex
+```
+
+**Linux/macOS (Bash):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/bennacib/rhcsa_exam_vms/main/scripts/install.sh | bash
+```
+
+### Option 2: Clone the Repository
 
 ```powershell
-git clone <your-repo-url>
+git clone https://github.com/bennacib/rhcsa_exam_vms.git
 cd rhcsa_exam_vms
+```
+
+Then run the TUI:
+```powershell
+.\rhcsa-tui.exe
+# or
+.\RHCSA.ps1 tui
+```
+
+### Option 3: Build from Source (Requires Go)
+
+```powershell
+go install github.com/bennacib/rhcsa_exam_vms/cmd/rhcsa-tui@latest
 ```
 
 ## Usage
@@ -45,9 +69,17 @@ Scenario source files live under `scenarios/`.
 
 Generated runtime cache is written locally under `.lab-state/generated/`, is created on demand, and is not part of the repo.
 
-### Quick start
+### Quick Start
 
-**1) Build the baseline**
+**1) Open the TUI (pre-built binary)**
+
+```powershell
+.\rhcsa-tui.exe
+# or on Linux/macOS:
+./rhcsa-tui
+```
+
+**2) Build the baseline**
 
 ```powershell
 .\RHCSA.ps1 up

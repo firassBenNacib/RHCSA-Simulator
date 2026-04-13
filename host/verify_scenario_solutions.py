@@ -1430,6 +1430,7 @@ def main() -> int:
                 for message in messages:
                     if message.strip():
                         print(f"    {message}")
+                return 1
 
     if failures:
         print("\nFailures:")

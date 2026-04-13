@@ -28,8 +28,12 @@ __pycache__/
 
 # Go / TUI build output
 .build/
+dist/
 rhcsa-tui
-rhcsa-tui.exe
+*.exe
+
+# Personal notes
+WORKLOG.md
 
 # Editor settings
 .vscode/

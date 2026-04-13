@@ -140,8 +140,6 @@ def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Fi
 
     if DIRECT_SUDOERS_RE.search(combined_solution_text) and not DIRECT_SUDOERS_RE.search(tasks_text):
         findings.append(Finding(path, "solution edits /etc/sudoers directly without task requiring it"))
-
-    if DIRECT_SUDOERS_RE.search(combined_solution_text) and not DIRECT_SUDOERS_RE.search(tasks_text):
         findings.append(Finding(path, "direct /etc/sudoers edit should normally use a sudoers.d drop-in"))
 
 
