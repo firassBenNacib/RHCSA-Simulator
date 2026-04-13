@@ -31,7 +31,7 @@ restorecon -Rv /srv/summit-web >/dev/null 2>&1 || true
 for u in kara miles zero auditord trainee54 summitremote cedar540 neriad foragerd; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel summitops >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/kara-systemctl
-rm -rf /projects/summit /root/miles-files /summit-home /usr/local/bin/summit-scan /root/summit-units.txt /root/alpha-lines /root/summit-etc.tar.gz /opt/exam-d
+rm -rf /projects/summit /root/foragerd-files /summit-home /usr/local/bin/summit-scan /root/summit-units.txt /root/alpha-lines /root/summit-etc.tar.gz /opt/exam-d
 python - <<'EOF'
 from pathlib import Path
 for p in [Path('/etc/security/pwquality.conf.d/exam-d.conf')]:
@@ -102,7 +102,8 @@ vgremove -fy summitvg >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
 podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
 id neriad >/dev/null 2>&1 || useradd -m neriad
-runuser -l neriad -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+neriad_uid="$(id -u neriad)"
+runuser -l neriad -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$neriad_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
 mkdir -p /opt/ind /opt/outd /opt/rhcsa/workspaces/exam-d/site-content
 cat > /opt/rhcsa/workspaces/exam-d/site-content/index.html <<'EOF'
 exam d container

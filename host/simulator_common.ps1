@@ -1473,6 +1473,8 @@ function Invoke-VagrantCommand {
     $vagrantPath = Get-VagrantPath
     for ($attempt = 1; $attempt -le ($RetryCount + 1); $attempt++) {
         $result = Invoke-ExternalCapture -FilePath $vagrantPath -ArgumentList $ArgumentList
+        Wait-VagrantClientQuiescence | Out-Null
+
         if ($result.ExitCode -eq 0) {
             if ($PassThruExitCode) {
                 return 0
@@ -1515,22 +1517,10 @@ function Start-VagrantMachineStep {
         [string]$RetryArea = 'baseline'
     )
 
-    $upArgumentList = if ($Provision) {
-        @('up', $MachineName, '--provision', '--no-color')
-    }
-    else {
-        @('up', $MachineName, '--no-provision', '--no-color')
-    }
-
-    $upFailureMessage = if ($Provision) {
-        "'vagrant up $MachineName --provision' failed."
-    }
-    else {
-        "'vagrant up $MachineName --no-provision' failed."
-    }
-
+    $upArgumentList = @('up', $MachineName, '--no-provision', '--no-color')
+    $upFailureMessage = "'vagrant up $MachineName --no-provision' failed."
     $upRetryMessage = if ($Provision) {
-        "Retrying $MachineName provisioning after a transient SSH/provider failure"
+        "Retrying $MachineName startup before provisioning after a transient SSH/provider failure"
     }
     else {
         "Retrying $MachineName startup after a transient SSH/provider failure"
@@ -1538,6 +1528,18 @@ function Start-VagrantMachineStep {
 
     try {
         Invoke-VagrantCommand -ArgumentList $upArgumentList -FailureMessage $upFailureMessage -RetryArea $RetryArea -RetryMessage $upRetryMessage
+        if ($Provision) {
+            Confirm-VagrantGuestProvisionReadiness `
+                -MachineName $MachineName `
+                -ProjectRoot $ProjectRoot `
+                -Area $RetryArea `
+                -MaxAttempts 12 `
+                -DelaySeconds 10 `
+                -RequiredSuccesses 1 `
+                -StabilizationDelaySeconds 3 `
+                -AllowStartupRetry
+            Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after startup." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
+        }
         return
     }
     catch {
@@ -1549,12 +1551,31 @@ function Start-VagrantMachineStep {
         $stateHuman = [string]$machineStatus[0].StateHuman
         switch ($stateHuman) {
             'running' {
+                Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName startup; completing VM startup"
+                Confirm-VagrantGuestProvisionReadiness `
+                    -MachineName $MachineName `
+                    -ProjectRoot $ProjectRoot `
+                    -Area $RetryArea `
+                    -MaxAttempts 12 `
+                    -DelaySeconds 10 `
+                    -RequiredSuccesses 1 `
+                    -StabilizationDelaySeconds 3 `
+                    -AllowStartupRetry
+                Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial startup recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
                 if (-not $Provision) {
-                    Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName startup; the VM is already running"
                     return
                 }
 
                 Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName startup; resuming provisioning"
+                Confirm-VagrantGuestProvisionReadiness `
+                    -MachineName $MachineName `
+                    -ProjectRoot $ProjectRoot `
+                    -Area $RetryArea `
+                    -MaxAttempts 12 `
+                    -DelaySeconds 10 `
+                    -RequiredSuccesses 1 `
+                    -StabilizationDelaySeconds 3 `
+                    -AllowStartupRetry
                 Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial startup recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
                 return
             }
@@ -1562,6 +1583,15 @@ function Start-VagrantMachineStep {
                 Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName import; resuming VM startup"
                 Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
                 if ($Provision) {
+                    Confirm-VagrantGuestProvisionReadiness `
+                        -MachineName $MachineName `
+                        -ProjectRoot $ProjectRoot `
+                        -Area $RetryArea `
+                        -MaxAttempts 12 `
+                        -DelaySeconds 10 `
+                        -RequiredSuccesses 1 `
+                        -StabilizationDelaySeconds 3 `
+                        -AllowStartupRetry
                     Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
                 }
                 return
@@ -1570,6 +1600,15 @@ function Start-VagrantMachineStep {
                 Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName import; resuming VM startup"
                 Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
                 if ($Provision) {
+                    Confirm-VagrantGuestProvisionReadiness `
+                        -MachineName $MachineName `
+                        -ProjectRoot $ProjectRoot `
+                        -Area $RetryArea `
+                        -MaxAttempts 12 `
+                        -DelaySeconds 10 `
+                        -RequiredSuccesses 1 `
+                        -StabilizationDelaySeconds 3 `
+                        -AllowStartupRetry
                     Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
                 }
                 return
@@ -1578,6 +1617,15 @@ function Start-VagrantMachineStep {
                 Write-WorkflowStatus -Area $RetryArea -Message "Recovered from a partial $MachineName import; resuming VM startup"
                 Invoke-VagrantCommand -ArgumentList @('up', $MachineName, '--no-provision', '--no-color') -FailureMessage "'vagrant up $MachineName --no-provision' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName startup after a transient SSH/provider failure"
                 if ($Provision) {
+                    Confirm-VagrantGuestProvisionReadiness `
+                        -MachineName $MachineName `
+                        -ProjectRoot $ProjectRoot `
+                        -Area $RetryArea `
+                        -MaxAttempts 12 `
+                        -DelaySeconds 10 `
+                        -RequiredSuccesses 1 `
+                        -StabilizationDelaySeconds 3 `
+                        -AllowStartupRetry
                     Invoke-VagrantCommand -ArgumentList @('provision', $MachineName, '--no-color') -FailureMessage "'vagrant provision $MachineName' failed after partial import recovery." -RetryArea $RetryArea -RetryMessage "Retrying $MachineName provisioning after a transient SSH/provider failure"
                 }
                 return
@@ -1771,18 +1819,29 @@ function Get-VmSshConfig {
 
     Push-Location $ProjectRoot
     try {
-        $result = Invoke-ExternalCapture -FilePath $vagrantPath -ArgumentList @('ssh-config', $MachineName)
+        for ($attempt = 1; $attempt -le 12; $attempt++) {
+            $result = Invoke-ExternalCapture -FilePath $vagrantPath -ArgumentList @('ssh-config', $MachineName)
+            Wait-VagrantClientQuiescence | Out-Null
+
+            if ($result.ExitCode -eq 0) {
+                return @($result.StdOut)
+            }
+
+            $combinedOutput = ((@($result.StdOut) + @($result.StdErr)) -join "`n")
+            if ($attempt -lt 12 -and $combinedOutput -match 'not yet ready for SSH') {
+                Start-Sleep -Seconds 5
+                continue
+            }
+
+            Write-FailureTranscript -StdOut $result.StdOut -StdErr $result.StdErr | Out-Null
+            throw "Failed to read SSH config for $MachineName."
+        }
     }
     finally {
         Pop-Location
     }
 
-    if ($result.ExitCode -ne 0) {
-        Write-FailureTranscript -StdOut $result.StdOut -StdErr $result.StdErr | Out-Null
-        throw "Failed to read SSH config for $MachineName."
-    }
-
-    return @($result.StdOut)
+    throw "Failed to read SSH config for $MachineName."
 }
 
 function Get-VmSshConnectionInfo {
@@ -2280,14 +2339,9 @@ function Get-VagrantMachineId {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    $idFile = Join-Path $ProjectRoot ".vagrant\machines\$MachineName\virtualbox\id"
-    if (-not (Test-Path $idFile -PathType Leaf)) {
-        throw "Vagrant machine id file not found for '$MachineName'."
-    }
-
-    $id = (Get-Content $idFile -Raw).Trim()
+    $id = Get-OptionalVagrantMachineId -MachineName $MachineName -ProjectRoot $ProjectRoot
     if ([string]::IsNullOrWhiteSpace($id)) {
-        throw "Vagrant machine id for '$MachineName' is empty."
+        throw "Vagrant machine id file not found for '$MachineName'."
     }
 
     return $id
@@ -2301,16 +2355,42 @@ function Get-OptionalVagrantMachineId {
     )
 
     $idFile = Join-Path $ProjectRoot ".vagrant\machines\$MachineName\virtualbox\id"
-    if (-not (Test-Path $idFile -PathType Leaf)) {
-        return $null
+    if (Test-Path $idFile -PathType Leaf) {
+        $id = (Get-Content $idFile -Raw).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($id)) {
+            return $id
+        }
     }
 
-    $id = (Get-Content $idFile -Raw).Trim()
-    if ([string]::IsNullOrWhiteSpace($id)) {
-        return $null
+    $projectName = Split-Path -Leaf $ProjectRoot
+    $vmNamePrefix = '{0}_{1}_' -f $projectName, $MachineName
+    $vboxManage = Get-VBoxManagePath
+    foreach ($listTarget in @('runningvms', 'vms')) {
+        $result = Invoke-ExternalCapture -FilePath $vboxManage -ArgumentList @('list', $listTarget)
+        if ($result.ExitCode -ne 0) {
+            continue
+        }
+
+        foreach ($line in $result.StdOut) {
+            if ($line -match '^"([^"]+)"\s+\{([0-9A-Fa-f-]+)\}$') {
+                $vmName = [string]$matches[1]
+                $vmId = [string]$matches[2]
+                if (-not $vmName.StartsWith($vmNamePrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    continue
+                }
+
+                $idDirectory = Split-Path -Parent $idFile
+                if (-not (Test-Path -LiteralPath $idDirectory)) {
+                    New-Item -ItemType Directory -Path $idDirectory -Force | Out-Null
+                }
+
+                Set-Utf8NoBomFile -Path $idFile -Content $vmId
+                return $vmId
+            }
+        }
     }
 
-    return $id
+    return $null
 }
 
 function Get-VBoxSnapshotCatalog {
@@ -2568,9 +2648,12 @@ function Invoke-BaseSnapshotInitialization {
     $machineIdMap = @{}
 
     foreach ($machine in @('servervm', 'clientvm')) {
-        if (-not (Test-Path (Join-Path $ProjectRoot ".vagrant\machines\$machine\virtualbox\id"))) {
+        $machineId = Get-OptionalVagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
+        if ([string]::IsNullOrWhiteSpace($machineId)) {
             throw "Cannot create base snapshots because '$machine' has not been created yet."
         }
+
+        $machineIdMap[$machine] = $machineId
 
         if ($ForceRefresh -or -not (Test-BaseSnapshot -MachineName $machine -ProjectRoot $ProjectRoot)) {
             $targetMachine += $machine
@@ -2588,8 +2671,7 @@ function Invoke-BaseSnapshotInitialization {
         }
 
         foreach ($machine in $targetMachine) {
-            $vmId = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
-            $machineIdMap[$machine] = $vmId
+            $vmId = [string]$machineIdMap[$machine]
             if (Test-BaseSnapshot -MachineName $machine -ProjectRoot $ProjectRoot) {
                 Invoke-VBoxSnapshotCommand -VmId $vmId -SnapshotArgumentList @('delete', 'base-clean') -FailureMessage "Failed to delete existing base-clean snapshot for $machine." -VBoxManagePath $vboxManage
             }
@@ -2680,9 +2762,10 @@ function Wait-VagrantGuestSshReady {
         [Parameter(Mandatory = $true)]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$Area = 'scenario',
         [int]$MaxAttempts = 18,
         [int]$DelaySeconds = 10,
-        [int]$RequiredSuccesses = 2,
+        [int]$RequiredSuccesses = 1,
         [int]$StabilizationDelaySeconds = 3
     )
 
@@ -2697,7 +2780,7 @@ function Wait-VagrantGuestSshReady {
                 return
             }
 
-            Write-WorkflowStatus -Area 'scenario' -Message "Confirmed $MachineName SSH once; waiting for stable readiness ($consecutiveSuccesses/$RequiredSuccesses)"
+            Write-WorkflowStatus -Area $Area -Message "Confirmed $MachineName SSH once; waiting for stable readiness ($consecutiveSuccesses/$RequiredSuccesses)"
             Start-Sleep -Seconds $StabilizationDelaySeconds
             continue
         }
@@ -2705,7 +2788,7 @@ function Wait-VagrantGuestSshReady {
         $consecutiveSuccesses = 0
 
         if ($attempt -lt $MaxAttempts) {
-            Write-WorkflowStatus -Area 'scenario' -Message "Waiting for $MachineName SSH readiness before provisioning ($attempt/$MaxAttempts)"
+            Write-WorkflowStatus -Area $Area -Message "Waiting for $MachineName SSH readiness before provisioning ($attempt/$MaxAttempts)"
             Start-Sleep -Seconds $DelaySeconds
             continue
         }
@@ -2720,9 +2803,10 @@ function Confirm-VagrantGuestProvisionReadiness {
         [ValidateSet('servervm', 'clientvm')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$Area = 'scenario',
         [int]$MaxAttempts = 18,
         [int]$DelaySeconds = 10,
-        [int]$RequiredSuccesses = 2,
+        [int]$RequiredSuccesses = 1,
         [int]$StabilizationDelaySeconds = 3,
         [switch]$AllowStartupRetry
     )
@@ -2731,6 +2815,7 @@ function Confirm-VagrantGuestProvisionReadiness {
         Wait-VagrantGuestSshReady `
             -MachineName $MachineName `
             -ProjectRoot $ProjectRoot `
+            -Area $Area `
             -MaxAttempts $MaxAttempts `
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
@@ -2742,11 +2827,12 @@ function Confirm-VagrantGuestProvisionReadiness {
             throw
         }
 
-        Write-WorkflowStatus -Area 'scenario' -Message "Retrying $MachineName startup after a transient post-restore SSH readiness failure"
-        Start-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea 'scenario'
+        Write-WorkflowStatus -Area $Area -Message "Retrying $MachineName startup after a transient post-restore SSH readiness failure"
+        Start-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea $Area
         Wait-VagrantGuestSshReady `
             -MachineName $MachineName `
             -ProjectRoot $ProjectRoot `
+            -Area $Area `
             -MaxAttempts ([Math]::Max($MaxAttempts / 2, 8)) `
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
@@ -2849,6 +2935,14 @@ function Invoke-LabHypervisorLockCleanup {
         return 0
     }
 
+    $machineStateRoot = Join-Path $ProjectRoot '.vagrant\machines'
+    if (Test-Path -LiteralPath $machineStateRoot) {
+        Get-ChildItem -Path $machineStateRoot -Filter 'action_*' -File -Recurse -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
+            }
+    }
+
     $machineIds = @(
         Get-OptionalVagrantMachineId -MachineName 'servervm' -ProjectRoot $ProjectRoot
         Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot
@@ -2881,7 +2975,81 @@ function Invoke-LabHypervisorLockCleanup {
     }
 
     Start-Sleep -Seconds 2
+    if (Test-LabHypervisorBusy) {
+        $fallbackNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')
+        foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
+            if ([string]$process.Name -in $fallbackNames) {
+                Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
+                $killed++
+            }
+        }
+        Start-Sleep -Seconds 2
+    }
+
     return $killed
+}
+
+function Test-LabHypervisorBusy {
+    [OutputType([bool])]
+    param()
+
+    $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
+    foreach ($process in $processes) {
+        $name = [string]$process.Name
+        if ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Wait-LabHypervisorQuiescence {
+    [OutputType([bool])]
+    param(
+        [int]$MaxAttempts = 20,
+        [int]$DelaySeconds = 2
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        if (-not (Test-LabHypervisorBusy)) {
+            return $true
+        }
+        Start-Sleep -Seconds $DelaySeconds
+    }
+
+    return $false
+}
+
+function Test-VagrantClientBusy {
+    [OutputType([bool])]
+    param()
+
+    $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
+    foreach ($process in $processes) {
+        if ([string]$process.Name -in @('ruby.exe', 'vagrant.exe')) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Wait-VagrantClientQuiescence {
+    [OutputType([bool])]
+    param(
+        [int]$MaxAttempts = 30,
+        [int]$DelaySeconds = 2
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        if (-not (Test-VagrantClientBusy)) {
+            return $true
+        }
+        Start-Sleep -Seconds $DelaySeconds
+    }
+
+    return $false
 }
 
 function Invoke-ClientRecoveryConsole {
@@ -2943,6 +3111,7 @@ function Start-BaselineSession {
     }
 
     Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+    Wait-LabHypervisorQuiescence | Out-Null
     Remove-OrphanLabDiskSet -ProjectRoot $ProjectRoot | Out-Null
     if ([string]::IsNullOrWhiteSpace((Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot))) {
         Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
@@ -2981,6 +3150,7 @@ function Start-BaselineSession {
             if (-not $SkipEnvironmentRecovery -and $message -match 'E_ACCESSDENIED|object functionality is limited|another process is already executing an action on the machine|Vagrant locks each machine') {
                 $notices += 'Detected a stale VirtualBox machine lock. Rebuilding the Vagrant environment and retrying.'
                 Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+                Wait-LabHypervisorQuiescence | Out-Null
                 Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
                 $recoveryResult = Start-BaselineSession `
                     -NoProvision:$NoProvision `
@@ -3792,6 +3962,62 @@ function Invoke-OrphanVmFolderCleanup {
     }
 }
 
+function Remove-LiteralPathWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$LiteralPath,
+        [switch]$Recurse,
+        [switch]$Force,
+        [int]$MaxAttempts = 5
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        if (-not (Test-Path -LiteralPath $LiteralPath)) {
+            return $true
+        }
+
+        try {
+            Remove-Item -LiteralPath $LiteralPath -Recurse:$Recurse -Force:$Force -ErrorAction Stop
+        }
+        catch {
+            Start-Sleep -Milliseconds ([Math]::Min(250 * $attempt, 1000))
+        }
+
+        if (-not (Test-Path -LiteralPath $LiteralPath)) {
+            return $true
+        }
+    }
+
+    return (-not (Test-Path -LiteralPath $LiteralPath))
+}
+
+function Test-LocalLabArtifactsPresent {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $paths = @(
+        (Join-Path $ProjectRoot '.vagrant'),
+        (Join-Path $ProjectRoot '.lab-state'),
+        (Join-Path $ProjectRoot '.lab-disks'),
+        (Join-Path $ProjectRoot 'output'),
+        (Join-Path $ProjectRoot 'builds'),
+        (Join-Path $ProjectRoot 'packer_cache')
+    )
+
+    foreach ($path in $paths) {
+        if (Test-Path -LiteralPath $path) {
+            return $true
+        }
+    }
+
+    if (Get-ChildItem -Path $ProjectRoot -Filter '*.vdi' -File -ErrorAction SilentlyContinue | Select-Object -First 1) {
+        return $true
+    }
+
+    return $false
+}
+
 function Remove-LabEnvironment {
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -3803,8 +4029,24 @@ function Remove-LabEnvironment {
     if (-not $PSCmdlet.ShouldProcess($ProjectRoot, 'Destroy RHCSA lab environment and cleanup local state')) {
         return [PSCustomObject]@{
             Skipped = $true
+            AlreadyClean = $false
             Notes = $notes
             RemovedPaths = @()
+            RemainingPaths = @()
+            RemainingVms = @()
+            CleanupComplete = $true
+        }
+    }
+
+    if (-not (Test-LocalLabArtifactsPresent -ProjectRoot $ProjectRoot)) {
+        return [PSCustomObject]@{
+            Skipped = $false
+            AlreadyClean = $true
+            Notes = @('No local simulator state was present.')
+            RemovedPaths = @()
+            RemainingPaths = @()
+            RemainingVms = @()
+            CleanupComplete = $true
         }
     }
 
@@ -3817,6 +4059,8 @@ function Remove-LabEnvironment {
     $labDisksDir = Join-Path $ProjectRoot '.lab-disks'
     $legacyDisksDir = Join-Path $ProjectRoot '.vagrant\disks'
     $removedPaths = @()
+    $remainingPaths = @()
+    $remainingVms = @()
 
     Push-Location $ProjectRoot
     try {
@@ -3844,6 +4088,7 @@ function Remove-LabEnvironment {
             }
 
             Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+            Wait-LabHypervisorQuiescence | Out-Null
 
             foreach ($candidate in (Get-LabVBoxVmCandidate -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage)) {
                 Invoke-VBoxVmRemoval -VBoxManagePath $vboxManage -VmId $candidate.Id
@@ -3857,6 +4102,12 @@ function Remove-LabEnvironment {
                 $notes += 'VirtualBox left stale disk registrations behind. Continuing with local disk cleanup.'
             }
             Invoke-OrphanVmFolderCleanup -VBoxMachineFolder $vboxMachineFolder -ProjectName $projectName
+            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+            Wait-LabHypervisorQuiescence | Out-Null
+            $remainingVms = @(Get-LabVBoxVmCandidate -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage)
+            if ($remainingVms.Count -gt 0) {
+                $notes += ('VirtualBox still reports lab VM(s): {0}' -f (($remainingVms | ForEach-Object { $_.Name }) -join ', '))
+            }
         }
 
         $paths = @(
@@ -3873,16 +4124,28 @@ function Remove-LabEnvironment {
 
         foreach ($path in $paths) {
             if (Test-Path $path) {
-                Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
-                $removedPaths += $path
+                if (Remove-LiteralPathWithRetry -LiteralPath $path -Recurse -Force) {
+                    $removedPaths += $path
+                }
+                else {
+                    $remainingPaths += $path
+                }
             }
         }
 
         Get-ChildItem -Path . -Filter '*.vdi' -File -ErrorAction SilentlyContinue |
             ForEach-Object {
-                Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
-                $removedPaths += $_.FullName
+                if (Remove-LiteralPathWithRetry -LiteralPath $_.FullName -Force) {
+                    $removedPaths += $_.FullName
+                }
+                else {
+                    $remainingPaths += $_.FullName
+                }
             }
+
+        if ($remainingPaths.Count -gt 0) {
+            $notes += ('Local state path(s) still present: {0}' -f ($remainingPaths -join ', '))
+        }
     }
     finally {
         Pop-Location
@@ -3890,8 +4153,12 @@ function Remove-LabEnvironment {
 
     return [PSCustomObject]@{
         Skipped = $false
+        AlreadyClean = $false
         Notes = $notes
         RemovedPaths = $removedPaths
+        RemainingPaths = $remainingPaths
+        RemainingVms = $remainingVms
+        CleanupComplete = (($remainingPaths.Count -eq 0) -and ($remainingVms.Count -eq 0))
     }
 }
 

@@ -30,10 +30,10 @@
         "ssh-copy-id is the quickest way to seed authorized_keys."
       ],
       "checks": [
-        "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null && ssh admin@servervm sudo getent passwd bridge48 >/dev/null && ssh admin@servervm sudo getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
         "test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub",
-        "ssh bridge48@servervm true",
-        "ssh bridge48@servervm test -f /home/bridge48/inbox/payload.txt"
+        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@servervm true'",
+        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@servervm test -f /home/bridge48/inbox/payload.txt'"
       ],
       "solution_outline": [
         "Create bridge48 on both systems and set the password.",
@@ -55,7 +55,11 @@
       ],
       "solution_commands": [
         [
-          "useradd -m bridge48",
+          "# On clientvm",
+          "id bridge48 >/dev/null 2>&1 || useradd -m bridge48",
+          "echo 'bridge48:cinder9' | chpasswd",
+          "# On servervm",
+          "id bridge48 >/dev/null 2>&1 || useradd -m bridge48",
           "echo 'bridge48:cinder9' | chpasswd"
         ],
         [

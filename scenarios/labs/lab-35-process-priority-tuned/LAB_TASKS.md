@@ -33,4 +33,4 @@ Start the command sleep 3600 in the background on servervm and save its PID in /
 
 ## Task 03 - Renice the process to 5 (servervm) - 10 pts
 
-Adjust the nice value of that process so it becomes 5.
+On servervm, adjust the nice value of that process so it becomes 5.

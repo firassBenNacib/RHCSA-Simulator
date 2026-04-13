@@ -149,33 +149,33 @@ Generate and enable a systemd user service for container pdfa and enable lingeri
 
 ---
 
-## Question 17 - Persistent Journal (servervm) - 4 pts
+## Question 17 - Fixed UID User (clientvm) - 4 pts
 
-On servervm, enable persistent systemd journal storage and restart systemd-journald.
-
----
-
-## Question 18 - Persistent Journal (servervm) - 4 pts
-
-On servervm, enable persistent systemd journal storage and restart systemd-journald.
+Create user ash420 with UID 4420 and set its password to cinder9.
 
 ---
 
-## Question 19 - Persistent Journal (servervm) - 4 pts
+## Question 18 - Find Copy Preserve (clientvm) - 4 pts
 
-On servervm, enable persistent systemd journal storage and restart systemd-journald.
-
----
-
-## Question 20 - Persistent Journal (servervm) - 4 pts
-
-On servervm, enable persistent systemd journal storage and restart systemd-journald.
+Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours. Copy them to /root/amber-files while preserving the source directory structure.
 
 ---
 
-## Question 21 - Persistent Journal (servervm) - 4 pts
+## Question 19 - Grep Filter (clientvm) - 4 pts
 
-On servervm, enable persistent systemd journal storage and restart systemd-journald.
+Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.
+
+---
+
+## Question 20 - Archive /etc (clientvm) - 4 pts
+
+Create /root/etc-opsa.tar.bz2 containing /etc.
+
+---
+
+## Question 21 - Service Report Script (clientvm) - 4 pts
+
+Create executable script /usr/local/bin/opsa-report that writes the active state of each unit listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
 
 ---
 

@@ -99,7 +99,8 @@ umount /mnt/reviewc >/dev/null 2>&1 || true
 
     podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
     id eirac >/dev/null 2>&1 || useradd -m eirac
-runuser -l eirac -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+    eirac_uid="$(id -u eirac)"
+    runuser -l eirac -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$eirac_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
     mkdir -p /opt/inc /opt/outc /opt/rhcsa/workspaces/exam-c/site-content
     cat > /opt/rhcsa/workspaces/exam-c/site-content/index.html <<'EOF'
 exam c container

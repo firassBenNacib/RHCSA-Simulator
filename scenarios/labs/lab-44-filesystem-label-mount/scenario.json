@@ -28,9 +28,9 @@
         "Use LABEL=DATA44, not a device path or UUID."
       ],
       "checks": [
-        "blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44",
-        "findmnt -n /data44 | grep -Fq '/data44'",
-        "grep -Eq '^LABEL=DATA44[[:space:]]+/data44[[:space:]]+ext4[[:space:]]+defaults[[:space:]]+0[[:space:]]+0$' /etc/fstab"
+        "test -b /dev/sdb1",
+        "blkid -o value -s LABEL /dev/sdb1 | grep -qx DATA44 && findmnt -n /data44 | grep -Fq '/data44'",
+        "grep -Fqx 'LABEL=DATA44 /data44 ext4 defaults 0 0' /etc/fstab"
       ],
       "solution_outline": [
         "Partition /dev/sdb with a 600 MiB GPT partition.",

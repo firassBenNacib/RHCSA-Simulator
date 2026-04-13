@@ -212,19 +212,11 @@ tar -czf /root/usr-local-h.tar.gz /usr/local
 ## Question 17 - Swap Space (clientvm) - 4 pts
 
 ```bash
-fdisk /dev/sdb
-# g
-# n
-# <Enter>
-# +672M
-# t
-# 19
-# w
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 673MiB
+partprobe /dev/sdb
 mkswap /dev/sdb1
-vim /etc/fstab
-blkid /dev/sdb1
-vim /etc/fstab
-# Add the swap entry with the UUID reported above
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 swapon -a
 ```
 

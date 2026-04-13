@@ -10,7 +10,6 @@ cat > /etc/exports.d/direct36.exports <<'EOF'
 EOF
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
-firewall-cmd --permanent --add-service=nfs >/dev/null 2>&1 || true
-firewall-cmd --permanent --add-service=rpc-bind >/dev/null 2>&1 || true
-firewall-cmd --permanent --add-service=mountd >/dev/null 2>&1 || true
-firewall-cmd --reload >/dev/null 2>&1 || true
+firewall-cmd --add-service=nfs >/dev/null 2>&1 || true
+firewall-cmd --add-service=rpc-bind >/dev/null 2>&1 || true
+firewall-cmd --add-service=mountd >/dev/null 2>&1 || true

@@ -47,6 +47,7 @@
       ],
       "solution_commands": [
         [
+          "id merin22 >/dev/null 2>&1 || useradd -m merin22",
           "passwd merin22",
           "# enter: cinder9",
           "su - merin22",
@@ -54,16 +55,17 @@
           "exit"
         ],
         [
-          "loginctl enable-linger merin22"
+          "loginctl enable-linger merin22",
+          "uid=$(id -u merin22)",
+          "systemctl start user@$uid.service",
+          "for i in $(seq 1 30); do [ -S /run/user/$uid/bus ] && break; sleep 1; done"
         ],
         [
-          "su - merin22",
-          "export XDG_RUNTIME_DIR=/run/user/$(id -u)",
-          "mkdir -p ~/.config/systemd/user",
-          "cd ~/.config/systemd/user",
-          "podman generate systemd --name render22 --files --new",
-          "systemctl --user daemon-reload",
-          "systemctl --user enable --now container-render22.service"
+          "runuser -l merin22 -c 'mkdir -p ~/.config/systemd/user'",
+          "runuser -l merin22 -c 'cd ~/.config/systemd/user && podman generate systemd --name render22 --files'",
+          "runuser -l merin22 -c 'podman kill render22 >/dev/null 2>&1 || true'",
+          "runuser -l merin22 -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user daemon-reload'",
+          "runuser -l merin22 -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user enable --now container-render22.service'"
         ]
       ]
     }

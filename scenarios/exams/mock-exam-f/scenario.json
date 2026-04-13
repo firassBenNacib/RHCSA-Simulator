@@ -130,9 +130,11 @@
         [
           "# Run on servervm",
           "vim /etc/ssh/sshd_config",
+          "Port 22",
           "Port 2222",
           "PasswordAuthentication yes",
           "PubkeyAuthentication yes",
+          "semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || semanage port -m -t ssh_port_t -p tcp 2222",
           "systemctl restart sshd"
         ],
         [
@@ -200,27 +202,23 @@
           "/usr/local/bin/aurora-report"
         ],
         [
-          "fdisk /dev/sdb",
-          "# create a 704 MiB partition and change the type to Linux swap",
+          "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 705MiB",
           "partprobe /dev/sdb",
           "mkswap /dev/sdb1",
           "swapon /dev/sdb1",
-          "blkid /dev/sdb1",
-          "vim /etc/fstab",
-          "UUID=<uuid> swap swap defaults 0 0"
+          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ],
         [
-          "fdisk /dev/sdc",
-          "# create one Linux LVM partition that uses the disk",
+          "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
           "partprobe /dev/sdc",
           "pvcreate /dev/sdc1",
           "vgcreate -s 8M auroravg /dev/sdc1",
           "lvcreate -n auroralv -l 50 auroravg",
           "mkfs.xfs -f /dev/auroravg/auroralv",
           "mkdir -p /mnt/auroralv",
-          "blkid /dev/auroravg/auroralv",
-          "vim /etc/fstab",
-          "UUID=<uuid> /mnt/auroralv xfs defaults 0 0",
+          "uuid=$(blkid -s UUID -o value /dev/auroravg/auroralv)",
+          "echo \"UUID=$uuid /mnt/auroralv xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ],
         [

@@ -25,7 +25,7 @@
         "The words file for this lab is preseeded if it was not present before."
       ],
       "checks": [
-        "test -s /root/lines && grep -q 'ich' /root/lines && ! awk 'index($0,\"ich\")==0{print; exit 1}' /root/lines"
+        "test -s /root/lines && grep -q 'ich' /root/lines && awk 'index($0,\"ich\")==0{exit 1}' /root/lines"
       ],
       "solution_outline": [
         "Use persistent configuration only."

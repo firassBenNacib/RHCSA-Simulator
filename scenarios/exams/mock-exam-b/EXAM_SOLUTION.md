@@ -93,7 +93,7 @@ echo cinder9 | passwd --stdin cato421
 ## Question 07 - Primary Login User (clientvm) - 5 pts
 
 ```bash
-useradd mira
+id mira >/dev/null 2>&1 || useradd -m mira
 echo cinder9 | passwd --stdin mira
 ```
 
@@ -135,9 +135,11 @@ mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
 ```bash
 # Run on servervm
 vim /etc/ssh/sshd_config
+Port 22
 Port 2222
 PasswordAuthentication yes
 PubkeyAuthentication yes
+semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || semanage port -m -t ssh_port_t -p tcp 2222
 systemctl restart sshd
 ```
 
@@ -156,6 +158,7 @@ firewall-cmd --reload
 ## Question 13 - SSH Key Generation (clientvm) - 4 pts
 
 ```bash
+# Run on clientvm
 su - mira
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 ```
@@ -166,11 +169,12 @@ ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 
 ```bash
 # Run on servervm
-useradd meshremote
+id meshremote >/dev/null 2>&1 || useradd -m meshremote
 echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
+# Run on clientvm
 su - mira
 ssh-copy-id -p 2222 meshremote@servervm
 ssh -p 2222 -o BatchMode=yes meshremote@servervm true
@@ -181,97 +185,77 @@ ssh -p 2222 -o BatchMode=yes meshremote@servervm true
 ## Question 15 - Rsync Transfer (servervm) - 4 pts
 
 ```bash
+# Run on clientvm
 su - mira
 rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
 ```
 
 ---
 
-## Question 16 - Passwordless SSH (servervm) - 4 pts
+## Question 16 - Find Copy Preserve (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@servervm
-ssh -p 2222 -o BatchMode=yes meshremote@servervm true
+mkdir -p /root/mira-files
+find /opt/exam-b/find -user mira -mtime -1 -type f -exec cp --parents {} /root/mira-files \;
 ```
 
 ---
 
-## Question 17 - Rsync Transfer (servervm) - 4 pts
+## Question 17 - Grep Filter (clientvm) - 4 pts
 
 ```bash
-su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
+grep proto /usr/share/dict/words > /root/proto-lines
 ```
 
 ---
 
-## Question 18 - Passwordless SSH (servervm) - 4 pts
+## Question 18 - Archive /usr/local (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@servervm
-ssh -p 2222 -o BatchMode=yes meshremote@servervm true
+tar -cjf /root/usr-local-b.tar.bz2 /usr/local
 ```
 
 ---
 
-## Question 19 - Rsync Transfer (servervm) - 4 pts
+## Question 19 - Service Report Script (clientvm) - 4 pts
 
 ```bash
-su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
+vim /usr/local/bin/corecheck
+#!/usr/bin/env bash
+> /root/coremesh-units.txt
+while read -r unit; do
+  systemctl is-active "$unit" >> /root/coremesh-units.txt
+done < /usr/local/share/exam-b/units.lst
+chmod 755 /usr/local/bin/corecheck
+/usr/local/bin/corecheck
 ```
 
 ---
 
-## Question 20 - Passwordless SSH (servervm) - 4 pts
+## Question 20 - Swap Space (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@servervm
-ssh -p 2222 -o BatchMode=yes meshremote@servervm true
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB
+partprobe /dev/sdb
+mkswap /dev/sdb1
+swapon /dev/sdb1
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```
 
 ---
 
-## Question 21 - Rsync Transfer (servervm) - 4 pts
+## Question 21 - Resize LV (clientvm) - 4 pts
 
 ```bash
-su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt
+lvextend -L 300M /dev/reviewvgb/reviewb
+resize2fs /dev/reviewvgb/reviewb
 ```
 
 ---
 
-## Question 22 - Passwordless SSH (servervm) - 4 pts
+## Question 22 - Apply Tuned (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@servervm
-ssh -p 2222 -o BatchMode=yes meshremote@servervm true
+tuned-adm profile "$(tuned-adm recommend)"
 ```

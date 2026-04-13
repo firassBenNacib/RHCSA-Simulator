@@ -252,14 +252,12 @@ chmod +x /usr/local/bin/harbor-check
 ## Question 20 - Swap Space (clientvm) - 4 pts
 
 ```bash
-fdisk /dev/sdb
-# create a 640 MiB partition and change the type to Linux swap
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB
 partprobe /dev/sdb
 mkswap /dev/sdb1
 swapon /dev/sdb1
-blkid /dev/sdb1
-vim /etc/fstab
-UUID=<uuid> swap swap defaults 0 0
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```
 
 ---

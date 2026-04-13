@@ -50,11 +50,13 @@
       ],
       "solution_commands": [
         [
-          "groupadd collab26",
-          "useradd -M probe26",
+          "getent group collab26 >/dev/null || groupadd collab26",
+          "id probe26 >/dev/null 2>&1 || useradd -M probe26",
           "echo 'probe26:cinder9' | chpasswd"
         ],
         [
+          "mkdir -p /shared/collab26",
+          "chown root:collab26 /shared/collab26",
           "chmod 770 /shared/collab26",
           "chmod g+s /shared/collab26"
         ],

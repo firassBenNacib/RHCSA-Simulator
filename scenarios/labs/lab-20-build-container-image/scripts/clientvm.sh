@@ -16,7 +16,8 @@ fi
 
 podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
 id builder20 >/dev/null 2>&1 || useradd -m builder20
-runuser -l builder20 -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+builder20_uid="$(id -u builder20)"
+runuser -l builder20 -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$builder20_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
 rm -rf /opt/rhcsa/workspaces/text2pdf20
 mkdir -p /opt/rhcsa/workspaces/text2pdf20/site-content
 cat > /opt/rhcsa/workspaces/text2pdf20/site-content/index.html <<'EOF'

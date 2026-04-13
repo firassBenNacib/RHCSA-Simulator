@@ -42,9 +42,11 @@
       ],
       "solution_commands": [
         [
+          "id runner21 >/dev/null 2>&1 || useradd -m runner21",
           "su - runner21"
         ],
         [
+          "su - runner21",
           "podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest",
           "podman ps",
           "exit"

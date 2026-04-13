@@ -22,13 +22,11 @@ Add a persistent swap partition on an extra disk.
 ## Task 01 - Create a 400 MiB swap partition on /dev/sdb, enable (clientvm) - 10 pts
 
 ```bash
-fdisk /dev/sdb
-# create a 400M partition and change the type to Linux swap
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 401MiB
 partprobe /dev/sdb
 mkswap /dev/sdb1
 swapon /dev/sdb1
-blkid /dev/sdb1
-vim /etc/fstab
-UUID=<uuid-of-sdb1> swap swap defaults 0 0
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 swapon --show
 ```

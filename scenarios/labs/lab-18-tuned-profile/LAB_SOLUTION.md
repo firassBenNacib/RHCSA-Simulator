@@ -23,6 +23,7 @@ Apply the system recommended tuned profile.
 
 ```bash
 tuned-adm recommend
-tuned-adm profile <recommended-profile>
+rec="$(tuned-adm recommend | awk '{print $1}')"
+tuned-adm profile "$rec"
 tuned-adm active
 ```

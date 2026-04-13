@@ -8,9 +8,11 @@ ensure_httpd_base_archive() {
   local build_root="/var/tmp/rhcsa-httpd-rootfs-lab46"
   local rootfs_tar="/var/tmp/rhcsa-httpd-base-lab46.tar"
 
-  if tar -tf "$archive" 2>/dev/null | grep -Eq '^(manifest.json|index.json)$'; then
+  if [[ -f "$archive" ]] && skopeo inspect --raw "docker-archive:${archive}" >/dev/null 2>&1; then
     return 0
   fi
+
+  rm -f "$archive"
 
   if podman image exists "$image_name" >/dev/null 2>&1; then
     skopeo copy --insecure-policy "containers-storage:${image_name}" "docker-archive:${archive}:${image_name}" >/dev/null 2>&1 && return 0

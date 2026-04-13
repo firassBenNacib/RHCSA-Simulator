@@ -28,7 +28,7 @@
         "This lab now runs on servervm."
       ],
       "checks": [
-        "ssh admin@servervm matchpathcon /var/www/html/index45.html | awk '{print $3}' | grep -qx httpd_sys_content_t",
+        "ssh admin@servervm ls -Zd /var/www/html/index45.html | awk '{print $1}' | grep -Eq '(^|:)httpd_sys_content_t(:|$)'",
         "ssh admin@servervm getenforce | grep -qx Enforcing && ssh admin@servervm systemctl is-enabled httpd | grep -qx enabled && ssh admin@servervm systemctl is-active httpd | grep -qx active"
       ],
       "solution_outline": [

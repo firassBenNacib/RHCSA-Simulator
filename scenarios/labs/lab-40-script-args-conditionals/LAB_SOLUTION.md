@@ -23,22 +23,8 @@ Create a small shell script that processes arguments and returns the correct exi
 
 ```bash
 vim /usr/local/bin/usercheck40
-```
-
----
-
-## Task 02 - The script must accept one username argument (clientvm) - 10 pts
-
-```bash
 #!/bin/bash
 user_name="$1"
-```
-
----
-
-## Task 03 - If the user exists, print EXISTS: username to (clientvm) - 10 pts
-
-```bash
 if id "$user_name" >/dev/null 2>&1; then
   echo "EXISTS: $user_name"
   exit 0
@@ -46,6 +32,22 @@ else
   echo "MISSING: $user_name"
   exit 1
 fi
+```
+
+---
+
+## Task 02 - The script must accept one username argument (clientvm) - 10 pts
+
+```bash
+# The script reads the first positional parameter as user_name.
+```
+
+---
+
+## Task 03 - If the user exists, print EXISTS: username to (clientvm) - 10 pts
+
+```bash
+# The script uses id to print EXISTS and exit 0 when the user exists.
 ```
 
 ---

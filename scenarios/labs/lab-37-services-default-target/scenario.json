@@ -22,8 +22,7 @@
     "lab": {
       "tasks": [
         "Configure servervm to boot into multi-user.target by default.",
-        "Ensure the rsyslog service is enabled and running on servervm.",
-        "If postfix is installed on servervm, disable it and stop it."
+        "Ensure the rsyslog service is enabled and running on servervm, and if postfix is installed disable it and stop it."
       ],
       "hints": [
         "This lab belongs on servervm, not clientvm.",
@@ -31,33 +30,27 @@
       ],
       "checks": [
         "ssh admin@servervm systemctl get-default | grep -qx multi-user.target",
-        "ssh admin@servervm systemctl is-enabled rsyslog | grep -qx enabled && ssh admin@servervm systemctl is-active rsyslog | grep -qx active",
-        "ssh admin@servervm sh -lc 'rpm -q postfix >/dev/null 2>&1 || exit 0; systemctl is-enabled postfix 2>/dev/null | grep -qx disabled && systemctl is-active postfix 2>/dev/null | grep -qx inactive'"
+        "ssh admin@servervm systemctl is-enabled rsyslog | grep -qx enabled && ssh admin@servervm systemctl is-active rsyslog | grep -qx active && ssh admin@servervm sh -lc 'rpm -q postfix >/dev/null 2>&1 || exit 0; systemctl is-enabled postfix 2>/dev/null | grep -qx disabled && systemctl is-active postfix 2>/dev/null | grep -qx inactive'"
       ],
       "solution_outline": [
         "Set the default target to multi-user.target.",
-        "Enable and start rsyslog.",
-        "Disable postfix only if the package is present."
+        "Enable and start rsyslog, then disable postfix only if the package is present."
       ],
       "task_titles": [
         "Set the default boot target on servervm",
-        "Enable rsyslog on servervm",
-        "Disable postfix on servervm if present"
+        "Manage rsyslog and postfix on servervm"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
           "systemctl set-default multi-user.target"
         ],
         [
-          "systemctl enable --now rsyslog"
-        ],
-        [
-          "systemctl disable --now postfix"
+          "systemctl enable --now rsyslog",
+          "rpm -q postfix >/dev/null 2>&1 && systemctl disable --now postfix || true"
         ]
       ]
     }

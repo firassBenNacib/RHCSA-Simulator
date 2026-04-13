@@ -23,7 +23,7 @@ Configure both a user-specific and a global login greeting with clearer host dis
 ## Task 01 - Create the per-user greeting on servervm (servervm) - 15 pts
 
 ```bash
-useradd -m orien19
+id orien19 >/dev/null 2>&1 || useradd -m orien19
 echo 'echo "Welcome to you, user Orien, you are amazing!"' >> /home/orien19/.bash_profile
 chown orien19:orien19 /home/orien19/.bash_profile
 ```
@@ -33,6 +33,11 @@ chown orien19:orien19 /home/orien19/.bash_profile
 ## Task 02 - Create the global login greeting on both systems (clientvm) - 15 pts
 
 ```bash
+cat > /etc/profile.d/lab19-greeting.sh <<'EOF'
+echo "Welcome ${USER}, you are logged in!"
+EOF
+chmod 644 /etc/profile.d/lab19-greeting.sh
+# Run on servervm
 cat > /etc/profile.d/lab19-greeting.sh <<'EOF'
 echo "Welcome ${USER}, you are logged in!"
 EOF

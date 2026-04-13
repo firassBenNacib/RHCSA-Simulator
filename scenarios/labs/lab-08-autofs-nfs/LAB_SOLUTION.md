@@ -43,6 +43,8 @@ vault8 -rw,sync servervm:/exports/vault8
 vim /etc/auto.master.d/lab8.autofs
 /netdir /etc/auto.lab8
 systemctl enable --now autofs
+for attempt in 1 2 3 4 5; do ls /netdir/vault8 >/dev/null 2>&1 && mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs' && break; sleep 2; done
+mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs'
 ```
 
 ---

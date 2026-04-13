@@ -210,19 +210,11 @@ renice 10 -p "$(cat /home/workerg/sleep.pid)"
 ## Question 20 - Swap Space (clientvm) - 4 pts
 
 ```bash
-fdisk /dev/sdb
-# g
-# n
-# <Enter>
-# +736M
-# t
-# 19
-# w
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 737MiB
+partprobe /dev/sdb
 mkswap /dev/sdb1
-vim /etc/fstab
-blkid /dev/sdb1
-vim /etc/fstab
-# Add the swap entry with the UUID reported above
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 swapon -a
 ```
 
@@ -231,23 +223,15 @@ swapon -a
 ## Question 21 - Create And Mount LV (clientvm) - 4 pts
 
 ```bash
-fdisk /dev/sdc
-# g
-# n
-# <Enter>
-# +700M
-# t
-# 31
-# w
+parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 701MiB set 1 lvm on
+partprobe /dev/sdc
 pvcreate /dev/sdc1
 vgcreate -s 16M deltavg /dev/sdc1
 lvcreate -n deltalv -l 40 deltavg
 mkfs.ext4 /dev/deltavg/deltalv
 mkdir -p /mnt/deltalv
-vim /etc/fstab
-blkid /dev/deltavg/deltalv
-vim /etc/fstab
-# Add the ext4 mount entry with the UUID reported above
+uuid=$(blkid -s UUID -o value /dev/deltavg/deltalv)
+echo "UUID=$uuid /mnt/deltalv ext4 defaults 0 0" >> /etc/fstab
 mount -a
 ```
 

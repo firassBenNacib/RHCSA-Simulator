@@ -45,12 +45,12 @@
       ],
       "solution_commands": [
         [
-          "vim /etc/chrony.d/lab11-server.conf",
+          "vim /etc/chrony.conf",
           "allow 192.168.122.0/24",
           "systemctl enable --now chronyd"
         ],
         [
-          "vim /etc/chrony.d/lab11-client.conf",
+          "vim /etc/chrony.conf",
           "server servervm iburst",
           "systemctl enable --now chronyd"
         ]

@@ -98,7 +98,8 @@ pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
 wipefs -a /dev/sdc >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
 id solg >/dev/null 2>&1 || useradd -m solg
-runuser -l solg -c 'podman image exists localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1'
+solg_uid="$(id -u solg)"
+runuser -l solg -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$solg_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman image exists localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1"
 mkdir -p /opt/ing /opt/outg /opt/rhcsa/workspaces/exam-g/site-content
 cat > /opt/rhcsa/workspaces/exam-g/site-content/index.html <<'EOF'
 exam g container

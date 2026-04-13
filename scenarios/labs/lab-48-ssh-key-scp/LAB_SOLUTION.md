@@ -23,7 +23,11 @@ Use a key pair and scp between the two lab hosts.
 ## Task 01 - Ensure bridge48 exists on both systems (clientvm) - 10 pts
 
 ```bash
-useradd -m bridge48
+# On clientvm
+id bridge48 >/dev/null 2>&1 || useradd -m bridge48
+echo 'bridge48:cinder9' | chpasswd
+# On servervm
+id bridge48 >/dev/null 2>&1 || useradd -m bridge48
 echo 'bridge48:cinder9' | chpasswd
 ```
 

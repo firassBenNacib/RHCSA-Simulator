@@ -31,8 +31,8 @@
       ],
       "solution_outline": [],
       "task_titles": [
-        "user worker42 has a CPU-bound process whose PID is...",
-        "User worker42 also has a long-running sleep process..."
+        "Terminate worker42's CPU-bound process",
+        "Change the long-running sleep process to nice 10"
       ],
       "task_points": [
         10,

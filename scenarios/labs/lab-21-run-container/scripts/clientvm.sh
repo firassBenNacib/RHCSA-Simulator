@@ -16,7 +16,8 @@ fi
 
 podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
 id runner21 >/dev/null 2>&1 || useradd -m runner21
-runuser -l runner21 -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+runner21_uid=$(id -u runner21)
+runuser -l runner21 -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$runner21_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
 mkdir -p /opt/file21 /opt/processed21 /tmp/lab21img/site-content
 cat > /tmp/lab21img/site-content/index.html <<'EOF'
 lab21 image
@@ -25,6 +26,6 @@ cat > /tmp/lab21img/Containerfile <<'EOF'
 FROM localhost/rhcsa-httpd-base:latest
 COPY site-content/ /var/www/html/
 EOF
-runuser -l runner21 -c 'podman build -t localhost/text2pdf21:latest /tmp/lab21img >/dev/null'
-runuser -l runner21 -c 'podman rm -f mycontainer21 >/dev/null 2>&1 || true'
+runuser -l runner21 -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$runner21_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman build -t localhost/text2pdf21:latest /tmp/lab21img >/dev/null"
+runuser -l runner21 -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$runner21_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman rm -f mycontainer21 >/dev/null 2>&1 || true"
 chown -R runner21:runner21 /opt/file21 /opt/processed21

@@ -27,16 +27,9 @@ systemctl set-default multi-user.target
 
 ---
 
-## Task 02 - Enable rsyslog on servervm (servervm) - 10 pts
+## Task 02 - Manage rsyslog and postfix on servervm (servervm) - 20 pts
 
 ```bash
 systemctl enable --now rsyslog
-```
-
----
-
-## Task 03 - Disable postfix on servervm if present (servervm) - 10 pts
-
-```bash
-systemctl disable --now postfix
+rpm -q postfix >/dev/null 2>&1 && systemctl disable --now postfix || true
 ```

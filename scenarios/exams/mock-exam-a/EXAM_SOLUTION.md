@@ -145,8 +145,9 @@ violet ALL=(root) NOPASSWD: /usr/bin/passwd
 ## Question 10 - Setgid Directory (clientvm) - 5 pts
 
 ```bash
-chmod 770 /srv/sysopsa
-chmod g+s /srv/sysopsa
+mkdir -p /srv/sysopsa
+chown root:sysopsa /srv/sysopsa
+chmod 2770 /srv/sysopsa
 ```
 
 ---
@@ -172,14 +173,12 @@ vim /etc/hosts
 ## Question 13 - Swap Space (clientvm) - 4 pts
 
 ```bash
-fdisk /dev/sdb
-# create a 512M GPT partition and set the type to Linux swap
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB
 partprobe /dev/sdb
 mkswap /dev/sdb1
 swapon /dev/sdb1
-blkid /dev/sdb1
-vim /etc/fstab
-UUID=<uuid-of-sdb1> swap swap defaults 0 0
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```
 
 ---
@@ -220,77 +219,47 @@ loginctl enable-linger oriona
 
 ---
 
-## Question 17 - Persistent Journal (servervm) - 4 pts
+## Question 17 - Fixed UID User (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+useradd -u 4420 ash420
+echo cinder9 | passwd --stdin ash420
 ```
 
 ---
 
-## Question 18 - Persistent Journal (servervm) - 4 pts
+## Question 18 - Find Copy Preserve (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+mkdir -p /root/amber-files
+find /opt/exam-a/find -user amber -mtime -1 -type f -exec cp --parents {} /root/amber-files \;
 ```
 
 ---
 
-## Question 19 - Persistent Journal (servervm) - 4 pts
+## Question 19 - Grep Filter (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+grep 'delta' /usr/share/dict/words > /root/delta-lines
 ```
 
 ---
 
-## Question 20 - Persistent Journal (servervm) - 4 pts
+## Question 20 - Archive /etc (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+tar -cjf /root/etc-opsa.tar.bz2 /etc
 ```
 
 ---
 
-## Question 21 - Persistent Journal (servervm) - 4 pts
+## Question 21 - Service Report Script (clientvm) - 4 pts
 
 ```bash
-# Run on servervm
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+vim /usr/local/bin/opsa-report
+#!/bin/bash
+while read -r unit; do systemctl is-active "$unit"; done < /usr/local/share/exam-a/services.lst > /root/opsa-services.txt
+chmod 755 /usr/local/bin/opsa-report
 ```
 
 ---

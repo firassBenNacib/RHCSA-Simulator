@@ -25,12 +25,6 @@ Configure servervm to boot into multi-user.target by default.
 
 ---
 
-## Task 02 - Enable rsyslog on servervm (servervm) - 10 pts
+## Task 02 - Manage rsyslog and postfix on servervm (servervm) - 20 pts
 
-Ensure the rsyslog service is enabled and running on servervm.
-
----
-
-## Task 03 - Disable postfix on servervm if present (servervm) - 10 pts
-
-If postfix is installed on servervm, disable it and stop it.
+Ensure the rsyslog service is enabled and running on servervm, and if postfix is installed disable it and stop it.

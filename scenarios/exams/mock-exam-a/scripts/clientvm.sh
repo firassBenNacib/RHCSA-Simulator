@@ -105,7 +105,8 @@ umount /mnt/reviewa >/dev/null 2>&1 || true
 
     podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
     id oriona >/dev/null 2>&1 || useradd -m oriona
-runuser -l oriona -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+    oriona_uid="$(id -u oriona)"
+    runuser -l oriona -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$oriona_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
     mkdir -p /opt/ina /opt/outa /opt/rhcsa/workspaces/exam-a/site-content
     cat > /opt/rhcsa/workspaces/exam-a/site-content/index.html <<'EOF'
 exam a container

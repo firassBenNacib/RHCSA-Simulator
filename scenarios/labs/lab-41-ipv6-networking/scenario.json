@@ -27,7 +27,7 @@
         "Use nmcli so the change survives a reconnect."
       ],
       "checks": [
-        "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 != \"\" && $2 != \"lo\" {print $1; exit}')\"; test -n \"$CONN\"; test \"$(nmcli -g ipv6.addresses connection show \"$CONN\")\" = 'fd00:122:41::25/64' && test \"$(nmcli -g ipv6.gateway connection show \"$CONN\")\" = 'fd00:122:41::1' && test \"$(nmcli -g ipv6.dns connection show \"$CONN\")\" = 'fd00:122:41::53' && test \"$(nmcli -g ipv6.method connection show \"$CONN\")\" = 'manual'",
+        "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 == \"eth1\" {print $1; found = 1; exit} $2 != \"\" && $2 != \"lo\" && first == \"\" {first = $1} END {if (!found) print first}')\"; test -n \"$CONN\"; test \"$(nmcli -g ipv6.addresses connection show \"$CONN\" | tr -d '\\\\')\" = 'fd00:122:41::25/64' && test \"$(nmcli -g ipv6.gateway connection show \"$CONN\" | tr -d '\\\\')\" = 'fd00:122:41::1' && test \"$(nmcli -g ipv6.dns connection show \"$CONN\" | tr -d '\\\\')\" = 'fd00:122:41::53' && test \"$(nmcli -g ipv6.method connection show \"$CONN\")\" = 'manual'",
         "hostnamectl --static | grep -qx 'clientvm.ipv6lab.local'",
         "getent hosts servervm.ipv6lab.local | grep -Fq 'fd00:122:41::3'"
       ],
@@ -44,11 +44,9 @@
       ],
       "solution_commands": [
         [
-          "nmcli device status",
-          "nmcli connection show \"System eth1\"",
-          "nmcli connection modify \"System eth1\" ipv6.method manual ipv6.addresses fd00:122:41::25/64 ipv6.gateway fd00:122:41::1 ipv6.dns fd00:122:41::53 connection.autoconnect yes",
-          "nmcli connection down \"System eth1\"",
-          "nmcli connection up \"System eth1\""
+          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 == \"eth1\" {print $1; found = 1; exit} $2 != \"\" && $2 != \"lo\" && first == \"\" {first = $1} END {if (!found) print first}')\"",
+          "test -n \"$CONN\"",
+          "nmcli connection modify \"$CONN\" ipv6.method manual ipv6.addresses fd00:122:41::25/64 ipv6.gateway fd00:122:41::1 ipv6.dns fd00:122:41::53 connection.autoconnect yes"
         ],
         [
           "hostnamectl set-hostname clientvm.ipv6lab.local",
@@ -56,7 +54,8 @@
           "fd00:122:41::3 servervm.ipv6lab.local"
         ],
         [
-          "nmcli connection show \"System eth1\"",
+          "CONN=\"$(nmcli -t -f NAME,DEVICE connection show --active | awk -F: '$2 == \"eth1\" {print $1; found = 1; exit} $2 != \"\" && $2 != \"lo\" && first == \"\" {first = $1} END {if (!found) print first}')\"",
+          "nmcli connection show \"$CONN\"",
           "getent hosts servervm.ipv6lab.local"
         ]
       ]

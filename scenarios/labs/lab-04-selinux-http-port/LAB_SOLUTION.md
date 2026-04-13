@@ -24,7 +24,7 @@ Fix Apache so it listens on a nonstandard port without disabling SELinux.
 ```bash
 vim /etc/httpd/conf/httpd.conf
 Listen 9082
-systemctl enable --now httpd
+systemctl enable httpd
 ```
 
 ---

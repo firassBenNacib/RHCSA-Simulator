@@ -22,8 +22,7 @@ Create a new volume group and logical volume and mount it persistently.
 ## Task 01 - On /dev/sdb, create an LVM partition, then create (clientvm) - 10 pts
 
 ```bash
-fdisk /dev/sdb
-# create a GPT LVM partition for the remaining disk space
+parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
 partprobe /dev/sdb
 pvcreate /dev/sdb1
 vgcreate -s 8M wgroupx /dev/sdb1
@@ -37,9 +36,8 @@ lvcreate -n wsharex -l 50 wgroupx
 ```bash
 mkfs.ext4 /dev/wgroupx/wsharex
 mkdir -p /mnt/wsharex
-blkid /dev/wgroupx/wsharex
-vim /etc/fstab
-UUID=<uuid-of-wsharex> /mnt/wsharex ext4 defaults 0 0
+uuid=$(blkid -s UUID -o value /dev/wgroupx/wsharex)
+echo "UUID=$uuid /mnt/wsharex ext4 defaults 0 0" >> /etc/fstab
 mount -a
 findmnt /mnt/wsharex
 ```

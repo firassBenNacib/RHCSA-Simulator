@@ -22,7 +22,7 @@ Load a provided container image into user storage and inspect its metadata with 
 ## Task 01 - Create user scope46 and set the password (clientvm) - 10 pts
 
 ```bash
-useradd -m scope46
+id scope46 >/dev/null 2>&1 || useradd -m scope46
 passwd scope46
 # enter: cinder9
 ```

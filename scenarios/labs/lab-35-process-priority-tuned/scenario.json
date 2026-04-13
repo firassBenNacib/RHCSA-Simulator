@@ -22,7 +22,7 @@
       "tasks": [
         "Install the tuned package if it is not already present and activate the tuned profile throughput-performance on servervm.",
         "Start the command sleep 3600 in the background on servervm and save its PID in /root/sleep35.pid.",
-        "Adjust the nice value of that process so it becomes 5."
+        "On servervm, adjust the nice value of that process so it becomes 5."
       ],
       "hints": [
         "Keep the tuning task on servervm, not clientvm.",
@@ -30,7 +30,7 @@
       ],
       "checks": [
         "ssh admin@servervm sudo tuned-adm active | grep -Fq 'throughput-performance'",
-        "ssh admin@servervm sudo test -s /root/sleep35.pid && ssh admin@servervm sudo ps -o ni= -p \"$(cat /root/sleep35.pid)\" | grep -qx ' 5'"
+        "ssh admin@servervm sudo bash -lc 'test -f /root/sleep35.pid && ps -o ni= -p \"$(cat /root/sleep35.pid)\" | tr -d \"[:space:]\" | grep -qx 5'"
       ],
       "solution_outline": [
         "Enable tuned and set throughput-performance on servervm.",
@@ -54,9 +54,10 @@
           "tuned-adm profile throughput-performance"
         ],
         [
-          "sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid"
+          "nohup sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid"
         ],
         [
+          "# On servervm",
           "renice -n 5 -p \"$(cat /root/sleep35.pid)\""
         ]
       ]

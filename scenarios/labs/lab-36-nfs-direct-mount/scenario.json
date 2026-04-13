@@ -30,7 +30,7 @@
         "Do not use autofs for this task."
       ],
       "checks": [
-        "grep -Eq '^[^#].*192\\.168\\.122\\.3:/exports/direct36[[:space:]]+/mnt/direct36[[:space:]]+nfs[[:space:]]+ro,sync' /etc/fstab",
+        "grep -Fqx '192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0' /etc/fstab",
         "mountpoint -q /mnt/direct36",
         "test -f /mnt/direct36/nfs36.txt"
       ],

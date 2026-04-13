@@ -19,32 +19,26 @@
   "content": {
     "lab": {
       "tasks": [
-        "On clientvm, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently.",
-        "SELinux must remain in enforcing mode."
+        "On clientvm, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently while SELinux remains in enforcing mode."
       ],
       "hints": [
         "Use a persistent SELinux boolean command."
       ],
       "checks": [
-        "getsebool httpd_can_network_connect | grep -q \"--> on\"",
-        "getenforce | grep -qx Enforcing"
+        "getsebool httpd_can_network_connect | grep -q -- \"--> on\" && getenforce | grep -qx Enforcing"
       ],
       "solution_outline": [
-        "Do not change enforcing mode."
+        "Enable the boolean persistently without changing SELinux mode."
       ],
       "task_titles": [
-        "configure the SELinux boolean...",
-        "SELinux must remain in enforcing mode"
+        "Enable the SELinux boolean while keeping enforcing mode"
       ],
       "task_points": [
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
-          "setsebool -P httpd_can_network_connect on"
-        ],
-        [
+          "setsebool -P httpd_can_network_connect on",
           "getenforce",
           "getsebool httpd_can_network_connect"
         ]

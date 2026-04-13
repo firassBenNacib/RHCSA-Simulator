@@ -5,7 +5,7 @@ param(
         param($commandName, $parameterName, $wordToComplete)
         $null = $commandName, $parameterName
 
-        foreach ($value in @('help', 'up', 'destroy', 'list', 'start', 'reset', 'status', 'check', 'repo', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', '-h', '--help')) {
+        foreach ($value in @('help', 'up', 'down', 'destroy', 'list', 'start', 'reset', 'status', 'check', 'repo', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', '-h', '--help')) {
             if ($value -like "$wordToComplete*") {
                 [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
             }
@@ -20,7 +20,7 @@ param(
 
         $area = [string]$fakeBoundParameters['Area']
         $candidates = switch ($area.ToLowerInvariant()) {
-            'help' { @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion') }
+            'help' { @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion') }
             'list' { @('all', 'labs', 'lab', 'exams', 'exam') }
             'ssh' { @('clientvm', 'servervm') }
             'ssh-config' { @('clientvm', 'servervm') }
@@ -232,6 +232,7 @@ function Get-RecommendedHelpCommand {
 
     switch ("$Area/$Command") {
         'baseline/up' { return '.\RHCSA.ps1 help up' }
+        'baseline/down' { return '.\RHCSA.ps1 help down' }
         'baseline/destroy' { return '.\RHCSA.ps1 help destroy' }
         'scenario/list' { return '.\RHCSA.ps1 help list' }
         'scenario/start' { return '.\RHCSA.ps1 help start' }
@@ -280,7 +281,7 @@ function Format-HelpEntryList {
 
 function Get-HelpOutput {
     param(
-        [ValidateSet('general', 'up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')]
+        [ValidateSet('general', 'up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')]
         [string]$Scope = 'general'
     )
 
@@ -300,6 +301,16 @@ function Get-HelpOutput {
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up -NoProvision')
+            )
+        }
+        'down' {
+            return @(
+                (Get-UiHeading -Text 'down'),
+                (Format-StyledText -Text 'Power off the simulator VMs without destroying the baseline or local state.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 down'),
+                '',
+                'Example:',
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 down')
             )
         }
         'destroy' {
@@ -431,6 +442,7 @@ function Get-HelpOutput {
         default {
             $entry = @(
                 [PSCustomObject]@{ Name = 'up'; Description = 'Start or refresh the clean baseline' }
+                [PSCustomObject]@{ Name = 'down'; Description = 'Power off the simulator VMs' }
                 [PSCustomObject]@{ Name = 'destroy'; Description = 'Destroy VMs and local simulator state' }
                 [PSCustomObject]@{ Name = 'list'; Description = 'List labs and mock exams' }
                 [PSCustomObject]@{ Name = 'start'; Description = 'Start a lab or exam run' }
@@ -455,6 +467,7 @@ function Get-HelpOutput {
                 '',
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 down'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
@@ -628,7 +641,7 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
     }
 
     if (`$tokens.Count -eq 0) {
-        Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', 'help')
+        Complete-RhcsaValues -Value @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', 'help')
         return
     }
 
@@ -637,7 +650,7 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
 
     switch (`$root) {
         'help' {
-            Complete-RhcsaValues -Value @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
+            Complete-RhcsaValues -Value @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
             return
         }
         'list' {
@@ -1237,16 +1250,33 @@ function Format-DestroyOutput {
         }
     }
 
+    $alreadyClean = $false
+    if ($null -ne $resultObject.PSObject.Properties['AlreadyClean']) {
+        $alreadyClean = [bool]$resultObject.AlreadyClean
+    }
+
     $lines = @()
+    if ($resultObject.Skipped) {
+        $lines += (Get-UiHeading -Text 'Destroy skipped' -StyleName 'Warning')
+        return $lines
+    }
+
+    if ($alreadyClean) {
+        $lines += (Get-UiHeading -Text 'Simulator destroyed and cleaned' -StyleName 'Success')
+        return $lines
+    }
+
     foreach ($note in @($resultObject.Notes)) {
-        if ([string]$note -match '^vagrant destroy returned exit code (-1|1)\b') {
-            continue
-        }
         $lines += ('{0} {1}' -f (Format-StyledText -Text 'NOTICE' -StyleName 'Warning'), $note)
     }
 
-    if ($resultObject.Skipped) {
-        $lines += (Get-UiHeading -Text 'Destroy skipped' -StyleName 'Warning')
+    $cleanupComplete = $true
+    if ($null -ne $resultObject.PSObject.Properties['CleanupComplete']) {
+        $cleanupComplete = [bool]$resultObject.CleanupComplete
+    }
+
+    if (-not $cleanupComplete) {
+        $lines += (Get-UiHeading -Text 'Destroy incomplete' -StyleName 'Warning')
         return $lines
     }
 
@@ -1275,13 +1305,14 @@ function Resolve-CommandRoute {
 
     switch ($resolvedArea) {
         'help' {
-            if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
+            if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
                 $nextArea = $tokens[0].ToLowerInvariant()
                 $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
                 return [PSCustomObject]@{ Area = 'help'; Command = $nextArea; Item = $null; Extra = $remaining; Legacy = $false }
             }
         }
         'up' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'up'; Item = $null; Extra = $tokens; Legacy = $false } }
+        'down' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'down'; Item = $null; Extra = $tokens; Legacy = $false } }
         'destroy' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'destroy'; Item = $null; Extra = $tokens; Legacy = $false } }
         'list' {
             $listItem = if ($tokens.Count -gt 0) { $tokens[0] } else { $null }
@@ -1331,6 +1362,7 @@ if ($Help) {
     switch ($normalizedArea) {
         '' { $helpScope = 'general' }
         'up' { $helpScope = 'up' }
+        'down' { $helpScope = 'down' }
         'destroy' { $helpScope = 'destroy' }
         'list' { $helpScope = 'list' }
         'start' { $helpScope = 'start' }
@@ -1344,7 +1376,7 @@ if ($Help) {
         'tui' { $helpScope = 'tui' }
         'completion' { $helpScope = 'completion' }
         'help' {
-            $helpScope = if ($normalizedCommand -in @('up', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
+            $helpScope = if ($normalizedCommand -in @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')) {
                 $normalizedCommand
             }
             else {
@@ -1429,6 +1461,49 @@ try {
                 $script:ShowWorkflowStatus = $previousWorkflowPreference
             }
             Format-BaselineStartOutput -BaselineResult $result -BaselineStatus (Get-BaselineStatus -ProjectRoot $projectRoot) | Write-Output
+            break
+        }
+        'baseline/down' {
+            if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+                Get-HelpOutput -Scope 'down' | Write-Output
+                break
+            }
+
+            if ($item) {
+                throw "Unknown down argument '$item'."
+            }
+
+            if ($remainingItem.Count -gt 0) {
+                throw "Unknown down argument '$($remainingItem[0])'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Id')) {
+                throw "Unknown down argument '-Id'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Mode')) {
+                throw "Unknown down argument '-Mode'."
+            }
+
+            if ($PSBoundParameters.ContainsKey('Vm')) {
+                throw "Unknown down argument '-Vm'."
+            }
+
+            $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $projectRoot)
+            $vagrantPath = Get-VagrantPath
+            foreach ($machineName in @('servervm', 'clientvm')) {
+                $current = $machineStatus | Where-Object { $_.Name -eq $machineName } | Select-Object -First 1
+                if ($null -eq $current) {
+                    continue
+                }
+                if ($current.State -in @('not created', 'poweroff', 'saved', 'aborted')) {
+                    continue
+                }
+                Invoke-ExternalCommand -FilePath $vagrantPath -ArgumentList @('halt', $machineName, '-f') -FailureMessage "Failed to halt $machineName." -IgnoreExitCode -SuppressOutput
+            }
+
+            Write-Output (Get-UiHeading -Text 'VMs powered off' -StyleName 'Success')
+            Format-VmStatusOutput -MachineStatus (Get-VagrantMachineStatus -ProjectRoot $projectRoot) | Write-Output
             break
         }
         'baseline/repo' {

@@ -98,7 +98,8 @@ umount /mnt/reviewb >/dev/null 2>&1 || true
 
     podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
     id lyrab >/dev/null 2>&1 || useradd -m lyrab
-runuser -l lyrab -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'
+    lyrab_uid="$(id -u lyrab)"
+    runuser -l lyrab -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$lyrab_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
     mkdir -p /opt/inb /opt/outb /opt/rhcsa/workspaces/exam-b/site-content
     cat > /opt/rhcsa/workspaces/exam-b/site-content/index.html <<'EOF'
 exam b container

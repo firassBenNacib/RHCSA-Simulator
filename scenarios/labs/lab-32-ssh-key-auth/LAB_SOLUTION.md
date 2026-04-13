@@ -23,11 +23,11 @@ Configure passwordless SSH login from clientvm to servervm using a key pair.
 ## Task 01 - Create user relay32 on clientvm and user vault32 on (clientvm + servervm) - 10 pts
 
 ```bash
-useradd -m relay32
+id relay32 >/dev/null 2>&1 || useradd -m relay32
 passwd relay32
 # enter: cinder9
 # on servervm
-useradd -m vault32
+id vault32 >/dev/null 2>&1 || useradd -m vault32
 passwd vault32
 # enter: cinder9
 ```
@@ -38,8 +38,8 @@ passwd vault32
 
 ```bash
 su - relay32
-ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-ssh-copy-id vault32@servervm
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+ssh-copy-id -o StrictHostKeyChecking=no vault32@servervm
 ```
 
 ---

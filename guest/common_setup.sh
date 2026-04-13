@@ -326,20 +326,69 @@ rhcsa_validate_container_archive() {
 rhcsa_rebuild_httpd_base_archive() {
   local archive_path="/opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
   local image_name="localhost/rhcsa-httpd-base:latest"
+  local build_root="/var/tmp/rhcsa-httpd-rootfs-rebuild"
+  local rootfs_tar="/var/tmp/rhcsa-httpd-base-rebuild.tar"
 
-  if ! podman image exists "$image_name" >/dev/null 2>&1; then
-    [[ -f "$archive_path" ]] || return 1
-    podman import \
-      --change 'CMD ["/usr/sbin/httpd","-DFOREGROUND"]' \
-      --change 'EXPOSE 80' \
-      --change 'STOPSIGNAL SIGWINCH' \
-      "$archive_path" \
-      "$image_name" >/dev/null 2>&1
+  mkdir -p /opt/rhcsa/container-assets
+
+  if podman image exists "$image_name" >/dev/null 2>&1; then
+    rm -f "$archive_path"
+    if skopeo copy --insecure-policy "containers-storage:${image_name}" "docker-archive:${archive_path}:${image_name}" >/dev/null 2>&1 &&
+      rhcsa_validate_container_archive "$archive_path"; then
+      return 0
+    fi
   fi
 
+  rm -rf "$build_root"
+  mkdir -p "$build_root"
+
+  dnf -y \
+    --installroot "$build_root" \
+    --releasever=9 \
+    --disablerepo='*' \
+    --enablerepo=rhcsa-baseos \
+    --enablerepo=rhcsa-appstream \
+    --setopt=reposdir=/etc/yum.repos.d \
+    --setopt=install_weak_deps=False \
+    --setopt=tsflags=nodocs \
+    install bash coreutils httpd >/dev/null
+
+  dnf -y \
+    --installroot "$build_root" \
+    --releasever=9 \
+    --disablerepo='*' \
+    --enablerepo=rhcsa-baseos \
+    --enablerepo=rhcsa-appstream \
+    --setopt=reposdir=/etc/yum.repos.d \
+    clean all >/dev/null || true
+
+  rm -rf \
+    "$build_root/var/cache/dnf" \
+    "$build_root/var/log/dnf"* \
+    "$build_root/var/log/yum."* \
+    "$build_root/usr/share/doc" \
+    "$build_root/usr/share/info" \
+    "$build_root/usr/share/man"
+
+  mkdir -p "$build_root/run/httpd" "$build_root/var/www/html"
+  echo 'RHCSA local container base image' > "$build_root/var/www/html/index.html"
+
+  tar -C "$build_root" -cf "$rootfs_tar" .
+  podman rmi -f "$image_name" >/dev/null 2>&1 || true
+  podman import \
+    --change 'CMD ["/usr/sbin/httpd","-DFOREGROUND"]' \
+    --change 'EXPOSE 80' \
+    --change 'STOPSIGNAL SIGWINCH' \
+    "$rootfs_tar" \
+    "$image_name" >/dev/null 2>&1
+
   rm -f "$archive_path"
-  skopeo copy --insecure-policy "containers-storage:${image_name}" "docker-archive:${archive_path}:${image_name}" >/dev/null 2>&1
+  skopeo copy --insecure-policy "containers-storage:${image_name}" "docker-archive:${archive_path}:${image_name}" >/dev/null 2>&1 || return 1
   rhcsa_validate_container_archive "$archive_path"
+  local status=$?
+  rm -f "$rootfs_tar"
+  rm -rf "$build_root"
+  return $status
 }
 
 rhcsa_ensure_httpd_base_archive() {

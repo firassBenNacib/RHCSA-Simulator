@@ -181,16 +181,6 @@ def normalize_command_list(commands: list[str]) -> list[str]:
             i += 1
             continue
 
-        if match := re.fullmatch(r"id ([a-z_][a-z0-9_-]*) (?:>/dev/null 2>&1 )?\|\| (useradd .+)", cmd, re.IGNORECASE):
-            normalized.append(match.group(2))
-            i += 1
-            continue
-
-        if cmd == "rpm -q postfix >/dev/null 2>&1 && systemctl disable --now postfix || true":
-            normalized.append("systemctl disable --now postfix")
-            i += 1
-            continue
-
         if cmd.startswith("sed -i 's/^Listen .*/Listen ") and cmd.endswith("/etc/httpd/conf/httpd.conf"):
             match = re.search(r"Listen ([0-9]+)", cmd)
             if not match:

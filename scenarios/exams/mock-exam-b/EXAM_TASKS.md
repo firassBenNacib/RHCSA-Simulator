@@ -117,42 +117,46 @@ Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/
 
 ---
 
-## Question 16 - Passwordless SSH (servervm) - 4 pts
+## Question 16 - Find Copy Preserve (clientvm) - 4 pts
 
-On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
-
----
-
-## Question 17 - Rsync Transfer (servervm) - 4 pts
-
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.
+Find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.
 
 ---
 
-## Question 18 - Passwordless SSH (servervm) - 4 pts
+## Question 17 - Grep Filter (clientvm) - 4 pts
 
-On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
-
----
-
-## Question 19 - Rsync Transfer (servervm) - 4 pts
-
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.
+Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.
 
 ---
 
-## Question 20 - Passwordless SSH (servervm) - 4 pts
+## Question 18 - Archive /usr/local (clientvm) - 4 pts
 
-On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
-
----
-
-## Question 21 - Rsync Transfer (servervm) - 4 pts
-
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.
+Create /root/usr-local-b.tar.bz2 containing /usr/local.
 
 ---
 
-## Question 22 - Passwordless SSH (servervm) - 4 pts
+## Question 19 - Service Report Script (clientvm) - 4 pts
 
-On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
+Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.
+
+---
+
+## Question 20 - Swap Space (clientvm) - 4 pts
+
+On /dev/sdb, create a 640 MiB swap partition.
+
+**Requirements**
+- Enable it immediately.
+- Configure it persistently.
+
+---
+
+## Question 21 - Resize LV (clientvm) - 4 pts
+
+Resize /dev/reviewvgb/reviewb so the final size is 300 MiB without losing the existing filesystem data.
+
+---
+
+## Question 22 - Apply Tuned (clientvm) - 4 pts
+
+Apply the recommended tuned profile and leave it active.

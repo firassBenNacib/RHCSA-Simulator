@@ -28,9 +28,9 @@
         "Do not move the existing document root."
       ],
       "checks": [
-        "ss -ltn '( sport = :9082 )' | grep -q ':9082' && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active",
+        "grep -Eq '^Listen 9082$' /etc/httpd/conf/httpd.conf && systemctl is-enabled httpd | grep -qx enabled",
         "firewall-cmd --permanent --query-port=9082/tcp",
-        "curl -fsS http://localhost:9082 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b9082\\b'"
+        "curl -fsS http://localhost:9082 >/dev/null && systemctl is-active httpd | grep -qx active && semanage port -l | grep -Eq '^http_port_t\\b.*\\b9082\\b'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -49,7 +49,7 @@
         [
           "vim /etc/httpd/conf/httpd.conf",
           "Listen 9082",
-          "systemctl enable --now httpd"
+          "systemctl enable httpd"
         ],
         [
           "firewall-cmd --permanent --add-port=9082/tcp",

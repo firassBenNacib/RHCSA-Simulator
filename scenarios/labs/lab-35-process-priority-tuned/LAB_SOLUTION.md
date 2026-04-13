@@ -32,7 +32,7 @@ tuned-adm profile throughput-performance
 ## Task 02 - Start the long-running sleep process on servervm (servervm) - 10 pts
 
 ```bash
-sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid
+nohup sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid
 ```
 
 ---
@@ -40,5 +40,6 @@ sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid
 ## Task 03 - Renice the process to 5 (servervm) - 10 pts
 
 ```bash
+# On servervm
 renice -n 5 -p "$(cat /root/sleep35.pid)"
 ```

@@ -19,12 +19,6 @@ Modify a SELinux boolean persistently without changing enforcing mode.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - configure the SELinux boolean (clientvm) - 10 pts
+## Task 01 - Enable the SELinux boolean while keeping enforcing mode (clientvm) - 20 pts
 
-On clientvm, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently.
-
----
-
-## Task 02 - SELinux must remain in enforcing mode (clientvm) - 10 pts
-
-SELinux must remain in enforcing mode.
+On clientvm, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently while SELinux remains in enforcing mode.

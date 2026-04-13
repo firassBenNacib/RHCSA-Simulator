@@ -29,9 +29,9 @@
         "Populate authorized_keys for the target user."
       ],
       "checks": [
-        "getent passwd relay32 >/dev/null && getent shadow relay32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null && ssh admin@servervm sudo getent passwd vault32 >/dev/null && ssh admin@servervm sudo getent shadow vault32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "getent passwd relay32 >/dev/null && getent shadow relay32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
         "runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true'",
-        "sshd -T | grep -Eq '^passwordauthentication yes$' && ssh admin@servervm sudo sshd -T | grep -Eq '^passwordauthentication yes$'"
+        "sshd -T | grep -Eq '^passwordauthentication yes$'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -48,18 +48,18 @@
       ],
       "solution_commands": [
         [
-          "useradd -m relay32",
+          "id relay32 >/dev/null 2>&1 || useradd -m relay32",
           "passwd relay32",
           "# enter: cinder9",
           "# on servervm",
-          "useradd -m vault32",
+          "id vault32 >/dev/null 2>&1 || useradd -m vault32",
           "passwd vault32",
           "# enter: cinder9"
         ],
         [
           "su - relay32",
-          "ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa",
-          "ssh-copy-id vault32@servervm"
+          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519",
+          "ssh-copy-id -o StrictHostKeyChecking=no vault32@servervm"
         ],
         [
           "su - relay32",

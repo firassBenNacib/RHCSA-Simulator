@@ -31,5 +31,6 @@ find /opt/lab12/source -type f -user natfind -mtime -1
 
 ```bash
 mkdir -p /root/natfind-files
-find /opt/lab12/source -type f -user natfind -mtime -1 -exec cp --parents {} /root/natfind-files \;
+cd /opt/lab12/source
+find . -type f -user natfind -mtime -1 -exec cp --parents {} /root/natfind-files \;
 ```

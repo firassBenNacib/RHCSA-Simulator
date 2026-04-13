@@ -23,9 +23,11 @@ Configure key-based SSH access and securely transfer files between systems.
 ## Task 01 - Ensure mesh39 exists on both systems (clientvm) - 10 pts
 
 ```bash
-useradd -m mesh39
-passwd mesh39
-# repeat on servervm
+id mesh39 >/dev/null 2>&1 || useradd -m mesh39
+echo 'mesh39:cinder9' | chpasswd
+# Run on servervm
+id mesh39 >/dev/null 2>&1 || useradd -m mesh39
+echo 'mesh39:cinder9' | chpasswd
 ```
 
 ---

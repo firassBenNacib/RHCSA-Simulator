@@ -198,59 +198,66 @@ chmod 0750 /srv/summit-audit
 
 ---
 
-## Question 17 - Audit Directory (clientvm) - 4 pts
+## Question 17 - Find And Copy (clientvm) - 4 pts
 
 ```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
+mkdir -p /root/foragerd-files
+find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/foragerd-files \;
 ```
 
 ---
 
-## Question 18 - Audit Directory (clientvm) - 4 pts
+## Question 18 - Grep Filter (clientvm) - 4 pts
 
 ```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
+grep 'alpha' /usr/share/dict/words > /root/alpha-lines
 ```
 
 ---
 
-## Question 19 - Audit Directory (clientvm) - 4 pts
+## Question 19 - Archive /etc (clientvm) - 4 pts
 
 ```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
+tar -czf /root/summit-etc.tar.gz /etc
 ```
 
 ---
 
-## Question 20 - Audit Directory (clientvm) - 4 pts
+## Question 20 - Service Report Script (clientvm) - 4 pts
 
 ```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
+vim /usr/local/bin/summit-scan
+#!/bin/bash
+while read -r unit; do systemctl is-active "$unit"; done < /usr/local/share/exam-d/units.lst > /root/summit-units.txt
+chmod 755 /usr/local/bin/summit-scan
 ```
 
 ---
 
-## Question 21 - Audit Directory (clientvm) - 4 pts
+## Question 21 - Swap Space (clientvm) - 4 pts
 
 ```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB
+partprobe /dev/sdb
+mkswap /dev/sdb1
+swapon /dev/sdb1
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```
 
 ---
 
-## Question 22 - Find And Copy (clientvm) - 4 pts
+## Question 22 - LVM Mount (clientvm) - 4 pts
 
 ```bash
-mkdir -p /root/miles-files
-find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/miles-files \;
+parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100%
+partprobe /dev/sdc
+pvcreate /dev/sdc1
+vgcreate summitvg /dev/sdc1
+lvcreate -n summitlv -L 256M summitvg
+mkfs.ext4 -F /dev/summitvg/summitlv
+mkdir -p /mnt/summitlv
+uuid=$(blkid -s UUID -o value /dev/summitvg/summitlv)
+echo "UUID=$uuid /mnt/summitlv ext4 defaults 0 0" >> /etc/fstab
+mount -a
 ```

@@ -22,6 +22,7 @@ Run a container from a prepared local image with bind mounts.
 ## Task 01 - Run mycontainer21 as runner21 (clientvm) - 10 pts
 
 ```bash
+id runner21 >/dev/null 2>&1 || useradd -m runner21
 su - runner21
 ```
 
@@ -30,6 +31,7 @@ su - runner21
 ## Task 02 - Bind mount the input and output directories (clientvm) - 10 pts
 
 ```bash
+su - runner21
 podman run -d --name mycontainer21 -v /opt/file21:/data/input:Z -v /opt/processed21:/data/output:Z localhost/text2pdf21:latest
 podman ps
 exit
