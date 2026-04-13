@@ -23,7 +23,6 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-    strip_parent: true
 checksum:
   algorithm: sha256
 snapshot:
