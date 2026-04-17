@@ -387,3 +387,25 @@ func TestCopyDetailSectionOmitsHeadingTitle(t *testing.T) {
 		t.Fatalf("expected section copy payload to omit its title, got %q", sections[0].content)
 	}
 }
+
+func TestSolutionCopyBoundsExistPerSection(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailSolution
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) == 0 {
+		t.Fatal("expected solution copy bounds to be available")
+	}
+}
+
+func TestPromptCopyBoundsAreHidden(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailPrompt
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) != 0 {
+		t.Fatalf("expected task view copy bounds to be hidden, got %d", len(bounds))
+	}
+}

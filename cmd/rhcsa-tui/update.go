@@ -34,15 +34,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.MouseMsg:
-		return m.handleMouse(msg)
+		next, cmd := m.handleMouse(msg)
+		if msg.Type == tea.MouseMotion {
+			return next, cmd
+		}
+		return next, withRepaint(cmd)
 
 	case actionResultMsg:
 		return m.handleActionResult(msg)
 	case tea.KeyMsg:
-		return m.handleKeyMsg(msg)
+		next, cmd := m.handleKeyMsg(msg)
+		return next, withRepaint(cmd)
 	}
 
 	return m, nil
+}
+
+func withRepaint(cmd tea.Cmd) tea.Cmd {
+	if cmd == nil {
+		return tea.ClearScreen
+	}
+	return tea.Batch(cmd, tea.ClearScreen)
 }
 
 func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {

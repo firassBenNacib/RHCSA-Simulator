@@ -317,7 +317,7 @@ func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
 	}
 }
 
-func TestPromptViewShowsPerQuestionCopyButtonsForStructuredContent(t *testing.T) {
+func TestPromptViewDoesNotShowCopyButtonsForStructuredContent(t *testing.T) {
 	m := buildRenderTestModel(t)
 	taskPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_TASKS.md")
 	taskBody := strings.Join([]string{
@@ -334,8 +334,8 @@ func TestPromptViewShowsPerQuestionCopyButtonsForStructuredContent(t *testing.T)
 	}
 
 	stripped := utils.StripAnsi(m.renderDetailBody())
-	if strings.Count(stripped, "[COPY]") < 2 {
-		t.Fatalf("expected per-task copy buttons, got:\n%s", stripped)
+	if strings.Contains(stripped, "[COPY]") {
+		t.Fatalf("expected task view to omit copy buttons, got:\n%s", stripped)
 	}
 }
 

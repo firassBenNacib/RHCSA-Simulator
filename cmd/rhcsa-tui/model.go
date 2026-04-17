@@ -324,6 +324,9 @@ func (m model) detailTextWidth() int {
 }
 
 func (m model) statusPaneHeight() int {
+	if m.filterMode {
+		return 0
+	}
 	if strings.TrimSpace(m.statusText) == "" && !m.busy && !m.filterMode && m.confirmKind == "" {
 		return 0
 	}

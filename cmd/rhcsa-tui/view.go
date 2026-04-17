@@ -440,6 +440,10 @@ func (m model) copyableDetailBody() string {
 }
 
 func (m model) copyableSections() []copySection {
+	if !m.canCopyDetail() {
+		return nil
+	}
+
 	body := m.copyableDetailBody()
 	if body == "" {
 		return nil
@@ -620,7 +624,8 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 	terminalCommands := mode == detailCheck
 	copySectionIndex := -1
 	copySections := m.copyableSections()
-	if len(copySections) == 1 && copySections[0].title == "SECTION" {
+	showCopyButtons := m.canCopyDetail()
+	if showCopyButtons && len(copySections) == 1 && copySections[0].title == "SECTION" {
 		rendered = append(rendered, m.renderCopyableHeadingLine("Copy Section", width, 0)...)
 		rendered = append(rendered, detailRenderedLine{text: "", copySection: -1})
 		copySectionIndex = 0
@@ -664,24 +669,36 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 		case strings.HasPrefix(trimmed, "# "):
 			heading := strings.TrimPrefix(trimmed, "# ")
 			if _, ok := normalizedSectionHeading(heading); ok {
-				copySectionIndex++
-				rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				if showCopyButtons {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				} else {
+					rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH1)
+				}
 				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH1)
 		case strings.HasPrefix(trimmed, "## "):
 			heading := strings.TrimPrefix(trimmed, "## ")
 			if _, ok := normalizedSectionHeading(heading); ok {
-				copySectionIndex++
-				rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				if showCopyButtons {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				} else {
+					rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH2)
+				}
 				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH2)
 		case strings.HasPrefix(trimmed, "### "):
 			heading := strings.TrimPrefix(trimmed, "### ")
 			if _, ok := normalizedSectionHeading(heading); ok {
-				copySectionIndex++
-				rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				if showCopyButtons {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				} else {
+					rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH3)
+				}
 				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH3)
@@ -692,8 +709,12 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 			rendered = appendCommandLines(rendered, trimmed, width, m.theme)
 		default:
 			if _, ok := normalizedSectionHeading(trimmed); ok {
-				copySectionIndex++
-				rendered = append(rendered, m.renderCopyableHeadingLine(trimmed, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				if showCopyButtons {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(trimmed, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				} else {
+					rendered = appendWrappedDetailLines(rendered, "  "+trimmed, width, m.theme.DetailH2)
+				}
 				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+line, width, m.theme.DetailPlain)
@@ -950,6 +971,10 @@ type sectionCopyBound struct {
 }
 
 func (m model) detailSectionCopyBounds() []sectionCopyBound {
+	if !m.canCopyDetail() {
+		return nil
+	}
+
 	bodyLines := m.renderDetailBodyLines(m.detailTextWidth())
 	if len(bodyLines) == 0 {
 		return nil
@@ -1007,7 +1032,8 @@ func (m model) detailSectionOffsets() []int {
 	lines := m.renderDetailBodyLines(m.detailTextWidth())
 	offsets := make([]int, 0, 8)
 	for i, line := range lines {
-		if line.copySection >= 0 {
+		stripped := strings.TrimSpace(utils.StripAnsi(line.text))
+		if _, ok := normalizedSectionHeading(stripped); ok {
 			offsets = append(offsets, i)
 		}
 	}
