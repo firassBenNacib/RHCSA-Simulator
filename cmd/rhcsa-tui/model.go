@@ -279,11 +279,11 @@ const (
 	maxStatusHeight     = 12
 	minStatusHeight     = 4
 	// header(1) + tabBar(2) + footer(1) = 4 lines of chrome
-	chromeHeight       = 4
-	minContentHeight   = 4
-	minDetailTextWidth = 20
-	listPaneBorder     = 3
-	detailPaneBorder   = 5
+	chromeHeight          = 4
+	minContentHeight      = 4
+	minDetailTextWidth    = 20
+	listPaneBorder        = 3
+	detailPaneBorder      = 5
 	defaultMaxStatusLines = 10
 )
 
@@ -429,6 +429,50 @@ func (m *model) switchCatalogTab(delta int) {
 	if m.activeTab == labsTab {
 		m.touchViewed()
 	}
+}
+
+func (m model) availableDetailModes() []detailMode {
+	if m.activeTab == examsTab {
+		return []detailMode{detailPrompt, detailSolution}
+	}
+	return []detailMode{detailPrompt, detailHint, detailCheck, detailSolution}
+}
+
+func (m *model) cycleDetailMode(delta int) {
+	modes := m.availableDetailModes()
+	if len(modes) == 0 || delta == 0 {
+		return
+	}
+
+	index := 0
+	for i, mode := range modes {
+		if mode == m.detail {
+			index = i
+			break
+		}
+	}
+
+	index = (index + delta + len(modes)) % len(modes)
+	m.setDetailMode(modes[index])
+}
+
+func (m model) selectionProgressLabel() string {
+	total := len(m.filteredExams())
+	selected := m.selectedExam + 1
+	if m.activeTab == labsTab {
+		total = len(m.filteredLabs())
+		selected = m.selectedLab + 1
+	}
+	if total == 0 {
+		return "0 / 0"
+	}
+	if selected < 1 {
+		selected = 1
+	}
+	if selected > total {
+		selected = total
+	}
+	return fmt.Sprintf("%d / %d", selected, total)
 }
 
 // ── Confirm / status text helpers ──────────────────────────
@@ -638,7 +682,7 @@ func (m model) helpBody() string {
 		"",
 		"Navigation",
 		"  Tab / Shift+Tab      move between the catalog and details",
-		"  ← / →                switch LABS and EXAMS",
+		"  ← / →                switch LABS and EXAMS, or switch documents in details",
 		"  ↑ / ↓ / j / k        move within the active pane",
 		"  PgUp / PgDn          page through details",
 		"  Ctrl+U / Ctrl+D      half-page scroll in details",
@@ -649,6 +693,7 @@ func (m model) helpBody() string {
 		"  Enter / s            start selected lab or exam",
 		"  c                    run checks (labs only)",
 		"  r                    reset the active run",
+		"  y                    copy checks or solution to the clipboard",
 		"  z                    SSH → clientvm",
 		"  x                    SSH → servervm",
 		"",

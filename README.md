@@ -116,11 +116,12 @@ This is the best option if you already use the PowerShell entrypoint for everyth
 
 * `Enter` start the selected lab or exam
 * `Tab` move between the catalog and the detail pane
-* `←` / `→` switch between Labs and Exams
+* `←` / `→` switch between Labs and Exams from the catalog, or switch documents from the detail pane
 * `F1` or `1` open Tasks
 * `F2` or `2` open Hint for labs
 * `F3` or `3` or `"` open Checks for labs
 * `F4` or `4` or `'` open Solution
+* `y` copy the current Checks or Solution document to the clipboard
 * `c` run checks for the active lab
 * `r` reset the active run
 * `/` open search

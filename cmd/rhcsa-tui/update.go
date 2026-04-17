@@ -32,10 +32,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = int(msg.Width)
 		m.height = int(msg.Height)
 		return m, nil
-		
+
 	case tea.MouseMsg:
 		return m.handleMouse(msg)
-		
+
 	case actionResultMsg:
 		return m.handleActionResult(msg)
 	case tea.KeyMsg:
@@ -212,10 +212,18 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.switchPaneFocus()
 		return m, nil
 	case "left":
-		m.switchCatalogTab(-1)
+		if m.focus == focusDetail {
+			m.cycleDetailMode(-1)
+		} else {
+			m.switchCatalogTab(-1)
+		}
 		return m, nil
 	case "right":
-		m.switchCatalogTab(1)
+		if m.focus == focusDetail {
+			m.cycleDetailMode(1)
+		} else {
+			m.switchCatalogTab(1)
+		}
 		return m, nil
 	case "esc":
 		if m.focus == focusDetail {
@@ -306,6 +314,21 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleSSHAction("clientvm")
 	case "x":
 		return m.handleSSHAction("servervm")
+	case "y":
+		if !m.canCopyDetail() {
+			m.statusText = "Copy is available for checks and solutions"
+			return m, nil
+		}
+		if err := copyTextToClipboard(m.copyableDetailBody()); err != nil {
+			m.statusText = "Clipboard copy failed\n" + err.Error()
+			return m, nil
+		}
+		if m.detail == detailCheck {
+			m.statusText = "Copied checks to clipboard"
+		} else {
+			m.statusText = "Copied solution to clipboard"
+		}
+		return m, nil
 	case "/", ":", "ctrl+f":
 		m.filterMode = true
 		if m.filterQuery == "" {

@@ -91,13 +91,13 @@ func TestRenderFullView(t *testing.T) {
 	stripped := utils.StripAnsi(output)
 
 	checks := []string{
-		"RHCSA Simulator",       // header
-		"LABS",                  // tab
-		"EXAMS",                 // tab
-		"TASKS",                 // view mode
-		"Lab 01",                // lab title
-		"Start",                 // footer key
-		"Quit",                  // footer key
+		"RHCSA Simulator", // header
+		"LABS",            // tab
+		"EXAMS",           // tab
+		"TASKS",           // view mode
+		"Lab 01",          // lab title
+		"Start",           // footer key
+		"Quit",            // footer key
 	}
 
 	for _, check := range checks {
@@ -196,6 +196,13 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 			t.Fatalf("expected footer to contain %q, got:\n%s", snippet, stripped)
 		}
 	}
+	if !strings.Contains(stripped, "1 / 1") {
+		t.Fatalf("expected header to contain selection progress, got:\n%s", stripped)
+	}
+	if !(strings.Index(stripped, "/ Find") < strings.Index(stripped, "? Help") &&
+		strings.Index(stripped, "? Help") < strings.Index(stripped, "q Quit")) {
+		t.Fatalf("expected footer to end with Find, Help, Quit ordering, got:\n%s", stripped)
+	}
 }
 
 func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
@@ -223,5 +230,14 @@ func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
 	}
 	if !strings.Contains(sanitized, "## Task 01") {
 		t.Fatalf("expected sanitized content to retain task heading, got:\n%s", sanitized)
+	}
+}
+
+func TestSolutionRenderingUsesTerminalPromptStyle(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.detail = detailSolution
+	rendered := utils.StripAnsi(m.renderDetailBody())
+	if !strings.Contains(rendered, "$ hostnamectl set-hostname demo") {
+		t.Fatalf("expected solution rendering to prefix commands with $, got:\n%s", rendered)
 	}
 }

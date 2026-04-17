@@ -144,6 +144,7 @@ func (m model) renderListHeader(width int) []string {
 	}
 
 	metaParts := []string{fmt.Sprintf("%d total", total)}
+	metaParts = []string{m.selectionProgressLabel()}
 	if strings.TrimSpace(m.filterQuery) != "" {
 		metaParts = append(metaParts, fmt.Sprintf("filter: %q", m.filterQuery))
 	}
@@ -172,35 +173,35 @@ func (m model) renderListItems(width, height int) string {
 		if total == 0 {
 			return m.theme.Muted.Render("  No labs found")
 		}
-			start, end := m.visibleRange(total)
-			activeID := m.activeScenarioID()
-			for i := start; i < end; i++ {
-				lab := labs[i]
-				entries = append(entries, listEntry{
-					id:       lab.ID,
-					title:    lab.Title,
-					selected: i == m.selectedLab,
-					active:   lab.ID == activeID,
-				})
-			}
-		} else {
+		start, end := m.visibleRange(total)
+		activeID := m.activeScenarioID()
+		for i := start; i < end; i++ {
+			lab := labs[i]
+			entries = append(entries, listEntry{
+				id:       lab.ID,
+				title:    lab.Title,
+				selected: i == m.selectedLab,
+				active:   lab.ID == activeID,
+			})
+		}
+	} else {
 		exams := m.filteredExams()
 		total = len(exams)
 		if total == 0 {
 			return m.theme.Muted.Render("  No exams found")
 		}
 		start, end := m.visibleRange(total)
-			activeID := m.activeScenarioID()
-			for i := start; i < end; i++ {
-				exam := exams[i]
-				entries = append(entries, listEntry{
-					id:       exam.ID,
-					title:    exam.Title,
-					selected: i == m.selectedExam,
-					active:   exam.ID == activeID,
-				})
-			}
+		activeID := m.activeScenarioID()
+		for i := start; i < end; i++ {
+			exam := exams[i]
+			entries = append(entries, listEntry{
+				id:       exam.ID,
+				title:    exam.Title,
+				selected: i == m.selectedExam,
+				active:   exam.ID == activeID,
+			})
 		}
+	}
 
 	lines := make([]string, 0, height)
 	for _, e := range entries {
@@ -309,6 +310,9 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	}
 
 	tabs := m.theme.RenderViewModes(m.detail, m.activeTab == examsTab)
+	if m.canCopyDetail() {
+		tabs += "  " + m.theme.PaneHeader.Render("[Copy]")
+	}
 	titleWidth := utils.MaxInt(width-lipgloss.Width(tabs)-2, 12)
 	title := m.theme.PaneTitle.Render(truncateLine(view.title, titleWidth))
 	metaParts := []string{view.id, fmt.Sprintf("%d min", view.minutes)}
@@ -345,6 +349,18 @@ func (m model) renderDetailBody() string {
 	body := trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body))
 	rendered := m.processMarkdown(body, m.detailTextWidth(), m.detail)
 	return rendered
+}
+
+func (m model) canCopyDetail() bool {
+	return m.detail == detailCheck || m.detail == detailSolution
+}
+
+func (m model) copyableDetailBody() string {
+	view := m.currentScenarioView()
+	if view.id == "" {
+		return ""
+	}
+	return strings.TrimSpace(trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body)))
 }
 
 func sanitizeScenarioSentence(text string) string {
@@ -452,7 +468,11 @@ func (m model) processMarkdown(content string, width int, mode detailMode) strin
 		case strings.Trim(trimmed, "-") == "" && len(trimmed) > 2:
 			rendered = append(rendered, m.theme.DetailRule.Render("  "+strings.Repeat("─", utils.MinInt(width-8, 60))))
 		case inCode:
-			rendered = appendWrappedLines(rendered, "  "+line, width, m.theme.DetailCode)
+			if mode == detailSolution {
+				rendered = appendWrappedLines(rendered, "  $ "+strings.TrimSpace(line), width, m.theme.DetailCommand)
+			} else {
+				rendered = appendWrappedLines(rendered, "  "+line, width, m.theme.DetailCode)
+			}
 		case strings.HasPrefix(trimmed, "# "):
 			rendered = appendWrappedLines(rendered, "  "+strings.TrimPrefix(trimmed, "# "), width, m.theme.DetailH1)
 		case strings.HasPrefix(trimmed, "## "):
@@ -593,34 +613,40 @@ func (m model) renderFooter(width int) string {
 	} else {
 		actions = []footerAction{
 			{"Enter", "Start"},
+			{"r", "Reset"},
 			{"Tab", "Pane"},
-			{"←→", "L/E"},
-			{"F1", "Tasks"},
 		}
+		arrowLabel := "L/E"
+		if m.focus == focusDetail {
+			arrowLabel = "Docs"
+		}
+		actions = append(actions, footerAction{"←→", arrowLabel}, footerAction{"F1", "Tasks"})
 		if m.activeTab == labsTab {
+			if !m.canCopyDetail() {
+				actions = append(actions, footerAction{"c", "Check"})
+			}
 			actions = append(actions,
 				footerAction{"F2", "Hint"},
 				footerAction{"F3", "Checks"},
 				footerAction{"F4", "Solve"},
-				footerAction{"c", "Check"},
 			)
 		} else {
 			actions = append(actions, footerAction{"F4", "Solve"})
 		}
+		if m.canCopyDetail() {
+			actions = append(actions, footerAction{"y", "Copy"})
+		}
 		actions = append(actions,
-			footerAction{"r", "Reset"},
 			footerAction{"/", "Find"},
 			footerAction{"?", "Help"},
 			footerAction{"q", "Quit"},
-			footerAction{"z", "Client"},
-			footerAction{"x", "Server"},
 		)
 	}
 
 	parts := make([]string, 0, len(actions))
 	usedWidth := 0
 	for _, action := range actions {
-		part := m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" " + action.label)
+		part := m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label)
 		partWidth := lipgloss.Width(part)
 		if len(parts) > 0 {
 			partWidth += 2

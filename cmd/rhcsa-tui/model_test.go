@@ -196,3 +196,27 @@ func TestListNavigationStopsScrollingWhenDetailFocused(t *testing.T) {
 		t.Fatalf("expected detail offset to increase, got %d", updated.currentDetailOffset())
 	}
 }
+
+func TestArrowKeysSwitchDocumentsWhenDetailFocused(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.focus = focusDetail
+	m.detail = detailPrompt
+
+	got, _ := m.handleNormalKey(tea.KeyMsg{Type: tea.KeyRight})
+	updated := got.(model)
+	if updated.detail != detailHint {
+		t.Fatalf("expected hint view after right arrow, got %v", updated.detail)
+	}
+
+	got, _ = updated.handleNormalKey(tea.KeyMsg{Type: tea.KeyRight})
+	updated = got.(model)
+	if updated.detail != detailCheck {
+		t.Fatalf("expected checks view after second right arrow, got %v", updated.detail)
+	}
+
+	got, _ = updated.handleNormalKey(tea.KeyMsg{Type: tea.KeyLeft})
+	updated = got.(model)
+	if updated.detail != detailHint {
+		t.Fatalf("expected hint view after left arrow, got %v", updated.detail)
+	}
+}

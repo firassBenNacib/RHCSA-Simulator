@@ -87,9 +87,9 @@ func TestSimplifyMarkdownTableLine(t *testing.T) {
 		wantOk  bool
 	}{
 		{"not a table", "", false},
-		{"|---|---|", "", true},          // separator row
+		{"|---|---|", "", true},         // separator row
 		{"| a | b |", "a: b", true},     // two-column
-		{"| field | value |", "", true},  // header row — skip
+		{"| field | value |", "", true}, // header row — skip
 		{"| x | y | z |", "x │ y │ z", true},
 		{"|only|", "only", true},
 	}

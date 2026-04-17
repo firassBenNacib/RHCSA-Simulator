@@ -47,15 +47,15 @@ type Theme struct {
 	BadgeEmpty   lipgloss.Style
 
 	// Detail content
-	DetailH1    lipgloss.Style
-	DetailH2    lipgloss.Style
-	DetailH3    lipgloss.Style
-	DetailMeta  lipgloss.Style
-	DetailCode  lipgloss.Style
+	DetailH1      lipgloss.Style
+	DetailH2      lipgloss.Style
+	DetailH3      lipgloss.Style
+	DetailMeta    lipgloss.Style
+	DetailCode    lipgloss.Style
 	DetailCommand lipgloss.Style
-	DetailList  lipgloss.Style
-	DetailPlain lipgloss.Style
-	DetailRule  lipgloss.Style
+	DetailList    lipgloss.Style
+	DetailPlain   lipgloss.Style
+	DetailRule    lipgloss.Style
 
 	// Active badge shown in detail header
 	ActiveBadge lipgloss.Style
@@ -91,6 +91,7 @@ type Theme struct {
 func NewTheme() Theme {
 	red := lipgloss.Color("#DC2626")
 	redLight := lipgloss.Color("#F87171")
+	redMuted := lipgloss.Color("#3F1417")
 
 	bgDark := lipgloss.Color("#090E17")
 	bgMid := lipgloss.Color("#0F1724")
@@ -113,7 +114,7 @@ func NewTheme() Theme {
 
 	return Theme{
 		// ── Header bar ──────────────────────────────────────
-	HeaderBar: lipgloss.NewStyle().
+		HeaderBar: lipgloss.NewStyle().
 			Padding(0, 2),
 		AppName: lipgloss.NewStyle().
 			Bold(true).
@@ -161,9 +162,11 @@ func NewTheme() Theme {
 		// ── List items ──────────────────────────────────────
 		ItemSelected: lipgloss.NewStyle().
 			Foreground(textBright).
+			Background(redMuted).
 			Bold(true),
 		ItemSelectedBlurred: lipgloss.NewStyle().
-			Foreground(textNormal),
+			Foreground(textNormal).
+			Background(bgCard),
 		ItemNormal: lipgloss.NewStyle().
 			Foreground(textDim),
 		ItemRunning: lipgloss.NewStyle().
