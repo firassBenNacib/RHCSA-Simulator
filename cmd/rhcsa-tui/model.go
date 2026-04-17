@@ -297,15 +297,30 @@ func (m model) listPaneWidth() int {
 	if m.useStackedLayout() {
 		return m.width
 	}
-	return utils.MaxInt((m.width*2)/5, 30)
+	preferred := utils.MaxInt((m.width*37)/100, 32)
+	return utils.MinInt(preferred, utils.MaxInt(m.width-44, 32))
+}
+
+func (m model) detailPaneWidth() int {
+	if m.useStackedLayout() {
+		return m.width
+	}
+	return utils.MaxInt(m.width-m.listPaneWidth()-1, minDetailTextWidth)
+}
+
+func (m model) detailPaneOrigin() (int, int) {
+	contentY := 3
+	if m.useStackedLayout() {
+		return 0, contentY + m.listPaneHeight() + 1
+	}
+	return m.listPaneWidth() + 1, contentY
 }
 
 func (m model) detailTextWidth() int {
 	if m.useStackedLayout() {
 		return utils.MaxInt(m.width-detailPaneBorder, minDetailTextWidth)
 	}
-	rightWidth := m.width - m.listPaneWidth() - 1
-	return utils.MaxInt(rightWidth-detailPaneBorder, minDetailTextWidth)
+	return utils.MaxInt(m.detailPaneWidth()-detailPaneBorder, minDetailTextWidth)
 }
 
 func (m model) statusPaneHeight() int {
@@ -693,7 +708,6 @@ func (m model) helpBody() string {
 		"  Enter / s            start selected lab or exam",
 		"  c                    run checks (labs only)",
 		"  r                    reset the active run",
-		"  y                    copy checks or solution to the clipboard",
 		"  z                    SSH → clientvm",
 		"  x                    SSH → servervm",
 		"",
@@ -704,9 +718,10 @@ func (m model) helpBody() string {
 		"",
 		"Views",
 		"  F1 / 1               Tasks",
-		"  F2 / 2               Hint",
+		"  F2 / 2               Hints",
 		"  F3 / 3 / \"           Checks",
-		"  F4 / 4 / '           Solution",
+		"  F4 / 4 / '           Solutions",
+		"  [COPY]               click to copy checks or solutions",
 		"",
 		"Press ? or Esc to close this help.",
 	}, "\n")

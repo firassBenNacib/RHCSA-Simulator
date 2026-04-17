@@ -191,13 +191,19 @@ func TestRenderRemovesLegacyScrollHintsAndTimePrefixes(t *testing.T) {
 func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	m := buildRenderTestModel(t)
 	stripped := utils.StripAnsi(m.View())
-	for _, snippet := range []string{"F1", "Tasks", "F2", "Hint", "F3", "Checks", "F4", "Solve", "q", "Quit"} {
+	for _, snippet := range []string{"c", "Check", "F1", "Tasks", "F2", "Hints", "F3", "Checks", "F4", "Solutions", "q", "Quit"} {
 		if !strings.Contains(stripped, snippet) {
 			t.Fatalf("expected footer to contain %q, got:\n%s", snippet, stripped)
 		}
 	}
 	if !strings.Contains(stripped, "1 / 1") {
 		t.Fatalf("expected header to contain selection progress, got:\n%s", stripped)
+	}
+	if strings.Contains(stripped, "y Copy") {
+		t.Fatalf("expected footer to omit y Copy, got:\n%s", stripped)
+	}
+	if !(strings.Index(stripped, "c Check") < strings.Index(stripped, "F1 Tasks")) {
+		t.Fatalf("expected c Check before F1 Tasks, got:\n%s", stripped)
 	}
 	if !(strings.Index(stripped, "/ Find") < strings.Index(stripped, "? Help") &&
 		strings.Index(stripped, "? Help") < strings.Index(stripped, "q Quit")) {
@@ -230,6 +236,78 @@ func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
 	}
 	if !strings.Contains(sanitized, "## Task 01") {
 		t.Fatalf("expected sanitized content to retain task heading, got:\n%s", sanitized)
+	}
+}
+
+func TestTrimActionSectionBoilerplateRemovesSystemsAndGeneralInstructions(t *testing.T) {
+	body := strings.Join([]string{
+		"### Systems",
+		"- clientvm",
+		"- servervm",
+		"",
+		"## General Instructions",
+		"1. Keep it persistent.",
+		"2. Use standard tools.",
+		"",
+		"## Task 01",
+		"```bash",
+		"useradd demo",
+		"```",
+	}, "\n")
+
+	trimmed := trimActionSectionBoilerplate(body)
+	for _, unwanted := range []string{"### Systems", "General Instructions", "clientvm"} {
+		if strings.Contains(trimmed, unwanted) {
+			t.Fatalf("expected trimmed action body to omit %q, got:\n%s", unwanted, trimmed)
+		}
+	}
+	if !strings.Contains(trimmed, "## Task 01") {
+		t.Fatalf("expected trimmed action body to keep task content, got:\n%s", trimmed)
+	}
+}
+
+func TestExtractSystemsFromDocument(t *testing.T) {
+	body := strings.Join([]string{
+		"### Systems",
+		"- clientvm",
+		"- servervm",
+		"",
+		"## Task 01",
+		"Do the work.",
+	}, "\n")
+
+	systems := extractSystemsFromDocument(body)
+	if got := strings.Join(systems, ", "); got != "clientvm, servervm" {
+		t.Fatalf("expected systems list, got %q", got)
+	}
+}
+
+func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.detail = detailSolution
+
+	stripped := utils.StripAnsi(m.View())
+	if !strings.Contains(stripped, "[COPY]") {
+		t.Fatalf("expected solution view to show [COPY], got:\n%s", stripped)
+	}
+	for _, unwanted := range []string{"Systems", "General Instructions"} {
+		if strings.Contains(stripped, unwanted) {
+			t.Fatalf("expected solution view to trim %q, got:\n%s", unwanted, stripped)
+		}
+	}
+}
+
+func TestPromptViewTrimsBoilerplateAndShowsTaskSooner(t *testing.T) {
+	m := buildRenderTestModel(t)
+	stripped := utils.StripAnsi(m.View())
+
+	for _, unwanted := range []string{"Systems", "General Instructions"} {
+		if strings.Contains(stripped, unwanted) {
+			t.Fatalf("expected prompt view to trim %q, got:\n%s", unwanted, stripped)
+		}
+	}
+	if !strings.Contains(stripped, "Configure hostname") {
+		t.Fatalf("expected prompt view to keep actionable task content, got:\n%s", stripped)
 	}
 }
 

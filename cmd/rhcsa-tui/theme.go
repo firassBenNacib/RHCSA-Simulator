@@ -19,9 +19,10 @@ type Theme struct {
 	TabInactive lipgloss.Style
 	TabBorder   lipgloss.Style
 
-	// View mode (TASKS / HINT / SOLUTION / CHECKS)
+	// View mode (TASKS / HINTS / SOLUTIONS / CHECKS)
 	ViewMode       lipgloss.Style
 	ViewModeActive lipgloss.Style
+	CopyButton     lipgloss.Style
 
 	// Pane chrome
 	ListPane          lipgloss.Style
@@ -143,10 +144,17 @@ func NewTheme() Theme {
 			Padding(0, 1).
 			Bold(true).
 			Foreground(redLight),
+		CopyButton: lipgloss.NewStyle().
+			Padding(0, 1).
+			Bold(true).
+			Foreground(textBright).
+			Background(bgCard),
 
 		// ── Panes ───────────────────────────────────────────
-		ListPane:   lipgloss.NewStyle(),
-		DetailPane: lipgloss.NewStyle(),
+		ListPane: lipgloss.NewStyle().
+			Align(lipgloss.Left),
+		DetailPane: lipgloss.NewStyle().
+			Align(lipgloss.Left),
 		PaneBorder: lipgloss.NewStyle().
 			Foreground(borderSoft),
 		PaneHeader: lipgloss.NewStyle().
@@ -310,7 +318,7 @@ func (t Theme) RenderTabs(activeTab tabName, width int) string {
 	return bar + "\n" + rule
 }
 
-// RenderViewModes renders the TASKS / HINT / SOLUTION / CHECKS tabs.
+// RenderViewModes renders the TASKS / HINTS / SOLUTIONS / CHECKS tabs.
 func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 	type modeEntry struct {
 		mode  detailMode
@@ -321,14 +329,14 @@ func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 	if isExam {
 		modes = []modeEntry{
 			{detailPrompt, "TASKS"},
-			{detailSolution, "SOLUTION"},
+			{detailSolution, "SOLUTIONS"},
 		}
 	} else {
 		modes = []modeEntry{
 			{detailPrompt, "TASKS"},
-			{detailHint, "HINT"},
+			{detailHint, "HINTS"},
 			{detailCheck, "CHECKS"},
-			{detailSolution, "SOLUTION"},
+			{detailSolution, "SOLUTIONS"},
 		}
 	}
 
@@ -342,6 +350,10 @@ func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 	}
 
 	return lipgloss.JoinHorizontal(lipgloss.Left, parts...)
+}
+
+func (t Theme) RenderCopyButton() string {
+	return t.CopyButton.Render("[COPY]")
 }
 
 // StatusBadge returns a styled single-char badge for the given progress marker.

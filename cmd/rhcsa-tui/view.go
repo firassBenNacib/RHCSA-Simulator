@@ -74,7 +74,7 @@ func (m model) View() string {
 
 func (m model) renderWideContent() string {
 	leftWidth := m.listPaneWidth()
-	rightWidth := m.width - leftWidth - 1
+	rightWidth := m.detailPaneWidth()
 	ch := m.contentHeight()
 
 	listPane := m.theme.ListPane.Width(leftWidth).Render(m.renderList(leftWidth, ch))
@@ -134,17 +134,13 @@ type listEntry struct {
 
 func (m model) renderListHeader(width int) []string {
 	var label string
-	var total int
 	if m.activeTab == labsTab {
 		label = "Labs"
-		total = len(m.filteredLabs())
 	} else {
 		label = "Exams"
-		total = len(m.filteredExams())
 	}
 
-	metaParts := []string{fmt.Sprintf("%d total", total)}
-	metaParts = []string{m.selectionProgressLabel()}
+	metaParts := []string{m.selectionProgressLabel()}
 	if strings.TrimSpace(m.filterQuery) != "" {
 		metaParts = append(metaParts, fmt.Sprintf("filter: %q", m.filterQuery))
 	}
@@ -310,21 +306,30 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	}
 
 	tabs := m.theme.RenderViewModes(m.detail, m.activeTab == examsTab)
+	copyAction := ""
 	if m.canCopyDetail() {
-		tabs += "  " + m.theme.PaneHeader.Render("[Copy]")
+		copyAction = m.theme.RenderCopyButton()
 	}
-	titleWidth := utils.MaxInt(width-lipgloss.Width(tabs)-2, 12)
-	title := m.theme.PaneTitle.Render(truncateLine(view.title, titleWidth))
+	title := m.theme.PaneTitle.Render(truncateLine(view.title, width))
 	metaParts := []string{view.id, fmt.Sprintf("%d min", view.minutes)}
+	if systems := extractSystemsFromDocument(view.body); len(systems) > 0 {
+		metaParts = append(metaParts, strings.Join(systems, " / "))
+	}
 	if view.active {
 		metaParts = append(metaParts, m.theme.ActiveBadge.Render("ACTIVE"))
 	}
 	if status := m.theme.StatusBadge(view.progress); status != "" {
 		metaParts = append(metaParts, status)
 	}
+	subtitle := sanitizeScenarioSentence(view.description)
+	if subtitle != "" {
+		metaParts = append(metaParts, subtitle)
+	}
 
 	lines := []string{
-		m.fillLine(title, tabs, width),
+		m.fillLine(tabs, copyAction, width),
+		m.theme.PaneBorder.Width(width).Render(strings.Repeat("─", width)),
+		title,
 	}
 	if meta := strings.Join(metaParts, "  ·  "); meta != "" {
 		metaStyle := m.theme.PaneHeader
@@ -332,9 +337,6 @@ func (m model) renderDetailHeaderLines(width int) []string {
 			metaStyle = m.theme.PaneHeaderFocused
 		}
 		lines = append(lines, metaStyle.Render(truncateLine(meta, width)))
-	}
-	if subtitle := sanitizeScenarioSentence(view.description); subtitle != "" {
-		lines = append(lines, m.theme.PaneSubtitle.Render(truncateLine(subtitle, width)))
 	}
 
 	lines = append(lines, m.theme.PaneBorder.Width(width).Render(strings.Repeat("─", width)))
@@ -347,6 +349,7 @@ func (m model) renderDetailBody() string {
 		return m.theme.Muted.Render("No scenario selected")
 	}
 	body := trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body))
+	body = trimActionSectionBoilerplate(body)
 	rendered := m.processMarkdown(body, m.detailTextWidth(), m.detail)
 	return rendered
 }
@@ -360,7 +363,9 @@ func (m model) copyableDetailBody() string {
 	if view.id == "" {
 		return ""
 	}
-	return strings.TrimSpace(trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body)))
+	body := strings.TrimSpace(trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body)))
+	body = trimActionSectionBoilerplate(body)
+	return strings.TrimSpace(body)
 }
 
 func sanitizeScenarioSentence(text string) string {
@@ -399,6 +404,63 @@ func sanitizeScenarioDocument(description, content string) string {
 	}
 
 	return strings.TrimSpace(compactBlankLines(sanitized))
+}
+
+func trimActionSectionBoilerplate(content string) string {
+	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
+	filtered := make([]string, 0, len(lines))
+	skipSection := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "### Systems" || trimmed == "## General Instructions" {
+			skipSection = true
+			continue
+		}
+		if skipSection {
+			if strings.HasPrefix(trimmed, "## ") || strings.HasPrefix(trimmed, "### ") {
+				skipSection = false
+			} else {
+				continue
+			}
+		}
+		filtered = append(filtered, line)
+	}
+
+	return strings.TrimSpace(compactBlankLines(filtered))
+}
+
+func extractSystemsFromDocument(content string) []string {
+	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
+	systems := make([]string, 0, 2)
+	seen := map[string]bool{}
+	inSystems := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "### Systems" || trimmed == "## Systems" {
+			inSystems = true
+			continue
+		}
+		if !inSystems {
+			continue
+		}
+		if strings.HasPrefix(trimmed, "## ") || strings.HasPrefix(trimmed, "### ") {
+			break
+		}
+		for _, prefix := range []string{"- ", "* ", "+ "} {
+			if strings.HasPrefix(trimmed, prefix) {
+				system := strings.TrimSpace(strings.TrimPrefix(trimmed, prefix))
+				if system != "" && !seen[system] {
+					seen[system] = true
+					systems = append(systems, system)
+				}
+				break
+			}
+		}
+	}
+
+	return systems
 }
 
 func shouldHideOverviewLine(trimmed string) bool {
@@ -620,21 +682,20 @@ func (m model) renderFooter(width int) string {
 		if m.focus == focusDetail {
 			arrowLabel = "Docs"
 		}
-		actions = append(actions, footerAction{"←→", arrowLabel}, footerAction{"F1", "Tasks"})
+		actions = append(actions, footerAction{"←→", arrowLabel})
 		if m.activeTab == labsTab {
-			if !m.canCopyDetail() {
-				actions = append(actions, footerAction{"c", "Check"})
-			}
+			actions = append(actions, footerAction{"c", "Check"})
 			actions = append(actions,
-				footerAction{"F2", "Hint"},
+				footerAction{"F1", "Tasks"},
+				footerAction{"F2", "Hints"},
 				footerAction{"F3", "Checks"},
-				footerAction{"F4", "Solve"},
+				footerAction{"F4", "Solutions"},
 			)
 		} else {
-			actions = append(actions, footerAction{"F4", "Solve"})
-		}
-		if m.canCopyDetail() {
-			actions = append(actions, footerAction{"y", "Copy"})
+			actions = append(actions,
+				footerAction{"F1", "Tasks"},
+				footerAction{"F4", "Solutions"},
+			)
 		}
 		actions = append(actions,
 			footerAction{"/", "Find"},
@@ -659,6 +720,23 @@ func (m model) renderFooter(width int) string {
 	}
 
 	return m.theme.FooterBar.Width(width).Render(strings.Join(parts, "  "))
+}
+
+func (m model) detailCopyButtonBounds() (int, int, int, bool) {
+	if !m.canCopyDetail() {
+		return 0, 0, 0, false
+	}
+
+	detailWidth := m.detailPaneWidth()
+	buttonWidth := lipgloss.Width(m.theme.RenderCopyButton())
+	if buttonWidth < 1 || detailWidth < buttonWidth {
+		return 0, 0, 0, false
+	}
+
+	originX, originY := m.detailPaneOrigin()
+	startX := originX + detailWidth - buttonWidth
+	endX := originX + detailWidth - 1
+	return startX, endX, originY, true
 }
 
 func (m model) fillLine(left, right string, width int) string {

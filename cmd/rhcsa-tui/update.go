@@ -46,8 +46,119 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
-	// Mouse support disabled for stability - use keyboard navigation
+	if m.filterMode || m.showHelp || m.busy || m.confirmKind != "" {
+		return m, nil
+	}
+
+	switch msg.Type {
+	case tea.MouseMotion:
+		return m, nil
+	case tea.MouseWheelUp:
+		if m.mouseInDetailPane(msg.X, msg.Y) {
+			m.focus = focusDetail
+			m.setCurrentDetailOffset(m.currentDetailOffset() - 3)
+			return m, nil
+		}
+		if m.mouseInListPane(msg.X, msg.Y) {
+			m.focus = focusList
+			m.moveSelection(-1)
+			return m, nil
+		}
+	case tea.MouseWheelDown:
+		if m.mouseInDetailPane(msg.X, msg.Y) {
+			m.focus = focusDetail
+			m.setCurrentDetailOffset(m.currentDetailOffset() + 3)
+			return m, nil
+		}
+		if m.mouseInListPane(msg.X, msg.Y) {
+			m.focus = focusList
+			m.moveSelection(1)
+			return m, nil
+		}
+	case tea.MouseLeft:
+		if startX, endX, y, ok := m.detailCopyButtonBounds(); ok && msg.Y == y && msg.X >= startX && msg.X <= endX {
+			m.focus = focusDetail
+			return m.copyCurrentDetail(), nil
+		}
+		if m.mouseInListPane(msg.X, msg.Y) {
+			m.focus = focusList
+			m.selectListRowAt(msg.Y)
+			return m, nil
+		}
+		if m.mouseInDetailPane(msg.X, msg.Y) {
+			m.focus = focusDetail
+			return m, nil
+		}
+	}
 	return m, nil
+}
+
+func (m model) mouseInListPane(x, y int) bool {
+	contentY := 3
+	if y < contentY {
+		return false
+	}
+	if m.useStackedLayout() {
+		return y < contentY+m.listPaneHeight()
+	}
+	return x >= 0 && x < m.listPaneWidth() && y < contentY+m.contentHeight()
+}
+
+func (m model) mouseInDetailPane(x, y int) bool {
+	originX, originY := m.detailPaneOrigin()
+	return x >= originX && x < originX+m.detailPaneWidth() && y >= originY && y < originY+m.detailPaneHeight()
+}
+
+func (m *model) selectListRowAt(y int) {
+	contentY := 3
+	listY := y - contentY
+	if m.useStackedLayout() {
+		if listY < 0 || listY >= m.listPaneHeight() {
+			return
+		}
+	} else if listY < 0 || listY >= m.contentHeight() {
+		return
+	}
+
+	row := listY - 2
+	if row < 0 {
+		return
+	}
+
+	index := m.listOffset + row
+	if m.activeTab == labsTab {
+		labs := m.filteredLabs()
+		if index < 0 || index >= len(labs) {
+			return
+		}
+		m.selectedLab = index
+		m.touchViewed()
+	} else {
+		exams := m.filteredExams()
+		if index < 0 || index >= len(exams) {
+			return
+		}
+		m.selectedExam = index
+	}
+	m.adjustListOffset()
+	m.resetDetailOffsets()
+}
+
+func (m model) copyCurrentDetail() model {
+	if !m.canCopyDetail() {
+		m.statusText = "Copy is available for checks and solutions only"
+		return m
+	}
+	if err := copyTextToClipboard(m.copyableDetailBody()); err != nil {
+		m.statusText = "Clipboard copy failed\n" + err.Error()
+		return m
+	}
+	if m.detail == detailCheck {
+		m.statusText = "Copied checks to clipboard"
+	} else {
+		m.statusText = "Copied solutions to clipboard"
+	}
+	return m
 }
 
 func (m model) itemCount() int {
@@ -314,21 +425,6 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleSSHAction("clientvm")
 	case "x":
 		return m.handleSSHAction("servervm")
-	case "y":
-		if !m.canCopyDetail() {
-			m.statusText = "Copy is available for checks and solutions"
-			return m, nil
-		}
-		if err := copyTextToClipboard(m.copyableDetailBody()); err != nil {
-			m.statusText = "Clipboard copy failed\n" + err.Error()
-			return m, nil
-		}
-		if m.detail == detailCheck {
-			m.statusText = "Copied checks to clipboard"
-		} else {
-			m.statusText = "Copied solution to clipboard"
-		}
-		return m, nil
 	case "/", ":", "ctrl+f":
 		m.filterMode = true
 		if m.filterQuery == "" {
