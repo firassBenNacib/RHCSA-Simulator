@@ -97,7 +97,6 @@ func NewTheme() Theme {
 	bgDark := lipgloss.Color("#090E17")
 	bgMid := lipgloss.Color("#0F1724")
 	bgCard := lipgloss.Color("#151E2D")
-	bgCommand := lipgloss.Color("#122033")
 	border := lipgloss.Color("#334155")
 	borderSoft := lipgloss.Color("#243244")
 
@@ -152,7 +151,7 @@ func NewTheme() Theme {
 			Padding(0, 2).
 			Bold(true).
 			Foreground(textBright).
-			Background(lipgloss.Color("#1E293B")),
+			Background(redMuted),
 
 		// ── Panes ───────────────────────────────────────────
 		ListPane: lipgloss.NewStyle().
@@ -221,13 +220,10 @@ func NewTheme() Theme {
 		DetailMeta: lipgloss.NewStyle().
 			Foreground(textMuted),
 		DetailCode: lipgloss.NewStyle().
-			Foreground(codeBlue).
-			Background(bgCommand).
-			Padding(0, 1),
+			Foreground(codeBlue),
 		DetailCommand: lipgloss.NewStyle().
 			Foreground(codeGreen).
-			Background(bgCommand).
-			Padding(0, 1),
+			Bold(true),
 		DetailList: lipgloss.NewStyle().
 			Foreground(textDim),
 		DetailPlain: lipgloss.NewStyle().
@@ -318,7 +314,7 @@ func (t Theme) RenderTabs(activeTab tabName, width int) string {
 
 	tabs := lipgloss.JoinHorizontal(lipgloss.Left, labsStr, "   ", examsStr)
 	bar := t.TabBar.Width(width).Render(tabs)
-	rule := t.TabBorder.Width(width).Render(strings.Repeat("─", width))
+	rule := t.TabBorder.Render(strings.Repeat("─", width))
 	return bar + "\n" + rule
 }
 
@@ -357,7 +353,7 @@ func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 }
 
 func (t Theme) RenderCopyButton() string {
-	return t.CopyButton.Render("[COPY COMMANDS]")
+	return t.CopyButton.Render("[COPY]")
 }
 
 // StatusBadge returns a styled single-char badge for the given progress marker.

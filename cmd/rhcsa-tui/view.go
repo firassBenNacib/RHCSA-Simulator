@@ -77,11 +77,28 @@ func (m model) renderWideContent() string {
 	rightWidth := m.detailPaneWidth()
 	ch := m.contentHeight()
 
-	listPane := padRenderedBlock(m.renderList(leftWidth, ch), leftWidth, ch)
-	sep := m.renderVerticalSeparator(ch)
-	detailPane := padRenderedBlock(m.renderDetail(rightWidth, ch), rightWidth, ch)
+	listPane := blockLines(m.renderList(leftWidth, ch), leftWidth, ch)
+	detailPane := blockLines(m.renderDetail(rightWidth, ch), rightWidth, ch)
+	sepLines := strings.Split(m.renderVerticalSeparator(ch), "\n")
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, listPane, sep, detailPane)
+	lines := make([]string, 0, ch)
+	for i := 0; i < ch; i++ {
+		left := ""
+		if i < len(listPane) {
+			left = listPane[i]
+		}
+		sep := ""
+		if i < len(sepLines) {
+			sep = sepLines[i]
+		}
+		right := ""
+		if i < len(detailPane) {
+			right = detailPane[i]
+		}
+		lines = append(lines, left+sep+right)
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 // ── Stacked layout (narrow terminals) ──────────────────────
@@ -92,7 +109,7 @@ func (m model) renderStackedContent() string {
 	detailH := ch - listH
 
 	listPane := padRenderedBlock(m.renderList(m.width, listH), m.width, listH)
-	rule := m.theme.PaneBorder.Width(m.width).Render(strings.Repeat("─", m.width))
+	rule := m.renderPaneRule(m.width)
 	detailPane := padRenderedBlock(m.renderDetail(m.width, detailH), m.width, detailH)
 
 	return lipgloss.JoinVertical(lipgloss.Left, listPane, rule, detailPane)
@@ -102,14 +119,25 @@ func (m model) renderStackedContent() string {
 
 func (m model) renderVerticalSeparator(height int) string {
 	lines := make([]string, height)
-	style := m.theme.PaneBorder
 	for i := range lines {
-		lines[i] = style.Render("│")
+		lines[i] = m.renderBorderGlyph("│")
 	}
 	return strings.Join(lines, "\n")
 }
 
+func (m model) renderPaneRule(width int) string {
+	return m.renderBorderGlyph(strings.Repeat("─", width))
+}
+
+func (m model) renderBorderGlyph(text string) string {
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("#243244")).Render(text)
+}
+
 func padRenderedBlock(text string, width, height int) string {
+	return strings.Join(blockLines(text, width, height), "\n")
+}
+
+func blockLines(text string, width, height int) []string {
 	lines := strings.Split(text, "\n")
 	if len(lines) < height {
 		for len(lines) < height {
@@ -120,13 +148,17 @@ func padRenderedBlock(text string, width, height int) string {
 	}
 
 	for i, line := range lines {
+		if lipgloss.Width(line) > width {
+			line = lipgloss.NewStyle().MaxWidth(width).Render(line)
+			lines[i] = line
+		}
 		lineWidth := lipgloss.Width(line)
 		if lineWidth < width {
 			lines[i] = line + strings.Repeat(" ", width-lineWidth)
 		}
 	}
 
-	return strings.Join(lines, "\n")
+	return lines
 }
 
 // ── List pane ──────────────────────────────────────────────
@@ -175,7 +207,7 @@ func (m model) renderListHeader(width int) []string {
 	)
 	return []string{
 		line,
-		m.theme.PaneBorder.Width(width).Render(strings.Repeat("─", width)),
+		m.renderPaneRule(width),
 	}
 }
 
@@ -330,7 +362,7 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	if m.canCopyDetail() {
 		copyAction = m.theme.RenderCopyButton()
 	}
-	title := m.theme.PaneTitle.Render(truncateLine(view.title, width))
+	title := m.theme.PaneTitle.Render("  " + truncateLine(view.title, utils.MaxInt(width-2, 1)))
 	metaParts := []string{view.id, fmt.Sprintf("%d min", view.minutes)}
 	if systems := extractSystemsFromDocument(view.body); len(systems) > 0 {
 		metaParts = append(metaParts, strings.Join(systems, " / "))
@@ -348,7 +380,7 @@ func (m model) renderDetailHeaderLines(width int) []string {
 
 	lines := []string{
 		m.fillLine(tabs, copyAction, width),
-		m.theme.PaneBorder.Width(width).Render(strings.Repeat("─", width)),
+		m.renderPaneRule(width),
 		title,
 	}
 	if meta := strings.Join(metaParts, "  ·  "); meta != "" {
@@ -356,10 +388,10 @@ func (m model) renderDetailHeaderLines(width int) []string {
 		if m.focus == focusDetail {
 			metaStyle = m.theme.PaneHeaderFocused
 		}
-		lines = append(lines, metaStyle.Render(truncateLine(meta, width)))
+		lines = append(lines, metaStyle.Render("  "+truncateLine(meta, utils.MaxInt(width-2, 1))))
 	}
 
-	lines = append(lines, m.theme.PaneBorder.Width(width).Render(strings.Repeat("─", width)))
+	lines = append(lines, m.renderPaneRule(width))
 	return lines
 }
 
@@ -550,8 +582,8 @@ func (m model) processMarkdown(content string, width int, mode detailMode) strin
 		case strings.Trim(trimmed, "-") == "" && len(trimmed) > 2:
 			rendered = append(rendered, m.theme.DetailRule.Render("  "+strings.Repeat("─", utils.MinInt(width-8, 60))))
 		case inCode:
-			if mode == detailSolution {
-				rendered = appendWrappedLines(rendered, "  $ "+strings.TrimSpace(line), width, m.theme.DetailCommand)
+			if mode == detailSolution || mode == detailCheck {
+				rendered = appendCommandLines(rendered, strings.TrimSpace(line), width, m.theme)
 			} else {
 				rendered = appendWrappedLines(rendered, "  "+line, width, m.theme.DetailCode)
 			}
@@ -565,13 +597,25 @@ func (m model) processMarkdown(content string, width int, mode detailMode) strin
 			content := strings.TrimPrefix(strings.TrimPrefix(strings.TrimPrefix(trimmed, "- "), "* "), "+ ")
 			rendered = appendWrappedLines(rendered, "  • "+content, width, m.theme.DetailList)
 		case terminalCommands:
-			rendered = appendWrappedLines(rendered, "  $ "+trimmed, width, m.theme.DetailCommand)
+			rendered = appendCommandLines(rendered, trimmed, width, m.theme)
 		default:
 			rendered = appendWrappedLines(rendered, "  "+line, width, m.theme.DetailPlain)
 		}
 	}
 
 	return strings.Join(rendered, "\n")
+}
+
+func appendCommandLines(dst []string, line string, width int, theme Theme) []string {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return append(dst, "")
+	}
+	if strings.HasPrefix(trimmed, "#") {
+		return appendWrappedLines(dst, "  "+trimmed, width, theme.DetailMeta)
+	}
+	command := strings.TrimPrefix(trimmed, "$ ")
+	return appendWrappedLines(dst, "  $ "+command, width, theme.DetailCommand)
 }
 
 // ── Text wrapping ──────────────────────────────────────────

@@ -287,8 +287,8 @@ func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
 	m.detail = detailSolution
 
 	stripped := utils.StripAnsi(m.View())
-	if !strings.Contains(stripped, "[COPY COMMANDS]") {
-		t.Fatalf("expected solution view to show [COPY COMMANDS], got:\n%s", stripped)
+	if !strings.Contains(stripped, "[COPY]") {
+		t.Fatalf("expected solution view to show [COPY], got:\n%s", stripped)
 	}
 	for _, unwanted := range []string{"Systems", "General Instructions"} {
 		if strings.Contains(stripped, unwanted) {
@@ -317,5 +317,22 @@ func TestSolutionRenderingUsesTerminalPromptStyle(t *testing.T) {
 	rendered := utils.StripAnsi(m.renderDetailBody())
 	if !strings.Contains(rendered, "$ hostnamectl set-hostname demo") {
 		t.Fatalf("expected solution rendering to prefix commands with $, got:\n%s", rendered)
+	}
+}
+
+func TestWideLayoutKeepsDetailFlushWithSeparator(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+
+	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	if len(lines) < 6 {
+		t.Fatalf("expected wide layout output, got:\n%s", m.View())
+	}
+	if !strings.Contains(lines[3], "1 / 1│  TASKS") {
+		t.Fatalf("expected detail tabs to start at the separator, got:\n%s", lines[3])
+	}
+	if !strings.Contains(lines[5], "│  Lab 01: Networking and Hostname") {
+		t.Fatalf("expected detail title to sit just after the separator, got:\n%s", lines[5])
 	}
 }
