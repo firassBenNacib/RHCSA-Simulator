@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	failLinePattern   = regexp.MustCompile(`(?i)^\[fail\]\s*\[([^\]]*)\]\s*(.*)$`)
-	failDetailPattern = regexp.MustCompile(`(?i)^fail\s+(\d+):\s*\[([^\]]*)\]\s*(.*)$`)
+	failLinePattern     = regexp.MustCompile(`(?i)^\[fail\]\s*\[([^\]]*)\]\s*(.*)$`)
+	failDetailPattern   = regexp.MustCompile(`(?i)^fail\s+(\d+):\s*\[([^\]]*)\]\s*(.*)$`)
+	sectionTitlePattern = regexp.MustCompile(`(?i)^(?:task|check)\s+\d+\b.*$`)
 )
 
 func catalogReadRelative(root, relative string) (string, error) {
@@ -95,7 +97,11 @@ func (m model) renderWideContent() string {
 		if i < len(detailPane) {
 			right = detailPane[i]
 		}
-		lines = append(lines, left+sep+right)
+		line := left + sep + right
+		if visible := lipgloss.Width(line); visible < m.width {
+			line += strings.Repeat(" ", m.width-visible)
+		}
+		lines = append(lines, line)
 	}
 
 	return strings.Join(lines, "\n")
@@ -284,7 +290,11 @@ func (m model) renderListRow(entry listEntry, width int) string {
 func (m model) renderDetail(width, height int) string {
 	header := m.renderDetailHeaderLines(width)
 	bodyHeight := utils.MaxInt(height-len(header), 1)
-	lines := strings.Split(m.renderDetailBody(), "\n")
+	bodyLines := m.renderDetailBodyLines(m.detailTextWidth())
+	lines := make([]string, 0, len(bodyLines))
+	for _, line := range bodyLines {
+		lines = append(lines, line.text)
+	}
 	offset := m.currentDetailOffset()
 	if offset > 0 && offset < len(lines) {
 		lines = lines[offset:]
@@ -307,6 +317,16 @@ type scenarioView struct {
 	active      bool
 	progress    string
 	body        string
+}
+
+type detailRenderedLine struct {
+	text        string
+	copySection int
+}
+
+type copySection struct {
+	title   string
+	content string
 }
 
 func (m model) currentScenarioView() scenarioView {
@@ -358,10 +378,6 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	}
 
 	tabs := m.theme.RenderViewModes(m.detail, m.activeTab == examsTab)
-	copyAction := ""
-	if m.canCopyDetail() {
-		copyAction = m.theme.RenderCopyButton()
-	}
 	title := m.theme.PaneTitle.Render("  " + truncateLine(view.title, utils.MaxInt(width-2, 1)))
 	metaParts := []string{view.id, fmt.Sprintf("%d min", view.minutes)}
 	if systems := extractSystemsFromDocument(view.body); len(systems) > 0 {
@@ -373,13 +389,8 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	if status := m.theme.StatusBadge(view.progress); status != "" {
 		metaParts = append(metaParts, status)
 	}
-	subtitle := sanitizeScenarioSentence(view.description)
-	if subtitle != "" {
-		metaParts = append(metaParts, subtitle)
-	}
-
 	lines := []string{
-		m.fillLine(tabs, copyAction, width),
+		m.fillLine(tabs, "", width),
 		m.renderPaneRule(width),
 		title,
 	}
@@ -396,14 +407,22 @@ func (m model) renderDetailHeaderLines(width int) []string {
 }
 
 func (m model) renderDetailBody() string {
+	lines := m.renderDetailBodyLines(m.detailTextWidth())
+	parts := make([]string, 0, len(lines))
+	for _, line := range lines {
+		parts = append(parts, line.text)
+	}
+	return strings.Join(parts, "\n")
+}
+
+func (m model) renderDetailBodyLines(width int) []detailRenderedLine {
 	view := m.currentScenarioView()
 	if view.id == "" {
-		return m.theme.Muted.Render("No scenario selected")
+		return []detailRenderedLine{{text: m.theme.Muted.Render("No scenario selected"), copySection: -1}}
 	}
 	body := trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body))
 	body = trimActionSectionBoilerplate(body)
-	rendered := m.processMarkdown(body, m.detailTextWidth(), m.detail)
-	return rendered
+	return m.processMarkdownLines(body, width, m.detail)
 }
 
 func (m model) canCopyDetail() bool {
@@ -418,6 +437,58 @@ func (m model) copyableDetailBody() string {
 	body := strings.TrimSpace(trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body)))
 	body = trimActionSectionBoilerplate(body)
 	return strings.TrimSpace(body)
+}
+
+func (m model) copyableSections() []copySection {
+	if !m.canCopyDetail() {
+		return nil
+	}
+
+	body := m.copyableDetailBody()
+	if body == "" {
+		return nil
+	}
+
+	lines := strings.Split(strings.ReplaceAll(body, "\r\n", "\n"), "\n")
+	sections := make([]copySection, 0, 8)
+	var current *copySection
+
+	flush := func() {
+		if current == nil {
+			return
+		}
+		current.content = strings.TrimSpace(current.content)
+		if current.content != "" {
+			sections = append(sections, *current)
+		}
+		current = nil
+	}
+
+	for _, raw := range lines {
+		normalized, ok := normalizedSectionHeading(raw)
+		if ok {
+			flush()
+			current = &copySection{title: normalized, content: normalized}
+			continue
+		}
+
+		if current == nil {
+			continue
+		}
+
+		if current.content == "" {
+			current.content = raw
+		} else {
+			current.content += "\n" + raw
+		}
+	}
+	flush()
+
+	if len(sections) == 0 && strings.TrimSpace(body) != "" {
+		return []copySection{{title: "COMMANDS", content: strings.TrimSpace(body)}}
+	}
+
+	return sections
 }
 
 func sanitizeScenarioSentence(text string) string {
@@ -546,16 +617,23 @@ func compactBlankLines(lines []string) string {
 
 // ── Markdown processor ─────────────────────────────────────
 
-func (m model) processMarkdown(content string, width int, mode detailMode) string {
+func (m model) processMarkdownLines(content string, width int, mode detailMode) []detailRenderedLine {
 	lines := strings.Split(stripMarkdownBold(content), "\n")
-	rendered := make([]string, 0, len(lines))
+	rendered := make([]detailRenderedLine, 0, len(lines))
 	inCode := false
 	terminalCommands := mode == detailCheck
+	copySectionIndex := -1
+	copySections := m.copyableSections()
+	if len(copySections) == 1 && copySections[0].title == "COMMANDS" {
+		rendered = append(rendered, m.renderCopyableHeadingLine("Commands", width, 0)...)
+		rendered = append(rendered, detailRenderedLine{text: "", copySection: -1})
+		copySectionIndex = 0
+	}
 
 	for _, rawLine := range lines {
 		trimmed := strings.TrimSpace(rawLine)
 		if trimmed == "" {
-			rendered = append(rendered, "")
+			rendered = append(rendered, detailRenderedLine{text: "", copySection: -1})
 			continue
 		}
 
@@ -573,52 +651,120 @@ func (m model) processMarkdown(content string, width int, mode detailMode) strin
 		// Table rows
 		if converted, ok := simplifyMarkdownTableLine(trimmed); ok {
 			if converted != "" {
-				rendered = append(rendered, m.theme.DetailMeta.Render("  "+converted))
+				rendered = append(rendered, detailRenderedLine{text: m.theme.DetailMeta.Render("  " + converted), copySection: -1})
 			}
 			continue
 		}
 
 		switch {
 		case strings.Trim(trimmed, "-") == "" && len(trimmed) > 2:
-			rendered = append(rendered, m.theme.DetailRule.Render("  "+strings.Repeat("─", utils.MinInt(width-8, 60))))
+			rendered = append(rendered, detailRenderedLine{text: m.theme.DetailRule.Render("  " + strings.Repeat("─", utils.MinInt(width-8, 60))), copySection: -1})
 		case inCode:
 			if mode == detailSolution || mode == detailCheck {
 				rendered = appendCommandLines(rendered, strings.TrimSpace(line), width, m.theme)
 			} else {
-				rendered = appendWrappedLines(rendered, "  "+line, width, m.theme.DetailCode)
+				rendered = appendWrappedDetailLines(rendered, "  "+line, width, m.theme.DetailCode)
 			}
 		case strings.HasPrefix(trimmed, "# "):
-			rendered = appendWrappedLines(rendered, "  "+strings.TrimPrefix(trimmed, "# "), width, m.theme.DetailH1)
+			heading := strings.TrimPrefix(trimmed, "# ")
+			if mode == detailSolution || mode == detailCheck {
+				if _, ok := normalizedSectionHeading(heading); ok {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+					continue
+				}
+			}
+			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH1)
 		case strings.HasPrefix(trimmed, "## "):
-			rendered = appendWrappedLines(rendered, "  "+strings.TrimPrefix(trimmed, "## "), width, m.theme.DetailH2)
+			heading := strings.TrimPrefix(trimmed, "## ")
+			if mode == detailSolution || mode == detailCheck {
+				if _, ok := normalizedSectionHeading(heading); ok {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+					continue
+				}
+			}
+			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH2)
 		case strings.HasPrefix(trimmed, "### "):
-			rendered = appendWrappedLines(rendered, "  "+strings.TrimPrefix(trimmed, "### "), width, m.theme.DetailH3)
+			heading := strings.TrimPrefix(trimmed, "### ")
+			if mode == detailSolution || mode == detailCheck {
+				if _, ok := normalizedSectionHeading(heading); ok {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+					continue
+				}
+			}
+			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH3)
 		case strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "+ "):
 			content := strings.TrimPrefix(strings.TrimPrefix(strings.TrimPrefix(trimmed, "- "), "* "), "+ ")
-			rendered = appendWrappedLines(rendered, "  • "+content, width, m.theme.DetailList)
+			rendered = appendWrappedDetailLines(rendered, "  • "+content, width, m.theme.DetailList)
 		case terminalCommands:
 			rendered = appendCommandLines(rendered, trimmed, width, m.theme)
 		default:
-			rendered = appendWrappedLines(rendered, "  "+line, width, m.theme.DetailPlain)
+			if mode == detailSolution || mode == detailCheck {
+				if _, ok := normalizedSectionHeading(trimmed); ok {
+					copySectionIndex++
+					rendered = append(rendered, m.renderCopyableHeadingLine(trimmed, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+					continue
+				}
+			}
+			rendered = appendWrappedDetailLines(rendered, "  "+line, width, m.theme.DetailPlain)
 		}
 	}
 
-	return strings.Join(rendered, "\n")
+	return rendered
 }
 
-func appendCommandLines(dst []string, line string, width int, theme Theme) []string {
+func sectionIndexOrNone(index, total int) int {
+	if index < 0 || index >= total {
+		return -1
+	}
+	return index
+}
+
+func normalizedSectionHeading(line string) (string, bool) {
+	trimmed := strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(line), "#"))
+	if !sectionTitlePattern.MatchString(trimmed) {
+		return "", false
+	}
+	return trimmed, true
+}
+
+func (m model) renderCopyableHeadingLine(heading string, width int, copySection int) []detailRenderedLine {
+	button := m.theme.RenderCopyButton()
+	buttonWidth := lipgloss.Width(button)
+	textWidth := utils.MaxInt(width-buttonWidth-3, 12)
+	title := truncateLine(heading, textWidth)
+	line := m.theme.DetailH2.Render("  "+title) + " " + button
+	return []detailRenderedLine{{text: line, copySection: copySection}}
+}
+
+func appendCommandLines(dst []detailRenderedLine, line string, width int, theme Theme) []detailRenderedLine {
 	trimmed := strings.TrimSpace(line)
 	if trimmed == "" {
-		return append(dst, "")
+		return append(dst, detailRenderedLine{text: "", copySection: -1})
 	}
 	if strings.HasPrefix(trimmed, "#") {
-		return appendWrappedLines(dst, "  "+trimmed, width, theme.DetailMeta)
+		return appendWrappedDetailLines(dst, "  "+trimmed, width, theme.DetailMeta)
 	}
 	command := strings.TrimPrefix(trimmed, "$ ")
-	return appendWrappedLines(dst, "  $ "+command, width, theme.DetailCommand)
+	return appendWrappedDetailLines(dst, "  $ "+command, width, theme.DetailCommand)
 }
 
 // ── Text wrapping ──────────────────────────────────────────
+
+func appendWrappedDetailLines(dst []detailRenderedLine, line string, width int, style lipgloss.Style) []detailRenderedLine {
+	if strings.TrimSpace(line) == "" {
+		return append(dst, detailRenderedLine{text: "", copySection: -1})
+	}
+	if width < 12 {
+		width = 12
+	}
+	for _, part := range wrapLine(line, width) {
+		dst = append(dst, detailRenderedLine{text: style.Render(part), copySection: -1})
+	}
+	return dst
+}
 
 func appendWrappedLines(dst []string, line string, width int, style lipgloss.Style) []string {
 	if strings.TrimSpace(line) == "" {
@@ -803,6 +949,68 @@ func (m model) detailCopyButtonBounds() (int, int, int, bool) {
 	return startX, endX, originY, true
 }
 
+type sectionCopyBound struct {
+	section int
+	startX  int
+	endX    int
+	y       int
+}
+
+func (m model) detailSectionCopyBounds() []sectionCopyBound {
+	if !m.canCopyDetail() {
+		return nil
+	}
+
+	bodyLines := m.renderDetailBodyLines(m.detailTextWidth())
+	if len(bodyLines) == 0 {
+		return nil
+	}
+
+	offset := m.currentDetailOffset()
+	if offset > len(bodyLines) {
+		offset = len(bodyLines)
+	}
+	visible := bodyLines[offset:]
+	bodyHeight := utils.MaxInt(m.detailPaneHeight()-len(m.renderDetailHeaderLines(m.detailPaneWidth())), 1)
+	if len(visible) > bodyHeight {
+		visible = visible[:bodyHeight]
+	}
+
+	originX, originY := m.detailPaneOrigin()
+	headerHeight := len(m.renderDetailHeaderLines(m.detailPaneWidth()))
+	bounds := make([]sectionCopyBound, 0, 8)
+
+	for i, line := range visible {
+		if line.copySection < 0 {
+			continue
+		}
+		stripped := utils.StripAnsi(line.text)
+		idx := strings.LastIndex(stripped, "[COPY]")
+		if idx < 0 {
+			continue
+		}
+		bounds = append(bounds, sectionCopyBound{
+			section: line.copySection,
+			startX:  originX + idx,
+			endX:    originX + idx + len("[COPY]") - 1,
+			y:       originY + headerHeight + i,
+		})
+	}
+
+	return bounds
+}
+
+func (m model) detailSectionOffsets() []int {
+	lines := m.renderDetailBodyLines(m.detailTextWidth())
+	offsets := make([]int, 0, 8)
+	for i, line := range lines {
+		if line.copySection >= 0 {
+			offsets = append(offsets, i)
+		}
+	}
+	return offsets
+}
+
 func (m model) catalogTabBounds() (labsStart, labsEnd, examsStart, examsEnd, y int) {
 	y = 1
 	x := 2
@@ -891,7 +1099,14 @@ func truncateLine(text string, width int) string {
 	if len(runes) <= width {
 		return text
 	}
-	return string(runes[:width-1]) + "…"
+	if width == 1 {
+		return "…"
+	}
+	candidate := string(runes[:width-1])
+	if cut := strings.LastIndexFunc(candidate, unicode.IsSpace); cut > width/2 {
+		candidate = strings.TrimRightFunc(candidate[:cut], unicode.IsSpace)
+	}
+	return candidate + "…"
 }
 
 func stripMarkdownBold(s string) string {

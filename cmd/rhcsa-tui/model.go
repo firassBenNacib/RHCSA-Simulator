@@ -404,6 +404,30 @@ func (m *model) resetDetailOffsets() {
 	}
 }
 
+func (m model) nextDetailSectionOffset() int {
+	offsets := m.detailSectionOffsets()
+	current := m.currentDetailOffset()
+	for _, offset := range offsets {
+		if offset > current {
+			return offset
+		}
+	}
+	return m.detailMaxOffset()
+}
+
+func (m model) previousDetailSectionOffset() int {
+	offsets := m.detailSectionOffsets()
+	current := m.currentDetailOffset()
+	prev := 0
+	for _, offset := range offsets {
+		if offset >= current {
+			break
+		}
+		prev = offset
+	}
+	return prev
+}
+
 func (m *model) ensureValidDetailMode() {
 	if m.activeTab == examsTab && (m.detail == detailHint || m.detail == detailCheck) {
 		m.detail = detailPrompt
@@ -721,7 +745,7 @@ func (m model) helpBody() string {
 		"  F2 / 2               Hints",
 		"  F3 / 3 / \"           Checks",
 		"  F4 / 4 / '           Solutions",
-		"  [COPY]               click to copy checks or solutions",
+		"  [COPY]               click a task/check section to copy its commands",
 		"",
 		"Press ? or Esc to close this help.",
 	}, "\n")

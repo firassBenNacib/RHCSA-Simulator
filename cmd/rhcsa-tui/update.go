@@ -76,7 +76,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.MouseLeft:
-		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); msg.Y == y {
+		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); msg.Y >= y-1 && msg.Y <= y+1 {
 			switch {
 			case msg.X >= labsStart && msg.X <= labsEnd:
 				m.activeTab = labsTab
@@ -95,7 +95,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
-		if _, originY := m.detailPaneOrigin(); msg.Y == originY {
+		if _, originY := m.detailPaneOrigin(); msg.Y >= originY-1 && msg.Y <= originY+1 {
 			for mode, bounds := range m.detailTabBounds() {
 				if msg.X >= bounds[0] && msg.X <= bounds[1] {
 					m.focus = focusDetail
@@ -104,9 +104,11 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
-		if startX, endX, y, ok := m.detailCopyButtonBounds(); ok && msg.Y == y && msg.X >= startX && msg.X <= endX {
-			m.focus = focusDetail
-			return m.copyCurrentDetail(), nil
+		for _, bound := range m.detailSectionCopyBounds() {
+			if msg.Y == bound.y && msg.X >= bound.startX && msg.X <= bound.endX {
+				m.focus = focusDetail
+				return m.copyDetailSection(bound.section), nil
+			}
 		}
 		if m.mouseInListPane(msg.X, msg.Y) {
 			m.focus = focusList
@@ -186,6 +188,20 @@ func (m model) copyCurrentDetail() model {
 	} else {
 		m.statusText = "Copied solutions to clipboard"
 	}
+	return m
+}
+
+func (m model) copyDetailSection(index int) model {
+	sections := m.copyableSections()
+	if index < 0 || index >= len(sections) {
+		m.statusText = "Copy target is unavailable"
+		return m
+	}
+	if err := copyTextToClipboard(sections[index].content); err != nil {
+		m.statusText = "Clipboard copy failed\n" + err.Error()
+		return m
+	}
+	m.statusText = fmt.Sprintf("Copied %s", sections[index].title)
 	return m
 }
 
@@ -289,7 +305,7 @@ func (m model) handleFilterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m model) handleHelpKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case "ctrl+c", "q", "Q":
 		return m, tea.Quit
 	case "esc", "?", ",":
 		m.showHelp = false
@@ -414,7 +430,7 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case "pgup":
 		if m.focus == focusDetail {
-			m.setCurrentDetailOffset(m.currentDetailOffset() - m.detailPageStep())
+			m.setCurrentDetailOffset(m.previousDetailSectionOffset())
 		} else {
 			m.moveSelection(-(m.listPageSize() - 1))
 		}
@@ -428,7 +444,7 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case "pgdown":
 		if m.focus == focusDetail {
-			m.setCurrentDetailOffset(m.currentDetailOffset() + m.detailPageStep())
+			m.setCurrentDetailOffset(m.nextDetailSectionOffset())
 		} else {
 			m.moveSelection(m.listPageSize() - 1)
 		}
@@ -440,18 +456,18 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.moveSelection(m.listPageSize() - 1)
 		}
 		return m, nil
-	case "enter", "s":
+	case "enter", "s", "S":
 		m.confirmKind = "start"
 		m.confirmText = m.startConfirmText()
 		m.statusText = m.confirmText
 		return m, nil
-	case "c":
+	case "c", "C":
 		return m.handleCheckAction()
-	case "r":
+	case "r", "R":
 		return m.handleResetAction()
-	case "z":
+	case "z", "Z":
 		return m.handleSSHAction("clientvm")
-	case "x":
+	case "x", "X":
 		return m.handleSSHAction("servervm")
 	case "/", ":", "ctrl+f":
 		m.filterMode = true
@@ -461,7 +477,7 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.statusText = fmt.Sprintf("Search: %s", m.filterQuery)
 		}
 		return m, nil
-	case "?", ",":
+	case "?", ",", "H":
 		m.showHelp = true
 		return m, nil
 	}

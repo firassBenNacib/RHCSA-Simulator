@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -239,6 +241,12 @@ func TestMouseClickSwitchesCatalogTabs(t *testing.T) {
 	if updated.activeTab != labsTab {
 		t.Fatalf("expected labs tab after mouse click, got %v", updated.activeTab)
 	}
+
+	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: y - 1, Type: tea.MouseLeft})
+	updated = got.(model)
+	if updated.activeTab != examsTab {
+		t.Fatalf("expected exams tab after clicking the tab row above, got %v", updated.activeTab)
+	}
 }
 
 func TestMouseClickSwitchesDetailTabs(t *testing.T) {
@@ -259,5 +267,54 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 	if updated.focus != focusDetail {
 		t.Fatalf("expected detail focus after mouse click, got %v", updated.focus)
+	}
+
+	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y - 1, Type: tea.MouseLeft})
+	updated = got.(model)
+	if updated.detail != detailHint {
+		t.Fatalf("expected hint detail after clicking the detail tab row above, got %v", updated.detail)
+	}
+}
+
+func TestUppercaseActionKeysWork(t *testing.T) {
+	m := buildRenderTestModel(t)
+	if err := os.MkdirAll(filepath.Join(m.root, ".vagrant", "machines"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	got, _ := m.handleNormalKey(fakeKeyMsg("C"))
+	updated := got.(model)
+	if !updated.busy {
+		t.Fatalf("expected uppercase C to trigger checks")
+	}
+}
+
+func TestPageDownSnapsToNextDetailSection(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 14
+	m.focus = focusDetail
+	taskPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_TASKS.md")
+	taskBody := strings.Join([]string{
+		"## Task 01 - First",
+		"",
+		"Do the first thing.",
+		"",
+		"## Task 02 - Second",
+		"",
+		"Do the second thing.",
+		"",
+		"## Task 03 - Third",
+		"",
+		"Do the third thing.",
+	}, "\n")
+	if err := os.WriteFile(taskPath, []byte(taskBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got, _ := m.handleNormalKey(tea.KeyMsg{Type: tea.KeyPgDown})
+	updated := got.(model)
+	if updated.currentDetailOffset() <= 0 {
+		t.Fatalf("expected page down to move to the next section, got offset %d", updated.currentDetailOffset())
 	}
 }
