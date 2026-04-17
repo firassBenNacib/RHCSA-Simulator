@@ -1,0 +1,66 @@
+name: Release TUI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            ext: ""
+            label: linux-amd64
+          - runner: windows-latest
+            goos: windows
+            goarch: amd64
+            ext: ".exe"
+            label: windows-amd64
+          - runner: macos-latest
+            goos: darwin
+            goarch: amd64
+            ext: ""
+            label: macos-amd64
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run TUI tests
+        run: go test ./cmd/rhcsa-tui/...
+
+      - name: Build TUI binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          output="dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}"
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$output" ./cmd/rhcsa-tui
+          ls -lah dist
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhcsa-tui-${{ matrix.label }}
+          path: dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}
+
+      - name: Attach binary to GitHub release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}

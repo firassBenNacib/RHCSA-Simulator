@@ -19,7 +19,7 @@ An interactive PowerShell project for running RHCSA v9 practice labs and mock ex
 * [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * [rhel-9.7-x86_64-dvd.iso](https://developers.redhat.com/content-gateway/file/rhel/Red_Hat_Enterprise_Linux_9.7/rhel-9.7-x86_64-dvd.iso) in the project root, downloaded from [Red Hat Developer](https://developers.redhat.com/products/rhel/download) or the Red Hat Customer Portal
-* [Go](https://go.dev/dl/) installed and on **PATH** if you want to use the TUI
+* [Go](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source
 
 ## Installation
 
@@ -39,9 +39,12 @@ The simulator uses two VMs:
 
 Scenarios are discovered automatically from the labs and exams folders.
 
-Only one run is active at a time.
+Scenario source files live under:
 
-Scenario source files live under `scenarios/`.
+* `scenarios/labs`
+* `scenarios/exams`
+
+Only one run is active at a time.
 
 Generated runtime cache is written locally under `.lab-state/generated/`, is created on demand, and is not part of the repo.
 
@@ -83,6 +86,55 @@ Generated runtime cache is written locally under `.lab-state/generated/`, is cre
 .\RHCSA.ps1 tui
 ```
 
+### TUI usage
+
+There are two supported ways to use the TUI:
+
+**Recommended for users**
+
+Download a prebuilt `rhcsa-tui` binary from GitHub Releases, place it in the simulator repository, and run it directly:
+
+```powershell
+.\rhcsa-tui.exe
+```
+
+The TUI looks for `RHCSA.ps1` starting from:
+
+* `RHCSA_SIMULATOR_ROOT` if set
+* the current working directory
+* the directory that contains the TUI binary
+
+**Built-in launcher**
+
+```powershell
+.\RHCSA.ps1 tui
+```
+
+This is the best option if you already use the PowerShell entrypoint for everything else.
+
+**Keyboard summary**
+
+* `Enter` start the selected lab or exam
+* `Tab` move between the catalog and the detail pane
+* `←` / `→` switch between Labs and Exams
+* `F1` or `1` open Tasks
+* `F2` or `2` open Hint for labs
+* `F3` or `3` or `"` open Checks for labs
+* `F4` or `4` or `'` open Solution
+* `c` run checks for the active lab
+* `r` reset the active run
+* `/` open search
+* `z` open SSH to `clientvm`
+* `x` open SSH to `servervm`
+* `?` open help
+
+**Build from source**
+
+```powershell
+go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
+.\rhcsa-tui.exe
+```
+
 ### Optional commands
 
 **Destroy the simulator**
@@ -122,6 +174,16 @@ Generated runtime cache is written locally under `.lab-state/generated/`, is cre
 .\RHCSA.ps1 ssh-config
 .\RHCSA.ps1 ssh-config servervm
 ```
+
+**Download or rebuild the TUI**
+
+Use GitHub Releases for prebuilt binaries, or rebuild locally with:
+
+```powershell
+go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
+```
+
+The repository includes a GitHub Actions workflow at `.github/workflows/release-tui.yml` that builds and uploads Windows, Linux, and macOS TUI binaries when a GitHub Release is published.
 
 ## Commands
 
