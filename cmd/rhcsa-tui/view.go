@@ -16,7 +16,7 @@ import (
 var (
 	failLinePattern     = regexp.MustCompile(`(?i)^\[fail\]\s*\[([^\]]*)\]\s*(.*)$`)
 	failDetailPattern   = regexp.MustCompile(`(?i)^fail\s+(\d+):\s*\[([^\]]*)\]\s*(.*)$`)
-	sectionTitlePattern = regexp.MustCompile(`(?i)^(?:task|check)\s+\d+\b.*$`)
+	sectionTitlePattern = regexp.MustCompile(`(?i)^(?:task|check|question|hint)\s+\d+\b.*$`)
 )
 
 func catalogReadRelative(root, relative string) (string, error) {
@@ -440,10 +440,6 @@ func (m model) copyableDetailBody() string {
 }
 
 func (m model) copyableSections() []copySection {
-	if !m.canCopyDetail() {
-		return nil
-	}
-
 	body := m.copyableDetailBody()
 	if body == "" {
 		return nil
@@ -468,7 +464,7 @@ func (m model) copyableSections() []copySection {
 		normalized, ok := normalizedSectionHeading(raw)
 		if ok {
 			flush()
-			current = &copySection{title: normalized, content: normalized}
+			current = &copySection{title: normalized}
 			continue
 		}
 
@@ -485,7 +481,7 @@ func (m model) copyableSections() []copySection {
 	flush()
 
 	if len(sections) == 0 && strings.TrimSpace(body) != "" {
-		return []copySection{{title: "COMMANDS", content: strings.TrimSpace(body)}}
+		return []copySection{{title: "SECTION", content: strings.TrimSpace(body)}}
 	}
 
 	return sections
@@ -624,8 +620,8 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 	terminalCommands := mode == detailCheck
 	copySectionIndex := -1
 	copySections := m.copyableSections()
-	if len(copySections) == 1 && copySections[0].title == "COMMANDS" {
-		rendered = append(rendered, m.renderCopyableHeadingLine("Commands", width, 0)...)
+	if len(copySections) == 1 && copySections[0].title == "SECTION" {
+		rendered = append(rendered, m.renderCopyableHeadingLine("Copy Section", width, 0)...)
 		rendered = append(rendered, detailRenderedLine{text: "", copySection: -1})
 		copySectionIndex = 0
 	}
@@ -667,32 +663,26 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 			}
 		case strings.HasPrefix(trimmed, "# "):
 			heading := strings.TrimPrefix(trimmed, "# ")
-			if mode == detailSolution || mode == detailCheck {
-				if _, ok := normalizedSectionHeading(heading); ok {
-					copySectionIndex++
-					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
-					continue
-				}
+			if _, ok := normalizedSectionHeading(heading); ok {
+				copySectionIndex++
+				rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH1)
 		case strings.HasPrefix(trimmed, "## "):
 			heading := strings.TrimPrefix(trimmed, "## ")
-			if mode == detailSolution || mode == detailCheck {
-				if _, ok := normalizedSectionHeading(heading); ok {
-					copySectionIndex++
-					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
-					continue
-				}
+			if _, ok := normalizedSectionHeading(heading); ok {
+				copySectionIndex++
+				rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH2)
 		case strings.HasPrefix(trimmed, "### "):
 			heading := strings.TrimPrefix(trimmed, "### ")
-			if mode == detailSolution || mode == detailCheck {
-				if _, ok := normalizedSectionHeading(heading); ok {
-					copySectionIndex++
-					rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
-					continue
-				}
+			if _, ok := normalizedSectionHeading(heading); ok {
+				copySectionIndex++
+				rendered = append(rendered, m.renderCopyableHeadingLine(heading, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+heading, width, m.theme.DetailH3)
 		case strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "+ "):
@@ -701,12 +691,10 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 		case terminalCommands:
 			rendered = appendCommandLines(rendered, trimmed, width, m.theme)
 		default:
-			if mode == detailSolution || mode == detailCheck {
-				if _, ok := normalizedSectionHeading(trimmed); ok {
-					copySectionIndex++
-					rendered = append(rendered, m.renderCopyableHeadingLine(trimmed, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
-					continue
-				}
+			if _, ok := normalizedSectionHeading(trimmed); ok {
+				copySectionIndex++
+				rendered = append(rendered, m.renderCopyableHeadingLine(trimmed, width, sectionIndexOrNone(copySectionIndex, len(copySections)))...)
+				continue
 			}
 			rendered = appendWrappedDetailLines(rendered, "  "+line, width, m.theme.DetailPlain)
 		}
@@ -843,11 +831,10 @@ func wrapLine(line string, width int) []string {
 // ── Search bar ─────────────────────────────────────────────
 
 func (m model) renderSearchBar(width int) string {
-	label := m.theme.SearchLabel.Render(" Search ")
+	label := m.theme.SearchLabel.Render("Search ")
 	query := m.filterQuery + "▏"
-	input := m.theme.SearchInput.Width(utils.MaxInt(width-8, 20)).Render(query)
-	bar := label + input
-	return lipgloss.NewStyle().Width(width).Render(bar)
+	input := m.theme.SearchInput.Render(query)
+	return truncateOrPadRenderedLine(label+input, width)
 }
 
 // ── Output / status panel ──────────────────────────────────
@@ -859,12 +846,19 @@ func (m model) renderOutput(width, height int) string {
 	}
 
 	lines := strings.Split(body, "\n")
-	rendered := make([]string, 0, len(lines))
+	rendered := make([]string, 0, height)
+	rendered = append(rendered, m.fillLine(m.theme.OutputTitle.Render("Output"), "", width))
+	rendered = append(rendered, m.renderPaneRule(width))
 	for _, line := range lines {
-		rendered = append(rendered, m.statusLineStyle(line).Render(" "+line))
+		rendered = append(rendered, truncateOrPadRenderedLine(m.statusLineStyle(line).Render(" "+line), width))
 	}
-
-	return m.theme.OutputPanel.Width(width).Height(utils.MinInt(height, 8)).Render(strings.Join(rendered, "\n"))
+	for len(rendered) < height {
+		rendered = append(rendered, strings.Repeat(" ", width))
+	}
+	if len(rendered) > height {
+		rendered = rendered[:height]
+	}
+	return strings.Join(rendered, "\n")
 }
 
 // ── Footer ─────────────────────────────────────────────────
@@ -880,7 +874,6 @@ func (m model) renderFooter(width int) string {
 		actions = []footerAction{
 			{"Enter", "Keep"},
 			{"Esc", "Clear"},
-			{"q", "Quit"},
 		}
 	} else {
 		actions = []footerAction{
@@ -957,10 +950,6 @@ type sectionCopyBound struct {
 }
 
 func (m model) detailSectionCopyBounds() []sectionCopyBound {
-	if !m.canCopyDetail() {
-		return nil
-	}
-
 	bodyLines := m.renderDetailBodyLines(m.detailTextWidth())
 	if len(bodyLines) == 0 {
 		return nil
@@ -979,20 +968,34 @@ func (m model) detailSectionCopyBounds() []sectionCopyBound {
 	originX, originY := m.detailPaneOrigin()
 	headerHeight := len(m.renderDetailHeaderLines(m.detailPaneWidth()))
 	bounds := make([]sectionCopyBound, 0, 8)
+	button := utils.StripAnsi(m.theme.RenderCopyButton())
+	buttonLabel := "[COPY]"
+	leftPad := strings.Index(button, buttonLabel)
+	if leftPad < 0 {
+		leftPad = 0
+	}
+	buttonWidth := len(button)
+	if buttonWidth < len(buttonLabel) {
+		buttonWidth = len(buttonLabel)
+	}
 
 	for i, line := range visible {
 		if line.copySection < 0 {
 			continue
 		}
 		stripped := utils.StripAnsi(line.text)
-		idx := strings.LastIndex(stripped, "[COPY]")
+		idx := strings.LastIndex(stripped, buttonLabel)
 		if idx < 0 {
 			continue
 		}
+		startX := originX + idx - leftPad
+		if startX < originX {
+			startX = originX
+		}
 		bounds = append(bounds, sectionCopyBound{
 			section: line.copySection,
-			startX:  originX + idx,
-			endX:    originX + idx + len("[COPY]") - 1,
+			startX:  startX,
+			endX:    startX + buttonWidth - 1,
 			y:       originY + headerHeight + i,
 		})
 	}
@@ -1009,6 +1012,17 @@ func (m model) detailSectionOffsets() []int {
 		}
 	}
 	return offsets
+}
+
+func truncateOrPadRenderedLine(line string, width int) string {
+	if lipgloss.Width(line) > width {
+		line = lipgloss.NewStyle().MaxWidth(width).Render(line)
+	}
+	visible := lipgloss.Width(line)
+	if visible < width {
+		line += strings.Repeat(" ", width-visible)
+	}
+	return line
 }
 
 func (m model) catalogTabBounds() (labsStart, labsEnd, examsStart, examsEnd, y int) {

@@ -50,35 +50,38 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	mouseX := msg.X
+	mouseY := m.normalizeMouseY(msg.Y)
+
 	switch msg.Type {
 	case tea.MouseMotion:
 		return m, nil
 	case tea.MouseWheelUp:
-		if m.mouseInDetailPane(msg.X, msg.Y) {
+		if m.mouseInDetailPane(mouseX, mouseY) {
 			m.focus = focusDetail
 			m.setCurrentDetailOffset(m.currentDetailOffset() - 3)
 			return m, nil
 		}
-		if m.mouseInListPane(msg.X, msg.Y) {
+		if m.mouseInListPane(mouseX, mouseY) {
 			m.focus = focusList
 			m.moveSelection(-1)
 			return m, nil
 		}
 	case tea.MouseWheelDown:
-		if m.mouseInDetailPane(msg.X, msg.Y) {
+		if m.mouseInDetailPane(mouseX, mouseY) {
 			m.focus = focusDetail
 			m.setCurrentDetailOffset(m.currentDetailOffset() + 3)
 			return m, nil
 		}
-		if m.mouseInListPane(msg.X, msg.Y) {
+		if m.mouseInListPane(mouseX, mouseY) {
 			m.focus = focusList
 			m.moveSelection(1)
 			return m, nil
 		}
 	case tea.MouseLeft:
-		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); msg.Y >= y-1 && msg.Y <= y+1 {
+		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); mouseY >= y-1 && mouseY <= y+1 {
 			switch {
-			case msg.X >= labsStart && msg.X <= labsEnd:
+			case mouseX >= labsStart && mouseX <= labsEnd:
 				m.activeTab = labsTab
 				m.ensureValidDetailMode()
 				m.adjustListOffset()
@@ -86,7 +89,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				m.focus = focusList
 				m.touchViewed()
 				return m, nil
-			case msg.X >= examsStart && msg.X <= examsEnd:
+			case mouseX >= examsStart && mouseX <= examsEnd:
 				m.activeTab = examsTab
 				m.ensureValidDetailMode()
 				m.adjustListOffset()
@@ -95,9 +98,9 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
-		if _, originY := m.detailPaneOrigin(); msg.Y >= originY-1 && msg.Y <= originY+1 {
+		if _, originY := m.detailPaneOrigin(); mouseY >= originY-1 && mouseY <= originY+1 {
 			for mode, bounds := range m.detailTabBounds() {
-				if msg.X >= bounds[0] && msg.X <= bounds[1] {
+				if mouseX >= bounds[0] && mouseX <= bounds[1] {
 					m.focus = focusDetail
 					m.setDetailMode(mode)
 					return m, nil
@@ -105,17 +108,17 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		for _, bound := range m.detailSectionCopyBounds() {
-			if msg.Y == bound.y && msg.X >= bound.startX && msg.X <= bound.endX {
+			if mouseY >= bound.y-1 && mouseY <= bound.y+1 && mouseX >= bound.startX && mouseX <= bound.endX {
 				m.focus = focusDetail
 				return m.copyDetailSection(bound.section), nil
 			}
 		}
-		if m.mouseInListPane(msg.X, msg.Y) {
+		if m.mouseInListPane(mouseX, mouseY) {
 			m.focus = focusList
-			m.selectListRowAt(msg.Y)
+			m.selectListRowAt(mouseY)
 			return m, nil
 		}
-		if m.mouseInDetailPane(msg.X, msg.Y) {
+		if m.mouseInDetailPane(mouseX, mouseY) {
 			m.focus = focusDetail
 			return m, nil
 		}
@@ -316,7 +319,7 @@ func (m model) handleHelpKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m model) handleBusyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case "ctrl+c", "q", "Q":
 		return m, tea.Quit
 	}
 	return m, nil
@@ -331,7 +334,7 @@ func (m model) handleConfirmKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.confirmText = ""
 		m.statusText = "Cancelled"
 		return m, nil
-	case "ctrl+c", "q":
+	case "ctrl+c", "q", "Q":
 		return m, tea.Quit
 	}
 	return m, nil
@@ -361,7 +364,7 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case "ctrl+c", "q", "Q":
 		return m, tea.Quit
 	case "tab", "shift+tab":
 		m.switchPaneFocus()
@@ -381,6 +384,10 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case "esc":
+		if strings.TrimSpace(m.statusText) != "" {
+			m.statusText = ""
+			return m, nil
+		}
 		if m.focus == focusDetail {
 			m.focus = focusList
 			return m, nil
@@ -471,11 +478,7 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleSSHAction("servervm")
 	case "/", ":", "ctrl+f":
 		m.filterMode = true
-		if m.filterQuery == "" {
-			m.statusText = "Search"
-		} else {
-			m.statusText = fmt.Sprintf("Search: %s", m.filterQuery)
-		}
+		m.statusText = ""
 		return m, nil
 	case "?", ",", "H":
 		m.showHelp = true

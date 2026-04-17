@@ -344,6 +344,9 @@ func (m model) statusPaneHeight() int {
 
 func (m model) contentHeight() int {
 	h := m.height - chromeHeight - m.statusPaneHeight()
+	if m.filterMode {
+		h--
+	}
 	return utils.MaxInt(h, minContentHeight)
 }
 
@@ -383,6 +386,10 @@ func (m model) detailVisibleLines() int {
 
 func (m model) detailPageStep() int {
 	return utils.MaxInt(m.detailVisibleLines()-3, 1)
+}
+
+func (m model) normalizeMouseY(y int) int {
+	return y + 1
 }
 
 func (m model) detailMaxOffset() int {
@@ -738,14 +745,14 @@ func (m model) helpBody() string {
 		"Search",
 		"  / or Ctrl+F          open search",
 		"  Enter                keep filter",
-		"  Esc                  clear filter",
+		"  Esc                  clear filter and close search",
 		"",
 		"Views",
-		"  F1 / 1               Tasks",
-		"  F2 / 2               Hints",
-		"  F3 / 3 / \"           Checks",
-		"  F4 / 4 / '           Solutions",
-		"  [COPY]               click a task/check section to copy its commands",
+		"  F1                   Tasks",
+		"  F2                   Hints",
+		"  F3                   Checks",
+		"  F4                   Solutions",
+		"  [COPY]               click a question or check section to copy it",
 		"",
 		"Press ? or Esc to close this help.",
 	}, "\n")

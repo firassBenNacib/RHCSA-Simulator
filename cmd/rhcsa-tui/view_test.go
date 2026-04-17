@@ -110,14 +110,29 @@ func TestMatchesPromptViewKey(t *testing.T) {
 	if matchesPromptViewKey(fakeKeyMsg("1")) != true {
 		t.Error("expected '1' to match prompt view key")
 	}
+	if matchesPromptViewKey(fakeKeyMsg("&")) != true {
+		t.Error("expected '&' to match prompt view key")
+	}
 	if matchesPromptViewKey(fakeKeyMsg("q")) != false {
 		t.Error("expected 'q' not to match prompt view key")
+	}
+}
+
+func TestMatchesHintViewKey(t *testing.T) {
+	if matchesHintViewKey(fakeKeyMsg("2")) != true {
+		t.Error("expected '2' to match hint view key")
+	}
+	if matchesHintViewKey(fakeKeyMsg("é")) != true {
+		t.Error("expected 'é' to match hint view key")
 	}
 }
 
 func TestMatchesSolutionViewKey(t *testing.T) {
 	if matchesSolutionViewKey(fakeKeyMsg("4")) != true {
 		t.Error("expected '4' to match solution view key")
+	}
+	if matchesSolutionViewKey(fakeKeyMsg("'")) != true {
+		t.Error("expected apostrophe to match solution view key")
 	}
 	if matchesSolutionViewKey(fakeKeyMsg("q")) != false {
 		t.Error("expected 'q' not to match solution view key")
@@ -127,6 +142,9 @@ func TestMatchesSolutionViewKey(t *testing.T) {
 func TestMatchesCheckViewKey(t *testing.T) {
 	if matchesCheckViewKey(fakeKeyMsg("3")) != true {
 		t.Error("expected '3' to match check view key")
+	}
+	if matchesCheckViewKey(fakeKeyMsg("\"")) != true {
+		t.Error("expected quote to match check view key")
 	}
 	if matchesCheckViewKey(fakeKeyMsg("a")) != false {
 		t.Error("expected 'a' not to match check view key")

@@ -211,6 +211,26 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	}
 }
 
+func TestFilterFooterOmitsQuitAndKeepsTopTabs(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 20
+	m.filterMode = true
+	m.filterQuery = "nfs"
+	m.statusText = "Search: nfs"
+
+	stripped := utils.StripAnsi(m.View())
+	if !strings.Contains(stripped, "LABS") || !strings.Contains(stripped, "EXAMS") {
+		t.Fatalf("expected top catalog tabs to remain visible during search, got:\n%s", stripped)
+	}
+	if !strings.Contains(stripped, "Enter Keep") || !strings.Contains(stripped, "Esc Clear") {
+		t.Fatalf("expected search footer actions, got:\n%s", stripped)
+	}
+	if strings.Contains(stripped, "q Quit") {
+		t.Fatalf("expected search footer to omit q Quit, got:\n%s", stripped)
+	}
+}
+
 func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
 	description := "Configure persistent networking on clientvm in RHCSA style"
 	body := strings.Join([]string{
@@ -294,6 +314,54 @@ func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
 		if strings.Contains(stripped, unwanted) {
 			t.Fatalf("expected solution view to trim %q, got:\n%s", unwanted, stripped)
 		}
+	}
+}
+
+func TestPromptViewShowsPerQuestionCopyButtonsForStructuredContent(t *testing.T) {
+	m := buildRenderTestModel(t)
+	taskPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_TASKS.md")
+	taskBody := strings.Join([]string{
+		"## Task 01 - First",
+		"",
+		"Do the first thing.",
+		"",
+		"## Task 02 - Second",
+		"",
+		"Do the second thing.",
+	}, "\n")
+	if err := os.WriteFile(taskPath, []byte(taskBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	stripped := utils.StripAnsi(m.renderDetailBody())
+	if strings.Count(stripped, "[COPY]") < 2 {
+		t.Fatalf("expected per-task copy buttons, got:\n%s", stripped)
+	}
+}
+
+func TestExamSolutionShowsPerQuestionCopyButtons(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.activeTab = examsTab
+	m.detail = detailSolution
+	solutionPath := filepath.Join(m.root, "scenarios", "exams", "mock-exam-a", "EXAM_SOLUTION.md")
+	solutionBody := strings.Join([]string{
+		"# Mock Exam A",
+		"",
+		"## Question 01 - First",
+		"",
+		"echo first",
+		"",
+		"## Question 02 - Second",
+		"",
+		"echo second",
+	}, "\n")
+	if err := os.WriteFile(solutionPath, []byte(solutionBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	stripped := utils.StripAnsi(m.renderDetailBody())
+	if strings.Count(stripped, "[COPY]") < 2 {
+		t.Fatalf("expected per-question copy buttons in exam solutions, got:\n%s", stripped)
 	}
 }
 

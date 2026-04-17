@@ -276,6 +276,21 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 }
 
+func TestMouseClickSelectsExpectedLabRow(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.labs = append(m.labs, m.labs[0])
+	m.labs[1].ID = "lab-02-demo"
+	m.labs[1].Title = "Lab 02: Second Demo"
+
+	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: 5, Type: tea.MouseLeft})
+	updated := got.(model)
+	if updated.selectedLab != 1 {
+		t.Fatalf("expected second lab to be selected from row click, got %d", updated.selectedLab)
+	}
+}
+
 func TestUppercaseActionKeysWork(t *testing.T) {
 	m := buildRenderTestModel(t)
 	if err := os.MkdirAll(filepath.Join(m.root, ".vagrant", "machines"), 0o755); err != nil {
@@ -286,6 +301,17 @@ func TestUppercaseActionKeysWork(t *testing.T) {
 	updated := got.(model)
 	if !updated.busy {
 		t.Fatalf("expected uppercase C to trigger checks")
+	}
+}
+
+func TestUppercaseQuitKeyWorks(t *testing.T) {
+	m := buildRenderTestModel(t)
+	got, cmd := m.handleNormalKey(fakeKeyMsg("Q"))
+	if _, ok := got.(model); !ok {
+		t.Fatal("expected model result")
+	}
+	if cmd == nil {
+		t.Fatal("expected uppercase Q to return a quit command")
 	}
 }
 
@@ -316,5 +342,48 @@ func TestPageDownSnapsToNextDetailSection(t *testing.T) {
 	updated := got.(model)
 	if updated.currentDetailOffset() <= 0 {
 		t.Fatalf("expected page down to move to the next section, got offset %d", updated.currentDetailOffset())
+	}
+}
+
+func TestExamQuestionsProduceSectionOffsets(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.activeTab = examsTab
+	m.width = 120
+	m.height = 18
+	examTaskPath := filepath.Join(m.root, "scenarios", "exams", "mock-exam-a", "EXAM_TASKS.md")
+	taskBody := strings.Join([]string{
+		"# Mock Exam A",
+		"",
+		"## Question 01 - First",
+		"",
+		"Do the first thing.",
+		"",
+		"## Question 02 - Second",
+		"",
+		"Do the second thing.",
+		"",
+		"## Question 03 - Third",
+		"",
+		"Do the third thing.",
+	}, "\n")
+	if err := os.WriteFile(examTaskPath, []byte(taskBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	offsets := m.detailSectionOffsets()
+	if len(offsets) < 3 {
+		t.Fatalf("expected exam questions to create section offsets, got %v", offsets)
+	}
+}
+
+func TestCopyDetailSectionOmitsHeadingTitle(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.detail = detailCheck
+	sections := m.copyableSections()
+	if len(sections) == 0 {
+		t.Fatal("expected at least one copyable section")
+	}
+	if strings.Contains(sections[0].content, sections[0].title) {
+		t.Fatalf("expected section copy payload to omit its title, got %q", sections[0].content)
 	}
 }
