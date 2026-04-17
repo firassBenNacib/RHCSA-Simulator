@@ -92,11 +92,12 @@ type Theme struct {
 func NewTheme() Theme {
 	red := lipgloss.Color("#DC2626")
 	redLight := lipgloss.Color("#F87171")
-	redMuted := lipgloss.Color("#3F1417")
+	redMuted := lipgloss.Color("#4A171B")
 
 	bgDark := lipgloss.Color("#090E17")
 	bgMid := lipgloss.Color("#0F1724")
 	bgCard := lipgloss.Color("#151E2D")
+	bgCommand := lipgloss.Color("#122033")
 	border := lipgloss.Color("#334155")
 	borderSoft := lipgloss.Color("#243244")
 
@@ -111,7 +112,8 @@ func NewTheme() Theme {
 	blue := lipgloss.Color("#3b82f6")
 	yellow := lipgloss.Color("#fbbf24")
 	orange := lipgloss.Color("#fb923c")
-	codeGreen := lipgloss.Color("#6ee7b7")
+	codeGreen := lipgloss.Color("#7FE9D0")
+	codeBlue := lipgloss.Color("#93C5FD")
 
 	return Theme{
 		// ── Header bar ──────────────────────────────────────
@@ -127,28 +129,30 @@ func NewTheme() Theme {
 		TabBar: lipgloss.NewStyle().
 			Padding(0, 2),
 		TabActive: lipgloss.NewStyle().
-			Padding(0, 1).
+			Padding(0, 2).
 			Bold(true).
-			Foreground(redLight),
+			Foreground(textBright).
+			Background(redMuted),
 		TabInactive: lipgloss.NewStyle().
-			Padding(0, 1).
+			Padding(0, 2).
 			Foreground(textMuted),
 		TabBorder: lipgloss.NewStyle().
 			Foreground(borderSoft),
 
 		// ── View mode bar ───────────────────────────────────
 		ViewMode: lipgloss.NewStyle().
-			Padding(0, 1).
+			Padding(0, 2).
 			Foreground(textMuted),
 		ViewModeActive: lipgloss.NewStyle().
-			Padding(0, 1).
-			Bold(true).
-			Foreground(redLight),
-		CopyButton: lipgloss.NewStyle().
-			Padding(0, 1).
+			Padding(0, 2).
 			Bold(true).
 			Foreground(textBright).
-			Background(bgCard),
+			Background(redMuted),
+		CopyButton: lipgloss.NewStyle().
+			Padding(0, 2).
+			Bold(true).
+			Foreground(textBright).
+			Background(lipgloss.Color("#1E293B")),
 
 		// ── Panes ───────────────────────────────────────────
 		ListPane: lipgloss.NewStyle().
@@ -217,12 +221,12 @@ func NewTheme() Theme {
 		DetailMeta: lipgloss.NewStyle().
 			Foreground(textMuted),
 		DetailCode: lipgloss.NewStyle().
-			Foreground(codeGreen).
-			Background(bgCard).
+			Foreground(codeBlue).
+			Background(bgCommand).
 			Padding(0, 1),
 		DetailCommand: lipgloss.NewStyle().
 			Foreground(codeGreen).
-			Background(bgCard).
+			Background(bgCommand).
 			Padding(0, 1),
 		DetailList: lipgloss.NewStyle().
 			Foreground(textDim),
@@ -353,7 +357,7 @@ func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 }
 
 func (t Theme) RenderCopyButton() string {
-	return t.CopyButton.Render("[COPY]")
+	return t.CopyButton.Render("[COPY COMMANDS]")
 }
 
 // StatusBadge returns a styled single-char badge for the given progress marker.

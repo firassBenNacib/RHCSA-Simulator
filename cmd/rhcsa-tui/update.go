@@ -76,6 +76,34 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.MouseLeft:
+		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); msg.Y == y {
+			switch {
+			case msg.X >= labsStart && msg.X <= labsEnd:
+				m.activeTab = labsTab
+				m.ensureValidDetailMode()
+				m.adjustListOffset()
+				m.resetDetailOffsets()
+				m.focus = focusList
+				m.touchViewed()
+				return m, nil
+			case msg.X >= examsStart && msg.X <= examsEnd:
+				m.activeTab = examsTab
+				m.ensureValidDetailMode()
+				m.adjustListOffset()
+				m.resetDetailOffsets()
+				m.focus = focusList
+				return m, nil
+			}
+		}
+		if _, originY := m.detailPaneOrigin(); msg.Y == originY {
+			for mode, bounds := range m.detailTabBounds() {
+				if msg.X >= bounds[0] && msg.X <= bounds[1] {
+					m.focus = focusDetail
+					m.setDetailMode(mode)
+					return m, nil
+				}
+			}
+		}
 		if startX, endX, y, ok := m.detailCopyButtonBounds(); ok && msg.Y == y && msg.X >= startX && msg.X <= endX {
 			m.focus = focusDetail
 			return m.copyCurrentDetail(), nil

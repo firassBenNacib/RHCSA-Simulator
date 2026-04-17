@@ -77,9 +77,9 @@ func (m model) renderWideContent() string {
 	rightWidth := m.detailPaneWidth()
 	ch := m.contentHeight()
 
-	listPane := m.theme.ListPane.Width(leftWidth).Render(m.renderList(leftWidth, ch))
+	listPane := padRenderedBlock(m.renderList(leftWidth, ch), leftWidth, ch)
 	sep := m.renderVerticalSeparator(ch)
-	detailPane := m.theme.DetailPane.Width(rightWidth).Render(m.renderDetail(rightWidth, ch))
+	detailPane := padRenderedBlock(m.renderDetail(rightWidth, ch), rightWidth, ch)
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, listPane, sep, detailPane)
 }
@@ -91,9 +91,9 @@ func (m model) renderStackedContent() string {
 	listH := utils.MaxInt(ch/3, 6)
 	detailH := ch - listH
 
-	listPane := m.theme.ListPane.Width(m.width).Render(m.renderList(m.width, listH))
+	listPane := padRenderedBlock(m.renderList(m.width, listH), m.width, listH)
 	rule := m.theme.PaneBorder.Width(m.width).Render(strings.Repeat("─", m.width))
-	detailPane := m.theme.DetailPane.Width(m.width).Render(m.renderDetail(m.width, detailH))
+	detailPane := padRenderedBlock(m.renderDetail(m.width, detailH), m.width, detailH)
 
 	return lipgloss.JoinVertical(lipgloss.Left, listPane, rule, detailPane)
 }
@@ -106,6 +106,26 @@ func (m model) renderVerticalSeparator(height int) string {
 	for i := range lines {
 		lines[i] = style.Render("│")
 	}
+	return strings.Join(lines, "\n")
+}
+
+func padRenderedBlock(text string, width, height int) string {
+	lines := strings.Split(text, "\n")
+	if len(lines) < height {
+		for len(lines) < height {
+			lines = append(lines, "")
+		}
+	} else if len(lines) > height {
+		lines = lines[:height]
+	}
+
+	for i, line := range lines {
+		lineWidth := lipgloss.Width(line)
+		if lineWidth < width {
+			lines[i] = line + strings.Repeat(" ", width-lineWidth)
+		}
+	}
+
 	return strings.Join(lines, "\n")
 }
 
@@ -739,6 +759,33 @@ func (m model) detailCopyButtonBounds() (int, int, int, bool) {
 	return startX, endX, originY, true
 }
 
+func (m model) catalogTabBounds() (labsStart, labsEnd, examsStart, examsEnd, y int) {
+	y = 1
+	x := 2
+	labsWidth := lipgloss.Width(m.theme.TabActive.Render("LABS"))
+	examsWidth := lipgloss.Width(m.theme.TabActive.Render("EXAMS"))
+	labsStart, labsEnd = x, x+labsWidth-1
+	x = labsEnd + 1 + 3
+	examsStart, examsEnd = x, x+examsWidth-1
+	return
+}
+
+func (m model) detailTabBounds() map[detailMode][2]int {
+	bounds := map[detailMode][2]int{}
+	originX, originY := m.detailPaneOrigin()
+	_ = originY
+	x := originX
+
+	modes := m.availableDetailModes()
+	for _, mode := range modes {
+		label := detailModeLabel(mode)
+		width := lipgloss.Width(m.theme.ViewModeActive.Render(label))
+		bounds[mode] = [2]int{x, x + width - 1}
+		x += width
+	}
+	return bounds
+}
+
 func (m model) fillLine(left, right string, width int) string {
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
@@ -773,6 +820,21 @@ func trimDocumentHeading(title string, mode detailMode, body string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func detailModeLabel(mode detailMode) string {
+	switch mode {
+	case detailPrompt:
+		return "TASKS"
+	case detailHint:
+		return "HINTS"
+	case detailCheck:
+		return "CHECKS"
+	case detailSolution:
+		return "SOLUTIONS"
+	default:
+		return ""
+	}
 }
 
 // ── Utilities ──────────────────────────────────────────────

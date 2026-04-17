@@ -287,8 +287,8 @@ func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
 	m.detail = detailSolution
 
 	stripped := utils.StripAnsi(m.View())
-	if !strings.Contains(stripped, "[COPY]") {
-		t.Fatalf("expected solution view to show [COPY], got:\n%s", stripped)
+	if !strings.Contains(stripped, "[COPY COMMANDS]") {
+		t.Fatalf("expected solution view to show [COPY COMMANDS], got:\n%s", stripped)
 	}
 	for _, unwanted := range []string{"Systems", "General Instructions"} {
 		if strings.Contains(stripped, unwanted) {

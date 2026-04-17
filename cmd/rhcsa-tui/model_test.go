@@ -220,3 +220,44 @@ func TestArrowKeysSwitchDocumentsWhenDetailFocused(t *testing.T) {
 		t.Fatalf("expected hint view after left arrow, got %v", updated.detail)
 	}
 }
+
+func TestMouseClickSwitchesCatalogTabs(t *testing.T) {
+	m := buildRenderTestModel(t)
+	labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds()
+	if labsEnd < labsStart || examsEnd < examsStart {
+		t.Fatal("expected valid tab bounds")
+	}
+
+	got, _ := m.handleMouse(tea.MouseMsg{X: examsStart, Y: y, Type: tea.MouseLeft})
+	updated := got.(model)
+	if updated.activeTab != examsTab {
+		t.Fatalf("expected exams tab after mouse click, got %v", updated.activeTab)
+	}
+
+	got, _ = updated.handleMouse(tea.MouseMsg{X: labsStart, Y: y, Type: tea.MouseLeft})
+	updated = got.(model)
+	if updated.activeTab != labsTab {
+		t.Fatalf("expected labs tab after mouse click, got %v", updated.activeTab)
+	}
+}
+
+func TestMouseClickSwitchesDetailTabs(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	bounds := m.detailTabBounds()
+	hintBounds, ok := bounds[detailHint]
+	if !ok {
+		t.Fatal("expected hint tab bounds")
+	}
+	_, y := m.detailPaneOrigin()
+
+	got, _ := m.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y, Type: tea.MouseLeft})
+	updated := got.(model)
+	if updated.detail != detailHint {
+		t.Fatalf("expected hint detail after mouse click, got %v", updated.detail)
+	}
+	if updated.focus != focusDetail {
+		t.Fatalf("expected detail focus after mouse click, got %v", updated.focus)
+	}
+}
