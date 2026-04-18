@@ -230,19 +230,19 @@ func TestMouseClickSwitchesCatalogTabs(t *testing.T) {
 		t.Fatal("expected valid tab bounds")
 	}
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: examsStart, Y: visualMouseY(y), Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: examsStart, Y: renderedMouseY(y), Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.activeTab != examsTab {
 		t.Fatalf("expected exams tab after mouse click, got %v", updated.activeTab)
 	}
 
-	got, _ = updated.handleMouse(tea.MouseMsg{X: labsStart, Y: visualMouseY(y), Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(tea.MouseMsg{X: labsStart, Y: renderedMouseY(y), Type: tea.MouseLeft})
 	updated = got.(model)
 	if updated.activeTab != labsTab {
 		t.Fatalf("expected labs tab after mouse click, got %v", updated.activeTab)
 	}
 
-	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: y, Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: renderedMouseY(y + 1), Type: tea.MouseLeft})
 	updated = got.(model)
 	if updated.activeTab != labsTab {
 		t.Fatalf("expected click below tab row to leave active tab unchanged, got %v", updated.activeTab)
@@ -260,7 +260,7 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 	_, y := m.detailPaneOrigin()
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: visualMouseY(y), Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: renderedMouseY(y), Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.detail != detailHint {
 		t.Fatalf("expected hint detail after mouse click, got %v", updated.detail)
@@ -270,7 +270,7 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 
 	updated.detail = detailPrompt
-	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y, Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: renderedMouseY(y + 1), Type: tea.MouseLeft})
 	updated = got.(model)
 	if updated.detail != detailPrompt {
 		t.Fatalf("expected click below detail tab row to leave detail unchanged, got %v", updated.detail)
@@ -285,7 +285,7 @@ func TestMouseClickSelectsExpectedLabRow(t *testing.T) {
 	m.labs[1].ID = "lab-02-demo"
 	m.labs[1].Title = "Lab 02: Second Demo"
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: 5, Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: renderedMouseY(6), Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.selectedLab != 1 {
 		t.Fatalf("expected second lab to be selected from row click, got %d", updated.selectedLab)
@@ -305,7 +305,7 @@ func footerBoundByID(t *testing.T, m model, id footerActionID) footerActionBound
 
 func clickFooterAction(m model, bound footerActionBound) (tea.Model, tea.Cmd) {
 	x := (bound.startX + bound.endX) / 2
-	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: visualMouseY(bound.y)})
+	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bound.y)})
 }
 
 func TestMouseClickFooterSwitchesDetailMode(t *testing.T) {
@@ -485,12 +485,12 @@ func captureClipboardCopy(t *testing.T) *string {
 
 func clickCopyBound(m model, bound sectionCopyBound) model {
 	x := (bound.startX + bound.endX) / 2
-	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: visualMouseY(bound.y)})
+	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bound.y)})
 	return result.(model)
 }
 
-func visualMouseY(renderedY int) int {
-	return renderedY - 1
+func renderedMouseY(renderedY int) int {
+	return renderedY
 }
 
 func TestCheckCopyClickCopiesCommandBodyOnly(t *testing.T) {
@@ -562,6 +562,69 @@ func TestSolutionCopyClickCopiesSectionBodyOnly(t *testing.T) {
 	}
 }
 
+func TestSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	solutionPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_SOLUTION.md")
+	solutionBody := strings.Join([]string{
+		"# Lab 01: Networking And Hostname",
+		"",
+		"## Lab Solution",
+		"## Overview",
+		"| Field | Value |",
+		"|---|---|",
+		"| Scenario ID | `lab-01-networking-hostname` |",
+		"| Mode | Lab |",
+		"| Time limit | 35 minutes |",
+		"| Objectives | networking-and-firewall |",
+		"",
+		"Configure persistent networking and hostname settings on clientvm in RHCSA style.",
+		"",
+		"### Systems",
+		"- clientvm",
+		"",
+		"## General Instructions",
+		"1. Unless a task states otherwise, make all changes persistent across reboots.",
+		"",
+		"## Task 01 - Client Network Configuration (clientvm) - 10 pts",
+		"",
+		"```bash",
+		"nmcli device status",
+		"hostnamectl set-hostname clientvm.netlab.local",
+		"```",
+		"",
+		"---",
+		"",
+		"## Task 02 - Static Host Entry (clientvm) - 10 pts",
+		"",
+		"```bash",
+		"vim /etc/hosts",
+		"192.168.122.3 repo.netlab.local",
+		"```",
+	}, "\n")
+	if err := os.WriteFile(solutionPath, []byte(solutionBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) < 2 {
+		t.Fatalf("expected generated solution copy bounds, got %d", len(bounds))
+	}
+
+	updated := clickCopyBound(m, bounds[0])
+	if !strings.Contains(updated.statusText, "Copied Task 01") {
+		t.Fatalf("expected first generated task copied status, got %q", updated.statusText)
+	}
+	want := "nmcli device status\nhostnamectl set-hostname clientvm.netlab.local"
+	if *copied != want {
+		t.Fatalf("copied generated solution = %q, want %q", *copied, want)
+	}
+}
+
 func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120
@@ -575,7 +638,7 @@ func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 	}
 	x := (bounds[0].startX + bounds[0].endX) / 2
 
-	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y - 2})
+	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bounds[0].y - 1)})
 	if *copied != "" {
 		t.Fatalf("expected click above copy button not to copy, got %q", *copied)
 	}
@@ -583,7 +646,7 @@ func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 		t.Fatalf("expected click above copy button not to report copy, got %q", result.(model).statusText)
 	}
 
-	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: visualMouseY(bounds[0].y)})
+	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bounds[0].y)})
 	if *copied == "" {
 		t.Fatal("expected exact-row click to copy")
 	}
@@ -592,7 +655,7 @@ func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 	}
 
 	*copied = ""
-	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y})
+	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bounds[0].y + 1)})
 	if *copied != "" {
 		t.Fatalf("expected click below copy button not to copy, got %q", *copied)
 	}

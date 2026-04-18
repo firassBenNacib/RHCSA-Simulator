@@ -392,7 +392,7 @@ func (m model) detailPageStep() int {
 }
 
 func (m model) normalizeMouseY(y int) int {
-	return y + 1
+	return y
 }
 
 func (m model) detailMaxOffset() int {

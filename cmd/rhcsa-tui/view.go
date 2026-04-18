@@ -1038,7 +1038,7 @@ func (m model) footerActionBounds(width int) []footerActionBound {
 			id:     action.id,
 			startX: x,
 			endX:   x + actionWidth - 1,
-			y:      m.height,
+			y:      m.height - 1,
 		})
 		x += actionWidth
 	}
