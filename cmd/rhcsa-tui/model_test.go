@@ -7,6 +7,9 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+
+	"rhcsa_exam_vms/internal/utils"
 )
 
 // fakeKeyMsg creates a tea.KeyMsg for testing key matchers.
@@ -308,6 +311,38 @@ func clickFooterAction(m model, bound footerActionBound) (tea.Model, tea.Cmd) {
 	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bound.y)})
 }
 
+func visibleTextPoint(t *testing.T, m model, target string) (int, int) {
+	t.Helper()
+	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	for y, line := range lines {
+		idx := strings.Index(line, target)
+		if idx < 0 {
+			continue
+		}
+		return lipgloss.Width(line[:idx]) + lipgloss.Width(target)/2, y
+	}
+	t.Fatalf("expected visible target %q in view:\n%s", target, strings.Join(lines, "\n"))
+	return 0, 0
+}
+
+func visibleTextEndPoint(t *testing.T, m model, target string) (int, int) {
+	t.Helper()
+	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	for y, line := range lines {
+		idx := strings.Index(line, target)
+		if idx < 0 {
+			continue
+		}
+		return lipgloss.Width(line[:idx]) + lipgloss.Width(target) - 1, y
+	}
+	t.Fatalf("expected visible target %q in view:\n%s", target, strings.Join(lines, "\n"))
+	return 0, 0
+}
+
+func clickVisibleText(m model, x, y int) (tea.Model, tea.Cmd) {
+	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: y})
+}
+
 func TestMouseClickFooterSwitchesDetailMode(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120
@@ -362,6 +397,40 @@ func TestMouseClickFooterHelpAndQuitInLabMode(t *testing.T) {
 	_, cmd := clickFooterAction(m, footerBoundByID(t, m, footerActionQuit))
 	if cmd == nil {
 		t.Fatal("expected footer quit click to return quit command in lab mode")
+	}
+}
+
+func TestMouseClickVisibleFooterActionsInLabMode(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+	m.activeTab = labsTab
+	m.focus = focusList
+
+	x, y := visibleTextPoint(t, m, "/ Find")
+	got, _ := clickVisibleText(m, x, y)
+	updated := got.(model)
+	if !updated.filterMode {
+		t.Fatalf("expected visible / Find click to enter search mode at %d,%d", x, y)
+	}
+
+	x, y = visibleTextPoint(t, m, "? Help")
+	got, _ = clickVisibleText(m, x, y)
+	updated = got.(model)
+	if !updated.showHelp {
+		t.Fatalf("expected visible ? Help click to open help at %d,%d", x, y)
+	}
+
+	x, y = visibleTextPoint(t, m, "q Quit")
+	_, cmd := clickVisibleText(m, x, y)
+	if cmd == nil {
+		t.Fatalf("expected visible q Quit click to return quit command at %d,%d", x, y)
+	}
+
+	x, y = visibleTextEndPoint(t, m, "q Quit")
+	_, cmd = clickVisibleText(m, x+1, y)
+	if cmd == nil {
+		t.Fatalf("expected one-column-right q Quit click to return quit command at %d,%d", x+1, y)
 	}
 }
 
@@ -656,6 +725,77 @@ func TestSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 	updated := clickCopyBound(m, bounds[0])
 	if !strings.Contains(updated.statusText, "Copied Task 01") {
 		t.Fatalf("expected first generated task copied status, got %q", updated.statusText)
+	}
+	want := "nmcli device status\nhostnamectl set-hostname clientvm.netlab.local"
+	if *copied != want {
+		t.Fatalf("copied generated solution = %q, want %q", *copied, want)
+	}
+
+	*copied = ""
+	x, y := visibleTextEndPoint(t, m, "[COPY]")
+	updatedModel, _ := clickVisibleText(m, x+1, y)
+	updated = updatedModel.(model)
+	if !strings.Contains(updated.statusText, "Copied Task 01") {
+		t.Fatalf("expected one-column-right solution copy click to copy task at %d,%d, got status %q", x+1, y, updated.statusText)
+	}
+	if *copied != want {
+		t.Fatalf("copied generated solution from one-column-right click = %q, want %q", *copied, want)
+	}
+}
+
+func TestVisibleSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	solutionPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_SOLUTION.md")
+	solutionBody := strings.Join([]string{
+		"# Lab 01: Networking And Hostname",
+		"",
+		"## Lab Solution",
+		"## Overview",
+		"| Field | Value |",
+		"|---|---|",
+		"| Scenario ID | `lab-01-networking-hostname` |",
+		"| Mode | Lab |",
+		"| Time limit | 35 minutes |",
+		"| Objectives | networking-and-firewall |",
+		"",
+		"Configure persistent networking and hostname settings on clientvm in RHCSA style.",
+		"",
+		"### Systems",
+		"- clientvm",
+		"",
+		"## General Instructions",
+		"1. Unless a task states otherwise, make all changes persistent across reboots.",
+		"",
+		"## Task 01 - Client Network Configuration (clientvm) - 10 pts",
+		"",
+		"```bash",
+		"nmcli device status",
+		"hostnamectl set-hostname clientvm.netlab.local",
+		"```",
+		"",
+		"---",
+		"",
+		"## Task 02 - Static Host Entry (clientvm) - 10 pts",
+		"",
+		"```bash",
+		"vim /etc/hosts",
+		"192.168.122.3 repo.netlab.local",
+		"```",
+	}, "\n")
+	if err := os.WriteFile(solutionPath, []byte(solutionBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	x, y := visibleTextPoint(t, m, "[COPY]")
+	updatedModel, _ := clickVisibleText(m, x, y)
+	updated := updatedModel.(model)
+	if !strings.Contains(updated.statusText, "Copied Task 01") {
+		t.Fatalf("expected visible solution copy click to copy task at %d,%d, got status %q", x, y, updated.statusText)
 	}
 	want := "nmcli device status\nhostnamectl set-hostname clientvm.netlab.local"
 	if *copied != want {

@@ -1077,7 +1077,13 @@ type sectionCopyBound struct {
 	section int
 	startX  int
 	endX    int
+	lineX   int
+	lineEnd int
 	y       int
+}
+
+func (b sectionCopyBound) contains(x int) bool {
+	return hitHorizontalBound(x, b.startX, b.endX) || hitHorizontalBound(x, b.lineX, b.lineEnd)
 }
 
 func (m model) detailSectionCopyBounds() []sectionCopyBound {
@@ -1138,6 +1144,8 @@ func (m model) detailSectionCopyBounds() []sectionCopyBound {
 			section: line.copySection,
 			startX:  startX,
 			endX:    startX + buttonWidth - 1,
+			lineX:   originX,
+			lineEnd: originX + lipgloss.Width(stripped) - 1,
 			y:       originY + headerHeight + i,
 		})
 	}

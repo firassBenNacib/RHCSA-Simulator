@@ -126,7 +126,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		for _, bound := range m.detailSectionCopyBounds() {
-			if mouseY == bound.y && mouseX >= bound.startX && mouseX <= bound.endX {
+			if mouseY == bound.y && bound.contains(mouseX) {
 				m.focus = focusDetail
 				return m.copyDetailSection(bound.section), nil
 			}
@@ -146,12 +146,16 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 func (m model) handleFooterClick(mouseX, mouseY int) (tea.Model, tea.Cmd, bool) {
 	for _, bound := range m.footerActionBounds(m.width) {
-		if mouseY == bound.y && mouseX >= bound.startX && mouseX <= bound.endX {
+		if (mouseY == bound.y || mouseY == bound.y+1) && hitHorizontalBound(mouseX, bound.startX, bound.endX) {
 			next, cmd := m.handleFooterAction(bound.id)
 			return next, cmd, true
 		}
 	}
 	return m, nil, false
+}
+
+func hitHorizontalBound(x, startX, endX int) bool {
+	return (x >= startX && x <= endX) || (x-1 >= startX && x-1 <= endX)
 }
 
 func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
