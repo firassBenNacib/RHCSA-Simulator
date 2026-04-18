@@ -170,7 +170,11 @@ func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 		if m.focus == focusDetail {
 			m.cycleDetailMode(1)
 		} else {
-			m.switchCatalogTab(1)
+			if m.activeTab == labsTab {
+				m.switchCatalogTab(1)
+			} else {
+				m.switchCatalogTab(-1)
+			}
 		}
 		return m, nil
 	case footerActionCheck:

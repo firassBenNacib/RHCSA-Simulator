@@ -327,6 +327,44 @@ func TestMouseClickFooterSwitchesDetailMode(t *testing.T) {
 	}
 }
 
+func TestMouseClickFooterSwitchesCatalogTabsBothWays(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+	m.focus = focusList
+	m.activeTab = labsTab
+
+	got, _ := clickFooterAction(m, footerBoundByID(t, m, footerActionSwitch))
+	updated := got.(model)
+	if updated.activeTab != examsTab {
+		t.Fatalf("expected footer L/E click to switch to exams, got %v", updated.activeTab)
+	}
+
+	got, _ = clickFooterAction(updated, footerBoundByID(t, updated, footerActionSwitch))
+	updated = got.(model)
+	if updated.activeTab != labsTab {
+		t.Fatalf("expected second footer L/E click to switch back to labs, got %v", updated.activeTab)
+	}
+}
+
+func TestMouseClickFooterHelpAndQuitInLabMode(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+	m.activeTab = labsTab
+
+	got, _ := clickFooterAction(m, footerBoundByID(t, m, footerActionHelp))
+	updated := got.(model)
+	if !updated.showHelp {
+		t.Fatal("expected footer help click to open help in lab mode")
+	}
+
+	_, cmd := clickFooterAction(m, footerBoundByID(t, m, footerActionQuit))
+	if cmd == nil {
+		t.Fatal("expected footer quit click to return quit command in lab mode")
+	}
+}
+
 func TestMouseClickFooterFindAndQuit(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120

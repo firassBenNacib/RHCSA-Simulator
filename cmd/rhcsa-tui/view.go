@@ -1028,19 +1028,30 @@ func (m model) renderFooter(width int) string {
 func (m model) footerActionBounds(width int) []footerActionBound {
 	actions := m.visibleFooterActions(width)
 	bounds := make([]footerActionBound, 0, len(actions))
-	x := 1 // FooterBar horizontal padding.
-	for i, action := range actions {
-		actionWidth := lipgloss.Width(action.key + " " + action.label)
-		if i > 0 {
-			x += 2
+
+	rendered := utils.StripAnsi(m.renderFooter(width))
+	lines := strings.Split(rendered, "\n")
+	if len(lines) == 0 {
+		return bounds
+	}
+	content := lines[len(lines)-1]
+	searchFrom := 0
+	for _, action := range actions {
+		target := action.key + " " + action.label
+		idx := strings.Index(content[searchFrom:], target)
+		if idx < 0 {
+			continue
 		}
+		startByte := searchFrom + idx
+		startX := lipgloss.Width(content[:startByte])
+		targetWidth := lipgloss.Width(target)
 		bounds = append(bounds, footerActionBound{
 			id:     action.id,
-			startX: x,
-			endX:   x + actionWidth - 1,
+			startX: startX,
+			endX:   startX + targetWidth - 1,
 			y:      m.height - 1,
 		})
-		x += actionWidth
+		searchFrom = startByte + len(target)
 	}
 	return bounds
 }
@@ -1098,23 +1109,30 @@ func (m model) detailSectionCopyBounds() []sectionCopyBound {
 	if leftPad < 0 {
 		leftPad = 0
 	}
-	buttonWidth := len(button)
-	if buttonWidth < len(buttonLabel) {
-		buttonWidth = len(buttonLabel)
-	}
-
 	for i, line := range visible {
 		if line.copySection < 0 {
 			continue
 		}
 		stripped := utils.StripAnsi(line.text)
-		idx := strings.LastIndex(stripped, buttonLabel)
+		idx := strings.LastIndex(stripped, button)
+		target := button
 		if idx < 0 {
-			continue
+			idx = strings.LastIndex(stripped, buttonLabel)
+			target = buttonLabel
+			if idx < 0 {
+				continue
+			}
 		}
-		startX := originX + idx - leftPad
+		startX := originX + lipgloss.Width(stripped[:idx])
+		if target == buttonLabel {
+			startX -= leftPad
+		}
 		if startX < originX {
 			startX = originX
+		}
+		buttonWidth := lipgloss.Width(target)
+		if target == buttonLabel {
+			buttonWidth += leftPad
 		}
 		bounds = append(bounds, sectionCopyBound{
 			section: line.copySection,
