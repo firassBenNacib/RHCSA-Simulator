@@ -278,8 +278,8 @@ const (
 	minWideLayoutHeight = 24
 	maxStatusHeight     = 12
 	minStatusHeight     = 4
-	// header(1) + tabBar(2) + footer border/content(2) = 5 lines of chrome
-	chromeHeight          = 5
+	// tabBar(2) + footer border/content(2) = 4 lines of chrome
+	chromeHeight          = 4
 	minContentHeight      = 4
 	minDetailTextWidth    = 20
 	listPaneBorder        = 3
@@ -309,7 +309,7 @@ func (m model) detailPaneWidth() int {
 }
 
 func (m model) detailPaneOrigin() (int, int) {
-	contentY := 3
+	contentY := 2
 	if m.useStackedLayout() {
 		return 0, contentY + m.listPaneHeight() + 1
 	}

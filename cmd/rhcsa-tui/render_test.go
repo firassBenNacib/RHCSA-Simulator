@@ -76,6 +76,41 @@ func buildRenderTestModel(t *testing.T) model {
 	return m
 }
 
+func buildRepoTestModel(t *testing.T) model {
+	t.Helper()
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := filepath.Clean(filepath.Join(wd, "..", ".."))
+	labs, exams, err := catalog.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(labs) == 0 {
+		t.Fatal("expected repository labs")
+	}
+	progressState := &progress.State{
+		Labs:  map[string]*progress.LabProgress{},
+		Exams: map[string]*progress.ExamProgress{},
+	}
+	m := model{
+		root:         root,
+		labs:         labs,
+		exams:        exams,
+		progress:     progressState,
+		progressPath: filepath.Join(t.TempDir(), "progress.json"),
+		theme:        NewTheme(),
+		activeTab:    labsTab,
+		detail:       detailPrompt,
+		focus:        focusList,
+		width:        160,
+		height:       35,
+	}
+	m.touchViewed()
+	return m
+}
+
 // TestRenderFullView creates a model with sample data and renders the full view
 // at a typical terminal size to verify no panics or layout glitches.
 func TestRenderFullView(t *testing.T) {
@@ -91,19 +126,21 @@ func TestRenderFullView(t *testing.T) {
 	stripped := utils.StripAnsi(output)
 
 	checks := []string{
-		"RHCSA Simulator", // header
-		"LABS",            // tab
-		"EXAMS",           // tab
-		"TASKS",           // view mode
-		"Lab 01",          // lab title
-		"Start",           // footer key
-		"Quit",            // footer key
+		"LABS",   // tab
+		"EXAMS",  // tab
+		"TASKS",  // view mode
+		"Lab 01", // lab title
+		"Start",  // footer key
+		"Quit",   // footer key
 	}
 
 	for _, check := range checks {
 		if !strings.Contains(stripped, check) {
 			t.Errorf("expected view to contain %q", check)
 		}
+	}
+	if strings.Contains(stripped, "RHCSA Simulator") {
+		t.Errorf("expected main view to omit top app title")
 	}
 
 	// Print the view for manual inspection
@@ -408,10 +445,10 @@ func TestWideLayoutKeepsDetailFlushWithSeparator(t *testing.T) {
 	if len(lines) < 6 {
 		t.Fatalf("expected wide layout output, got:\n%s", m.View())
 	}
-	if !strings.Contains(lines[3], "1 / 1│  TASKS") {
-		t.Fatalf("expected detail tabs to start at the separator, got:\n%s", lines[3])
+	if !strings.Contains(lines[2], "1 / 1│  TASKS") {
+		t.Fatalf("expected detail tabs to start at the separator, got:\n%s", lines[2])
 	}
-	if !strings.Contains(lines[5], "│  Lab 01: Networking and Hostname") {
-		t.Fatalf("expected detail title to sit just after the separator, got:\n%s", lines[5])
+	if !strings.Contains(lines[4], "│  Lab 01: Networking and Hostname") {
+		t.Fatalf("expected detail title to sit just after the separator, got:\n%s", lines[4])
 	}
 }

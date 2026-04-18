@@ -225,7 +225,7 @@ func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 }
 
 func (m model) mouseInListPane(x, y int) bool {
-	contentY := 3
+	contentY := 2
 	if y < contentY {
 		return false
 	}
@@ -241,7 +241,7 @@ func (m model) mouseInDetailPane(x, y int) bool {
 }
 
 func (m *model) selectListRowAt(y int) {
-	contentY := 3
+	contentY := 2
 	listY := y - contentY
 	if m.useStackedLayout() {
 		if listY < 0 || listY >= m.listPaneHeight() {

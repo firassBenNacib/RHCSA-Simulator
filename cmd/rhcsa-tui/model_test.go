@@ -288,7 +288,7 @@ func TestMouseClickSelectsExpectedLabRow(t *testing.T) {
 	m.labs[1].ID = "lab-02-demo"
 	m.labs[1].Title = "Lab 02: Second Demo"
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: renderedMouseY(6), Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: renderedMouseY(5), Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.selectedLab != 1 {
 		t.Fatalf("expected second lab to be selected from row click, got %d", updated.selectedLab)
@@ -340,7 +340,7 @@ func visibleTextEndPoint(t *testing.T, m model, target string) (int, int) {
 }
 
 func clickVisibleText(m model, x, y int) (tea.Model, tea.Cmd) {
-	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: y})
+	return m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: y})
 }
 
 func TestMouseClickFooterSwitchesDetailMode(t *testing.T) {
@@ -431,6 +431,32 @@ func TestMouseClickVisibleFooterActionsInLabMode(t *testing.T) {
 	_, cmd = clickVisibleText(m, x+1, y)
 	if cmd == nil {
 		t.Fatalf("expected one-column-right q Quit click to return quit command at %d,%d", x+1, y)
+	}
+}
+
+func TestMouseClickVisibleRepoLabFooterActionsThroughUpdate(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.activeTab = labsTab
+	m.focus = focusList
+
+	x, y := visibleTextPoint(t, m, "/ Find")
+	got, _ := clickVisibleText(m, x, y)
+	updated := got.(model)
+	if !updated.filterMode {
+		t.Fatalf("expected repository lab / Find click through Update to enter search mode at %d,%d", x, y)
+	}
+
+	x, y = visibleTextPoint(t, m, "? Help")
+	got, _ = clickVisibleText(m, x, y)
+	updated = got.(model)
+	if !updated.showHelp {
+		t.Fatalf("expected repository lab ? Help click through Update to open help at %d,%d", x, y)
+	}
+
+	x, y = visibleTextPoint(t, m, "q Quit")
+	_, cmd := clickVisibleText(m, x, y)
+	if cmd == nil {
+		t.Fatalf("expected repository lab q Quit click through Update to return quit command at %d,%d", x, y)
 	}
 }
 
@@ -800,6 +826,25 @@ func TestVisibleSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 	want := "nmcli device status\nhostnamectl set-hostname clientvm.netlab.local"
 	if *copied != want {
 		t.Fatalf("copied generated solution = %q, want %q", *copied, want)
+	}
+}
+
+func TestVisibleRepoLabSolutionCopyClickThroughUpdate(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	x, y := visibleTextPoint(t, m, "[COPY]")
+	got, _ := clickVisibleText(m, x, y)
+	updated := got.(model)
+	if !strings.Contains(updated.statusText, "Copied Task 01") {
+		t.Fatalf("expected repository solution [COPY] click through Update to copy task at %d,%d, got status %q", x, y, updated.statusText)
+	}
+	if !strings.Contains(*copied, "nmcli device status") {
+		t.Fatalf("expected copied repository solution to contain command body, got %q", *copied)
+	}
+	if strings.Contains(*copied, "Task 01") {
+		t.Fatalf("expected copied repository solution to omit title, got %q", *copied)
 	}
 }
 

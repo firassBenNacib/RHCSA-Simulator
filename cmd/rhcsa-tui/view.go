@@ -35,7 +35,6 @@ func (m model) View() string {
 	}
 
 	// Build chrome
-	header := m.theme.RenderHeader(m.width)
 	tabBar := m.theme.RenderTabs(m.activeTab, m.width)
 	footer := m.renderFooter(m.width)
 
@@ -48,7 +47,7 @@ func (m model) View() string {
 	}
 
 	// Assemble
-	parts := []string{header, tabBar, content}
+	parts := []string{tabBar, content}
 
 	// Search bar (rendered above output/footer when in filter mode)
 	if m.filterMode {
@@ -1177,7 +1176,7 @@ func truncateOrPadRenderedLine(line string, width int) string {
 }
 
 func (m model) catalogTabBounds() (labsStart, labsEnd, examsStart, examsEnd, y int) {
-	y = 1
+	y = 0
 	x := 2
 	labsWidth := lipgloss.Width(m.theme.TabActive.Render("LABS"))
 	examsWidth := lipgloss.Width(m.theme.TabActive.Render("EXAMS"))
