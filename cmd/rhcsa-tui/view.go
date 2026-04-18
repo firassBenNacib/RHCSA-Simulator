@@ -429,14 +429,40 @@ func (m model) canCopyDetail() bool {
 	return m.detail == detailCheck || m.detail == detailSolution
 }
 
-func (m model) copyableDetailBody() string {
+func cleanCopyText(text string) string {
+	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
+	cleaned := make([]string, 0, len(lines))
+	inCode := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") {
+			inCode = !inCode
+			continue
+		}
+		if !inCode && strings.Trim(trimmed, "-") == "" && len(trimmed) > 2 {
+			continue
+		}
+		if !inCode {
+			line = strings.ReplaceAll(line, "`", "")
+			line = stripMarkdownBold(line)
+		}
+		cleaned = append(cleaned, line)
+	}
+	return strings.TrimSpace(compactBlankLines(cleaned))
+}
+
+func (m model) rawDetailBody() string {
 	view := m.currentScenarioView()
 	if view.id == "" {
 		return ""
 	}
 	body := strings.TrimSpace(trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body)))
 	body = trimActionSectionBoilerplate(body)
-	return strings.TrimSpace(body)
+	return body
+}
+
+func (m model) copyableDetailBody() string {
+	return cleanCopyText(m.rawDetailBody())
 }
 
 func (m model) copyableSections() []copySection {
@@ -444,48 +470,61 @@ func (m model) copyableSections() []copySection {
 		return nil
 	}
 
-	body := m.copyableDetailBody()
-	if body == "" {
+	rawBody := m.rawDetailBody()
+	if rawBody == "" {
 		return nil
 	}
 
-	lines := strings.Split(strings.ReplaceAll(body, "\r\n", "\n"), "\n")
+	lines := strings.Split(strings.ReplaceAll(rawBody, "\r\n", "\n"), "\n")
 	sections := make([]copySection, 0, 8)
 	var current *copySection
+	var currentLines []string
+	inCode := false
 
 	flush := func() {
 		if current == nil {
 			return
 		}
-		current.content = strings.TrimSpace(current.content)
-		if current.content != "" {
+		current.content = cleanCopyText(strings.Join(currentLines, "\n"))
+		if strings.TrimSpace(current.content) != "" {
 			sections = append(sections, *current)
 		}
 		current = nil
+		currentLines = nil
 	}
 
 	for _, raw := range lines {
-		normalized, ok := normalizedSectionHeading(raw)
-		if ok {
-			flush()
-			current = &copySection{title: normalized}
+		trimmed := strings.TrimSpace(raw)
+		if strings.HasPrefix(trimmed, "```") {
+			inCode = !inCode
+			if current != nil {
+				currentLines = append(currentLines, raw)
+			}
 			continue
 		}
 
-		if current == nil {
-			continue
+		if !inCode {
+			line := strings.ReplaceAll(raw, "`", "")
+			line = stripMarkdownBold(line)
+			normalized, ok := normalizedSectionHeading(strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(line), "#")))
+			if ok {
+				flush()
+				current = &copySection{title: normalized}
+				continue
+			}
 		}
 
-		if current.content == "" {
-			current.content = raw
-		} else {
-			current.content += "\n" + raw
+		if current != nil {
+			currentLines = append(currentLines, raw)
 		}
 	}
 	flush()
 
-	if len(sections) == 0 && strings.TrimSpace(body) != "" {
-		return []copySection{{title: "SECTION", content: strings.TrimSpace(body)}}
+	if len(sections) == 0 {
+		cleaned := m.copyableDetailBody()
+		if strings.TrimSpace(cleaned) != "" {
+			return []copySection{{title: "SECTION", content: strings.TrimSpace(cleaned)}}
+		}
 	}
 
 	return sections

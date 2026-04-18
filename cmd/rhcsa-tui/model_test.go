@@ -244,8 +244,8 @@ func TestMouseClickSwitchesCatalogTabs(t *testing.T) {
 
 	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: y - 1, Type: tea.MouseLeft})
 	updated = got.(model)
-	if updated.activeTab != examsTab {
-		t.Fatalf("expected exams tab after clicking the tab row above, got %v", updated.activeTab)
+	if updated.activeTab != labsTab {
+		t.Fatalf("expected click above tab row to leave active tab unchanged, got %v", updated.activeTab)
 	}
 }
 
@@ -269,10 +269,11 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 		t.Fatalf("expected detail focus after mouse click, got %v", updated.focus)
 	}
 
+	updated.detail = detailPrompt
 	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y - 1, Type: tea.MouseLeft})
 	updated = got.(model)
-	if updated.detail != detailHint {
-		t.Fatalf("expected hint detail after clicking the detail tab row above, got %v", updated.detail)
+	if updated.detail != detailPrompt {
+		t.Fatalf("expected click above detail tab row to leave detail unchanged, got %v", updated.detail)
 	}
 }
 
@@ -284,7 +285,7 @@ func TestMouseClickSelectsExpectedLabRow(t *testing.T) {
 	m.labs[1].ID = "lab-02-demo"
 	m.labs[1].Title = "Lab 02: Second Demo"
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: 5, Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: 6, Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.selectedLab != 1 {
 		t.Fatalf("expected second lab to be selected from row click, got %d", updated.selectedLab)
@@ -407,5 +408,162 @@ func TestPromptCopyBoundsAreHidden(t *testing.T) {
 	bounds := m.detailSectionCopyBounds()
 	if len(bounds) != 0 {
 		t.Fatalf("expected task view copy bounds to be hidden, got %d", len(bounds))
+	}
+}
+
+func captureClipboardCopy(t *testing.T) *string {
+	t.Helper()
+	var copied string
+	original := clipboardCopy
+	clipboardCopy = func(text string) error {
+		copied = text
+		return nil
+	}
+	t.Cleanup(func() {
+		clipboardCopy = original
+	})
+	return &copied
+}
+
+func clickCopyBound(m model, bound sectionCopyBound) model {
+	x := (bound.startX + bound.endX) / 2
+	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bound.y})
+	return result.(model)
+}
+
+func TestCheckCopyClickCopiesCommandBodyOnly(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailCheck
+	copied := captureClipboardCopy(t)
+
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) == 0 {
+		t.Fatal("expected check copy bounds")
+	}
+
+	updated := clickCopyBound(m, bounds[0])
+	if !strings.Contains(updated.statusText, "Copied") {
+		t.Fatalf("expected copied status, got %q", updated.statusText)
+	}
+	if *copied == "" {
+		t.Fatal("expected clipboard content")
+	}
+	if strings.Contains(*copied, "Check 01") || strings.Contains(*copied, "Copy Section") {
+		t.Fatalf("expected copied check body only, got %q", *copied)
+	}
+}
+
+func TestSolutionCopyClickCopiesSectionBodyOnly(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	solutionPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_SOLUTION.md")
+	solutionBody := strings.Join([]string{
+		"# Solution",
+		"",
+		"## Task 01 - First Task (clientvm) - 10 pts",
+		"",
+		"```bash",
+		"hostnamectl set-hostname demo",
+		"nmcli con up demo",
+		"```",
+		"",
+		"---",
+		"",
+		"## Task 02 - Second Task (clientvm) - 10 pts",
+		"",
+		"```bash",
+		"touch /root/second",
+		"```",
+	}, "\n")
+	if err := os.WriteFile(solutionPath, []byte(solutionBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) < 2 {
+		t.Fatalf("expected at least two solution copy bounds, got %d", len(bounds))
+	}
+
+	updated := clickCopyBound(m, bounds[0])
+	if !strings.Contains(updated.statusText, "Copied Task 01") {
+		t.Fatalf("expected first task copied status, got %q", updated.statusText)
+	}
+	want := "hostnamectl set-hostname demo\nnmcli con up demo"
+	if *copied != want {
+		t.Fatalf("copied solution = %q, want %q", *copied, want)
+	}
+}
+
+func TestCopyHitboxUsesExactZeroBasedRow(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) == 0 {
+		t.Fatal("expected solution copy bounds")
+	}
+	x := (bounds[0].startX + bounds[0].endX) / 2
+
+	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y - 1})
+	if *copied != "" {
+		t.Fatalf("expected click above copy button not to copy, got %q", *copied)
+	}
+	if strings.Contains(result.(model).statusText, "Copied") {
+		t.Fatalf("expected click above copy button not to report copy, got %q", result.(model).statusText)
+	}
+
+	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y})
+	if *copied == "" {
+		t.Fatal("expected exact-row click to copy")
+	}
+	if !strings.Contains(result.(model).statusText, "Copied") {
+		t.Fatalf("expected exact-row click to report copy, got %q", result.(model).statusText)
+	}
+}
+
+func TestExamSolutionCopyClickCopiesClickedQuestion(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.activeTab = examsTab
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	solutionPath := filepath.Join(m.root, "scenarios", "exams", "mock-exam-a", "EXAM_SOLUTION.md")
+	solutionBody := strings.Join([]string{
+		"# Mock Exam A",
+		"",
+		"## Question 01 - First",
+		"",
+		"echo first",
+		"",
+		"## Question 02 - Second",
+		"",
+		"echo second",
+	}, "\n")
+	if err := os.WriteFile(solutionPath, []byte(solutionBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	bounds := m.detailSectionCopyBounds()
+	if len(bounds) < 2 {
+		t.Fatalf("expected at least two exam solution copy bounds, got %d", len(bounds))
+	}
+
+	updated := clickCopyBound(m, bounds[1])
+	if !strings.Contains(updated.statusText, "Copied Question 02") {
+		t.Fatalf("expected second question copied status, got %q", updated.statusText)
+	}
+	if *copied != "echo second" {
+		t.Fatalf("copied exam solution = %q, want %q", *copied, "echo second")
 	}
 }

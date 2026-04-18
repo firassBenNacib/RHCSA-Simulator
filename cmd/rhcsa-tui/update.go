@@ -91,7 +91,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.MouseLeft:
-		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); mouseY >= y-1 && mouseY <= y+1 {
+		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); mouseY == y {
 			switch {
 			case mouseX >= labsStart && mouseX <= labsEnd:
 				m.activeTab = labsTab
@@ -110,7 +110,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
-		if _, originY := m.detailPaneOrigin(); mouseY >= originY-1 && mouseY <= originY+1 {
+		if _, originY := m.detailPaneOrigin(); mouseY == originY {
 			for mode, bounds := range m.detailTabBounds() {
 				if mouseX >= bounds[0] && mouseX <= bounds[1] {
 					m.focus = focusDetail
@@ -120,7 +120,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		for _, bound := range m.detailSectionCopyBounds() {
-			if mouseY >= bound.y-1 && mouseY <= bound.y+1 && mouseX >= bound.startX && mouseX <= bound.endX {
+			if mouseY == bound.y && mouseX >= bound.startX && mouseX <= bound.endX {
 				m.focus = focusDetail
 				return m.copyDetailSection(bound.section), nil
 			}
@@ -194,7 +194,7 @@ func (m model) copyCurrentDetail() model {
 		m.statusText = "Copy is available for checks and solutions only"
 		return m
 	}
-	if err := copyTextToClipboard(m.copyableDetailBody()); err != nil {
+	if err := clipboardCopy(m.copyableDetailBody()); err != nil {
 		m.statusText = "Clipboard copy failed\n" + err.Error()
 		return m
 	}
@@ -212,7 +212,7 @@ func (m model) copyDetailSection(index int) model {
 		m.statusText = "Copy target is unavailable"
 		return m
 	}
-	if err := copyTextToClipboard(sections[index].content); err != nil {
+	if err := clipboardCopy(sections[index].content); err != nil {
 		m.statusText = "Clipboard copy failed\n" + err.Error()
 		return m
 	}

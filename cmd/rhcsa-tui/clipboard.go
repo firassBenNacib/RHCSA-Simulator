@@ -13,6 +13,7 @@ type clipboardCommand struct {
 
 func clipboardCommandCandidates() []clipboardCommand {
 	return []clipboardCommand{
+		{name: "cmd.exe", args: []string{"/c", "clip"}},
 		{name: "clip.exe"},
 		{name: "pbcopy"},
 		{name: "wl-copy"},
@@ -20,6 +21,8 @@ func clipboardCommandCandidates() []clipboardCommand {
 		{name: "xsel", args: []string{"--clipboard", "--input"}},
 	}
 }
+
+var clipboardCopy = copyTextToClipboard
 
 func copyTextToClipboard(text string) error {
 	text = strings.TrimSpace(text)
