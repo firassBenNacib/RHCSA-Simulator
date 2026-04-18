@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,10 +13,11 @@ import (
 	"rhcsa_exam_vms/internal/progress"
 )
 
-const version = "1.0.0"
-
 func main() {
-	root, err := findProjectRoot()
+	projectRoot := flag.String("project-root", "", "path to the RHCSA simulator repository")
+	flag.Parse()
+
+	root, err := findProjectRoot(*projectRoot)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -54,7 +56,13 @@ func main() {
 	}
 }
 
-func findProjectRoot() (string, error) {
+func findProjectRoot(configured string) (string, error) {
+	if configured != "" {
+		if root, ok := searchForProjectRoot(configured); ok {
+			return root, nil
+		}
+	}
+
 	if configuredRoot := os.Getenv("RHCSA_SIMULATOR_ROOT"); configuredRoot != "" {
 		if root, ok := searchForProjectRoot(configuredRoot); ok {
 			return root, nil

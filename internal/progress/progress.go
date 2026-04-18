@@ -7,22 +7,29 @@ import (
 	"time"
 )
 
-type LabProgress struct {
+type ScenarioProgress struct {
 	ViewedAt  string `json:"viewed_at,omitempty"`
 	StartedAt string `json:"started_at,omitempty"`
 	CheckedAt string `json:"checked_at,omitempty"`
 	PassedAt  string `json:"passed_at,omitempty"`
 }
 
+type LabProgress = ScenarioProgress
+type ExamProgress = ScenarioProgress
+
 type State struct {
-	Labs map[string]*LabProgress `json:"labs"`
+	Labs  map[string]*LabProgress  `json:"labs"`
+	Exams map[string]*ExamProgress `json:"exams"`
 }
 
 func Load(path string) (*State, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &State{Labs: map[string]*LabProgress{}}, nil
+			return &State{
+				Labs:  map[string]*LabProgress{},
+				Exams: map[string]*ExamProgress{},
+			}, nil
 		}
 		return nil, err
 	}
@@ -35,6 +42,9 @@ func Load(path string) (*State, error) {
 	if state.Labs == nil {
 		state.Labs = map[string]*LabProgress{}
 	}
+	if state.Exams == nil {
+		state.Exams = map[string]*ExamProgress{}
+	}
 
 	return &state, nil
 }
@@ -42,6 +52,9 @@ func Load(path string) (*State, error) {
 func (s *State) Save(path string) error {
 	if s.Labs == nil {
 		s.Labs = map[string]*LabProgress{}
+	}
+	if s.Exams == nil {
+		s.Exams = map[string]*ExamProgress{}
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -57,7 +70,14 @@ func (s *State) Save(path string) error {
 }
 
 func (s *State) Marker(id string) string {
-	item := s.ensure(id)
+	return progressMarker(s.ensure(id))
+}
+
+func (s *State) ExamMarker(id string) string {
+	return progressMarker(s.ensureExam(id))
+}
+
+func progressMarker(item *ScenarioProgress) string {
 	switch {
 	case item.PassedAt != "":
 		return "P"
@@ -73,14 +93,28 @@ func (s *State) Marker(id string) string {
 }
 
 func (s *State) TouchViewed(id string) {
-	item := s.ensure(id)
+	touchViewed(s.ensure(id))
+}
+
+func (s *State) TouchExamViewed(id string) {
+	touchViewed(s.ensureExam(id))
+}
+
+func touchViewed(item *ScenarioProgress) {
 	if item.ViewedAt == "" {
 		item.ViewedAt = now()
 	}
 }
 
 func (s *State) TouchStarted(id string) {
-	item := s.ensure(id)
+	touchStarted(s.ensure(id))
+}
+
+func (s *State) TouchExamStarted(id string) {
+	touchStarted(s.ensureExam(id))
+}
+
+func touchStarted(item *ScenarioProgress) {
 	item.StartedAt = now()
 	if item.ViewedAt == "" {
 		item.ViewedAt = item.StartedAt
@@ -105,6 +139,18 @@ func (s *State) ensure(id string) *LabProgress {
 	}
 
 	return s.Labs[id]
+}
+
+func (s *State) ensureExam(id string) *ExamProgress {
+	if s.Exams == nil {
+		s.Exams = map[string]*ExamProgress{}
+	}
+
+	if _, ok := s.Exams[id]; !ok {
+		s.Exams[id] = &ExamProgress{}
+	}
+
+	return s.Exams[id]
 }
 
 func now() string {

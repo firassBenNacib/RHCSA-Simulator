@@ -41,8 +41,8 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Run TUI tests
-        run: go test ./cmd/rhcsa-tui/...
+      - name: Run Go tests
+        run: go test ./...
 
       - name: Build TUI binary
         shell: bash

@@ -98,8 +98,15 @@ Download a prebuilt `rhcsa-tui` binary from GitHub Releases, place it in the sim
 .\rhcsa-tui.exe
 ```
 
+If you keep the binary outside the repository, pass the simulator path explicitly:
+
+```powershell
+.\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms
+```
+
 The TUI looks for `RHCSA.ps1` starting from:
 
+* `--project-root` if passed
 * `RHCSA_SIMULATOR_ROOT` if set
 * the current working directory
 * the directory that contains the TUI binary
@@ -121,13 +128,15 @@ This is the best option if you already use the PowerShell entrypoint for everyth
 * `F2` or `2` open Hints for labs
 * `F3` or `3` or `"` open Checks for labs
 * `F4` or `4` or `'` open Solutions
-* click `[COPY]` in Checks or Solutions to copy the current document
+* click `[COPY]` in Checks or Solutions to copy that visible check/task section
 * `c` run checks for the active lab
 * `r` reset the active run
 * `/` open search
 * `z` open SSH to `clientvm`
 * `x` open SSH to `servervm`
 * `?` open help
+
+Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
 
 **Build from source**
 

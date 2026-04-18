@@ -1258,10 +1258,14 @@ function Get-RhcsaTuiSourcePaths {
     )
 
     $paths = @()
-    $sourceRoot = Join-Path $ProjectRoot 'cmd/rhcsa-tui'
-    $goFiles = Get-ChildItem -Path $sourceRoot -Filter '*.go' -File -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName
-    if ($null -ne $goFiles) {
-        $paths += $goFiles.FullName
+    foreach ($sourceRoot in @(
+        (Join-Path $ProjectRoot 'cmd/rhcsa-tui'),
+        (Join-Path $ProjectRoot 'internal')
+    )) {
+        $goFiles = Get-ChildItem -Path $sourceRoot -Filter '*.go' -File -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName
+        if ($null -ne $goFiles) {
+            $paths += $goFiles.FullName
+        }
     }
 
     foreach ($path in @(

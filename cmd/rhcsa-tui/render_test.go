@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -143,10 +142,6 @@ func TestRenderFullView(t *testing.T) {
 		t.Errorf("expected main view to omit top app title")
 	}
 
-	// Print the view for manual inspection
-	fmt.Println("=== WIDE LAYOUT (120x35) ===")
-	fmt.Println(output)
-
 	// Render stacked layout (narrow terminal)
 	m.width = 60
 	m.height = 20
@@ -154,9 +149,6 @@ func TestRenderFullView(t *testing.T) {
 	if narrow == "" {
 		t.Fatal("expected non-empty narrow view output")
 	}
-
-	fmt.Println("\n=== STACKED LAYOUT (60x20) ===")
-	fmt.Println(narrow)
 
 	// Switch to exams tab
 	m.activeTab = examsTab
@@ -167,9 +159,6 @@ func TestRenderFullView(t *testing.T) {
 	if !strings.Contains(strippedExam, "Mock Exam A") {
 		t.Error("expected exam tab to show Mock Exam A")
 	}
-
-	fmt.Println("\n=== EXAMS TAB (120x35) ===")
-	fmt.Println(examView)
 
 	// Test help overlay
 	m.showHelp = true

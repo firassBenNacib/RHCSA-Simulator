@@ -8,11 +8,6 @@ import (
 
 // Theme holds every style the TUI uses, organised by region.
 type Theme struct {
-	// Header bar
-	HeaderBar  lipgloss.Style
-	AppName    lipgloss.Style
-	AppVersion lipgloss.Style
-
 	// Tab bar
 	TabBar      lipgloss.Style
 	TabActive   lipgloss.Style
@@ -115,15 +110,6 @@ func NewTheme() Theme {
 	codeBlue := lipgloss.Color("#93C5FD")
 
 	return Theme{
-		// ── Header bar ──────────────────────────────────────
-		HeaderBar: lipgloss.NewStyle().
-			Padding(0, 2),
-		AppName: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(red),
-		AppVersion: lipgloss.NewStyle().
-			Foreground(textMuted),
-
 		// ── Tab bar ─────────────────────────────────────────
 		TabBar: lipgloss.NewStyle().
 			Padding(0, 2),
@@ -292,14 +278,6 @@ func NewTheme() Theme {
 }
 
 // ── Rendering helpers ───────────────────────────────────────
-
-// RenderHeader returns the top header bar with app name and version.
-func (t Theme) RenderHeader(width int) string {
-	name := t.AppName.Render("RHCSA Simulator")
-	ver := t.AppVersion.Render(" v" + version)
-	content := name + ver
-	return t.HeaderBar.Width(width).Render(content)
-}
 
 // RenderTabs renders the LABS / EXAMS tab bar.
 func (t Theme) RenderTabs(activeTab tabName, width int) string {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -343,6 +345,78 @@ func clickVisibleText(m model, x, y int) (tea.Model, tea.Cmd) {
 	return m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: y})
 }
 
+type rawMouseHarness struct {
+	inner         model
+	sawMouse      bool
+	quitFromMouse bool
+}
+
+func (h rawMouseHarness) Init() tea.Cmd {
+	return nil
+}
+
+func (h rawMouseHarness) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	mouse, ok := msg.(tea.MouseMsg)
+	if !ok {
+		return h, nil
+	}
+
+	next, cmd := h.inner.Update(mouse)
+	h.inner = next.(model)
+	h.sawMouse = true
+	if commandContainsQuit(cmd) {
+		h.quitFromMouse = true
+	}
+	return h, tea.Quit
+}
+
+func (h rawMouseHarness) View() string {
+	return ""
+}
+
+func commandContainsQuit(cmd tea.Cmd) bool {
+	if cmd == nil {
+		return false
+	}
+	switch msg := cmd().(type) {
+	case tea.QuitMsg:
+		return true
+	case tea.BatchMsg:
+		for _, nested := range msg {
+			if commandContainsQuit(nested) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func runRawSGRClick(t *testing.T, m model, x, y int) rawMouseHarness {
+	t.Helper()
+
+	input := fmt.Sprintf("\x1b[<0;%d;%dM", x+1, y+1)
+	var output bytes.Buffer
+	program := tea.NewProgram(
+		rawMouseHarness{inner: m},
+		tea.WithInput(strings.NewReader(input)),
+		tea.WithOutput(&output),
+		tea.WithoutRenderer(),
+		tea.WithoutSignals(),
+	)
+	finalModel, err := program.Run()
+	if err != nil {
+		t.Fatalf("raw SGR click failed: %v", err)
+	}
+	final, ok := finalModel.(rawMouseHarness)
+	if !ok {
+		t.Fatalf("expected rawMouseHarness, got %T", finalModel)
+	}
+	if !final.sawMouse {
+		t.Fatalf("expected raw SGR click at %d,%d to be parsed as a mouse event", x, y)
+	}
+	return final
+}
+
 func TestMouseClickFooterSwitchesDetailMode(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120
@@ -457,6 +531,35 @@ func TestMouseClickVisibleRepoLabFooterActionsThroughUpdate(t *testing.T) {
 	_, cmd := clickVisibleText(m, x, y)
 	if cmd == nil {
 		t.Fatalf("expected repository lab q Quit click through Update to return quit command at %d,%d", x, y)
+	}
+}
+
+func TestRawSGRVisibleRepoLabFooterActions(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.width = 260
+	m.height = 35
+	m.activeTab = labsTab
+	m.focus = focusList
+
+	x, y := visibleTextPoint(t, m, "/ Find")
+	if x <= 95 {
+		t.Fatalf("expected / Find to be past the old X10 safe range, got x=%d", x)
+	}
+	got := runRawSGRClick(t, m, x, y).inner
+	if !got.filterMode {
+		t.Fatalf("expected raw SGR / Find click to enter search mode at %d,%d", x, y)
+	}
+
+	x, y = visibleTextPoint(t, m, "? Help")
+	got = runRawSGRClick(t, m, x, y).inner
+	if !got.showHelp {
+		t.Fatalf("expected raw SGR ? Help click to open help at %d,%d", x, y)
+	}
+
+	x, y = visibleTextPoint(t, m, "q Quit")
+	result := runRawSGRClick(t, m, x, y)
+	if !result.quitFromMouse {
+		t.Fatalf("expected raw SGR q Quit click to return quit command at %d,%d", x, y)
 	}
 }
 
@@ -839,6 +942,29 @@ func TestVisibleRepoLabSolutionCopyClickThroughUpdate(t *testing.T) {
 	updated := got.(model)
 	if !strings.Contains(updated.statusText, "Copied Task 01") {
 		t.Fatalf("expected repository solution [COPY] click through Update to copy task at %d,%d, got status %q", x, y, updated.statusText)
+	}
+	if !strings.Contains(*copied, "nmcli device status") {
+		t.Fatalf("expected copied repository solution to contain command body, got %q", *copied)
+	}
+	if strings.Contains(*copied, "Task 01") {
+		t.Fatalf("expected copied repository solution to omit title, got %q", *copied)
+	}
+}
+
+func TestRawSGRVisibleRepoLabSolutionCopyClick(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.width = 260
+	m.height = 35
+	m.detail = detailSolution
+	copied := captureClipboardCopy(t)
+
+	x, y := visibleTextPoint(t, m, "[COPY]")
+	if x <= 95 {
+		t.Fatalf("expected solution [COPY] to be past the old X10 safe range, got x=%d", x)
+	}
+	got := runRawSGRClick(t, m, x, y).inner
+	if !strings.Contains(got.statusText, "Copied Task 01") {
+		t.Fatalf("expected raw SGR solution [COPY] click to copy task at %d,%d, got status %q", x, y, got.statusText)
 	}
 	if !strings.Contains(*copied, "nmcli device status") {
 		t.Fatalf("expected copied repository solution to contain command body, got %q", *copied)
