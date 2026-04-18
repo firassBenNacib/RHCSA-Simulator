@@ -230,22 +230,22 @@ func TestMouseClickSwitchesCatalogTabs(t *testing.T) {
 		t.Fatal("expected valid tab bounds")
 	}
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: examsStart, Y: y, Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: examsStart, Y: visualMouseY(y), Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.activeTab != examsTab {
 		t.Fatalf("expected exams tab after mouse click, got %v", updated.activeTab)
 	}
 
-	got, _ = updated.handleMouse(tea.MouseMsg{X: labsStart, Y: y, Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(tea.MouseMsg{X: labsStart, Y: visualMouseY(y), Type: tea.MouseLeft})
 	updated = got.(model)
 	if updated.activeTab != labsTab {
 		t.Fatalf("expected labs tab after mouse click, got %v", updated.activeTab)
 	}
 
-	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: y - 1, Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: y, Type: tea.MouseLeft})
 	updated = got.(model)
 	if updated.activeTab != labsTab {
-		t.Fatalf("expected click above tab row to leave active tab unchanged, got %v", updated.activeTab)
+		t.Fatalf("expected click below tab row to leave active tab unchanged, got %v", updated.activeTab)
 	}
 }
 
@@ -260,7 +260,7 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 	_, y := m.detailPaneOrigin()
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y, Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: visualMouseY(y), Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.detail != detailHint {
 		t.Fatalf("expected hint detail after mouse click, got %v", updated.detail)
@@ -270,10 +270,10 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 
 	updated.detail = detailPrompt
-	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y - 1, Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: y, Type: tea.MouseLeft})
 	updated = got.(model)
 	if updated.detail != detailPrompt {
-		t.Fatalf("expected click above detail tab row to leave detail unchanged, got %v", updated.detail)
+		t.Fatalf("expected click below detail tab row to leave detail unchanged, got %v", updated.detail)
 	}
 }
 
@@ -285,10 +285,68 @@ func TestMouseClickSelectsExpectedLabRow(t *testing.T) {
 	m.labs[1].ID = "lab-02-demo"
 	m.labs[1].Title = "Lab 02: Second Demo"
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: 6, Type: tea.MouseLeft})
+	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: 5, Type: tea.MouseLeft})
 	updated := got.(model)
 	if updated.selectedLab != 1 {
 		t.Fatalf("expected second lab to be selected from row click, got %d", updated.selectedLab)
+	}
+}
+
+func footerBoundByID(t *testing.T, m model, id footerActionID) footerActionBound {
+	t.Helper()
+	for _, bound := range m.footerActionBounds(m.width) {
+		if bound.id == id {
+			return bound
+		}
+	}
+	t.Fatalf("expected footer action %v", id)
+	return footerActionBound{}
+}
+
+func clickFooterAction(m model, bound footerActionBound) (tea.Model, tea.Cmd) {
+	x := (bound.startX + bound.endX) / 2
+	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: visualMouseY(bound.y)})
+}
+
+func TestMouseClickFooterSwitchesDetailMode(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.detail = detailPrompt
+
+	got, _ := clickFooterAction(m, footerBoundByID(t, m, footerActionHints))
+	updated := got.(model)
+	if updated.detail != detailHint {
+		t.Fatalf("expected footer F2 click to switch to hints, got %v", updated.detail)
+	}
+
+	got, _ = clickFooterAction(updated, footerBoundByID(t, updated, footerActionChecks))
+	updated = got.(model)
+	if updated.detail != detailCheck {
+		t.Fatalf("expected footer F3 click to switch to checks, got %v", updated.detail)
+	}
+}
+
+func TestMouseClickFooterFindAndQuit(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+
+	got, _ := clickFooterAction(m, footerBoundByID(t, m, footerActionFind))
+	updated := got.(model)
+	if !updated.filterMode {
+		t.Fatal("expected footer find click to enter search mode")
+	}
+
+	got, _ = clickFooterAction(updated, footerBoundByID(t, updated, footerActionFilterClear))
+	updated = got.(model)
+	if updated.filterMode {
+		t.Fatal("expected footer clear click to leave search mode")
+	}
+
+	_, cmd := clickFooterAction(updated, footerBoundByID(t, updated, footerActionQuit))
+	if cmd == nil {
+		t.Fatal("expected footer quit click to return a quit command")
 	}
 }
 
@@ -427,8 +485,12 @@ func captureClipboardCopy(t *testing.T) *string {
 
 func clickCopyBound(m model, bound sectionCopyBound) model {
 	x := (bound.startX + bound.endX) / 2
-	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bound.y})
+	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: visualMouseY(bound.y)})
 	return result.(model)
+}
+
+func visualMouseY(renderedY int) int {
+	return renderedY - 1
 }
 
 func TestCheckCopyClickCopiesCommandBodyOnly(t *testing.T) {
@@ -500,7 +562,7 @@ func TestSolutionCopyClickCopiesSectionBodyOnly(t *testing.T) {
 	}
 }
 
-func TestCopyHitboxUsesExactZeroBasedRow(t *testing.T) {
+func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120
 	m.height = 35
@@ -513,7 +575,7 @@ func TestCopyHitboxUsesExactZeroBasedRow(t *testing.T) {
 	}
 	x := (bounds[0].startX + bounds[0].endX) / 2
 
-	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y - 1})
+	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y - 2})
 	if *copied != "" {
 		t.Fatalf("expected click above copy button not to copy, got %q", *copied)
 	}
@@ -521,12 +583,21 @@ func TestCopyHitboxUsesExactZeroBasedRow(t *testing.T) {
 		t.Fatalf("expected click above copy button not to report copy, got %q", result.(model).statusText)
 	}
 
-	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y})
+	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: visualMouseY(bounds[0].y)})
 	if *copied == "" {
 		t.Fatal("expected exact-row click to copy")
 	}
 	if !strings.Contains(result.(model).statusText, "Copied") {
 		t.Fatalf("expected exact-row click to report copy, got %q", result.(model).statusText)
+	}
+
+	*copied = ""
+	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: bounds[0].y})
+	if *copied != "" {
+		t.Fatalf("expected click below copy button not to copy, got %q", *copied)
+	}
+	if strings.Contains(result.(model).statusText, "Copied") {
+		t.Fatalf("expected click below copy button not to report copy, got %q", result.(model).statusText)
 	}
 }
 

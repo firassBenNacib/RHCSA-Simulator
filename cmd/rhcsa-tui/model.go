@@ -278,8 +278,8 @@ const (
 	minWideLayoutHeight = 24
 	maxStatusHeight     = 12
 	minStatusHeight     = 4
-	// header(1) + tabBar(2) + footer(1) = 4 lines of chrome
-	chromeHeight          = 4
+	// header(1) + tabBar(2) + footer border/content(2) = 5 lines of chrome
+	chromeHeight          = 5
 	minContentHeight      = 4
 	minDetailTextWidth    = 20
 	listPaneBorder        = 3
@@ -392,7 +392,7 @@ func (m model) detailPageStep() int {
 }
 
 func (m model) normalizeMouseY(y int) int {
-	return y
+	return y + 1
 }
 
 func (m model) detailMaxOffset() int {

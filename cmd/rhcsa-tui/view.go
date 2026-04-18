@@ -923,50 +923,81 @@ func (m model) renderOutput(width, height int) string {
 
 // ── Footer ─────────────────────────────────────────────────
 
-func (m model) renderFooter(width int) string {
-	type footerAction struct {
-		key   string
-		label string
-	}
+type footerActionID int
 
+const (
+	footerActionStart footerActionID = iota
+	footerActionReset
+	footerActionPane
+	footerActionSwitch
+	footerActionCheck
+	footerActionTasks
+	footerActionHints
+	footerActionChecks
+	footerActionSolutions
+	footerActionFind
+	footerActionHelp
+	footerActionQuit
+	footerActionFilterKeep
+	footerActionFilterClear
+)
+
+type footerAction struct {
+	key   string
+	label string
+	id    footerActionID
+}
+
+type footerActionBound struct {
+	id     footerActionID
+	startX int
+	endX   int
+	y      int
+}
+
+func (m model) footerActions() []footerAction {
 	var actions []footerAction
 	if m.filterMode {
-		actions = []footerAction{
-			{"Enter", "Keep"},
-			{"Esc", "Clear"},
+		return []footerAction{
+			{"Enter", "Keep", footerActionFilterKeep},
+			{"Esc", "Clear", footerActionFilterClear},
 		}
-	} else {
-		actions = []footerAction{
-			{"Enter", "Start"},
-			{"r", "Reset"},
-			{"Tab", "Pane"},
-		}
-		arrowLabel := "L/E"
-		if m.focus == focusDetail {
-			arrowLabel = "Docs"
-		}
-		actions = append(actions, footerAction{"←→", arrowLabel})
-		if m.activeTab == labsTab {
-			actions = append(actions, footerAction{"c", "Check"})
-			actions = append(actions,
-				footerAction{"F1", "Tasks"},
-				footerAction{"F2", "Hints"},
-				footerAction{"F3", "Checks"},
-				footerAction{"F4", "Solutions"},
-			)
-		} else {
-			actions = append(actions,
-				footerAction{"F1", "Tasks"},
-				footerAction{"F4", "Solutions"},
-			)
-		}
-		actions = append(actions,
-			footerAction{"/", "Find"},
-			footerAction{"?", "Help"},
-			footerAction{"q", "Quit"},
-		)
 	}
 
+	actions = []footerAction{
+		{"Enter", "Start", footerActionStart},
+		{"r", "Reset", footerActionReset},
+		{"Tab", "Pane", footerActionPane},
+	}
+	arrowLabel := "L/E"
+	if m.focus == focusDetail {
+		arrowLabel = "Docs"
+	}
+	actions = append(actions, footerAction{"←→", arrowLabel, footerActionSwitch})
+	if m.activeTab == labsTab {
+		actions = append(actions, footerAction{"c", "Check", footerActionCheck})
+		actions = append(actions,
+			footerAction{"F1", "Tasks", footerActionTasks},
+			footerAction{"F2", "Hints", footerActionHints},
+			footerAction{"F3", "Checks", footerActionChecks},
+			footerAction{"F4", "Solutions", footerActionSolutions},
+		)
+	} else {
+		actions = append(actions,
+			footerAction{"F1", "Tasks", footerActionTasks},
+			footerAction{"F4", "Solutions", footerActionSolutions},
+		)
+	}
+	actions = append(actions,
+		footerAction{"/", "Find", footerActionFind},
+		footerAction{"?", "Help", footerActionHelp},
+		footerAction{"q", "Quit", footerActionQuit},
+	)
+	return actions
+}
+
+func (m model) visibleFooterActions(width int) []footerAction {
+	actions := m.footerActions()
 	parts := make([]string, 0, len(actions))
 	usedWidth := 0
 	for _, action := range actions {
@@ -981,8 +1012,37 @@ func (m model) renderFooter(width int) string {
 		parts = append(parts, part)
 		usedWidth += partWidth
 	}
+	return actions[:len(parts)]
+}
+
+func (m model) renderFooter(width int) string {
+	actions := m.visibleFooterActions(width)
+	parts := make([]string, 0, len(actions))
+	for _, action := range actions {
+		parts = append(parts, m.theme.FooterKey.Render(action.key)+m.theme.FooterValue.Render(" "+action.label))
+	}
 
 	return m.theme.FooterBar.Width(width).Render(strings.Join(parts, "  "))
+}
+
+func (m model) footerActionBounds(width int) []footerActionBound {
+	actions := m.visibleFooterActions(width)
+	bounds := make([]footerActionBound, 0, len(actions))
+	x := 1 // FooterBar horizontal padding.
+	for i, action := range actions {
+		actionWidth := lipgloss.Width(action.key + " " + action.label)
+		if i > 0 {
+			x += 2
+		}
+		bounds = append(bounds, footerActionBound{
+			id:     action.id,
+			startX: x,
+			endX:   x + actionWidth - 1,
+			y:      m.height,
+		})
+		x += actionWidth
+	}
+	return bounds
 }
 
 func (m model) detailCopyButtonBounds() (int, int, int, bool) {

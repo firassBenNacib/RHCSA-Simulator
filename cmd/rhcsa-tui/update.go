@@ -58,12 +58,18 @@ func withRepaint(cmd tea.Cmd) tea.Cmd {
 }
 
 func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+	mouseX := msg.X
+	mouseY := m.normalizeMouseY(msg.Y)
+
+	if msg.Type == tea.MouseLeft && !m.showHelp && !m.busy && m.confirmKind == "" {
+		if next, cmd, ok := m.handleFooterClick(mouseX, mouseY); ok {
+			return next, cmd
+		}
+	}
+
 	if m.filterMode || m.showHelp || m.busy || m.confirmKind != "" {
 		return m, nil
 	}
-
-	mouseX := msg.X
-	mouseY := m.normalizeMouseY(msg.Y)
 
 	switch msg.Type {
 	case tea.MouseMotion:
@@ -136,6 +142,78 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, nil
+}
+
+func (m model) handleFooterClick(mouseX, mouseY int) (tea.Model, tea.Cmd, bool) {
+	for _, bound := range m.footerActionBounds(m.width) {
+		if mouseY == bound.y && mouseX >= bound.startX && mouseX <= bound.endX {
+			next, cmd := m.handleFooterAction(bound.id)
+			return next, cmd, true
+		}
+	}
+	return m, nil, false
+}
+
+func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
+	switch action {
+	case footerActionStart:
+		m.confirmKind = "start"
+		m.confirmText = m.startConfirmText()
+		m.statusText = m.confirmText
+		return m, nil
+	case footerActionReset:
+		return m.handleResetAction()
+	case footerActionPane:
+		m.switchPaneFocus()
+		return m, nil
+	case footerActionSwitch:
+		if m.focus == focusDetail {
+			m.cycleDetailMode(1)
+		} else {
+			m.switchCatalogTab(1)
+		}
+		return m, nil
+	case footerActionCheck:
+		return m.handleCheckAction()
+	case footerActionTasks:
+		m.setDetailMode(detailPrompt)
+		return m, nil
+	case footerActionHints:
+		if m.activeTab == labsTab {
+			m.setDetailMode(detailHint)
+		}
+		return m, nil
+	case footerActionChecks:
+		if m.activeTab == labsTab {
+			m.setDetailMode(detailCheck)
+		}
+		return m, nil
+	case footerActionSolutions:
+		m.setDetailMode(detailSolution)
+		return m, nil
+	case footerActionFind:
+		m.filterMode = true
+		m.statusText = ""
+		return m, nil
+	case footerActionHelp:
+		m.showHelp = true
+		return m, nil
+	case footerActionQuit:
+		return m, tea.Quit
+	case footerActionFilterKeep:
+		m.filterMode = false
+		m.statusText = ""
+		return m, nil
+	case footerActionFilterClear:
+		m.filterQuery = ""
+		m.normalizeSelection()
+		m.adjustListOffset()
+		m.filterMode = false
+		m.statusText = ""
+		return m, nil
+	default:
+		return m, nil
+	}
 }
 
 func (m model) mouseInListPane(x, y int) bool {

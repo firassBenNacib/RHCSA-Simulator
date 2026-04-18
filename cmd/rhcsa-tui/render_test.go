@@ -211,6 +211,17 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	}
 }
 
+func TestViewRendersExactTerminalHeight(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+
+	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	if len(lines) != m.height {
+		t.Fatalf("expected view to render %d lines, got %d", m.height, len(lines))
+	}
+}
+
 func TestFilterFooterOmitsQuitAndKeepsTopTabs(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120
