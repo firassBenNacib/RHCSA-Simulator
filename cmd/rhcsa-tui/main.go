@@ -48,12 +48,25 @@ func main() {
 		model,
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
+		tea.WithFPS(30),
+		tea.WithFilter(filterNoisyMouseEvents),
 	)
 
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error running TUI: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func filterNoisyMouseEvents(_ tea.Model, msg tea.Msg) tea.Msg {
+	mouse, ok := msg.(tea.MouseMsg)
+	if !ok {
+		return msg
+	}
+	if mouse.Type == tea.MouseMotion || mouse.Type == tea.MouseRelease || mouse.Action == tea.MouseActionRelease {
+		return nil
+	}
+	return msg
 }
 
 func findProjectRoot(configured string) (string, error) {

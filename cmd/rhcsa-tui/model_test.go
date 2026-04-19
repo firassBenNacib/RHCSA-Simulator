@@ -1136,6 +1136,38 @@ func TestMouseReleaseEventIgnored(t *testing.T) {
 	}
 }
 
+func TestNavigationUpdateDoesNotForceClearScreen(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+
+	next, cmd := m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	updated := next.(model)
+	if updated.selectedLab != 0 {
+		t.Fatalf("expected single-item test catalog to keep selected lab at 0, got %d", updated.selectedLab)
+	}
+	if cmd != nil {
+		t.Fatal("expected normal navigation to rely on Bubble Tea renderer without forcing a clear-screen command")
+	}
+}
+
+func TestNoisyMouseEventsAreFilteredBeforeRender(t *testing.T) {
+	for _, msg := range []tea.MouseMsg{
+		{Type: tea.MouseMotion, X: 10, Y: 10},
+		{Type: tea.MouseRelease, X: 10, Y: 10},
+		{Type: tea.MouseLeft, Action: tea.MouseActionRelease, X: 10, Y: 10},
+	} {
+		if got := filterNoisyMouseEvents(nil, msg); got != nil {
+			t.Fatalf("expected noisy mouse event %#v to be filtered, got %#v", msg, got)
+		}
+	}
+
+	click := tea.MouseMsg{Type: tea.MouseLeft, Action: tea.MouseActionPress, X: 10, Y: 10}
+	if got := filterNoisyMouseEvents(nil, click); got == nil {
+		t.Fatal("expected mouse press to pass through the event filter")
+	}
+}
+
 func TestRawSGRClickReleaseIgnored(t *testing.T) {
 	m := buildRepoTestModel(t)
 	m.width = 260
