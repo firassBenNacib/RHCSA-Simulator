@@ -485,7 +485,6 @@ func (m model) handleConfirmKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// View switching
 	switch {
 	case matchesPromptViewKey(msg):
 		m.setDetailMode(detailPrompt)

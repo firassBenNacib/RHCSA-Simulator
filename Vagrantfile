@@ -1,9 +1,22 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-
 require "json"
 
-ISO_PATH = File.expand_path("rhel-9.7-x86_64-dvd.iso", __dir__)
+RHCSA_PROFILE = ENV.fetch("RHCSA_PROFILE", "rhel9").downcase
+DEFAULT_ISO_BY_PROFILE = {
+  "rhel9" => "rhel-9.7-x86_64-dvd.iso",
+  "rhel10" => "rhel-10.1-x86_64-dvd.iso"
+}
+DEFAULT_BOX_BY_PROFILE = {
+  "rhel9" => "generic/rocky9",
+  "rhel10" => "generic/rocky10"
+}
+
+unless DEFAULT_ISO_BY_PROFILE.key?(RHCSA_PROFILE)
+  raise "Unsupported RHCSA_PROFILE '#{RHCSA_PROFILE}'. Use rhel9 or rhel10."
+end
+
+ISO_NAME = ENV.fetch("RHCSA_ISO", DEFAULT_ISO_BY_PROFILE.fetch(RHCSA_PROFILE))
+BOX_NAME = ENV.fetch("RHCSA_BOX", DEFAULT_BOX_BY_PROFILE.fetch(RHCSA_PROFILE))
+ISO_PATH = File.expand_path(ISO_NAME, __dir__)
 raise "Missing ISO: #{ISO_PATH}" unless File.exist?(ISO_PATH)
 
 SSH_COMMAND_CANDIDATES = [
@@ -74,7 +87,7 @@ SERVER_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN
 CLIENT_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN, "clientvm"), "clientvm")
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/rocky9"
+  config.vm.box = BOX_NAME
   config.vm.box_check_update = false
   config.ssh.insert_key = false
   config.ssh.keys_only = true

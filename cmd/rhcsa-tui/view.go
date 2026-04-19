@@ -26,19 +26,14 @@ func catalogReadRelative(root, relative string) (string, error) {
 	return catalog.ReadRelative(root, relative), nil
 }
 
-// ── Main View ──────────────────────────────────────────────
-
-// View renders the full TUI screen.
 func (m model) View() string {
 	if m.width == 0 || m.height == 0 {
 		return "Loading RHCSA Simulator…"
 	}
 
-	// Build chrome
 	tabBar := m.theme.RenderTabs(m.activeTab, m.width)
 	footer := m.renderFooter(m.width)
 
-	// Build content
 	var content string
 	if m.useStackedLayout() {
 		content = m.renderStackedContent()
@@ -46,15 +41,12 @@ func (m model) View() string {
 		content = m.renderWideContent()
 	}
 
-	// Assemble
 	parts := []string{tabBar, content}
 
-	// Search bar (rendered above output/footer when in filter mode)
 	if m.filterMode {
 		parts = append(parts, m.renderSearchBar(m.width))
 	}
 
-	// Status/output panel
 	if statusHeight := m.statusPaneHeight(); statusHeight > 0 && !m.filterMode {
 		parts = append(parts, m.renderOutput(m.width, statusHeight))
 	}
@@ -62,7 +54,6 @@ func (m model) View() string {
 	parts = append(parts, footer)
 	result := strings.Join(parts, "\n")
 
-	// Help overlay
 	if m.showHelp {
 		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
 			m.theme.Overlay.Render(m.renderHelpWithClose()))
@@ -70,8 +61,6 @@ func (m model) View() string {
 
 	return result
 }
-
-// ── Wide layout (side-by-side) ─────────────────────────────
 
 func (m model) renderWideContent() string {
 	leftWidth := m.listPaneWidth()
@@ -106,8 +95,6 @@ func (m model) renderWideContent() string {
 	return strings.Join(lines, "\n")
 }
 
-// ── Stacked layout (narrow terminals) ──────────────────────
-
 func (m model) renderStackedContent() string {
 	ch := m.contentHeight()
 	listH := utils.MaxInt(ch/3, 6)
@@ -119,8 +106,6 @@ func (m model) renderStackedContent() string {
 
 	return lipgloss.JoinVertical(lipgloss.Left, listPane, rule, detailPane)
 }
-
-// ── Vertical separator for wide layout ─────────────────────
 
 func (m model) renderVerticalSeparator(height int) string {
 	lines := make([]string, height)
@@ -166,8 +151,6 @@ func blockLines(text string, width, height int) []string {
 	return lines
 }
 
-// ── List pane ──────────────────────────────────────────────
-
 func (m model) renderList(width, height int) string {
 	header := m.renderListHeader(width)
 	bodyHeight := utils.MaxInt(height-len(header), 1)
@@ -181,7 +164,6 @@ func (m model) renderList(width, height int) string {
 	return strings.Join(append(header, items...), "\n")
 }
 
-// listEntry is the data needed to render one list row.
 type listEntry struct {
 	id       string
 	title    string
@@ -283,8 +265,6 @@ func (m model) renderListRow(entry listEntry, width int) string {
 
 	return rail + rowStyle.Width(innerWidth).Render(content)
 }
-
-// ── Detail pane ────────────────────────────────────────────
 
 func (m model) renderDetail(width, height int) string {
 	header := m.renderDetailHeaderLines(width)
@@ -653,8 +633,6 @@ func compactBlankLines(lines []string) string {
 	return strings.Join(out, "\n")
 }
 
-// ── Markdown processor ─────────────────────────────────────
-
 func (m model) processMarkdownLines(content string, width int, mode detailMode) []detailRenderedLine {
 	lines := strings.Split(stripMarkdownBold(content), "\n")
 	rendered := make([]detailRenderedLine, 0, len(lines))
@@ -686,8 +664,6 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 			line = strings.ReplaceAll(line, "`", "")
 			trimmed = strings.TrimSpace(line)
 		}
-
-		// Table rows
 		if converted, ok := simplifyMarkdownTableLine(trimmed); ok {
 			if converted != "" {
 				rendered = append(rendered, detailRenderedLine{text: m.theme.DetailMeta.Render("  " + converted), copySection: -1})
@@ -798,8 +774,6 @@ func appendCommandLines(dst []detailRenderedLine, line string, width int, theme 
 	return appendWrappedDetailLines(dst, "  $ "+command, width, theme.DetailCommand)
 }
 
-// ── Text wrapping ──────────────────────────────────────────
-
 func appendWrappedDetailLines(dst []detailRenderedLine, line string, width int, style lipgloss.Style) []detailRenderedLine {
 	if strings.TrimSpace(line) == "" {
 		return append(dst, detailRenderedLine{text: "", copySection: -1})
@@ -887,16 +861,12 @@ func wrapLine(line string, width int) []string {
 	return lines
 }
 
-// ── Search bar ─────────────────────────────────────────────
-
 func (m model) renderSearchBar(width int) string {
 	label := m.theme.SearchLabel.Render("Search ")
 	query := m.filterQuery + "▏"
 	input := m.theme.SearchInput.Render(query)
 	return truncateOrPadRenderedLine(label+input, width)
 }
-
-// ── Output / status panel ──────────────────────────────────
 
 func (m model) renderOutput(width, height int) string {
 	body := m.statusBody()
@@ -919,8 +889,6 @@ func (m model) renderOutput(width, height int) string {
 	}
 	return strings.Join(rendered, "\n")
 }
-
-// ── Footer ─────────────────────────────────────────────────
 
 type footerActionID int
 
@@ -1090,7 +1058,7 @@ func (m model) renderHelpWithClose() string {
 			maxWidth = w
 		}
 	}
-	maxWidth = utils.MaxInt(maxWidth, 64)
+	maxWidth = utils.MaxInt(maxWidth, 52)
 	btn := m.theme.HelpCloseBtn.Render(helpCloseBtn)
 	btnWidth := lipgloss.Width(btn)
 	if maxWidth < btnWidth+2 {
@@ -1298,8 +1266,6 @@ func detailModeLabel(mode detailMode) string {
 	}
 }
 
-// ── Utilities ──────────────────────────────────────────────
-
 func truncateLine(text string, width int) string {
 	if width < 1 {
 		return ""
@@ -1338,8 +1304,6 @@ func simplifyMarkdownTableLine(trimmed string) (string, bool) {
 	if len(cells) == 0 {
 		return "", true
 	}
-
-	// Separator row (all dashes/colons)
 	separator := true
 	for _, cell := range cells {
 		if strings.Trim(cell, "-:") != "" {
@@ -1350,8 +1314,6 @@ func simplifyMarkdownTableLine(trimmed string) (string, bool) {
 	if separator {
 		return "", true
 	}
-
-	// Two-column key-value tables
 	if len(cells) == 2 {
 		left := strings.ToLower(cells[0])
 		right := strings.ToLower(cells[1])
@@ -1367,8 +1329,6 @@ func simplifyMarkdownTableLine(trimmed string) (string, bool) {
 
 	return strings.Join(cells, " │ "), true
 }
-
-// ── Key matchers ───────────────────────────────────────────
 
 func matchesPromptViewKey(msg tea.KeyMsg) bool {
 	switch msg.String() {
@@ -1423,8 +1383,6 @@ func filterTextForKey(msg tea.KeyMsg) (string, bool) {
 			return text, true
 		}
 	}
-
-	// Accept printable characters, reject control/modifier combos
 	if normalized != "" &&
 		!strings.Contains(normalized, "ctrl+") &&
 		!strings.Contains(normalized, "alt+") &&

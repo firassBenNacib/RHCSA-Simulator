@@ -15,7 +15,6 @@ import (
 	"rhcsa_exam_vms/internal/utils"
 )
 
-// StripAnsi is a convenience wrapper around utils.StripAnsi.
 func StripAnsi(s string) string {
 	return utils.StripAnsi(s)
 }
@@ -97,8 +96,6 @@ func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *bac
 	return m
 }
 
-// ── Active scenario tracking ───────────────────────────────
-
 func (m *model) refreshActiveScenarioID() {
 	type activeScenario struct {
 		Scenario struct {
@@ -123,8 +120,6 @@ func (m *model) refreshActiveScenarioID() {
 func (m model) activeScenarioID() string {
 	return m.cachedActiveID
 }
-
-// ── Progress helpers ───────────────────────────────────────
 
 func (m model) progressMarker(id string) string {
 	if m.progress == nil {
@@ -159,8 +154,6 @@ func (m *model) touchViewed() {
 		}
 	}
 }
-
-// ── Selection & filtering ──────────────────────────────────
 
 func (m model) currentLab() catalog.Lab {
 	labs := m.filteredLabs()
@@ -207,8 +200,6 @@ func filterItems[T any](items []T, query string, keyFunc func(T) string) []T {
 	}
 	return filtered
 }
-
-// ── Navigation ─────────────────────────────────────────────
 
 func (m *model) moveSelection(delta int) {
 	if m.activeTab == labsTab {
@@ -271,14 +262,11 @@ func (m *model) adjustListOffset() {
 	m.listOffset = utils.Clamp(m.listOffset, 0, utils.MaxInt(total-pageSize, 0))
 }
 
-// ── Layout constants ───────────────────────────────────────
-
 const (
-	minWideLayoutWidth  = 100
-	minWideLayoutHeight = 24
-	maxStatusHeight     = 12
-	minStatusHeight     = 4
-	// tabBar(2) + footer border/content(2) = 4 lines of chrome
+	minWideLayoutWidth    = 100
+	minWideLayoutHeight   = 24
+	maxStatusHeight       = 12
+	minStatusHeight       = 4
 	chromeHeight          = 4
 	minContentHeight      = 4
 	minDetailTextWidth    = 20
@@ -286,8 +274,6 @@ const (
 	detailPaneBorder      = 5
 	defaultMaxStatusLines = 10
 )
-
-// ── Layout helpers ─────────────────────────────────────────
 
 func (m model) useStackedLayout() bool {
 	return m.width < minWideLayoutWidth || m.height < minWideLayoutHeight
@@ -524,8 +510,6 @@ func (m model) selectionProgressLabel() string {
 	return fmt.Sprintf("%d / %d", selected, total)
 }
 
-// ── Confirm / status text helpers ──────────────────────────
-
 func (m model) startConfirmText() string {
 	if m.activeTab == labsTab {
 		return fmt.Sprintf("Start %s? Press y or Enter to confirm.", m.currentLab().ID)
@@ -539,8 +523,6 @@ func (m model) startStatusText() string {
 	}
 	return fmt.Sprintf("Starting %s…", m.currentExam().ID)
 }
-
-// ── Status body rendering ──────────────────────────────────
 
 func (m model) statusBody() string {
 	if strings.TrimSpace(m.statusText) == "" {
@@ -616,8 +598,6 @@ func (m model) statusLineTone(line string) string {
 		return "default"
 	}
 }
-
-// ── Output summarisation ───────────────────────────────────
 
 func summarizeActionOutput(output string) string {
 	clean := StripAnsi(output)
@@ -723,8 +703,6 @@ func summarizeCheckLabel(command string) string {
 	}
 }
 
-// ── Help overlay ───────────────────────────────────────────
-
 const helpCloseBtn = "X"
 
 func (m model) helpBody() string {
@@ -732,32 +710,25 @@ func (m model) helpBody() string {
 		"RHCSA Help",
 		"",
 		"Navigation",
-		"  Tab / Shift+Tab      Switch pane",
-		"  ← / →                Switch LABS/EXAMS or documents",
-		"  ↑ / ↓ or j / k       Move selection or scroll",
-		"  PgUp / PgDn          Jump between detail sections",
-		"  Ctrl+U / Ctrl+D      Half-page scroll",
-		"  g / G                Jump to top / bottom",
+		"  Tab / Shift+Tab   Switch pane",
+		"  Left / Right      Switch tabs or docs",
+		"  Up / Down, j / k  Move or scroll",
+		"  PgUp / PgDn       Jump sections",
+		"  g / G             Top / bottom",
 		"",
 		"Documents",
-		"  F1 / 1 / &           Tasks",
-		"  F2 / 2 / é           Hints",
-		"  F3 / 3 / \"          Checks",
-		"  F4 / 4 / '           Solutions",
+		"  F1 / 1 / &        Tasks",
+		"  F2 / 2 / é        Hints",
+		"  F3 / 3 / \"       Checks",
+		"  F4 / 4 / '        Solutions",
 		"",
 		"Actions",
-		"  Enter / s            Start selected lab or exam",
-		"  c                    Check active lab",
-		"  r                    Reset active run",
-		"  z / x                SSH clientvm / servervm",
-		"",
-		"Search And Exit",
-		"  / or Ctrl+F          Find labs/exams",
-		"  Esc                  Close overlay or clear output",
-		"  q / Ctrl+C           Quit",
-		"",
-		"Mouse",
-		"  [COPY]               Copy a visible check or solution section",
-		"  Right-click          Close overlays or clear transient output",
+		"  Enter / s         Start selected item",
+		"  c                 Check active lab",
+		"  r                 Reset active run",
+		"  z / x             SSH clientvm/servervm",
+		"  /                 Find",
+		"  Esc               Close or clear output",
+		"  q / Ctrl+C        Quit",
 	}, "\n")
 }

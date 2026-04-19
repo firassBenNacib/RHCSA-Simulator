@@ -6,85 +6,60 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Theme holds every style the TUI uses, organised by region.
 type Theme struct {
-	// Tab bar
-	TabBar      lipgloss.Style
-	TabActive   lipgloss.Style
-	TabInactive lipgloss.Style
-	TabBorder   lipgloss.Style
-
-	// View mode (TASKS / HINTS / SOLUTIONS / CHECKS)
-	ViewMode       lipgloss.Style
-	ViewModeActive lipgloss.Style
-	CopyButton     lipgloss.Style
-
-	// Pane chrome
-	ListPane          lipgloss.Style
-	DetailPane        lipgloss.Style
-	PaneBorder        lipgloss.Style
-	PaneHeader        lipgloss.Style
-	PaneHeaderFocused lipgloss.Style
-	PaneTitle         lipgloss.Style
-	PaneSubtitle      lipgloss.Style
-
-	// List items
+	TabBar              lipgloss.Style
+	TabActive           lipgloss.Style
+	TabInactive         lipgloss.Style
+	TabBorder           lipgloss.Style
+	ViewMode            lipgloss.Style
+	ViewModeActive      lipgloss.Style
+	CopyButton          lipgloss.Style
+	ListPane            lipgloss.Style
+	DetailPane          lipgloss.Style
+	PaneBorder          lipgloss.Style
+	PaneHeader          lipgloss.Style
+	PaneHeaderFocused   lipgloss.Style
+	PaneTitle           lipgloss.Style
+	PaneSubtitle        lipgloss.Style
 	ItemSelected        lipgloss.Style
 	ItemSelectedBlurred lipgloss.Style
 	ItemNormal          lipgloss.Style
 	ItemRunning         lipgloss.Style
 	ItemCursor          lipgloss.Style
-
-	// Progress badges
-	BadgePassed  lipgloss.Style
-	BadgeChecked lipgloss.Style
-	BadgeStarted lipgloss.Style
-	BadgeViewed  lipgloss.Style
-	BadgeEmpty   lipgloss.Style
-
-	// Detail content
-	DetailH1      lipgloss.Style
-	DetailH2      lipgloss.Style
-	DetailH3      lipgloss.Style
-	DetailMeta    lipgloss.Style
-	DetailCode    lipgloss.Style
-	DetailCommand lipgloss.Style
-	DetailList    lipgloss.Style
-	DetailPlain   lipgloss.Style
-	DetailRule    lipgloss.Style
-
-	// Active badge shown in detail header
-	ActiveBadge lipgloss.Style
-
-	// Output / status panel
-	OutputPanel   lipgloss.Style
-	OutputTitle   lipgloss.Style
-	OutputError   lipgloss.Style
-	OutputWarning lipgloss.Style
-	OutputSuccess lipgloss.Style
-	OutputInfo    lipgloss.Style
-	OutputMuted   lipgloss.Style
-
-	// Search input
-	SearchLabel lipgloss.Style
-	SearchInput lipgloss.Style
-
-	// Scroll indicators
-	ScrollIndicator lipgloss.Style
-
-	// Footer
-	FooterBar   lipgloss.Style
-	FooterKey   lipgloss.Style
-	FooterValue lipgloss.Style
-
-	// Utility
-	Overlay      lipgloss.Style
-	HelpCloseBtn lipgloss.Style
-	Muted        lipgloss.Style
-	Dim          lipgloss.Style
+	BadgePassed         lipgloss.Style
+	BadgeChecked        lipgloss.Style
+	BadgeStarted        lipgloss.Style
+	BadgeViewed         lipgloss.Style
+	BadgeEmpty          lipgloss.Style
+	DetailH1            lipgloss.Style
+	DetailH2            lipgloss.Style
+	DetailH3            lipgloss.Style
+	DetailMeta          lipgloss.Style
+	DetailCode          lipgloss.Style
+	DetailCommand       lipgloss.Style
+	DetailList          lipgloss.Style
+	DetailPlain         lipgloss.Style
+	DetailRule          lipgloss.Style
+	ActiveBadge         lipgloss.Style
+	OutputPanel         lipgloss.Style
+	OutputTitle         lipgloss.Style
+	OutputError         lipgloss.Style
+	OutputWarning       lipgloss.Style
+	OutputSuccess       lipgloss.Style
+	OutputInfo          lipgloss.Style
+	OutputMuted         lipgloss.Style
+	SearchLabel         lipgloss.Style
+	SearchInput         lipgloss.Style
+	ScrollIndicator     lipgloss.Style
+	FooterBar           lipgloss.Style
+	FooterKey           lipgloss.Style
+	FooterValue         lipgloss.Style
+	Overlay             lipgloss.Style
+	HelpCloseBtn        lipgloss.Style
+	Muted               lipgloss.Style
+	Dim                 lipgloss.Style
 }
 
-// NewTheme builds the default RHCSA terminal theme.
 func NewTheme() Theme {
 	red := lipgloss.Color("#DC2626")
 	redLight := lipgloss.Color("#F87171")
@@ -111,7 +86,6 @@ func NewTheme() Theme {
 	codeBlue := lipgloss.Color("#93C5FD")
 
 	return Theme{
-		// ── Tab bar ─────────────────────────────────────────
 		TabBar: lipgloss.NewStyle().
 			Padding(0, 2),
 		TabActive: lipgloss.NewStyle().
@@ -124,8 +98,6 @@ func NewTheme() Theme {
 			Foreground(textMuted),
 		TabBorder: lipgloss.NewStyle().
 			Foreground(borderSoft),
-
-		// ── View mode bar ───────────────────────────────────
 		ViewMode: lipgloss.NewStyle().
 			Padding(0, 2).
 			Foreground(textMuted),
@@ -139,8 +111,6 @@ func NewTheme() Theme {
 			Bold(true).
 			Foreground(textBright).
 			Background(redMuted),
-
-		// ── Panes ───────────────────────────────────────────
 		ListPane: lipgloss.NewStyle().
 			Align(lipgloss.Left),
 		DetailPane: lipgloss.NewStyle().
@@ -156,8 +126,6 @@ func NewTheme() Theme {
 			Bold(true),
 		PaneSubtitle: lipgloss.NewStyle().
 			Foreground(textMuted),
-
-		// ── List items ──────────────────────────────────────
 		ItemSelected: lipgloss.NewStyle().
 			Foreground(textBright).
 			Background(redMuted).
@@ -172,8 +140,6 @@ func NewTheme() Theme {
 		ItemCursor: lipgloss.NewStyle().
 			Foreground(red).
 			Bold(true),
-
-		// ── Badges ──────────────────────────────────────────
 		BadgePassed: lipgloss.NewStyle().
 			Foreground(bgDark).
 			Background(green).
@@ -195,8 +161,6 @@ func NewTheme() Theme {
 		BadgeEmpty: lipgloss.NewStyle().
 			Foreground(textDimmer).
 			Padding(0, 1),
-
-		// ── Detail content ──────────────────────────────────
 		DetailH1: lipgloss.NewStyle().
 			Foreground(textBright),
 		DetailH2: lipgloss.NewStyle().
@@ -217,15 +181,11 @@ func NewTheme() Theme {
 			Foreground(textNormal),
 		DetailRule: lipgloss.NewStyle().
 			Foreground(border),
-
-		// ── Active badge ────────────────────────────────────
 		ActiveBadge: lipgloss.NewStyle().
 			Foreground(bgDark).
 			Background(green).
 			Padding(0, 1).
 			Bold(true),
-
-		// ── Output panel ────────────────────────────────────
 		OutputPanel: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(borderSoft).
@@ -239,8 +199,6 @@ func NewTheme() Theme {
 		OutputSuccess: lipgloss.NewStyle().Foreground(green),
 		OutputInfo:    lipgloss.NewStyle().Foreground(textNormal),
 		OutputMuted:   lipgloss.NewStyle().Foreground(textFaint),
-
-		// ── Search ──────────────────────────────────────────
 		SearchLabel: lipgloss.NewStyle().
 			Foreground(red).
 			Bold(true),
@@ -248,12 +206,8 @@ func NewTheme() Theme {
 			Foreground(textBright).
 			Background(bgCard).
 			Padding(0, 1),
-
-		// ── Scroll indicators ───────────────────────────────
 		ScrollIndicator: lipgloss.NewStyle().
 			Foreground(textFaint),
-
-		// ── Footer ──────────────────────────────────────────
 		FooterBar: lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder(), true, false, false, false).
 			BorderForeground(borderSoft).
@@ -263,8 +217,6 @@ func NewTheme() Theme {
 			Bold(true),
 		FooterValue: lipgloss.NewStyle().
 			Foreground(textNormal),
-
-		// ── Utility ─────────────────────────────────────────
 		Overlay: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(red).
@@ -282,10 +234,6 @@ func NewTheme() Theme {
 			Foreground(textDimmer),
 	}
 }
-
-// ── Rendering helpers ───────────────────────────────────────
-
-// RenderTabs renders the LABS / EXAMS tab bar.
 func (t Theme) RenderTabs(activeTab tabName, width int) string {
 	labsStr := t.TabInactive.Render("LABS")
 	examsStr := t.TabInactive.Render("EXAMS")
@@ -301,8 +249,6 @@ func (t Theme) RenderTabs(activeTab tabName, width int) string {
 	rule := t.TabBorder.Render(strings.Repeat("─", width))
 	return bar + "\n" + rule
 }
-
-// RenderViewModes renders the TASKS / HINTS / SOLUTIONS / CHECKS tabs.
 func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 	type modeEntry struct {
 		mode  detailMode
@@ -339,8 +285,6 @@ func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 func (t Theme) RenderCopyButton() string {
 	return t.CopyButton.Render("[COPY]")
 }
-
-// StatusBadge returns a styled single-char badge for the given progress marker.
 func (t Theme) StatusBadge(marker string) string {
 	switch marker {
 	case "P":

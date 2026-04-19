@@ -109,28 +109,21 @@ func buildRepoTestModel(t *testing.T) model {
 	m.touchViewed()
 	return m
 }
-
-// TestRenderFullView creates a model with sample data and renders the full view
-// at a typical terminal size to verify no panics or layout glitches.
 func TestRenderFullView(t *testing.T) {
 	m := buildRenderTestModel(t)
-
-	// Render wide layout
 	output := m.View()
 	if output == "" {
 		t.Fatal("expected non-empty view output")
 	}
-
-	// Verify key elements are present
 	stripped := utils.StripAnsi(output)
 
 	checks := []string{
-		"LABS",   // tab
-		"EXAMS",  // tab
-		"TASKS",  // view mode
-		"Lab 01", // lab title
-		"Start",  // footer key
-		"Quit",   // footer key
+		"LABS",
+		"EXAMS",
+		"TASKS",
+		"Lab 01",
+		"Start",
+		"Quit",
 	}
 
 	for _, check := range checks {
@@ -141,16 +134,12 @@ func TestRenderFullView(t *testing.T) {
 	if strings.Contains(stripped, "RHCSA Simulator") {
 		t.Errorf("expected main view to omit top app title")
 	}
-
-	// Render stacked layout (narrow terminal)
 	m.width = 60
 	m.height = 20
 	narrow := m.View()
 	if narrow == "" {
 		t.Fatal("expected non-empty narrow view output")
 	}
-
-	// Switch to exams tab
 	m.activeTab = examsTab
 	m.width = 120
 	m.height = 35
@@ -159,16 +148,12 @@ func TestRenderFullView(t *testing.T) {
 	if !strings.Contains(strippedExam, "Mock Exam A") {
 		t.Error("expected exam tab to show Mock Exam A")
 	}
-
-	// Test help overlay
 	m.showHelp = true
 	helpView := m.View()
 	strippedHelp := utils.StripAnsi(helpView)
 	if !strings.Contains(strippedHelp, "RHCSA Help") {
 		t.Error("expected help overlay to show RHCSA help title")
 	}
-
-	// Test filter mode
 	m.showHelp = false
 	m.filterMode = true
 	m.filterQuery = "network"
@@ -177,10 +162,8 @@ func TestRenderFullView(t *testing.T) {
 	if !strings.Contains(strippedFilter, "network") {
 		t.Error("expected filter mode to show search query")
 	}
-
-	// Test status text
 	m.filterMode = false
-	m.activeTab = labsTab // Switch back
+	m.activeTab = labsTab
 	m.statusText = "Started lab-01-demo\nResult: complete (1/1)"
 	statusView := m.View()
 	strippedStatus := utils.StripAnsi(statusView)
@@ -188,8 +171,6 @@ func TestRenderFullView(t *testing.T) {
 		t.Error("expected status text to appear in output panel")
 	}
 }
-
-// TestRenderZeroSize verifies View handles zero-size gracefully.
 func TestRenderZeroSize(t *testing.T) {
 	m := model{
 		theme: NewTheme(),

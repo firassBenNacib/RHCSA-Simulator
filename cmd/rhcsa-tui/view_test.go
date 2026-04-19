@@ -48,7 +48,7 @@ func TestWrapLine(t *testing.T) {
 	tests := []struct {
 		line  string
 		width int
-		want  int // expected number of output lines
+		want  int
 	}{
 		{"hello", 80, 1},
 		{"", 80, 1},
@@ -87,9 +87,9 @@ func TestSimplifyMarkdownTableLine(t *testing.T) {
 		wantOk  bool
 	}{
 		{"not a table", "", false},
-		{"|---|---|", "", true},         // separator row
-		{"| a | b |", "a: b", true},     // two-column
-		{"| field | value |", "", true}, // header row — skip
+		{"|---|---|", "", true},
+		{"| a | b |", "a: b", true},
+		{"| field | value |", "", true},
 		{"| x | y | z |", "x │ y │ z", true},
 		{"|only|", "only", true},
 	}
@@ -105,8 +105,6 @@ func TestSimplifyMarkdownTableLine(t *testing.T) {
 }
 
 func TestMatchesPromptViewKey(t *testing.T) {
-	// We can only test string-based matching since tea.KeyMsg requires internal state.
-	// This test validates the function exists and handles basic cases.
 	if matchesPromptViewKey(fakeKeyMsg("1")) != true {
 		t.Error("expected '1' to match prompt view key")
 	}

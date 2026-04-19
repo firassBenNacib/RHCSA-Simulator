@@ -65,7 +65,7 @@ chown -R admin:admin /home/admin/data
 cat > /var/www/html/training/index.html <<'EOF'
 <html>
   <body>
-    <h1>RHCSA v9 simulator server</h1>
+    <h1>RHCSA simulator server</h1>
     <p>This host provides the offline repo, NFS exports, and support services.</p>
   </body>
 </html>

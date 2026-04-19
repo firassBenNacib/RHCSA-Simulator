@@ -1,6 +1,6 @@
 # RHCSA Simulator
 
-An interactive PowerShell project for running RHCSA v9 practice labs and mock exams with Vagrant, VirtualBox, SSH helpers, checks, and a terminal UI.
+An interactive PowerShell project for running RHCSA practice labs and mock exams with Vagrant, VirtualBox, SSH helpers, checks, and a terminal UI. The validated scenario set targets RHCSA 9 on RHEL 9; a RHEL 10 platform profile is available as preview infrastructure for future RHCSA 10 content.
 
 ## Table of Contents
 
@@ -18,7 +18,8 @@ An interactive PowerShell project for running RHCSA v9 practice labs and mock ex
 * PowerShell 5.1 or newer
 * [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
-* [rhel-9.7-x86_64-dvd.iso](https://developers.redhat.com/content-gateway/file/rhel/Red_Hat_Enterprise_Linux_9.7/rhel-9.7-x86_64-dvd.iso) in the project root, downloaded from [Red Hat Developer](https://developers.redhat.com/products/rhel/download) or the Red Hat Customer Portal
+* `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
+* `rhel-10.1-x86_64-dvd.iso` only if you opt into the preview RHEL 10 profile
 * [Go](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source
 
 ## Installation
@@ -26,9 +27,24 @@ An interactive PowerShell project for running RHCSA v9 practice labs and mock ex
 Clone:
 
 ```powershell
-git clone <your-repo-url>
+git clone https://github.com/firassBenNacib/rhcsa_exam_vms.git
 cd rhcsa_exam_vms
 ```
+
+Install or refresh the prebuilt TUI binary from the latest GitHub Release:
+
+```powershell
+irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/install.ps1 -OutFile install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+If you trust the repository and want a one-line installer:
+
+```powershell
+irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/install.ps1 | iex
+```
+
+Private forks can use the same installer by setting `GITHUB_TOKEN` before running it.
 
 ## Usage
 
@@ -36,8 +52,6 @@ The simulator uses two VMs:
 
 * servervm for the offline repository, NFS exports, and time source
 * clientvm as the main RHCSA workstation
-
-Scenarios are discovered automatically from the labs and exams folders.
 
 Scenario source files live under:
 
@@ -92,32 +106,34 @@ There are two supported ways to use the TUI:
 
 **Recommended for users**
 
-Download a prebuilt `rhcsa-tui` binary from GitHub Releases, place it in the simulator repository, and run it directly:
+Use the PowerShell entrypoint. It reuses `.build\rhcsa-tui.exe` when available and rebuilds only when source files changed:
 
 ```powershell
-.\rhcsa-tui.exe
+.\RHCSA.ps1 tui
 ```
 
-If you keep the binary outside the repository, pass the simulator path explicitly:
+You can also double-click:
 
 ```powershell
-.\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms
+.\rhcsa-tui.cmd
 ```
 
-The TUI looks for `RHCSA.ps1` starting from:
+`rhcsa-tui.exe` is a terminal application, not a desktop GUI application. Double-clicking the executable directly can open and close a console too quickly to see. Use `rhcsa-tui.cmd` for double-click launches, or run the executable from a terminal:
+
+```powershell
+.\.build\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms
+```
+
+The TUI finds `RHCSA.ps1` from:
 
 * `--project-root` if passed
 * `RHCSA_SIMULATOR_ROOT` if set
 * the current working directory
 * the directory that contains the TUI binary
 
-**Built-in launcher**
+**Release binaries**
 
-```powershell
-.\RHCSA.ps1 tui
-```
-
-This is the best option if you already use the PowerShell entrypoint for everything else.
+GitHub Releases publish prebuilt Windows, Linux, and macOS TUI binaries. Binaries are not committed to git; source lives under `cmd/rhcsa-tui`, shared packages live under `internal`, and generated binaries stay under `.build/` or local files ignored by git.
 
 **Keyboard summary**
 
@@ -128,7 +144,7 @@ This is the best option if you already use the PowerShell entrypoint for everyth
 * `F2` or `2` open Hints for labs
 * `F3` or `3` or `"` open Checks for labs
 * `F4` or `4` or `'` open Solutions
-* click `[COPY]` in Checks or Solutions to copy that visible check/task section
+* click `[COPY]` in Checks or Solutions to copy that visible check or solution section
 * `c` run checks for the active lab
 * `r` reset the active run
 * `/` open search
@@ -136,7 +152,7 @@ This is the best option if you already use the PowerShell entrypoint for everyth
 * `x` open SSH to `servervm`
 * `?` open help, then `Esc` or the top-right `X` closes it
 
-Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. You can click catalog tabs, document tabs, footer actions, and `[COPY]` buttons in Checks or Solutions. Right-click closes help, search, confirmations, or transient output. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
+Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
 
 **Build from source**
 
@@ -194,6 +210,27 @@ go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 ```
 
 The repository includes a GitHub Actions workflow at `.github/workflows/release-tui.yml` that builds and uploads Windows, Linux, and macOS TUI binaries when a GitHub Release is published.
+
+### Platform profiles
+
+The default profile is `rhel9`, which uses:
+
+```powershell
+$env:RHCSA_PROFILE = 'rhel9'
+$env:RHCSA_ISO = 'rhel-9.7-x86_64-dvd.iso'
+$env:RHCSA_BOX = 'generic/rocky9'
+```
+
+The preview RHEL 10 profile uses RHEL 10.1 ISO naming and a Rocky 10 Vagrant box by default:
+
+```powershell
+$env:RHCSA_PROFILE = 'rhel10'
+$env:RHCSA_ISO = 'rhel-10.1-x86_64-dvd.iso'
+$env:RHCSA_BOX = 'generic/rocky10'
+.\RHCSA.ps1 up
+```
+
+RHEL 10 support is intentionally marked preview until the full lab/exam replay suite is validated on a RHEL 10 baseline. RHCSA 10 content should be added as separate scenarios where behavior differs, especially Flatpak package tasks and updated systemd/service-management objectives.
 
 ## Commands
 

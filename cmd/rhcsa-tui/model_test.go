@@ -14,7 +14,6 @@ import (
 	"rhcsa_exam_vms/internal/utils"
 )
 
-// fakeKeyMsg creates a tea.KeyMsg for testing key matchers.
 func fakeKeyMsg(s string) tea.KeyMsg {
 	return tea.KeyMsg{
 		Type:  tea.KeyRunes,
@@ -1227,18 +1226,20 @@ func TestHelpOverlayUsesProfessionalLayout(t *testing.T) {
 	for _, want := range []string{
 		"RHCSA Help",
 		"Navigation",
-		"  Tab / Shift+Tab      Switch pane",
+		"  Tab / Shift+Tab   Switch pane",
 		"Documents",
-		"  F1 / 1 / &           Tasks",
-		"  F2 / 2 / é           Hints",
-		"  F3 / 3 / \"          Checks",
-		"  F4 / 4 / '           Solutions",
-		"Search And Exit",
-		"Mouse",
+		"  F1 / 1 / &        Tasks",
+		"  F2 / 2 / é        Hints",
+		"  F3 / 3 / \"       Checks",
+		"  F4 / 4 / '        Solutions",
+		"Actions",
 	} {
 		if !strings.Contains(stripped, want) {
 			t.Fatalf("expected help overlay to contain %q, got:\n%s", want, stripped)
 		}
+	}
+	if strings.Contains(stripped, "Mouse") {
+		t.Fatalf("expected help overlay to omit mouse section, got:\n%s", stripped)
 	}
 	if strings.Contains(stripped, "Keyboard Reference") {
 		t.Fatalf("expected help overlay to omit old title, got:\n%s", stripped)
