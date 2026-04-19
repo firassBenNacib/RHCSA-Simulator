@@ -134,9 +134,9 @@ This is the best option if you already use the PowerShell entrypoint for everyth
 * `/` open search
 * `z` open SSH to `clientvm`
 * `x` open SSH to `servervm`
-* `?` open help
+* `?` open help, then `Esc` or the top-right `X` closes it
 
-Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
+Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. You can click catalog tabs, document tabs, footer actions, and `[COPY]` buttons in Checks or Solutions. Right-click closes help, search, confirmations, or transient output. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
 
 **Build from source**
 

@@ -1050,3 +1050,257 @@ func TestExamSolutionCopyClickCopiesClickedQuestion(t *testing.T) {
 		t.Fatalf("copied exam solution = %q, want %q", *copied, "echo second")
 	}
 }
+
+func TestMouseClickFooterTabPane(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+	m.focus = focusList
+
+	got, _ := clickFooterAction(m, footerBoundByID(t, m, footerActionPane))
+	updated := got.(model)
+	if updated.focus != focusDetail {
+		t.Fatalf("expected footer Tab Pane click to switch focus to detail, got %v", updated.focus)
+	}
+
+	got, _ = clickFooterAction(updated, footerBoundByID(t, updated, footerActionPane))
+	updated = got.(model)
+	if updated.focus != focusList {
+		t.Fatalf("expected second footer Tab Pane click to switch focus back to list, got %v", updated.focus)
+	}
+}
+
+func TestRawSGRClickTabPaneAndSwitch(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.width = 260
+	m.height = 35
+	m.focus = focusList
+	m.activeTab = labsTab
+
+	x, y := visibleTextPoint(t, m, "Tab Pane")
+	got := runRawSGRClick(t, m, x, y)
+	if got.inner.focus != focusDetail {
+		t.Fatalf("expected raw SGR Tab Pane click at %d,%d to switch to detail focus, got %v", x, y, got.inner.focus)
+	}
+
+	x, y = visibleTextPoint(t, m, "←→ L/E")
+	got = runRawSGRClick(t, m, x, y)
+	if got.inner.activeTab != examsTab {
+		t.Fatalf("expected raw SGR ←→ L/E click at %d,%d to switch to exams, got %v", x, y, got.inner.activeTab)
+	}
+}
+
+func TestRawSGRClickCatalogTabsFromRenderedPosition(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.width = 260
+	m.height = 35
+	m.focus = focusList
+	m.activeTab = labsTab
+
+	x, y := visibleTextPoint(t, m, "EXAMS")
+	got := runRawSGRClick(t, m, x, y)
+	if got.inner.activeTab != examsTab {
+		t.Fatalf("expected raw SGR EXAMS click at %d,%d to switch to exams tab, got %v", x, y, got.inner.activeTab)
+	}
+}
+
+func TestRawSGRClickDetailTabsFromRenderedPosition(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.width = 260
+	m.height = 35
+	m.focus = focusList
+	m.activeTab = labsTab
+	m.detail = detailPrompt
+
+	x, y := visibleTextPoint(t, m, "SOLUTIONS")
+	got := runRawSGRClick(t, m, x, y)
+	if got.inner.detail != detailSolution {
+		t.Fatalf("expected raw SGR SOLUTIONS click at %d,%d to switch to solution mode, got %v", x, y, got.inner.detail)
+	}
+}
+
+func TestMouseReleaseEventIgnored(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+	m.focus = focusList
+
+	bound := footerBoundByID(t, m, footerActionPane)
+	x := (bound.startX + bound.endX) / 2
+
+	releaseMsg := tea.MouseMsg{Type: tea.MouseLeft, Action: tea.MouseActionRelease, X: x, Y: renderedMouseY(bound.y)}
+	next, _ := m.handleMouse(releaseMsg)
+	updated := next.(model)
+	if updated.focus != m.focus {
+		t.Fatalf("expected MouseRelease to be ignored (focus should stay %v), got %v", m.focus, updated.focus)
+	}
+}
+
+func TestRawSGRClickReleaseIgnored(t *testing.T) {
+	m := buildRepoTestModel(t)
+	m.width = 260
+	m.height = 35
+	m.focus = focusList
+	m.activeTab = labsTab
+
+	x, y := visibleTextPoint(t, m, "Tab Pane")
+	input := fmt.Sprintf("\x1b[<0;%d;%dm", x+1, y+1)
+	var output bytes.Buffer
+	program := tea.NewProgram(
+		rawMouseHarness{inner: m},
+		tea.WithInput(strings.NewReader(input)),
+		tea.WithOutput(&output),
+		tea.WithoutRenderer(),
+		tea.WithoutSignals(),
+	)
+	finalModel, err := program.Run()
+	if err != nil {
+		t.Fatalf("raw SGR release click failed: %v", err)
+	}
+	final, ok := finalModel.(rawMouseHarness)
+	if !ok {
+		t.Fatalf("expected rawMouseHarness, got %T", finalModel)
+	}
+	if final.inner.focus != m.focus {
+		t.Fatalf("expected SGR release event to be ignored (focus should stay %v), got %v", m.focus, final.inner.focus)
+	}
+}
+
+func TestHelpCloseButtonDismisses(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.showHelp = true
+
+	sx, ex, y, ok := m.helpCloseBtnBounds()
+	if !ok {
+		t.Fatal("expected helpCloseBtnBounds to find the X button in rendered help view")
+	}
+
+	clickX := (sx + ex) / 2
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: clickX, Y: y})
+	updated := next.(model)
+	if updated.showHelp {
+		t.Fatalf("expected clicking X to dismiss help, but showHelp still true")
+	}
+}
+
+func TestHelpOverlayUsesProfessionalLayout(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.showHelp = true
+
+	stripped := utils.StripAnsi(m.View())
+	for _, want := range []string{
+		"RHCSA Help",
+		"Navigation",
+		"  Tab / Shift+Tab      Switch pane",
+		"Documents",
+		"  F1 / 1 / &           Tasks",
+		"  F2 / 2 / é           Hints",
+		"  F3 / 3 / \"          Checks",
+		"  F4 / 4 / '           Solutions",
+		"Search And Exit",
+		"Mouse",
+	} {
+		if !strings.Contains(stripped, want) {
+			t.Fatalf("expected help overlay to contain %q, got:\n%s", want, stripped)
+		}
+	}
+	if strings.Contains(stripped, "Keyboard Reference") {
+		t.Fatalf("expected help overlay to omit old title, got:\n%s", stripped)
+	}
+}
+
+func TestHelpCloseButtonMissDoesNotDismiss(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.showHelp = true
+
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: 0, Y: 0})
+	updated := next.(model)
+	if !updated.showHelp {
+		t.Fatal("expected clicking outside X to keep help open")
+	}
+}
+
+func TestRightClickDismissingHelp(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.showHelp = true
+
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	updated := next.(model)
+	if updated.showHelp {
+		t.Fatal("expected right-click to dismiss help overlay")
+	}
+}
+
+func TestRightClickDismissesConfirm(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.confirmKind = "start"
+	m.confirmText = "Start lab?"
+
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	updated := next.(model)
+	if updated.confirmKind != "" {
+		t.Fatal("expected right-click to dismiss confirm dialog")
+	}
+	if updated.statusText != "Cancelled" {
+		t.Fatalf("expected statusText 'Cancelled', got %q", updated.statusText)
+	}
+}
+
+func TestRightClickDismissesFilter(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.filterMode = true
+	m.filterQuery = "net"
+
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	updated := next.(model)
+	if !updated.filterMode {
+		t.Fatal("expected first right-click to keep filter mode open (just clears query)")
+	}
+	if updated.filterQuery != "" {
+		t.Fatalf("expected first right-click to clear filter query, got %q", updated.filterQuery)
+	}
+
+	next, _ = updated.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	updated = next.(model)
+	if updated.filterMode {
+		t.Fatal("expected second right-click to dismiss filter mode")
+	}
+}
+
+func TestRightClickReturnsToList(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.focus = focusDetail
+
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	updated := next.(model)
+	if updated.focus != focusList {
+		t.Fatal("expected right-click in detail focus to return to list focus")
+	}
+}
+
+func TestRightClickClearsStatusOutput(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.statusText = "All checks passed"
+
+	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	updated := next.(model)
+	if updated.statusText != "" {
+		t.Fatalf("expected right-click to clear status text, got %q", updated.statusText)
+	}
+}

@@ -65,7 +65,7 @@ func (m model) View() string {
 	// Help overlay
 	if m.showHelp {
 		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
-			m.theme.Overlay.Render(m.helpBody()))
+			m.theme.Overlay.Render(m.renderHelpWithClose()))
 	}
 
 	return result
@@ -1053,6 +1053,51 @@ func (m model) footerActionBounds(width int) []footerActionBound {
 		searchFrom = startByte + len(target)
 	}
 	return bounds
+}
+
+func (m model) helpCloseBtnBounds() (startX, endX, y int, ok bool) {
+	if !m.showHelp {
+		return 0, 0, 0, false
+	}
+	view := utils.StripAnsi(m.View())
+	lines := strings.Split(view, "\n")
+	for row, line := range lines {
+		idx := strings.Index(line, helpCloseBtn)
+		if idx < 0 {
+			continue
+		}
+		prefix := line[:idx]
+		if strings.TrimSpace(prefix) == "" {
+			continue
+		}
+		startX = lipgloss.Width(prefix)
+		endX = startX + lipgloss.Width(helpCloseBtn) - 1
+		return startX, endX, row, true
+	}
+	return 0, 0, 0, false
+}
+
+func (m model) renderHelpWithClose() string {
+	body := m.helpBody()
+	lines := strings.Split(body, "\n")
+	if len(lines) == 0 {
+		return body
+	}
+	maxWidth := 0
+	for _, l := range lines {
+		w := lipgloss.Width(l)
+		if w > maxWidth {
+			maxWidth = w
+		}
+	}
+	maxWidth = utils.MaxInt(maxWidth, 64)
+	btn := m.theme.HelpCloseBtn.Render(helpCloseBtn)
+	btnWidth := lipgloss.Width(btn)
+	if maxWidth < btnWidth+2 {
+		maxWidth = btnWidth + 2
+	}
+	lines[0] = m.fillLine(lines[0], btn, maxWidth)
+	return strings.Join(lines, "\n")
 }
 
 func (m model) detailCopyButtonBounds() (int, int, int, bool) {

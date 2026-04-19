@@ -57,11 +57,31 @@ func withRepaint(cmd tea.Cmd) tea.Cmd {
 	return tea.Batch(cmd, tea.ClearScreen)
 }
 
+func isMousePress(msg tea.MouseMsg) bool {
+	return msg.Type == tea.MouseLeft && msg.Action != tea.MouseActionRelease
+}
+
+func isRightClick(msg tea.MouseMsg) bool {
+	return msg.Type == tea.MouseRight && msg.Action != tea.MouseActionRelease
+}
+
 func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	mouseX := msg.X
 	mouseY := m.normalizeMouseY(msg.Y)
 
-	if msg.Type == tea.MouseLeft && !m.showHelp && !m.busy && m.confirmKind == "" {
+	if isRightClick(msg) {
+		return m.handleRightClick()
+	}
+
+	if isMousePress(msg) && m.showHelp {
+		if sx, ex, y, ok := m.helpCloseBtnBounds(); ok && mouseY == y && mouseX >= sx && mouseX <= ex {
+			m.showHelp = false
+			return m, nil
+		}
+		return m, nil
+	}
+
+	if isMousePress(msg) && !m.showHelp && !m.busy && m.confirmKind == "" {
 		if next, cmd, ok := m.handleFooterClick(mouseX, mouseY); ok {
 			return next, cmd
 		}
@@ -73,6 +93,8 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 	switch msg.Type {
 	case tea.MouseMotion:
+		return m, nil
+	case tea.MouseRelease:
 		return m, nil
 	case tea.MouseWheelUp:
 		if m.mouseInDetailPane(mouseX, mouseY) {
@@ -97,6 +119,9 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.MouseLeft:
+		if msg.Action == tea.MouseActionRelease {
+			return m, nil
+		}
 		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); mouseY == y {
 			switch {
 			case mouseX >= labsStart && mouseX <= labsEnd:
@@ -140,6 +165,39 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			m.focus = focusDetail
 			return m, nil
 		}
+	}
+	return m, nil
+}
+
+func (m model) handleRightClick() (tea.Model, tea.Cmd) {
+	if m.showHelp {
+		m.showHelp = false
+		return m, nil
+	}
+	if m.confirmKind != "" {
+		m.confirmKind = ""
+		m.confirmText = ""
+		m.statusText = "Cancelled"
+		return m, nil
+	}
+	if m.filterMode {
+		if m.filterQuery != "" {
+			m.filterQuery = ""
+			m.normalizeSelection()
+			m.adjustListOffset()
+			return m, nil
+		}
+		m.filterMode = false
+		m.statusText = ""
+		return m, nil
+	}
+	if strings.TrimSpace(m.statusText) != "" {
+		m.statusText = ""
+		return m, nil
+	}
+	if m.focus == focusDetail {
+		m.focus = focusList
+		return m, nil
 	}
 	return m, nil
 }

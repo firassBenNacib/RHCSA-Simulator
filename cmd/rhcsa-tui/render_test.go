@@ -164,8 +164,8 @@ func TestRenderFullView(t *testing.T) {
 	m.showHelp = true
 	helpView := m.View()
 	strippedHelp := utils.StripAnsi(helpView)
-	if !strings.Contains(strippedHelp, "Keyboard Reference") {
-		t.Error("expected help overlay to show keyboard reference")
+	if !strings.Contains(strippedHelp, "RHCSA Help") {
+		t.Error("expected help overlay to show RHCSA help title")
 	}
 
 	// Test filter mode

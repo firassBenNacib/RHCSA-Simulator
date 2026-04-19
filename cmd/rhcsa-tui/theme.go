@@ -78,9 +78,10 @@ type Theme struct {
 	FooterValue lipgloss.Style
 
 	// Utility
-	Overlay lipgloss.Style
-	Muted   lipgloss.Style
-	Dim     lipgloss.Style
+	Overlay      lipgloss.Style
+	HelpCloseBtn lipgloss.Style
+	Muted        lipgloss.Style
+	Dim          lipgloss.Style
 }
 
 // NewTheme builds the default RHCSA terminal theme.
@@ -267,9 +268,14 @@ func NewTheme() Theme {
 		Overlay: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(red).
-			Padding(2, 3).
+			Padding(1, 3).
 			Foreground(textNormal).
 			Background(bgMid),
+		HelpCloseBtn: lipgloss.NewStyle().
+			Padding(0, 1).
+			Foreground(textBright).
+			Background(red).
+			Bold(true),
 		Muted: lipgloss.NewStyle().
 			Foreground(textFaint),
 		Dim: lipgloss.NewStyle().
