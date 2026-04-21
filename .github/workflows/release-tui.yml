@@ -16,12 +16,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -54,6 +54,13 @@ jobs:
           test -n "$binary"
           "$binary" --version
 
+      - name: Upload snapshot artifacts
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: rhcsa-tui-snapshot
+          path: dist/**
+
       - name: Publish tagged release
         if: github.event_name == 'push'
         uses: goreleaser/goreleaser-action@v7
@@ -72,10 +79,3 @@ jobs:
           binary="$(find dist -path '*linux_amd64*/rhcsa-tui' -type f | head -n 1)"
           test -n "$binary"
           "$binary" --version
-
-      - name: Upload snapshot artifacts
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
-        with:
-          name: rhcsa-tui-snapshot
-          path: dist/**
