@@ -1,0 +1,31 @@
+* text=auto eol=lf
+
+*.ps1 text eol=lf
+*.psm1 text eol=lf
+*.psd1 text eol=lf
+*.py text eol=lf
+*.go text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf
+*.toml text eol=lf
+*.mod text eol=lf
+*.sum text eol=lf
+*.rb text eol=lf
+Vagrantfile text eol=lf
+Makefile text eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.box binary
+*.iso binary
+*.exe binary
