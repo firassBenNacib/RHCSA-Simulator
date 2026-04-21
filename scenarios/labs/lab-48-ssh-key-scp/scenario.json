@@ -9,21 +9,25 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Ensure user bridge48 exists on both clientvm and servervm, and set the password on both systems to cinder9.",
-        "As user bridge48 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
-        "Configure passwordless SSH access for bridge48 from clientvm to servervm using the public key.",
-        "Using scp over SSH, copy /home/bridge48/payload.txt from clientvm to /home/bridge48/inbox/ on servervm."
+        "Ensure user bridge48 exists on both client and server, and set the password on both systems to cinder9.",
+        "As user bridge48 on client, generate an ED25519 SSH key pair with no passphrase.",
+        "Configure passwordless SSH access for bridge48 from client to server using the public key.",
+        "Using scp over SSH, copy /home/bridge48/payload.txt from client to /home/bridge48/inbox/ on server."
       ],
       "hints": [
         "This lab does need a home directory because the key pair lives under ~/.ssh.",
@@ -32,19 +36,19 @@
       "checks": [
         "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
         "test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub",
-        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@servervm true'",
-        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@servervm test -f /home/bridge48/inbox/payload.txt'"
+        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server true'",
+        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server test -f /home/bridge48/inbox/payload.txt'"
       ],
       "solution_outline": [
         "Create bridge48 on both systems and set the password.",
-        "Generate a no-passphrase ED25519 key pair on clientvm.",
-        "Install the public key on servervm and verify passwordless SSH.",
+        "Generate a no-passphrase ED25519 key pair on client.",
+        "Install the public key on server and verify passwordless SSH.",
         "Copy the payload file into the remote inbox directory."
       ],
       "task_titles": [
         "Ensure bridge48 exists on both systems",
         "Generate the ED25519 key pair",
-        "Enable passwordless SSH from clientvm to servervm",
+        "Enable passwordless SSH from client to server",
         "Copy the payload with scp"
       ],
       "task_points": [
@@ -55,10 +59,10 @@
       ],
       "solution_commands": [
         [
-          "# On clientvm",
+          "# On client",
           "id bridge48 >/dev/null 2>&1 || useradd -m bridge48",
           "echo 'bridge48:cinder9' | chpasswd",
-          "# On servervm",
+          "# On server",
           "id bridge48 >/dev/null 2>&1 || useradd -m bridge48",
           "echo 'bridge48:cinder9' | chpasswd"
         ],
@@ -68,11 +72,11 @@
         ],
         [
           "su - bridge48",
-          "ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@servervm"
+          "ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@server"
         ],
         [
           "su - bridge48",
-          "scp /home/bridge48/payload.txt bridge48@servervm:/home/bridge48/inbox/"
+          "scp /home/bridge48/payload.txt bridge48@server:/home/bridge48/inbox/"
         ]
       ]
     }

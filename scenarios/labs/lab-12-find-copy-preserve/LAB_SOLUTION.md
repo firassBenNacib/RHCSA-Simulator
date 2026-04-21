@@ -12,14 +12,14 @@
 Locate recent files owned by a user and copy them while preserving directories.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Find the recent natfind-owned files (clientvm) - 10 pts
+## Task 01 - Find the recent natfind-owned files (client) - 10 pts
 
 ```bash
 find /opt/lab12/source -type f -user natfind -mtime -1
@@ -27,7 +27,7 @@ find /opt/lab12/source -type f -user natfind -mtime -1
 
 ---
 
-## Task 02 - Copy the matching files with structure preserved (clientvm) - 10 pts
+## Task 02 - Copy the matching files with structure preserved (client) - 10 pts
 
 ```bash
 mkdir -p /root/natfind-files

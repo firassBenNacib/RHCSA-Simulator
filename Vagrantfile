@@ -1,9 +1,38 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-
 require "json"
+require "rbconfig"
 
-ISO_PATH = File.expand_path("rhel-9.7-x86_64-dvd.iso", __dir__)
+RHCSA_PROFILE = ENV.fetch("RHCSA_PROFILE", "rhel9").downcase
+DEFAULT_ISO_BY_PROFILE = {
+  "rhel9" => "rhel-9.7-x86_64-dvd.iso",
+  "rhel10" => "rhel-10.1-x86_64-dvd.iso"
+}
+DEFAULT_BOX_BY_PROFILE = {
+  "rhel9" => "generic/rocky9",
+  "rhel10" => "rockylinux/10"
+}
+
+unless DEFAULT_ISO_BY_PROFILE.key?(RHCSA_PROFILE)
+  raise "Unsupported RHCSA_PROFILE '#{RHCSA_PROFILE}'. Use rhel9 or rhel10."
+end
+
+def host_supports_x86_64_v3?
+  cpu = RbConfig::CONFIG.fetch("host_cpu", "").downcase
+  return true unless cpu.include?("x86_64") || cpu.include?("amd64")
+  return true unless File.file?("/proc/cpuinfo")
+
+  flags = File.read("/proc/cpuinfo", encoding: "UTF-8", invalid: :replace, undef: :replace).lines.grep(/^flags\s*:/).first.to_s
+  required = %w[avx avx2 bmi1 bmi2 f16c fma movbe osxsave]
+  required.all? { |flag| flags.include?(" #{flag} ") } &&
+    (flags.include?(" lzcnt ") || flags.include?(" abm "))
+end
+
+if RHCSA_PROFILE == "rhel10" && !host_supports_x86_64_v3?
+  raise "RHCSA_PROFILE=rhel10 requires an x86-64-v3 capable host CPU. Use RHCSA_PROFILE=rhel9 on older hosts."
+end
+
+ISO_NAME = ENV.fetch("RHCSA_ISO", DEFAULT_ISO_BY_PROFILE.fetch(RHCSA_PROFILE))
+BOX_NAME = ENV.fetch("RHCSA_BOX", DEFAULT_BOX_BY_PROFILE.fetch(RHCSA_PROFILE))
+ISO_PATH = File.expand_path(ISO_NAME, __dir__)
 raise "Missing ISO: #{ISO_PATH}" unless File.exist?(ISO_PATH)
 
 SSH_COMMAND_CANDIDATES = [
@@ -25,8 +54,8 @@ else
 end
 
 DISK_SUFFIX = DISK_GENERATION.empty? ? "" : "-#{DISK_GENERATION}"
-CLIENT_DISK1 = File.join(LAB_DISKS_DIR, "clientvm-disk1#{DISK_SUFFIX}.vdi")
-CLIENT_DISK2 = File.join(LAB_DISKS_DIR, "clientvm-disk2#{DISK_SUFFIX}.vdi")
+CLIENT_DISK1 = File.join(LAB_DISKS_DIR, "client-disk1#{DISK_SUFFIX}.vdi")
+CLIENT_DISK2 = File.join(LAB_DISKS_DIR, "client-disk2#{DISK_SUFFIX}.vdi")
 
 ACTIVE_RUN_PATH = File.join(__dir__, ".lab-state", "active-run.json")
 CHECK_SERVER_SCRIPT = File.join(__dir__, ".lab-state", "check-server.sh")
@@ -45,6 +74,8 @@ def resolve_scenario_script(active_run, machine_key)
   return nil unless active_run
 
   relative_path = active_run.dig("scenario", "vm_scripts", machine_key)
+  legacy_key = machine_key == "server" ? "servervm" : "clientvm"
+  relative_path = active_run.dig("scenario", "vm_scripts", legacy_key) if relative_path.nil?
   return nil if relative_path.nil? || relative_path.to_s.strip.empty?
 
   File.expand_path(relative_path, __dir__)
@@ -70,11 +101,11 @@ end
 
 ACTIVE_RUN = load_active_run(ACTIVE_RUN_PATH)
 SCENARIO_ENV = scenario_env(ACTIVE_RUN)
-SERVER_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN, "servervm"), "servervm")
-CLIENT_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN, "clientvm"), "clientvm")
+SERVER_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN, "server"), "server")
+CLIENT_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN, "client"), "client")
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/rocky9"
+  config.vm.box = BOX_NAME
   config.vm.box_check_update = false
   config.ssh.insert_key = false
   config.ssh.keys_only = true
@@ -86,8 +117,8 @@ Vagrant.configure("2") do |config|
   config.vm.graceful_halt_timeout = 60
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
-  config.vm.define "servervm" do |server|
-    server.vm.hostname = "servervm"
+  config.vm.define "server" do |server|
+    server.vm.hostname = "server"
     server.vm.network "private_network", ip: "192.168.122.3"
 
     server.vm.provider "virtualbox" do |vb|
@@ -122,8 +153,8 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.define "clientvm" do |client|
-    client.vm.hostname = "clientvm"
+  config.vm.define "client" do |client|
+    client.vm.hostname = "client"
     client.vm.network "private_network", ip: "192.168.122.2"
 
     client.vm.provider "virtualbox" do |vb|

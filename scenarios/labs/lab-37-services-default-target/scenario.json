@@ -1,7 +1,7 @@
 {
   "id": "lab-37-services-default-target",
   "title": "Lab 37: Services and Default Target",
-  "description": "Manage the default target and key services on servervm.",
+  "description": "Manage the default target and key services on server.",
   "objective_tags": [
     "software-scheduling-time",
     "boot-and-recovery"
@@ -10,35 +10,39 @@
     "lab"
   ],
   "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure servervm to boot into multi-user.target by default.",
-        "Ensure the rsyslog service is enabled and running on servervm, and if postfix is installed disable it and stop it."
+        "Configure server to boot into multi-user.target by default.",
+        "Ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it."
       ],
       "hints": [
-        "This lab belongs on servervm, not clientvm.",
+        "This lab belongs on server, not client.",
         "Treat postfix as conditional: only act if it is installed."
       ],
       "checks": [
-        "ssh admin@servervm systemctl get-default | grep -qx multi-user.target",
-        "ssh admin@servervm systemctl is-enabled rsyslog | grep -qx enabled && ssh admin@servervm systemctl is-active rsyslog | grep -qx active && ssh admin@servervm sh -lc 'rpm -q postfix >/dev/null 2>&1 || exit 0; systemctl is-enabled postfix 2>/dev/null | grep -qx disabled && systemctl is-active postfix 2>/dev/null | grep -qx inactive'"
+        "# server systemctl get-default | grep -qx multi-user.target",
+        "# server systemctl is-enabled rsyslog | grep -qx enabled && systemctl is-active rsyslog | grep -qx active && sh -lc 'rpm -q postfix >/dev/null 2>&1 || exit 0; systemctl is-enabled postfix 2>/dev/null | grep -qx disabled'"
       ],
       "solution_outline": [
         "Set the default target to multi-user.target.",
         "Enable and start rsyslog, then disable postfix only if the package is present."
       ],
       "task_titles": [
-        "Set the default boot target on servervm",
-        "Manage rsyslog and postfix on servervm"
+        "Set the default boot target on server",
+        "Manage rsyslog and postfix on server"
       ],
       "task_points": [
         10,

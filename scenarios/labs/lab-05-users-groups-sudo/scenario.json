@@ -1,7 +1,7 @@
 {
   "id": "lab-05-users-groups-sudo",
   "title": "Lab 05: Users Groups And Sudo",
-  "description": "Create local users on servervm with minimal useradd usage and delegated sudo rules.",
+  "description": "Create local users on server with minimal useradd usage and delegated sudo rules.",
   "objective_tags": [
     "users-sudo-ssh"
   ],
@@ -9,13 +9,17 @@
     "lab"
   ],
   "time_limit_minutes": 40,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
@@ -29,14 +33,14 @@
         "Use visudo to edit sudo policy safely. Plain visudo as root is fine unless a task explicitly requires a drop-in file."
       ],
       "checks": [
-        "ssh admin@servervm id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && ssh admin@servervm getent passwd brenor >/dev/null",
-        "ssh admin@servervm id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && ssh admin@servervm getent passwd lyessa >/dev/null",
-        "ssh admin@servervm getent passwd quillan >/dev/null && ssh admin@servervm sudo passwd -S brenor | awk '{exit !($2 ~ /^P/)}' && ssh admin@servervm sudo passwd -S lyessa | awk '{exit !($2 ~ /^P/)}' && ssh admin@servervm sudo passwd -S quillan | awk '{exit !($2 ~ /^P/)}' && ssh admin@servervm getent passwd sarahx | awk -F: '{exit !($7==\"/sbin/nologin\")}' && ssh admin@servervm test ! -d /home/sarahx",
-        "ssh admin@servervm sudo visudo -cf /etc/sudoers >/dev/null && ssh admin@servervm sudo grep -ERq '^%opsrune[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null",
-        "ssh admin@servervm sudo visudo -cf /etc/sudoers >/dev/null && ssh admin@servervm sudo grep -ERq '^brenor[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null"
+        "# server id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && getent passwd brenor >/dev/null",
+        "# server id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && getent passwd lyessa >/dev/null",
+        "# server getent passwd quillan >/dev/null && passwd -S brenor | awk '{exit !($2 ~ /^P/)}' && passwd -S lyessa | awk '{exit !($2 ~ /^P/)}' && passwd -S quillan | awk '{exit !($2 ~ /^P/)}' && getent passwd sarahx | awk -F: '{exit !($7==\"/sbin/nologin\")}' && test ! -d /home/sarahx",
+        "# server visudo -cf /etc/sudoers >/dev/null && grep -ERq '^%opsrune[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null",
+        "# server visudo -cf /etc/sudoers >/dev/null && grep -ERq '^brenor[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null"
       ],
       "solution_outline": [
-        "Create the group and all four accounts on servervm.",
+        "Create the group and all four accounts on server.",
         "Set passwords only for the interactive accounts.",
         "Write two sudo drop-ins and validate them with visudo."
       ],

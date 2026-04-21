@@ -12,14 +12,14 @@
 Create a new volume group and logical volume and mount it persistently.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - On /dev/sdb, create an LVM partition, then create (clientvm) - 10 pts
+## Task 01 - On /dev/sdb, create an LVM partition, then create (client) - 10 pts
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
@@ -31,7 +31,7 @@ lvcreate -n wsharex -l 50 wgroupx
 
 ---
 
-## Task 02 - Create logical volume wsharex with 50 extents, (clientvm) - 10 pts
+## Task 02 - Create logical volume wsharex with 50 extents, (client) - 10 pts
 
 ```bash
 mkfs.ext4 /dev/wgroupx/wsharex

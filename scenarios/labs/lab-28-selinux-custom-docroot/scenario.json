@@ -10,17 +10,21 @@
     "lab"
   ],
   "time_limit_minutes": 35,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure Apache on clientvm to serve content from /srv/lab28/site on TCP port 8088.",
+        "Configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.",
         "Keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.",
         "Do not edit or remove /srv/lab28/site/index.html."
       ],

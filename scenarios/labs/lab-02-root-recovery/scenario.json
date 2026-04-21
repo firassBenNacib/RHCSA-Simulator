@@ -1,7 +1,7 @@
 {
   "id": "lab-02-root-recovery",
   "title": "Lab 02: Root Password Recovery",
-  "description": "Recover root access through the bootloader and restore normal access on clientvm",
+  "description": "Recover root access through the bootloader and restore normal access on client",
   "objective_tags": [
     "boot-and-recovery"
   ],
@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 40,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": true,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Recover root access on clientvm from the console and set the root password to cinder9.",
+        "Recover root access on client from the console and set the root password to cinder9.",
         "After the system boots normally, confirm that SELinux relabeling completed and root can log in again.",
         "Leave SSH password authentication working for root and admin."
       ],
@@ -36,7 +40,7 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Recover root access on clientvm from the console...",
+        "Recover root access on client from the console...",
         "After the system boots normally, confirm that...",
         "Leave SSH password authentication working for root..."
       ],

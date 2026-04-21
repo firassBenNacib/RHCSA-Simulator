@@ -12,8 +12,8 @@
 A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.
 
 ### Systems
-- clientvm
-- servervm
+- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -21,7 +21,7 @@ A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACL
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Root Recovery (clientvm) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
 ```bash
 # At the boot menu, edit the selected kernel entry.
@@ -34,7 +34,7 @@ exec /sbin/init
 
 ---
 
-## Question 02 - Client Network (clientvm) - 5 pts
+## Question 02 - Client Network (client) - 5 pts
 
 ```bash
 nmcli device status
@@ -42,12 +42,12 @@ nmcli connection show "System eth1"
 nmcli connection modify "System eth1" ipv4.addresses 192.168.122.28/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "System eth1"
 nmcli connection up "System eth1"
-hostnamectl set-hostname clientvm.exam-c.lab
+hostnamectl set-hostname client.exam-c.lab
 ```
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
+## Question 03 - Bootloader Kernel Argument (client) - 5 pts
 
 ```bash
 grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
@@ -55,7 +55,7 @@ grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 
 ---
 
-## Question 04 - Host Entry (clientvm) - 5 pts
+## Question 04 - Host Entry (client) - 5 pts
 
 ```bash
 vim /etc/hosts
@@ -64,18 +64,18 @@ vim /etc/hosts
 
 ---
 
-## Question 05 - Direct NFS Mount (clientvm) - 5 pts
+## Question 05 - Direct NFS Mount (client) - 5 pts
 
 ```bash
 mkdir -p /mnt/bluec
 vim /etc/fstab
-servervm:/exports/bluec /mnt/bluec nfs defaults,_netdev 0 0
+server:/exports/bluec /mnt/bluec nfs defaults,_netdev 0 0
 mount -a
 ```
 
 ---
 
-## Question 06 - Users And Group (clientvm) - 5 pts
+## Question 06 - Users And Group (client) - 5 pts
 
 ```bash
 groupadd infrac
@@ -87,16 +87,18 @@ echo cinder9 | passwd --stdin ren
 
 ---
 
-## Question 07 - Default ACL Directory (clientvm) - 5 pts
+## Question 07 - Default ACL Directory (client) - 5 pts
 
 ```bash
-chmod 770 /srv/infrac
-chmod g+s /srv/infrac
+mkdir -p /srv/infrac
+chown root:infrac /srv/infrac
+chmod 2770 /srv/infrac
+setfacl -d -m g:infrac:rwx /srv/infrac
 ```
 
 ---
 
-## Question 08 - No-Home User (clientvm) - 5 pts
+## Question 08 - No-Home User (client) - 5 pts
 
 ```bash
 useradd -M -s /sbin/nologin remote63
@@ -104,7 +106,7 @@ useradd -M -s /sbin/nologin remote63
 
 ---
 
-## Question 09 - At Job (clientvm) - 5 pts
+## Question 09 - At Job (client) - 5 pts
 
 ```bash
 echo 'echo "exam-c audit" >> /root/exam-c-at.log' | at now + 2 minutes
@@ -113,7 +115,7 @@ systemctl enable --now atd
 
 ---
 
-## Question 10 - Per-User Password Aging (clientvm) - 5 pts
+## Question 10 - Per-User Password Aging (client) - 5 pts
 
 ```bash
 chage -M 45 -m 5 -W 7 talia
@@ -121,10 +123,10 @@ chage -M 45 -m 5 -W 7 talia
 
 ---
 
-## Question 11 - Persistent Journal (servervm) - 5 pts
+## Question 11 - Persistent Journal (server) - 5 pts
 
 ```bash
-# Run on servervm
+# Run on server
 mkdir -p /var/log/journal
 mkdir -p /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
@@ -136,7 +138,7 @@ systemctl restart systemd-journald
 
 ---
 
-## Question 12 - User Umask (clientvm) - 5 pts
+## Question 12 - User Umask (client) - 5 pts
 
 ```bash
 echo 'umask 027' >> /home/ren/.bash_profile
@@ -144,7 +146,7 @@ echo 'umask 027' >> /home/ren/.bash_profile
 
 ---
 
-## Question 13 - Per-User Login Message (clientvm) - 4 pts
+## Question 13 - Per-User Login Message (client) - 4 pts
 
 ```bash
 echo 'echo exam-c access' >> /home/ren/.bash_profile
@@ -152,7 +154,7 @@ echo 'echo exam-c access' >> /home/ren/.bash_profile
 
 ---
 
-## Question 14 - Fixed UID User (clientvm) - 4 pts
+## Question 14 - Fixed UID User (client) - 4 pts
 
 ```bash
 useradd -u 4431 kian431
@@ -162,7 +164,7 @@ passwd kian431
 
 ---
 
-## Question 15 - Find And Copy (clientvm) - 4 pts
+## Question 15 - Find And Copy (client) - 4 pts
 
 ```bash
 find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/ren-files \;
@@ -170,7 +172,7 @@ find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/re
 
 ---
 
-## Question 16 - Grep Filter (clientvm) - 4 pts
+## Question 16 - Grep Filter (client) - 4 pts
 
 ```bash
 grep orbit /usr/share/dict/words > /root/orbit-lines
@@ -178,7 +180,7 @@ grep orbit /usr/share/dict/words > /root/orbit-lines
 
 ---
 
-## Question 17 - Archive (clientvm) - 4 pts
+## Question 17 - Archive (client) - 4 pts
 
 ```bash
 tar -cjf /root/etc-c.tar.bz2 /etc
@@ -186,7 +188,7 @@ tar -cjf /root/etc-c.tar.bz2 /etc
 
 ---
 
-## Question 18 - Service Status Script (clientvm) - 4 pts
+## Question 18 - Service Status Script (client) - 4 pts
 
 ```bash
 vim /usr/local/bin/northcheck
@@ -200,7 +202,7 @@ chmod 755 /usr/local/bin/northcheck
 
 ---
 
-## Question 19 - Swap Space (clientvm) - 4 pts
+## Question 19 - Swap Space (client) - 4 pts
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB
@@ -213,7 +215,7 @@ echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 
 ---
 
-## Question 20 - Resize Existing LV (clientvm) - 4 pts
+## Question 20 - Resize Existing LV (client) - 4 pts
 
 ```bash
 lvextend -L 340M /dev/reviewvgc/reviewc
@@ -222,7 +224,7 @@ resize2fs /dev/reviewvgc/reviewc
 
 ---
 
-## Question 21 - Rootless Container (clientvm) - 4 pts
+## Question 21 - Rootless Container (client) - 4 pts
 
 ```bash
 su - eirac
@@ -234,7 +236,7 @@ exit
 
 ---
 
-## Question 22 - Container Autostart (clientvm) - 4 pts
+## Question 22 - Container Autostart (client) - 4 pts
 
 ```bash
 su - eirac

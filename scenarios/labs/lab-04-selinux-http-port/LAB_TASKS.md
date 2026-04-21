@@ -12,25 +12,25 @@
 Fix Apache so it listens on a nonstandard port without disabling SELinux.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure Apache on clientvm so it listens on TCP (clientvm) - 10 pts
+## Task 01 - Configure Apache on client so it listens on TCP (client) - 10 pts
 
-Configure Apache on clientvm so it listens on TCP port 9082 and starts automatically at boot.
+Configure Apache on client so it listens on TCP port 9082 and starts automatically at boot.
 
 ---
 
-## Task 02 - Allow TCP port 9082 through the firewall permanently (clientvm) - 10 pts
+## Task 02 - Allow TCP port 9082 through the firewall permanently (client) - 10 pts
 
 Allow TCP port 9082 through the firewall permanently.
 
 ---
 
-## Task 03 - Make the SELinux changes needed so Apache serves (clientvm) - 10 pts
+## Task 03 - Make the SELinux changes needed so Apache serves (client) - 10 pts
 
 Make the SELinux changes needed so Apache serves the existing /var/www/html content on that port.

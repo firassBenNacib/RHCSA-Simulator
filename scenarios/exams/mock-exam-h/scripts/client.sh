@@ -14,7 +14,7 @@ fi
 mkdir -p /root/.repo-backup-client-exam-h
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-h
 useradd -D -f -1 >/dev/null 2>&1 || true
-hostnamectl set-hostname clientvm
+hostnamectl set-hostname client
 rhcsa_remove_matching_lines 'registry.silverpeak.lab' /etc/hosts
 connection_name="$(rhcsa_get_lab_connection_name || true)"
 rhcsa_reset_lab_ipv4_profile "$connection_name"
@@ -95,13 +95,13 @@ printf 'UUID=%s /mnt/reviewh ext4 defaults 0 0
 cat > /etc/yum.repos.d/exam-h-local.repo <<'EOF'
 [examh-baseos]
 name=ExamH BaseOS
-baseurl=http://servervm/repo/BaseOS/
+baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
 [examh-appstream]
 name=ExamH AppStream
-baseurl=http://servervm/repo/AppStream/
+baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF

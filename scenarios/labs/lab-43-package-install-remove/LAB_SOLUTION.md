@@ -12,14 +12,14 @@
 Install packages from the prepared local repositories and remove the one that is no longer needed.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Install tree and remove dos2unix (clientvm) - 20 pts
+## Task 01 - Install tree and remove dos2unix (client) - 20 pts
 
 ```bash
 dnf install -y tree dos2unix

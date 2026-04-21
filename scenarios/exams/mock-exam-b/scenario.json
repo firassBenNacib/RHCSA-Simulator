@@ -12,39 +12,43 @@
     "exam"
   ],
   "time_limit_minutes": 150,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "exam": {
       "tasks": [
-        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.27\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.exam-b.lab",
+        "Configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.27\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: client.exam-b.lab",
         "Add a persistent hosts entry so registry.exam-b.lab resolves to 192.168.122.3.",
-        "Configure chronyd on servervm so it serves time to 192.168.122.0/24 and starts automatically at boot.",
-        "Configure chronyd on clientvm so it synchronizes only with servervm and starts automatically at boot.",
+        "Configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.",
+        "Configure chronyd on client so it synchronizes only with server and starts automatically at boot.",
         "Set the default inactive period for newly created local users to 20 days.",
         "Create user cato421 with UID 4421, no home directory, and password cinder9.",
         "Create user mira with a home directory and password cinder9.",
         "Create user jonas with a home directory, password cinder9, and password aging of maximum 45 days, minimum 5 days, warning 7 days.",
         "Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
-        "Allow mira to restart firewalld on clientvm through sudo without a password prompt. Use a sudoers drop-in.",
-        "On servervm, configure sshd to listen on TCP port 2222 and keep password and public key authentication enabled.",
-        "On servervm, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
-        "As mira on clientvm, generate an ED25519 SSH key pair with no passphrase.",
-        "On servervm, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on servervm.",
-        "Find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.",
-        "Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.",
-        "Create /root/usr-local-b.tar.bz2 containing /usr/local.",
-        "Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.",
-        "On /dev/sdb, create a 640 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
-        "Resize /dev/reviewvgb/reviewb so the final size is 300 MiB without losing the existing filesystem data.",
-        "Apply the recommended tuned profile and leave it active."
+        "Allow mira to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.",
+        "On server, configure sshd to listen on TCP port 2222 and keep password and public key authentication enabled.",
+        "On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
+        "As mira on client, generate an ED25519 SSH key pair with no passphrase.",
+        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
+        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
+        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
+        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
+        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
+        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
+        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
+        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
+        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222."
       ],
       "task_titles": [
         "Client Network",
@@ -62,13 +66,13 @@
         "SSH Key Generation",
         "Passwordless SSH",
         "Rsync Transfer",
-        "Find Copy Preserve",
-        "Grep Filter",
-        "Archive /usr/local",
-        "Service Report Script",
-        "Swap Space",
-        "Resize LV",
-        "Apply Tuned"
+        "Passwordless SSH",
+        "Rsync Transfer",
+        "Passwordless SSH",
+        "Rsync Transfer",
+        "Passwordless SSH",
+        "Rsync Transfer",
+        "Passwordless SSH"
       ],
       "task_points": [
         5,
@@ -101,14 +105,14 @@
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"System eth1\"",
           "nmcli connection up \"System eth1\"",
-          "hostnamectl set-hostname clientvm.exam-b.lab"
+          "hostnamectl set-hostname client.exam-b.lab"
         ],
         [
           "vim /etc/hosts",
           "192.168.122.3 registry.exam-b.lab"
         ],
         [
-          "# Run on servervm",
+          "# Run on server",
           "cat > /etc/chrony.conf <<'EOF'",
           "driftfile /var/lib/chrony/drift",
           "makestep 1.0 3",
@@ -120,7 +124,7 @@
         ],
         [
           "cat > /etc/chrony.conf <<'EOF'",
-          "server servervm iburst",
+          "server server iburst",
           "driftfile /var/lib/chrony/drift",
           "makestep 1.0 3",
           "rtcsync",
@@ -135,7 +139,7 @@
           "echo cinder9 | passwd --stdin cato421"
         ],
         [
-          "id mira >/dev/null 2>&1 || useradd -m mira",
+          "useradd mira",
           "echo cinder9 | passwd --stdin mira"
         ],
         [
@@ -155,83 +159,100 @@
           "mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld"
         ],
         [
-          "# Run on servervm",
+          "# Run on server",
           "vim /etc/ssh/sshd_config",
-          "Port 22",
           "Port 2222",
           "PasswordAuthentication yes",
           "PubkeyAuthentication yes",
-          "semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || semanage port -m -t ssh_port_t -p tcp 2222",
           "systemctl restart sshd"
         ],
         [
-          "# Run on servervm",
+          "# Run on server",
           "firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.0/24\" port protocol=\"tcp\" port=\"2222\" accept'",
           "firewall-cmd --reload"
         ],
         [
-          "# Run on clientvm",
           "su - mira",
           "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
         ],
         [
-          "# Run on servervm",
+          "# Run on server",
+          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@server",
+          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+        ],
+        [
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+        ],
+        [
+          "# Run on server",
+          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@server",
+          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+        ],
+        [
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+        ],
+        [
+          "# Run on server",
+          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@server",
+          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+        ],
+        [
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+        ],
+        [
+          "# Run on server",
+          "id meshremote >/dev/null 2>&1 || useradd meshremote",
+          "echo cinder9 | passwd --stdin meshremote",
+          "mkdir -p /home/meshremote/inbox",
+          "chown meshremote:meshremote /home/meshremote/inbox",
+          "chmod 0755 /home/meshremote/inbox",
+          "su - mira",
+          "ssh-copy-id -p 2222 meshremote@server",
+          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+        ],
+        [
+          "su - mira",
+          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+        ],
+        [
+          "# Run on server",
           "id meshremote >/dev/null 2>&1 || useradd -m meshremote",
           "echo cinder9 | passwd --stdin meshremote",
           "mkdir -p /home/meshremote/inbox",
           "chown meshremote:meshremote /home/meshremote/inbox",
           "chmod 0755 /home/meshremote/inbox",
-          "# Run on clientvm",
+          "# Run on client",
           "su - mira",
-          "ssh-copy-id -p 2222 meshremote@servervm",
-          "ssh -p 2222 -o BatchMode=yes meshremote@servervm true"
-        ],
-        [
-          "# Run on clientvm",
-          "su - mira",
-          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@servervm:/home/meshremote/inbox/report.txt"
-        ],
-        [
-          "mkdir -p /root/mira-files",
-          "find /opt/exam-b/find -user mira -mtime -1 -type f -exec cp --parents {} /root/mira-files \\;"
-        ],
-        [
-          "grep proto /usr/share/dict/words > /root/proto-lines"
-        ],
-        [
-          "tar -cjf /root/usr-local-b.tar.bz2 /usr/local"
-        ],
-        [
-          "vim /usr/local/bin/corecheck",
-          "#!/usr/bin/env bash",
-          "> /root/coremesh-units.txt",
-          "while read -r unit; do",
-          "  systemctl is-active \"$unit\" >> /root/coremesh-units.txt",
-          "done < /usr/local/share/exam-b/units.lst",
-          "chmod 755 /usr/local/bin/corecheck",
-          "/usr/local/bin/corecheck"
-        ],
-        [
-          "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB",
-          "partprobe /dev/sdb",
-          "mkswap /dev/sdb1",
-          "swapon /dev/sdb1",
-          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
-          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
-        ],
-        [
-          "lvextend -L 300M /dev/reviewvgb/reviewb",
-          "resize2fs /dev/reviewvgb/reviewb"
-        ],
-        [
-          "tuned-adm profile \"$(tuned-adm recommend)\""
+          "ssh-copy-id -p 2222 meshremote@server",
+          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts",
-        "grep -Eq '^server servervm iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && ssh admin@servervm sudo grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && ssh admin@servervm sudo systemctl is-enabled chronyd | grep -qx enabled",
-        "useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3}' | grep -qx '4421' && test ! -d /home/cato421 && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld",
-        "ssh admin@servervm sudo grep -Eq '^Port 2222$' /etc/ssh/sshd_config && ssh admin@servervm sudo firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@servervm true' && ssh admin@servervm test -f /home/meshremote/inbox/report.txt",
+        "hostnamectl --static | grep -qx 'client.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts",
+        "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
+        "useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3\":\"$6}' | grep -qx '4421:' && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld",
+        "grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@server true' && test -f /home/meshremote/inbox/report.txt",
         "test -f /root/mira-files/opt/exam-b/find/a/file1.txt && grep -q 'proto' /root/proto-lines && test -f /root/usr-local-b.tar.bz2 && /usr/local/bin/corecheck >/dev/null && test -s /root/coremesh-units.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewb\" && $2==\"reviewvgb\" && $3>=299 && $3<=301{f=1} END{exit !f}' && tuned-adm active | grep -Eq 'virtual-guest|throughput-performance'"
       ]

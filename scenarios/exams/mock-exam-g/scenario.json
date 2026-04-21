@@ -13,35 +13,39 @@
     "exam"
   ],
   "time_limit_minutes": 150,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": true,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "exam": {
       "tasks": [
-        "Recover root access on clientvm from the console.\n\nSet the root password to: cinder9",
-        "Configure networking on clientvm with the following settings:\n\nIP ADDRESS: 192.168.122.39\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: clientvm.deltaforge.lab",
-        "Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
+        "Recover root access on client from the console.\n\nSet the root password to: cinder9",
+        "Configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.39\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: client.deltaforge.lab",
+        "Configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
         "Add a persistent hosts entry so vault.deltaforge.lab resolves to 192.168.122.3.",
-        "Mount the server export servervm:/exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.",
+        "Mount the server export server:/exports/delta-home persistently on client at /mnt/delta-home using NFS.",
         "Create group deltaops and create user pavel with deltaops as a supplementary group. Set the password of pavel to cinder9.",
         "Create /projects/delta-drop owned by root:deltaops with mode 3770 so group ownership is inherited and only file owners can delete their own files.",
         "Create user auditg without a home directory and with login shell /sbin/nologin.",
         "Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.",
         "Set a personal umask of 027 for pavel.",
         "Create user copyg on both systems with password cinder9.",
-        "As copyg on clientvm, generate an ED25519 SSH key pair with no passphrase, install it on servervm, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on servervm.",
+        "As copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.",
         "Queue a one-time at job as user pavel that appends the message \"exam-g tick\" to /root/exam-g-at.log in 2 minutes.",
         "Append a login message for pavel to ~/.bash_profile that prints \"exam-g access\" when pavel logs in.",
         "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.",
         "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.",
         "Create /root/etc-g.tar.bz2 containing /etc.",
-        "Configure journald on clientvm so logs are stored persistently across reboots.",
+        "Configure journald on client so logs are stored persistently across reboots.",
         "User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.",
         "On /dev/sdb, create a 736 MiB swap partition and configure it persistently.",
         "On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.",
@@ -110,7 +114,7 @@
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.39/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"System eth1\"",
           "nmcli connection up \"System eth1\"",
-          "hostnamectl set-hostname clientvm.deltaforge.lab"
+          "hostnamectl set-hostname client.deltaforge.lab"
         ],
         [
           "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\""
@@ -122,7 +126,7 @@
         [
           "mkdir -p /mnt/delta-home",
           "vim /etc/fstab",
-          "servervm:/exports/delta-home /mnt/delta-home nfs defaults,_netdev 0 0",
+          "server:/exports/delta-home /mnt/delta-home nfs defaults,_netdev 0 0",
           "mount -a"
         ],
         [
@@ -131,8 +135,9 @@
           "echo cinder9 | passwd --stdin pavel"
         ],
         [
-          "chmod 770 /projects/delta-drop",
-          "chmod g+s,+t /projects/delta-drop"
+          "mkdir -p /projects/delta-drop",
+          "chown root:deltaops /projects/delta-drop",
+          "chmod 3770 /projects/delta-drop"
         ],
         [
           "useradd -M -s /sbin/nologin auditg"
@@ -146,7 +151,7 @@
         [
           "useradd copyg",
           "echo cinder9 | passwd --stdin copyg",
-          "# Run on servervm",
+          "# Run on server",
           "useradd copyg",
           "echo cinder9 | passwd --stdin copyg",
           "mkdir -p /home/copyg/inbox",
@@ -156,8 +161,8 @@
         [
           "su - copyg",
           "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519",
-          "ssh-copy-id copyg@servervm",
-          "scp /opt/exam-g/copyg-payload.txt copyg@servervm:/home/copyg/inbox/payload.txt"
+          "ssh-copy-id copyg@server",
+          "scp /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt"
         ],
         [
           "su - pavel",
@@ -219,10 +224,10 @@
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
-        "mount | grep -Eq 'servervm:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
+        "hostnamectl --static | grep -qx 'client.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
+        "mount | grep -Eq 'server:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
         "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo exam-g access' /home/pavel/.bash_profile && atq | grep -q pavel",
-        "runuser -l copyg -c 'ssh -o BatchMode=yes copyg@servervm true' && ssh admin@servervm test -f /home/copyg/inbox/payload.txt",
+        "runuser -l copyg -c 'ssh -o BatchMode=yes copyg@server true' && test -f /home/copyg/inbox/payload.txt",
         "test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p \"$(cat /home/workerg/cpu.pid)\" >/dev/null 2>&1 && ps -o ni= -p \"$(cat /home/workerg/sleep.pid)\" | tr -d ' ' | grep -qx '10'",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'"
       ]

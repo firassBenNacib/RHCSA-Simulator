@@ -10,17 +10,21 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure journald on clientvm so logs are stored persistently across reboots.",
+        "Configure journald on client so logs are stored persistently across reboots.",
         "Create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
         "Ensure the rsyslog service is active after your changes."
       ],
@@ -37,7 +41,7 @@
         "Configure journald and rsyslog persistently."
       ],
       "task_titles": [
-        "Configure journald on clientvm so logs are stored...",
+        "Configure journald on client so logs are stored...",
         "Create the drop-in file...",
         "Ensure the rsyslog service is active after your..."
       ],

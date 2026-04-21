@@ -12,19 +12,19 @@
 Create and verify both a hard link and a symbolic link to the same source file.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create the file /root/linksource30 containing the (clientvm) - 10 pts
+## Task 01 - Create the file /root/linksource30 containing the (client) - 10 pts
 
 Create the file /root/linksource30 containing the text link-test.
 
 ---
 
-## Task 02 - Create the hard link /root/linkhard30 and the (clientvm) - 10 pts
+## Task 02 - Create the hard link /root/linkhard30 and the (client) - 10 pts
 
 Create the hard link /root/linkhard30 and the symbolic link /root/linksoft30 to /root/linksource30.
