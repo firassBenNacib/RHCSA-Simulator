@@ -1,0 +1,62 @@
+{
+  "id": "rhcsa10-lab-29-default-target",
+  "title": "RHCSA 10 Lab 29: Default Target",
+  "description": "Configure system boot target",
+  "objective_tags": [
+    "boot-and-recovery"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Set the default systemd target to multi-user.target.",
+        "Verify the default target.",
+        "Do not reboot the system."
+      ],
+      "hints": [
+        "Use systemctl set-default.",
+        "Use systemctl get-default to verify."
+      ],
+      "checks": [
+        "systemctl get-default | grep -qx multi-user.target",
+        "test -L /etc/systemd/system/default.target",
+        "readlink /etc/systemd/system/default.target | grep -q multi-user.target"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Set the default systemd target to multi-user.target",
+        "Verify the default target",
+        "Do not reboot the system"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "systemctl set-default multi-user.target"
+        ],
+        [
+          "systemctl get-default"
+        ],
+        [
+          "readlink /etc/systemd/system/default.target"
+        ]
+      ]
+    }
+  }
+}

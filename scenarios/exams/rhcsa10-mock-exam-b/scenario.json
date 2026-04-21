@@ -1,0 +1,267 @@
+{
+  "id": "rhcsa10-mock-exam-b",
+  "title": "RHCSA 10 Mock Exam B",
+  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "objective_tags": [
+    "boot-and-recovery",
+    "essential-tools",
+    "filesystems-and-autofs",
+    "networking-and-firewall",
+    "processes-logs-tuning",
+    "selinux-and-default-perms",
+    "shell-scripting",
+    "software-management",
+    "software-scheduling-time",
+    "storage-lvm",
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "exam"
+  ],
+  "time_limit_minutes": 180,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "exam": {
+      "tasks": [
+        "Set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168.122.3.",
+        "Set System eth1 to 192.168.122.61/24 with gateway 192.168.122.1 and DNS 192.168.122.3.",
+        "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
+        "Install org.rhcsa.Tools from exambflatpak, then remove it after verification.",
+        "Create group teamb10, create user userb10, set password cinder9, and add the user to teamb10.",
+        "Allow %teamb10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
+        "Set maximum password age for userb10 to 46 days and warning period to 7 days.",
+        "Create /usr/local/bin/b-who that prints the primary group for the supplied user argument.",
+        "Write users whose shell ends with sh to /root/b-shell-users.txt.",
+        "Create gzip archive /root/b-etc.tar.gz containing /etc/hosts and /etc/fstab.",
+        "Create /root/b-original, hard link /root/b-hard, and symlink /root/b-soft.",
+        "Create and enable exambtimer.timer that runs every 10 minutes.",
+        "Create VG vgb10 and LV datab mounted at /mnt/datab10.",
+        "Create /var/www/html/b.html and restore its default SELinux context.",
+        "Persistently enable httpd_can_network_connect.",
+        "Activate the throughput-performance tuned profile.",
+        "Configure persistent systemd journal storage.",
+        "Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10.log every 15 minutes.",
+        "Mount server:/exports/direct at /mnt/bdirect persistently.",
+        "Set the default target to multi-user.target without rebooting.",
+        "Install lsof and ensure tcpdump is removed."
+      ],
+      "hints": [
+        "Make changes persistent unless a question says otherwise.",
+        "Use local repositories and local documentation; do not depend on internet access.",
+        "Flatpak and systemd timer tasks belong to the RHCSA 10 track."
+      ],
+      "checks": [
+        "hostnamectl --static | grep -qx clientb.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverb\\.exam10\\.lab$' /etc/hosts",
+        "nmcli -g ipv4.addresses connection show 'System eth1' | grep -qx '192.168.122.61/24'",
+        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"exambflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
+        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "getent group teamb10 >/dev/null && id -nG userb10 | tr ' ' '\\n' | grep -qx teamb10",
+        "grep -ERq '^%teamb10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
+        "chage -l userb10 | grep -Eq 'Maximum.*46'",
+        "test -x /usr/local/bin/b-who && /usr/local/bin/b-who root | grep -qx root",
+        "test -s /root/b-shell-users.txt && grep -q '^root$' /root/b-shell-users.txt",
+        "test -f /root/b-etc.tar.gz && tar -tzf /root/b-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
+        "test \"$(stat -c %i /root/b-original)\" = \"$(stat -c %i /root/b-hard)\" && test -L /root/b-soft",
+        "systemctl cat exambtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled exambtimer.timer | grep -qx enabled",
+        "lvs /dev/vgb10/datab >/dev/null && findmnt -no TARGET /mnt/datab10 | grep -qx /mnt/datab10",
+        "ls -Z /var/www/html/b.html | grep -q httpd_sys_content_t",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "tuned-adm active | grep -q throughput-performance",
+        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
+        "crontab -l -u userb10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log'",
+        "findmnt -no SOURCE,TARGET /mnt/bdirect | grep -qx 'server:/exports/direct /mnt/bdirect'",
+        "systemctl get-default | grep -qx multi-user.target",
+        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
+      ],
+      "solution_outline": [
+        "Work through each question independently and verify before moving on."
+      ],
+      "task_titles": [
+        "Configure hostname and hosts entry",
+        "Configure IPv4 profile",
+        "Configure RPM repositories",
+        "Configure Flatpak remote",
+        "Install and remove Flatpak app",
+        "Create user and group",
+        "Delegate sudo access",
+        "Set password aging",
+        "Create argument script",
+        "Filter shell users",
+        "Create archive",
+        "Create links",
+        "Create systemd timer",
+        "Create LVM mount",
+        "Restore SELinux context",
+        "Set SELinux boolean",
+        "Set tuned profile",
+        "Preserve journal",
+        "Create cron job",
+        "Mount NFS export",
+        "Set default target",
+        "Install local RPM package"
+      ],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "solution_commands": [
+        [
+          "hostnamectl set-hostname clientb.exam10.lab",
+          "echo '192.168.122.3 serverb.exam10.lab' >> /etc/hosts"
+        ],
+        [
+          "nmcli connection modify 'System eth1' ipv4.addresses 192.168.122.61/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection up 'System eth1'"
+        ],
+        [
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
+          "[rhcsa10-exam-baseos]",
+          "name=RHCSA10 Exam BaseOS",
+          "baseurl=http://server/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[rhcsa10-exam-appstream]",
+          "name=RHCSA10 Exam AppStream",
+          "baseurl=http://server/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "EOF"
+        ],
+        [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify exambflatpak file:///opt/rhcsa/flatpak/repo"
+        ],
+        [
+          "flatpak install --system -y exambflatpak org.rhcsa.Tools",
+          "flatpak list --system --app",
+          "flatpak uninstall --system -y org.rhcsa.Tools"
+        ],
+        [
+          "groupadd teamb10",
+          "useradd -G teamb10 userb10",
+          "passwd userb10",
+          "# enter: cinder9"
+        ],
+        [
+          "echo '%teamb10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamb10",
+          "chmod 440 /etc/sudoers.d/teamb10"
+        ],
+        [
+          "chage -M 46 -W 7 userb10"
+        ],
+        [
+          "cat > /usr/local/bin/b-who <<'EOF'",
+          "#!/bin/bash",
+          "test -n \"${1:-}\" || exit 2",
+          "id -gn \"$1\"",
+          "EOF",
+          "chmod +x /usr/local/bin/b-who"
+        ],
+        [
+          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/b-shell-users.txt"
+        ],
+        [
+          "tar -czf /root/b-etc.tar.gz /etc/hosts /etc/fstab",
+          "tar -tzf /root/b-etc.tar.gz"
+        ],
+        [
+          "echo link > /root/b-original",
+          "ln /root/b-original /root/b-hard",
+          "ln -s /root/b-original /root/b-soft"
+        ],
+        [
+          "cat > /usr/local/sbin/exambtimer.sh <<'EOF'",
+          "#!/bin/bash",
+          "echo exambtimer >> /var/log/exambtimer.log",
+          "EOF",
+          "chmod +x /usr/local/sbin/exambtimer.sh",
+          "cat > /etc/systemd/system/exambtimer.service <<'EOF'",
+          "[Service]",
+          "Type=oneshot",
+          "ExecStart=/usr/local/sbin/exambtimer.sh",
+          "EOF",
+          "cat > /etc/systemd/system/exambtimer.timer <<'EOF'",
+          "[Timer]",
+          "OnCalendar=*:0/10",
+          "Persistent=true",
+          "[Install]",
+          "WantedBy=timers.target",
+          "EOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now exambtimer.timer"
+        ],
+        [
+          "pvcreate /dev/sdb",
+          "vgcreate vgb10 /dev/sdb",
+          "lvcreate -L 256M -n datab vgb10",
+          "mkfs.xfs -f /dev/vgb10/datab",
+          "mkdir -p /mnt/datab10",
+          "echo '/dev/vgb10/datab /mnt/datab10 xfs defaults 0 0' >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "echo b > /var/www/html/b.html",
+          "chcon -t user_tmp_t /var/www/html/b.html",
+          "restorecon -v /var/www/html/b.html"
+        ],
+        [
+          "setsebool -P httpd_can_network_connect on"
+        ],
+        [
+          "systemctl enable --now tuned",
+          "tuned-adm profile throughput-performance"
+        ],
+        [
+          "mkdir -p /var/log/journal",
+          "sed -i 's/^#\\?Storage=.*/Storage=persistent/' /etc/systemd/journald.conf",
+          "systemctl restart systemd-journald"
+        ],
+        [
+          "echo '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log' | crontab -u userb10 -"
+        ],
+        [
+          "mkdir -p /mnt/bdirect",
+          "echo 'server:/exports/direct /mnt/bdirect nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "systemctl set-default multi-user.target",
+          "systemctl get-default"
+        ],
+        [
+          "dnf install -y lsof",
+          "dnf remove -y tcpdump"
+        ]
+      ]
+    }
+  }
+}

@@ -153,8 +153,19 @@ def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Fi
     if DIRECT_SUDOERS_RE.search(combined_solution_text) and not DIRECT_SUDOERS_RE.search(tasks_text):
         findings.append(Finding(path, "solution edits /etc/sudoers directly without task requiring it"))
 
-    if DIRECT_SUDOERS_RE.search(combined_solution_text) and not DIRECT_SUDOERS_RE.search(tasks_text):
-        findings.append(Finding(path, "direct /etc/sudoers edit should normally use a sudoers.d drop-in"))
+
+def scenario_tracks(scenario: dict[str, Any]) -> list[str]:
+    tracks = scenario.get("tracks") or ["rhcsa9"]
+    if not isinstance(tracks, list):
+        return ["rhcsa9"]
+    normalized = []
+    for track in tracks:
+        value = str(track).strip().lower().replace("-", "").replace("_", "")
+        if value in {"rhcsa9", "rhel9", "9", "ex2009"}:
+            normalized.append("rhcsa9")
+        elif value in {"rhcsa10", "rhel10", "10", "ex20010"}:
+            normalized.append("rhcsa10")
+    return sorted(set(normalized)) or ["rhcsa9"]
 
 
 def identity_signature(scenario: dict[str, Any]) -> tuple[str, ...]:
@@ -204,23 +215,35 @@ def main() -> int:
                 or has_pattern(text, r"same repository file on server")
             ),
         ),
-        "apache custom port/docroot": (3, lambda text: has_pattern(text, r"apache", r"httpd") and has_pattern(text, r"docroot", r"document root", r"listen", r"port")),
+        "apache custom port/docroot": (
+            3,
+            lambda text: has_pattern(text, r"apache", r"httpd")
+            and has_pattern(text, r"docroot", r"document root", r"listen", r"http_port_t", r"httpd[^\n]{0,80}\bport\b", r"\bport\b[^\n]{0,80}httpd"),
+        ),
         "chrony": (3, lambda text: has_pattern(text, r"chrony")),
         "autofs/nfs": (4, lambda text: has_pattern(text, r"autofs", r"\bnfs\b")),
         "rootless container autostart": (3, lambda text: has_pattern(text, r"container autostart", r"systemctl --user", r"loginctl enable-linger")),
     }
 
-    recurring_counts: dict[str, int] = {key: 0 for key in recurring_limits}
+    recurring_counts: dict[str, dict[str, int]] = {
+        "rhcsa9": {key: 0 for key in recurring_limits},
+        "rhcsa10": {key: 0 for key in recurring_limits},
+    }
     meaningful_server_exams = 0
     identity_variant_exams = 0
     perms_variant_exams = 0
-    identity_signatures: dict[tuple[str, ...], list[str]] = {}
+    identity_signatures: dict[str, dict[tuple[str, ...], list[str]]] = {
+        "rhcsa9": {},
+        "rhcsa10": {},
+    }
 
     for path, scenario in exams:
         text = scenario_text(scenario)
-        for key, (limit, detector) in recurring_limits.items():
-            if detector(text):
-                recurring_counts[key] += 1
+        tracks = scenario_tracks(scenario)
+        for track in tracks:
+            for key, (limit, detector) in recurring_limits.items():
+                if detector(text):
+                    recurring_counts.setdefault(track, {key: 0 for key in recurring_limits})[key] += 1
 
         if scenario["flags"]["requires_server"] and has_pattern(
             text,
@@ -262,12 +285,14 @@ def main() -> int:
             perms_variant_exams += 1
 
         signature = identity_signature(scenario)
-        identity_signatures.setdefault(signature, []).append(scenario["id"])
+        for track in tracks:
+            identity_signatures.setdefault(track, {}).setdefault(signature, []).append(scenario["id"])
 
-    for key, count in recurring_counts.items():
-        limit = recurring_limits[key][0]
-        if count > limit:
-            findings.append(Finding(SCENARIOS_DIR / "exams", f"'{key}' appears in {count} exams (limit {limit})"))
+    for track, counts in recurring_counts.items():
+        for key, count in counts.items():
+            limit = recurring_limits[key][0]
+            if count > limit:
+                findings.append(Finding(SCENARIOS_DIR / "exams", f"'{key}' appears in {count} {track} exams (limit {limit})"))
 
     if meaningful_server_exams < 4:
         findings.append(Finding(SCENARIOS_DIR / "exams", f"expected at least 4 exams with meaningful server work, found {meaningful_server_exams}"))
@@ -276,9 +301,10 @@ def main() -> int:
     if perms_variant_exams < 4:
         findings.append(Finding(SCENARIOS_DIR / "exams", f"expected at least 4 exams with non-default permissions/SELinux variants, found {perms_variant_exams}"))
 
-    for signature, exam_ids in sorted(identity_signatures.items()):
-        if len(exam_ids) > 1 and set(signature) >= {"group-user", "sudo", "perm-block"}:
-            findings.append(Finding(SCENARIOS_DIR / "exams", f"repeated identity/sudo/permissions block across exams: {', '.join(exam_ids)}"))
+    for track, signatures in sorted(identity_signatures.items()):
+        for signature, exam_ids in sorted(signatures.items()):
+            if len(exam_ids) > 1 and set(signature) >= {"group-user", "sudo", "perm-block"}:
+                findings.append(Finding(SCENARIOS_DIR / "exams", f"repeated identity/sudo/permissions block across {track} exams: {', '.join(exam_ids)}"))
 
     if findings:
         for finding in findings:

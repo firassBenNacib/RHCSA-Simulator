@@ -1,0 +1,63 @@
+{
+  "id": "rhcsa10-lab-48-service-network-boot",
+  "title": "RHCSA 10 Lab 48: Network Service Boot",
+  "description": "Configure network services to start at boot",
+  "objective_tags": [
+    "networking-and-firewall"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Install httpd if needed.",
+        "Enable and start httpd.",
+        "Allow the http service permanently in firewalld."
+      ],
+      "hints": [
+        "Use systemctl enable --now.",
+        "Use firewall-cmd --permanent and reload."
+      ],
+      "checks": [
+        "rpm -q httpd >/dev/null",
+        "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active",
+        "firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Install httpd if needed",
+        "Enable and start httpd",
+        "Allow the http service permanently in firewalld"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "dnf install -y httpd"
+        ],
+        [
+          "systemctl enable --now httpd"
+        ],
+        [
+          "firewall-cmd --permanent --add-service=http",
+          "firewall-cmd --reload"
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "rhcsa10-lab-22-selinux-port",
+  "title": "RHCSA 10 Lab 22: SELinux HTTP Port",
+  "description": "Manage SELinux port labels",
+  "objective_tags": [
+    "selinux-and-default-perms",
+    "networking-and-firewall"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Add TCP port 8010 as an http_port_t SELinux port.",
+        "Configure firewalld to allow TCP port 8010 permanently.",
+        "Verify SELinux and firewall configuration."
+      ],
+      "hints": [
+        "Use semanage port.",
+        "Use firewall-cmd --add-port for the firewall."
+      ],
+      "checks": [
+        "semanage port -l | awk '$1 == \"http_port_t\" {print}' | grep -Eq '(^|[, ])8010(,|$)'",
+        "firewall-cmd --permanent --query-port=8010/tcp",
+        "firewall-cmd --query-port=8010/tcp"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Add TCP port 8010 as an http_port_t SELinux port",
+        "Configure firewalld to allow TCP port 8010 permanently",
+        "Verify SELinux and firewall configuration"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "semanage port -a -t http_port_t -p tcp 8010 || semanage port -m -t http_port_t -p tcp 8010"
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8010/tcp"
+        ],
+        [
+          "firewall-cmd --reload",
+          "semanage port -l | grep http_port_t"
+        ]
+      ]
+    }
+  }
+}

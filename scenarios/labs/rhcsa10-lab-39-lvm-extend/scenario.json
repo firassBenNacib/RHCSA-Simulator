@@ -1,0 +1,66 @@
+{
+  "id": "rhcsa10-lab-39-lvm-extend",
+  "title": "RHCSA 10 Lab 39: LVM Extend",
+  "description": "Extend an existing logical volume and filesystem",
+  "objective_tags": [
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create volume group grow10 on /dev/sdb.",
+        "Create logical volume growlv with size 256 MiB and XFS filesystem mounted at /mnt/grow10.",
+        "Extend the logical volume and filesystem to at least 384 MiB."
+      ],
+      "hints": [
+        "Use lvextend -r to resize the filesystem with the LV.",
+        "Verify with lvs and findmnt."
+      ],
+      "checks": [
+        "lvs /dev/grow10/growlv >/dev/null",
+        "findmnt -no TARGET /mnt/grow10 | grep -qx /mnt/grow10",
+        "test $(lvs --noheadings -o LV_SIZE --units m --nosuffix /dev/grow10/growlv | awk '{printf \"%d\", $1}') -ge 384"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create volume group grow10 on /dev/sdb",
+        "Create logical volume growlv with size 256 MiB and XFS filesystem mounte",
+        "Extend the logical volume and filesystem to at least 384 MiB"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "pvcreate /dev/sdb",
+          "vgcreate grow10 /dev/sdb"
+        ],
+        [
+          "lvcreate -L 256M -n growlv grow10",
+          "mkfs.xfs -f /dev/grow10/growlv",
+          "mkdir -p /mnt/grow10",
+          "mount /dev/grow10/growlv /mnt/grow10"
+        ],
+        [
+          "lvextend -L 384M -r /dev/grow10/growlv"
+        ]
+      ]
+    }
+  }
+}

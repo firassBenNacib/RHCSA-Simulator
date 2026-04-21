@@ -1,0 +1,62 @@
+{
+  "id": "rhcsa10-lab-45-secure-copy",
+  "title": "RHCSA 10 Lab 45: Secure Copy",
+  "description": "Securely transfer files between systems",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /root/rhcsa10-transfer.txt containing TRANSFER10.",
+        "Copy the file to server:/root/rhcsa10-transfer.txt.",
+        "Verify the file exists on server."
+      ],
+      "hints": [
+        "Use scp or rsync over SSH.",
+        "Use the server hostname from /etc/hosts."
+      ],
+      "checks": [
+        "test -f /root/rhcsa10-transfer.txt",
+        "# server test \"$(cat /root/rhcsa10-transfer.txt)\" = TRANSFER10",
+        "# server test -f /root/rhcsa10-transfer.txt"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /root/rhcsa10-transfer.txt containing TRANSFER10",
+        "Copy the file to server:/root/rhcsa10-transfer.txt",
+        "Verify the file exists on server"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "echo TRANSFER10 > /root/rhcsa10-transfer.txt"
+        ],
+        [
+          "scp /root/rhcsa10-transfer.txt root@server:/root/rhcsa10-transfer.txt"
+        ],
+        [
+          "ssh root@server 'cat /root/rhcsa10-transfer.txt'"
+        ]
+      ]
+    }
+  }
+}
