@@ -3,7 +3,44 @@ set -euo pipefail
 
 BOOTSTRAP_REPO_FILE="/etc/yum.repos.d/rhcsa-bootstrap.repo"
 BOOTSTRAP_ISO_MOUNT="/mnt/rhcsa-bootstrap-iso"
+RHCSA_PROFILE="${RHCSA_PROFILE:-rhel9}"
 DNF_ARGS=()
+BASE_PACKAGES=(
+  openssh-server
+  openssh-clients
+  sudo
+  firewalld
+  policycoreutils-python-utils
+  chrony
+  cronie
+  at
+  tuned
+  vim-enhanced
+  bash-completion
+  rsync
+  curl
+  wget
+  tar
+  gzip
+  bzip2
+  xz
+  acl
+  attr
+  autofs
+  nfs-utils
+  httpd
+  httpd-tools
+  lvm2
+  xfsprogs
+  e2fsprogs
+  dosfstools
+)
+
+if [[ "$RHCSA_PROFILE" == "rhel10" ]]; then
+  PROFILE_PACKAGES=(flatpak)
+else
+  PROFILE_PACKAGES=(podman skopeo buildah)
+fi
 
 get_node_name() {
   hostnamectl --static 2>/dev/null || hostname -s
@@ -87,6 +124,41 @@ cleanup_bootstrap_repo() {
   rm -f "$BOOTSTRAP_REPO_FILE"
 }
 
+prepare_flatpak_repo() {
+  [[ "$RHCSA_PROFILE" == "rhel10" ]] || return 0
+  command -v flatpak >/dev/null 2>&1 || return 0
+
+  local repo="/opt/rhcsa/flatpak/repo"
+  local work="/opt/rhcsa/flatpak/build"
+  rm -rf "$work"
+  install -d -m 755 "$repo" "$work/runtime/files" "$work/app/files/bin"
+
+  cat > "$work/runtime/metadata" <<'EOF'
+[Runtime]
+name=org.rhcsa.Platform
+runtime=org.rhcsa.Platform/x86_64/stable
+sdk=org.rhcsa.Platform/x86_64/stable
+EOF
+
+  cat > "$work/app/metadata" <<'EOF'
+[Application]
+name=org.rhcsa.Tools
+runtime=org.rhcsa.Platform/x86_64/stable
+sdk=org.rhcsa.Platform/x86_64/stable
+command=rhcsa-tools
+EOF
+
+  cat > "$work/app/files/bin/rhcsa-tools" <<'EOF'
+#!/bin/sh
+printf 'RHCSA10 tools\n'
+EOF
+  chmod +x "$work/app/files/bin/rhcsa-tools"
+
+  flatpak build-export --arch=x86_64 "$repo" "$work/runtime" stable >/dev/null
+  flatpak build-export --arch=x86_64 "$repo" "$work/app" stable >/dev/null
+  flatpak build-update-repo "$repo" >/dev/null
+}
+
 configure_hosts
 if ! configure_bootstrap_repo; then
   node_name="$(get_node_name)"
@@ -99,38 +171,9 @@ if ! configure_bootstrap_repo; then
 fi
 
 dnf "${DNF_ARGS[@]}" makecache
-dnf "${DNF_ARGS[@]}" install -y \
-  openssh-server \
-  openssh-clients \
-  sudo \
-  firewalld \
-  policycoreutils-python-utils \
-  chrony \
-  cronie \
-  at \
-  tuned \
-  vim-enhanced \
-  bash-completion \
-  rsync \
-  curl \
-  wget \
-  tar \
-  gzip \
-  bzip2 \
-  xz \
-  acl \
-  attr \
-  autofs \
-  nfs-utils \
-  httpd \
-  httpd-tools \
-  lvm2 \
-  xfsprogs \
-  e2fsprogs \
-  dosfstools \
-  podman \
-  skopeo \
-  buildah
+dnf "${DNF_ARGS[@]}" install -y "${BASE_PACKAGES[@]}" "${PROFILE_PACKAGES[@]}"
+
+prepare_flatpak_repo
 
 cleanup_bootstrap_repo
 
@@ -415,4 +458,4 @@ rhcsa_configure_password_recovery() {
 EOF
 
 chmod 755 /usr/local/lib/rhcsa-scenario-helpers.sh
-printf 'rhcsa-v9-baseline-ready\n' > /etc/rhcsa/baseline-ready
+printf 'rhcsa-%s-baseline-ready\n' "$RHCSA_PROFILE" > /etc/rhcsa/baseline-ready

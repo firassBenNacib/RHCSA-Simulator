@@ -1,0 +1,52 @@
+name: Runtime Replay
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Scenario track to replay
+        required: true
+        default: rhcsa9
+        type: choice
+        options:
+          - rhcsa9
+          - rhcsa10
+      kind:
+        description: Scenario kind to replay
+        required: true
+        default: lab
+        type: choice
+        options:
+          - lab
+          - exam
+          - all
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    name: Replay ${{ inputs.track }} ${{ inputs.kind }}
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+    env:
+      RHCSA_PROFILE: ${{ inputs.track == 'rhcsa10' && 'rhel10' || 'rhel9' }}
+      RHCSA_TRACK: ${{ inputs.track }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show simulator status
+        shell: pwsh
+        run: .\RHCSA.ps1 status
+
+      - name: Prepare baseline
+        shell: pwsh
+        run: .\RHCSA.ps1 up
+
+      - name: Replay scenarios
+        shell: pwsh
+        run: python .\host\verify_scenario_solutions.py --kind ${{ inputs.kind }} --track ${{ inputs.track }}

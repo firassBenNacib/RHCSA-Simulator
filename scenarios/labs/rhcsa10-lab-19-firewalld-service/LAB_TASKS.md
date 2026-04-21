@@ -1,0 +1,36 @@
+# RHCSA 10 Lab 19: Firewalld Service
+
+## Lab Tasks
+## Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `rhcsa10-lab-19-firewalld-service` |
+| Mode | Lab |
+| Time limit | 20 minutes |
+| Objectives | networking-and-firewall, selinux-and-default-perms |
+
+Manage persistent firewalld service rules.
+
+### Systems
+- client
+
+## General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
+
+## Task 01 - Ensure firewalld is enabled and running (client) - 10 pts
+
+Ensure firewalld is enabled and running.
+
+---
+
+## Task 02 - Permanently allow the https service in the public zone (client) - 10 pts
+
+Permanently allow the https service in the public zone.
+
+---
+
+## Task 03 - Reload firewalld and verify the service is allowed (client) - 10 pts
+
+Reload firewalld and verify the service is allowed.

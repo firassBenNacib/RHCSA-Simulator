@@ -1,0 +1,62 @@
+{
+  "id": "rhcsa10-lab-10-find-copy",
+  "title": "RHCSA 10 Lab 10: Find And Copy",
+  "description": "Find files and preserve metadata",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /root/rhcsa10-found.",
+        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps.",
+        "Verify that at least one copied file exists."
+      ],
+      "hints": [
+        "Use find -size -1k.",
+        "Use cp -a or install -p to preserve metadata."
+      ],
+      "checks": [
+        "test -d /root/rhcsa10-found",
+        "find /root/rhcsa10-found -type f | grep -q .",
+        "find /etc/skel -type f -size -1k | wc -l | awk '{exit !($1 >= 1)}'"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /root/rhcsa10-found",
+        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found",
+        "Verify that at least one copied file exists"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "mkdir -p /root/rhcsa10-found"
+        ],
+        [
+          "find /etc/skel -type f -size -1k -exec cp -a {} /root/rhcsa10-found/ \\;"
+        ],
+        [
+          "find /root/rhcsa10-found -type f -ls"
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "rhcsa10-lab-13-links",
+  "title": "RHCSA 10 Lab 13: Hard And Soft Links",
+  "description": "Create hard and symbolic links",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /root/rhcsa10-original with the text link source.",
+        "Create hard link /root/rhcsa10-hard pointing to the original file.",
+        "Create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-original."
+      ],
+      "hints": [
+        "Hard links share an inode.",
+        "Symbolic links store a path."
+      ],
+      "checks": [
+        "test \"$(cat /root/rhcsa10-original)\" = 'link source'",
+        "test \"$(stat -c %i /root/rhcsa10-original)\" = \"$(stat -c %i /root/rhcsa10-hard)\"",
+        "test -L /root/rhcsa10-soft && test \"$(readlink /root/rhcsa10-soft)\" = '/root/rhcsa10-original'"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /root/rhcsa10-original with the text link source",
+        "Create hard link /root/rhcsa10-hard pointing to the original file",
+        "Create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-origin"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "echo 'link source' > /root/rhcsa10-original"
+        ],
+        [
+          "ln /root/rhcsa10-original /root/rhcsa10-hard"
+        ],
+        [
+          "ln -s /root/rhcsa10-original /root/rhcsa10-soft"
+        ]
+      ]
+    }
+  }
+}

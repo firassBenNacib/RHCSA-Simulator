@@ -136,8 +136,8 @@ Vagrant.configure("2") do |config|
       ]
     end
 
-    server.vm.provision "shell", path: "guest/common_setup.sh"
-    server.vm.provision "shell", path: "guest/server_setup.sh"
+    server.vm.provision "shell", path: "guest/common_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
+    server.vm.provision "shell", path: "guest/server_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
     if SERVER_SCENARIO_SCRIPT
       server.vm.provision "shell",
         path: SERVER_SCENARIO_SCRIPT,
@@ -181,8 +181,8 @@ Vagrant.configure("2") do |config|
       ]
     end
 
-    client.vm.provision "shell", path: "guest/common_setup.sh"
-    client.vm.provision "shell", path: "guest/client_setup.sh"
+    client.vm.provision "shell", path: "guest/common_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
+    client.vm.provision "shell", path: "guest/client_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
     if CLIENT_SCENARIO_SCRIPT
       client.vm.provision "shell",
         path: CLIENT_SCENARIO_SCRIPT,
