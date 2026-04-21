@@ -33,6 +33,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Go test
+        shell: bash
         run: go test -coverprofile=coverage.out ./...
 
       - name: Upload Go coverage
@@ -42,6 +43,7 @@ jobs:
           path: coverage.out
 
       - name: Go vet
+        shell: bash
         run: go vet ./...
 
       - name: Go lint
@@ -52,6 +54,7 @@ jobs:
           args: --timeout=5m
 
       - name: Build TUI
+        shell: bash
         run: go build ./cmd/rhcsa-tui
 
       - name: Set up Python
