@@ -46,11 +46,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func isMousePress(msg tea.MouseMsg) bool {
-	return msg.Type == tea.MouseLeft && msg.Action != tea.MouseActionRelease
+	return msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress
 }
 
 func isRightClick(msg tea.MouseMsg) bool {
-	return msg.Type == tea.MouseRight && msg.Action != tea.MouseActionRelease
+	return msg.Button == tea.MouseButtonRight && msg.Action == tea.MouseActionPress
 }
 
 func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
@@ -85,12 +85,12 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	switch msg.Type {
-	case tea.MouseMotion:
+	switch {
+	case msg.Action == tea.MouseActionMotion:
 		return m, nil
-	case tea.MouseRelease:
+	case msg.Action == tea.MouseActionRelease:
 		return m, nil
-	case tea.MouseWheelUp:
+	case msg.Button == tea.MouseButtonWheelUp:
 		if m.mouseInDetailPane(mouseX, mouseY) {
 			m.focus = focusDetail
 			m.setCurrentDetailOffset(m.currentDetailOffset() - 3)
@@ -101,7 +101,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			m.moveSelection(-1)
 			return m, nil
 		}
-	case tea.MouseWheelDown:
+	case msg.Button == tea.MouseButtonWheelDown:
 		if m.mouseInDetailPane(mouseX, mouseY) {
 			m.focus = focusDetail
 			m.setCurrentDetailOffset(m.currentDetailOffset() + 3)
@@ -112,10 +112,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			m.moveSelection(1)
 			return m, nil
 		}
-	case tea.MouseLeft:
-		if msg.Action == tea.MouseActionRelease {
-			return m, nil
-		}
+	case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
 		if labsStart, labsEnd, examsStart, examsEnd, y := m.catalogTabBounds(); mouseY == y {
 			switch {
 			case mouseX >= labsStart && mouseX <= labsEnd:
@@ -358,23 +355,6 @@ func (m *model) selectListRowAt(y int) {
 	m.resetDetailOffsets()
 }
 
-func (m model) copyCurrentDetail() model {
-	if !m.canCopyDetail() {
-		m.statusText = "Copy is available for checks and solutions only"
-		return m
-	}
-	if err := clipboardCopy(m.copyableDetailBody()); err != nil {
-		m.statusText = "Clipboard copy failed\n" + err.Error()
-		return m
-	}
-	if m.detail == detailCheck {
-		m.statusText = "Copied checks to clipboard"
-	} else {
-		m.statusText = "Copied solutions to clipboard"
-	}
-	return m
-}
-
 func (m model) copyDetailSection(index int) model {
 	sections := m.copyableSections()
 	if index < 0 || index >= len(sections) {
@@ -387,13 +367,6 @@ func (m model) copyDetailSection(index int) model {
 	}
 	m.statusText = fmt.Sprintf("Copied %s", sections[index].title)
 	return m
-}
-
-func (m model) itemCount() int {
-	if m.activeTab == labsTab {
-		return len(m.filteredLabs())
-	}
-	return len(m.filteredExams())
 }
 
 func (m model) handleActionResult(msg actionResultMsg) (tea.Model, tea.Cmd) {

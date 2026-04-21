@@ -9,21 +9,51 @@ $ErrorActionPreference = 'Stop'
 
 function Write-InstallLine {
     param([string]$Message)
-    Write-Host "[RHCSA] $Message"
+    Write-Information "[RHCSA] $Message" -InformationAction Continue
 }
 
 function Get-WindowsTuiAsset {
     param([object]$Release)
 
-    $asset = $Release.assets |
+    $rawAsset = $Release.assets |
         Where-Object { $_.name -match '^rhcsa-tui-windows-amd64\.exe$' } |
         Select-Object -First 1
 
-    if (-not $asset) {
-        throw "Release '$($Release.tag_name)' does not include rhcsa-tui-windows-amd64.exe."
+    if ($rawAsset) {
+        return [pscustomobject]@{
+            Asset = $rawAsset
+            Kind = 'exe'
+        }
     }
 
-    return $asset
+    $zipAsset = $Release.assets |
+        Where-Object { $_.name -match '^rhcsa-tui_.*_windows_amd64\.zip$' } |
+        Select-Object -First 1
+
+    if ($zipAsset) {
+        return [pscustomobject]@{
+            Asset = $zipAsset
+            Kind = 'zip'
+        }
+    }
+
+    throw "Release '$($Release.tag_name)' does not include a Windows AMD64 TUI asset."
+}
+
+function Save-ReleaseAsset {
+    param(
+        [object]$Asset,
+        [string]$Destination,
+        [hashtable]$Headers
+    )
+
+    $downloadUri = $Asset.browser_download_url
+    $downloadHeaders = $Headers.Clone()
+    if ($env:GITHUB_TOKEN -and $Asset.url) {
+        $downloadUri = $Asset.url
+        $downloadHeaders['Accept'] = 'application/octet-stream'
+    }
+    Invoke-WebRequest -Uri $downloadUri -OutFile $Destination -Headers $downloadHeaders
 }
 
 $projectPath = [System.IO.Path]::GetFullPath($ProjectRoot)
@@ -47,17 +77,28 @@ try {
 catch {
     throw "Cannot read the latest GitHub Release for $Repo. Make sure the repository and release are public, or set GITHUB_TOKEN when installing from a private repository."
 }
-$asset = Get-WindowsTuiAsset -Release $release
+$assetInfo = Get-WindowsTuiAsset -Release $release
+$asset = $assetInfo.Asset
 
 $destination = Join-Path $buildPath 'rhcsa-tui.exe'
 Write-InstallLine "Downloading $($asset.name) from $($release.tag_name)"
-$downloadUri = $asset.browser_download_url
-$downloadHeaders = $headers.Clone()
-if ($env:GITHUB_TOKEN -and $asset.url) {
-    $downloadUri = $asset.url
-    $downloadHeaders['Accept'] = 'application/octet-stream'
+
+if ($assetInfo.Kind -eq 'zip') {
+    $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rhcsa-tui-" + [System.Guid]::NewGuid().ToString("N"))
+    $zipPath = Join-Path $tempRoot $asset.name
+    New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
+    Save-ReleaseAsset -Asset $asset -Destination $zipPath -Headers $headers
+    Expand-Archive -Path $zipPath -DestinationPath $tempRoot -Force
+    $binary = Get-ChildItem -Path $tempRoot -Recurse -Filter 'rhcsa-tui.exe' | Select-Object -First 1
+    if (-not $binary) {
+        throw "The release archive '$($asset.name)' did not contain rhcsa-tui.exe."
+    }
+    Copy-Item -Path $binary.FullName -Destination $destination -Force
+    Remove-Item -Path $tempRoot -Recurse -Force
 }
-Invoke-WebRequest -Uri $downloadUri -OutFile $destination -Headers $downloadHeaders
+else {
+    Save-ReleaseAsset -Asset $asset -Destination $destination -Headers $headers
+}
 
 $launcher = Join-Path $projectPath 'rhcsa-tui.cmd'
 if (-not (Test-Path $launcher -PathType Leaf)) {

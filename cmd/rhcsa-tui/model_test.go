@@ -234,19 +234,19 @@ func TestMouseClickSwitchesCatalogTabs(t *testing.T) {
 		t.Fatal("expected valid tab bounds")
 	}
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: examsStart, Y: renderedMouseY(y), Type: tea.MouseLeft})
+	got, _ := m.handleMouse(leftPress(examsStart, renderedMouseY(y)))
 	updated := got.(model)
 	if updated.activeTab != examsTab {
 		t.Fatalf("expected exams tab after mouse click, got %v", updated.activeTab)
 	}
 
-	got, _ = updated.handleMouse(tea.MouseMsg{X: labsStart, Y: renderedMouseY(y), Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(leftPress(labsStart, renderedMouseY(y)))
 	updated = got.(model)
 	if updated.activeTab != labsTab {
 		t.Fatalf("expected labs tab after mouse click, got %v", updated.activeTab)
 	}
 
-	got, _ = updated.handleMouse(tea.MouseMsg{X: examsStart, Y: renderedMouseY(y + 1), Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(leftPress(examsStart, renderedMouseY(y+1)))
 	updated = got.(model)
 	if updated.activeTab != labsTab {
 		t.Fatalf("expected click below tab row to leave active tab unchanged, got %v", updated.activeTab)
@@ -264,7 +264,7 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 	_, y := m.detailPaneOrigin()
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: renderedMouseY(y), Type: tea.MouseLeft})
+	got, _ := m.handleMouse(leftPress(hintBounds[0], renderedMouseY(y)))
 	updated := got.(model)
 	if updated.detail != detailHint {
 		t.Fatalf("expected hint detail after mouse click, got %v", updated.detail)
@@ -274,7 +274,7 @@ func TestMouseClickSwitchesDetailTabs(t *testing.T) {
 	}
 
 	updated.detail = detailPrompt
-	got, _ = updated.handleMouse(tea.MouseMsg{X: hintBounds[0], Y: renderedMouseY(y + 1), Type: tea.MouseLeft})
+	got, _ = updated.handleMouse(leftPress(hintBounds[0], renderedMouseY(y+1)))
 	updated = got.(model)
 	if updated.detail != detailPrompt {
 		t.Fatalf("expected click below detail tab row to leave detail unchanged, got %v", updated.detail)
@@ -289,7 +289,7 @@ func TestMouseClickSelectsExpectedLabRow(t *testing.T) {
 	m.labs[1].ID = "lab-02-demo"
 	m.labs[1].Title = "Lab 02: Second Demo"
 
-	got, _ := m.handleMouse(tea.MouseMsg{X: 6, Y: renderedMouseY(5), Type: tea.MouseLeft})
+	got, _ := m.handleMouse(leftPress(6, renderedMouseY(5)))
 	updated := got.(model)
 	if updated.selectedLab != 1 {
 		t.Fatalf("expected second lab to be selected from row click, got %d", updated.selectedLab)
@@ -309,7 +309,7 @@ func footerBoundByID(t *testing.T, m model, id footerActionID) footerActionBound
 
 func clickFooterAction(m model, bound footerActionBound) (tea.Model, tea.Cmd) {
 	x := (bound.startX + bound.endX) / 2
-	return m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bound.y)})
+	return m.handleMouse(leftPress(x, renderedMouseY(bound.y)))
 }
 
 func visibleTextPoint(t *testing.T, m model, target string) (int, int) {
@@ -341,7 +341,7 @@ func visibleTextEndPoint(t *testing.T, m model, target string) (int, int) {
 }
 
 func clickVisibleText(m model, x, y int) (tea.Model, tea.Cmd) {
-	return m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: y})
+	return m.Update(leftPress(x, y))
 }
 
 type rawMouseHarness struct {
@@ -721,12 +721,32 @@ func captureClipboardCopy(t *testing.T) *string {
 
 func clickCopyBound(m model, bound sectionCopyBound) model {
 	x := (bound.startX + bound.endX) / 2
-	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bound.y)})
+	result, _ := m.handleMouse(leftPress(x, renderedMouseY(bound.y)))
 	return result.(model)
 }
 
 func renderedMouseY(renderedY int) int {
 	return renderedY
+}
+
+func leftPress(x, y int) tea.MouseMsg {
+	return tea.MouseMsg{Button: tea.MouseButtonLeft, Action: tea.MouseActionPress, X: x, Y: y}
+}
+
+func leftRelease(x, y int) tea.MouseMsg {
+	return tea.MouseMsg{Button: tea.MouseButtonLeft, Action: tea.MouseActionRelease, X: x, Y: y}
+}
+
+func rightPress(x, y int) tea.MouseMsg {
+	return tea.MouseMsg{Button: tea.MouseButtonRight, Action: tea.MouseActionPress, X: x, Y: y}
+}
+
+func mouseMotion(x, y int) tea.MouseMsg {
+	return tea.MouseMsg{Action: tea.MouseActionMotion, X: x, Y: y}
+}
+
+func mouseRelease(x, y int) tea.MouseMsg {
+	return tea.MouseMsg{Action: tea.MouseActionRelease, X: x, Y: y}
 }
 
 func TestCheckCopyClickCopiesCommandBodyOnly(t *testing.T) {
@@ -987,7 +1007,7 @@ func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 	}
 	x := (bounds[0].startX + bounds[0].endX) / 2
 
-	result, _ := m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bounds[0].y - 1)})
+	result, _ := m.handleMouse(leftPress(x, renderedMouseY(bounds[0].y-1)))
 	if *copied != "" {
 		t.Fatalf("expected click above copy button not to copy, got %q", *copied)
 	}
@@ -995,7 +1015,7 @@ func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 		t.Fatalf("expected click above copy button not to report copy, got %q", result.(model).statusText)
 	}
 
-	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bounds[0].y)})
+	result, _ = m.handleMouse(leftPress(x, renderedMouseY(bounds[0].y)))
 	if *copied == "" {
 		t.Fatal("expected exact-row click to copy")
 	}
@@ -1004,7 +1024,7 @@ func TestCopyHitboxUsesExactVisibleRow(t *testing.T) {
 	}
 
 	*copied = ""
-	result, _ = m.handleMouse(tea.MouseMsg{Type: tea.MouseLeft, X: x, Y: renderedMouseY(bounds[0].y + 1)})
+	result, _ = m.handleMouse(leftPress(x, renderedMouseY(bounds[0].y+1)))
 	if *copied != "" {
 		t.Fatalf("expected click below copy button not to copy, got %q", *copied)
 	}
@@ -1128,7 +1148,7 @@ func TestMouseReleaseEventIgnored(t *testing.T) {
 	bound := footerBoundByID(t, m, footerActionPane)
 	x := (bound.startX + bound.endX) / 2
 
-	releaseMsg := tea.MouseMsg{Type: tea.MouseLeft, Action: tea.MouseActionRelease, X: x, Y: renderedMouseY(bound.y)}
+	releaseMsg := leftRelease(x, renderedMouseY(bound.y))
 	next, _ := m.handleMouse(releaseMsg)
 	updated := next.(model)
 	if updated.focus != m.focus {
@@ -1153,16 +1173,16 @@ func TestNavigationUpdateDoesNotForceClearScreen(t *testing.T) {
 
 func TestNoisyMouseEventsAreFilteredBeforeRender(t *testing.T) {
 	for _, msg := range []tea.MouseMsg{
-		{Type: tea.MouseMotion, X: 10, Y: 10},
-		{Type: tea.MouseRelease, X: 10, Y: 10},
-		{Type: tea.MouseLeft, Action: tea.MouseActionRelease, X: 10, Y: 10},
+		mouseMotion(10, 10),
+		mouseRelease(10, 10),
+		leftRelease(10, 10),
 	} {
 		if got := filterNoisyMouseEvents(nil, msg); got != nil {
 			t.Fatalf("expected noisy mouse event %#v to be filtered, got %#v", msg, got)
 		}
 	}
 
-	click := tea.MouseMsg{Type: tea.MouseLeft, Action: tea.MouseActionPress, X: 10, Y: 10}
+	click := leftPress(10, 10)
 	if got := filterNoisyMouseEvents(nil, click); got == nil {
 		t.Fatal("expected mouse press to pass through the event filter")
 	}
@@ -1210,7 +1230,7 @@ func TestHelpCloseButtonDismisses(t *testing.T) {
 	}
 
 	clickX := (sx + ex) / 2
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: clickX, Y: y})
+	next, _ := m.Update(leftPress(clickX, y))
 	updated := next.(model)
 	if updated.showHelp {
 		t.Fatalf("expected clicking X to dismiss help, but showHelp still true")
@@ -1250,7 +1270,7 @@ func TestHelpCloseButtonMissDoesNotDismiss(t *testing.T) {
 	m.height = 35
 	m.showHelp = true
 
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseLeft, X: 0, Y: 0})
+	next, _ := m.Update(leftPress(0, 0))
 	updated := next.(model)
 	if !updated.showHelp {
 		t.Fatal("expected clicking outside X to keep help open")
@@ -1263,7 +1283,7 @@ func TestRightClickDismissingHelp(t *testing.T) {
 	m.height = 35
 	m.showHelp = true
 
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	next, _ := m.Update(rightPress(10, 10))
 	updated := next.(model)
 	if updated.showHelp {
 		t.Fatal("expected right-click to dismiss help overlay")
@@ -1277,7 +1297,7 @@ func TestRightClickDismissesConfirm(t *testing.T) {
 	m.confirmKind = "start"
 	m.confirmText = "Start lab?"
 
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	next, _ := m.Update(rightPress(10, 10))
 	updated := next.(model)
 	if updated.confirmKind != "" {
 		t.Fatal("expected right-click to dismiss confirm dialog")
@@ -1294,7 +1314,7 @@ func TestRightClickDismissesFilter(t *testing.T) {
 	m.filterMode = true
 	m.filterQuery = "net"
 
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	next, _ := m.Update(rightPress(10, 10))
 	updated := next.(model)
 	if !updated.filterMode {
 		t.Fatal("expected first right-click to keep filter mode open (just clears query)")
@@ -1303,7 +1323,7 @@ func TestRightClickDismissesFilter(t *testing.T) {
 		t.Fatalf("expected first right-click to clear filter query, got %q", updated.filterQuery)
 	}
 
-	next, _ = updated.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	next, _ = updated.Update(rightPress(10, 10))
 	updated = next.(model)
 	if updated.filterMode {
 		t.Fatal("expected second right-click to dismiss filter mode")
@@ -1316,7 +1336,7 @@ func TestRightClickReturnsToList(t *testing.T) {
 	m.height = 35
 	m.focus = focusDetail
 
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	next, _ := m.Update(rightPress(10, 10))
 	updated := next.(model)
 	if updated.focus != focusList {
 		t.Fatal("expected right-click in detail focus to return to list focus")
@@ -1329,7 +1349,7 @@ func TestRightClickClearsStatusOutput(t *testing.T) {
 	m.height = 35
 	m.statusText = "All checks passed"
 
-	next, _ := m.Update(tea.MouseMsg{Type: tea.MouseRight, X: 10, Y: 10})
+	next, _ := m.Update(rightPress(10, 10))
 	updated := next.(model)
 	if updated.statusText != "" {
 		t.Fatalf("expected right-click to clear status text, got %q", updated.statusText)

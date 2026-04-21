@@ -1,80 +1,81 @@
 name: Release TUI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build ${{ matrix.label }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            ext: ""
-            label: linux-amd64
-          - runner: windows-latest
-            goos: windows
-            goarch: amd64
-            ext: ".exe"
-            label: windows-amd64
-          - runner: macos-latest
-            goos: darwin
-            goarch: amd64
-            ext: ""
-            label: macos-amd64
-          - runner: macos-latest
-            goos: darwin
-            goarch: arm64
-            ext: ""
-            label: macos-arm64
+  release:
+    name: Build release artifacts
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.26.x"
+          go-version-file: go.mod
 
       - name: Run Go tests
         run: go test ./...
 
-      - name: Build TUI binary
+      - name: Validate GoReleaser config
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
+
+      - name: Build snapshot artifacts
+        if: github.event_name == 'workflow_dispatch'
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Smoke test Linux binary
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p dist
-          output="dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}"
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$output" ./cmd/rhcsa-tui
-          if command -v sha256sum >/dev/null 2>&1; then
-            (cd dist && sha256sum "$(basename "$output")" > "$(basename "$output").sha256")
-          else
-            shasum -a 256 "$output" | sed "s# dist/# #" > "$output.sha256"
-          fi
-          ls -lah dist
+          binary="$(find dist -path '*linux_amd64*/rhcsa-tui' -type f | head -n 1)"
+          test -n "$binary"
+          "$binary" --version
 
-      - name: Upload workflow artifact
+      - name: Upload snapshot artifacts
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
-          name: rhcsa-tui-${{ matrix.label }}
-          path: |
-            dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}
-            dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}.sha256
+          name: rhcsa-tui-snapshot
+          path: dist/**
 
-      - name: Attach binary to GitHub release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v3
+      - name: Publish tagged release
+        if: github.event_name == 'push'
+        uses: goreleaser/goreleaser-action@v7
         with:
-          files: |
-            dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}
-            dist/rhcsa-tui-${{ matrix.label }}${{ matrix.ext }}.sha256
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Smoke test published Linux binary
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          binary="$(find dist -path '*linux_amd64*/rhcsa-tui' -type f | head -n 1)"
+          test -n "$binary"
+          "$binary" --version
