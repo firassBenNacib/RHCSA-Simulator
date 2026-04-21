@@ -30,20 +30,48 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.26.x"
+          go-version-file: go.mod
 
       - name: Go test
-        run: go test ./...
+        shell: bash
+        run: go test -coverprofile=coverage.out ./...
+
+      - name: Upload Go coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage-${{ matrix.os }}
+          path: coverage.out
 
       - name: Go vet
+        shell: bash
         run: go vet ./...
 
+      - name: Go lint
+        if: matrix.os == 'ubuntu-latest'
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          args: --timeout=5m
+
       - name: Build TUI
+        shell: bash
         run: go build ./cmd/rhcsa-tui
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dev dependencies
+        run: python -m pip install -r requirements-dev.txt
 
       - name: Python syntax
         shell: bash
         run: python -m py_compile host/*.py tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
+
+      - name: Python unit tests
+        shell: bash
+        run: python -m unittest discover tools/scenarios/tests
 
       - name: Scenario audit
         shell: bash
@@ -57,12 +85,28 @@ jobs:
         shell: pwsh
         run: |
           $errors = $null
-          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1')) {
+          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1', 'install.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null
             if ($errors) {
               $errors | Format-List | Out-String | Write-Error
               exit 1
             }
+          }
+
+      - name: PowerShell ScriptAnalyzer
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable -Name PSScriptAnalyzer)) {
+            Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+          }
+          $issues = @()
+          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1', 'install.ps1')) {
+            $issues += Invoke-ScriptAnalyzer -Path $file -Severity Error, Warning
+          }
+          if ($issues.Count -gt 0) {
+            $issues | Format-Table -AutoSize | Out-String | Write-Error
+            exit 1
           }
 
       - name: Vagrantfile syntax

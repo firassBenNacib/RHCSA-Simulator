@@ -22,9 +22,9 @@ Thumbs.db
 __pycache__/
 *.pyc
 
-# Local archives
-*.zip
+# Local images and release output
 *.iso
+dist/
 
 # Go / TUI build output
 .build/

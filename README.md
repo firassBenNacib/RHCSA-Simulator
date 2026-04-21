@@ -21,7 +21,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
 * `rhel-10.1-x86_64-dvd.iso` if you use the RHCSA 10 profile
-* [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source. Go 1.26 is recommended for release builds.
+* [Go 1.26+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
 
 ## Installation
 
@@ -32,7 +32,7 @@ git clone https://github.com/firassBenNacib/rhcsa_exam_vms.git
 cd rhcsa_exam_vms
 ```
 
-Install or refresh the prebuilt TUI binary from the latest GitHub Release:
+Install or refresh the prebuilt TUI binary from the latest GitHub Release. The installer downloads the Windows TUI archive, extracts `rhcsa-tui.exe` into `.build/`, and keeps the source tree clean:
 
 ```powershell
 irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/install.ps1 -OutFile install.ps1
@@ -139,7 +139,7 @@ The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or s
 
 **Release binaries**
 
-GitHub Releases publish prebuilt Windows, Linux, and macOS TUI binaries. Binaries are not committed to git; source lives under `cmd/rhcsa-tui`, shared packages live under `internal`, and generated binaries stay under `.build/` or local files ignored by git.
+GitHub Releases publish prebuilt Windows, Linux, and macOS TUI binaries with checksums through GoReleaser. Binaries are not committed to git; source lives under `cmd/rhcsa-tui`, shared packages live under `internal`, and generated binaries stay under `.build/` or local files ignored by git.
 
 **Keyboard summary**
 
@@ -217,10 +217,14 @@ go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 
 The repository includes:
 
-* `.github/workflows/ci.yml` for source checks, Go tests/vet/build, Python syntax, scenario audits, PowerShell parsing, and Vagrantfile syntax.
-* `.github/workflows/release-tui.yml` for Windows, Linux, and macOS TUI release binaries.
+* `.github/workflows/ci.yml` for Go tests/vet/staticcheck/build, Go coverage artifacts, Python syntax and unit tests, scenario audits, PowerShell parsing, PSScriptAnalyzer, Vagrantfile syntax, and whitespace checks.
+* `.github/workflows/security.yml` for Go vulnerability scans and dependency review on pull requests.
+* `.github/workflows/release-please.yml` for automated release PRs and semantic version tags from `main`.
+* `.github/workflows/release-tui.yml` for GoReleaser-built Windows, Linux, and macOS TUI archives with checksums and generated changelogs.
 * `.github/workflows/runtime-replay.yml` for manual self-hosted Windows replay against a local VirtualBox/RHEL ISO environment.
-* `.github/dependabot.yml` for weekly Go module and GitHub Actions update PRs.
+* `.github/dependabot.yml` for weekly Go module, Python dependency, and GitHub Actions update PRs.
+* `.goreleaser.yml` for release packaging.
+* `Makefile` for repeatable local checks on Linux/macOS/WSL.
 
 ### Platform profiles
 
@@ -316,7 +320,23 @@ Commands
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure and refactor direction, and [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure, AustinNicely comparison notes, and refactor direction. See [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage and [docs/release.md](docs/release.md) for release automation.
+
+Fast local checks:
+
+```bash
+make test
+```
+
+Windows PowerShell equivalents:
+
+```powershell
+go test ./...
+go vet ./...
+go build ./cmd/rhcsa-tui
+python -m unittest discover tools/scenarios/tests
+python host/verify_scenario_solutions.py --kind all --track all --audit-only
+```
 
 Keep these compatibility entrypoints working:
 

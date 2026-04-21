@@ -23,7 +23,22 @@ type State struct {
 }
 
 func Load(path string) (*State, error) {
-	raw, err := os.ReadFile(path)
+	dir, name := splitProgressPath(path)
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &State{
+				Labs:  map[string]*LabProgress{},
+				Exams: map[string]*ExamProgress{},
+			}, nil
+		}
+		return nil, err
+	}
+	defer func() {
+		_ = root.Close()
+	}()
+
+	raw, err := root.ReadFile(name)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &State{
@@ -57,16 +72,32 @@ func (s *State) Save(path string) error {
 		s.Exams = map[string]*ExamProgress{}
 	}
 
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	dir, name := splitProgressPath(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = root.Close()
+	}()
 
 	payload, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, append(payload, '\n'), 0o644)
+	return root.WriteFile(name, append(payload, '\n'), 0o600)
+}
+
+func splitProgressPath(path string) (string, string) {
+	dir := filepath.Dir(path)
+	if dir == "" {
+		dir = "."
+	}
+	return dir, filepath.Base(path)
 }
 
 func (s *State) Marker(id string) string {

@@ -13,10 +13,18 @@ import (
 	"rhcsa_exam_vms/internal/progress"
 )
 
+var version = "dev"
+
 func main() {
 	projectRoot := flag.String("project-root", "", "path to the RHCSA simulator repository")
 	track := flag.String("track", defaultTrack(), "scenario track to show: rhcsa9, rhcsa10, or all")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("rhcsa-tui %s\n", version)
+		return
+	}
 
 	root, err := findProjectRoot(*projectRoot)
 	if err != nil {
@@ -71,7 +79,7 @@ func filterNoisyMouseEvents(_ tea.Model, msg tea.Msg) tea.Msg {
 	if !ok {
 		return msg
 	}
-	if mouse.Type == tea.MouseMotion || mouse.Type == tea.MouseRelease || mouse.Action == tea.MouseActionRelease {
+	if mouse.Action == tea.MouseActionMotion || mouse.Action == tea.MouseActionRelease {
 		return nil
 	}
 	return msg
@@ -111,8 +119,13 @@ func findProjectRoot(configured string) (string, error) {
 func searchForProjectRoot(start string) (string, bool) {
 	dir := start
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "RHCSA.ps1")); err == nil {
-			return dir, true
+		root, err := os.OpenRoot(dir)
+		if err == nil {
+			_, statErr := root.Stat("RHCSA.ps1")
+			_ = root.Close()
+			if statErr == nil {
+				return dir, true
+			}
 		}
 
 		parent := filepath.Dir(dir)

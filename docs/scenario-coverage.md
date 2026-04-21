@@ -32,3 +32,7 @@ The RHCSA 10 track is separate and covers the RHEL 10-specific additions without
 - Do not duplicate PDF exam text. Rewrite tasks as original simulator scenarios with checks and solutions.
 - Add runtime scripts only when the baseline needs prepared files, users, repositories, or local services.
 - Regenerate scenario Markdown after editing `scenario.json`.
+
+## Current Gaps To Validate At Runtime
+
+Audit-only validation proves the scenario metadata, generated Markdown, and replay commands are structurally sound. It does not prove that a Rocky/RHEL 10 VM baseline has all required packages, Flatpak remotes, storage devices, and SELinux state for full replay. Do not advertise RHCSA 10 as runtime-complete until the self-hosted `runtime-replay` workflow passes with a RHEL 10-compatible ISO and x86-64-v3-capable host.
