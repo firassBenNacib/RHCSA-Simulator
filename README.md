@@ -1,6 +1,6 @@
 # RHCSA Simulator
 
-An interactive PowerShell project for running RHCSA practice labs and mock exams with Vagrant, VirtualBox, SSH helpers, checks, and a terminal UI. The validated scenario set targets RHCSA 9 on RHEL 9; a RHEL 10 platform profile is available as preview infrastructure for future RHCSA 10 content.
+An interactive PowerShell project for running RHCSA practice labs and mock exams with Vagrant, VirtualBox, SSH helpers, checks, and a terminal UI. The catalog contains separate RHCSA 9 and RHCSA 10 tracks so users can train against the right objective set without mixing Podman-era RHCSA 9 tasks with Flatpak and systemd timer RHCSA 10 tasks.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
-* `rhel-10.1-x86_64-dvd.iso` only if you opt into the preview RHEL 10 profile
+* `rhel-10.1-x86_64-dvd.iso` if you use the RHCSA 10 profile
 * [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source. Go 1.26 is recommended for release builds.
 
 ## Installation
@@ -135,7 +135,7 @@ The TUI finds `RHCSA.ps1` from:
 * the current working directory
 * the directory that contains the TUI binary
 
-The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or set `RHCSA_TRACK=rhcsa10` to preview RHCSA 10 content after a RHEL 10-compatible baseline is available. RHCSA 9 and RHCSA 10 catalogs are filtered separately, so RHCSA 9 Podman/container labs are not shown in RHCSA 10 mode.
+The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or set `RHCSA_TRACK=rhcsa10` for the RHCSA 10 catalog. RHCSA 9 and RHCSA 10 catalogs are filtered separately, so RHCSA 9 Podman/container labs are not shown in RHCSA 10 mode and RHCSA 10 Flatpak/systemd timer labs are not shown in RHCSA 9 mode.
 
 **Release binaries**
 
@@ -219,6 +219,7 @@ The repository includes:
 
 * `.github/workflows/ci.yml` for source checks, Go tests/vet/build, Python syntax, scenario audits, PowerShell parsing, and Vagrantfile syntax.
 * `.github/workflows/release-tui.yml` for Windows, Linux, and macOS TUI release binaries.
+* `.github/workflows/runtime-replay.yml` for manual self-hosted Windows replay against a local VirtualBox/RHEL ISO environment.
 * `.github/dependabot.yml` for weekly Go module and GitHub Actions update PRs.
 
 ### Platform profiles
@@ -231,7 +232,7 @@ $env:RHCSA_ISO = 'rhel-9.7-x86_64-dvd.iso'
 $env:RHCSA_BOX = 'generic/rocky9'
 ```
 
-The preview RHEL 10 profile uses RHEL 10.1 ISO naming and the official Rocky Linux 10 Vagrant box by default:
+The RHEL 10 profile uses RHEL 10.1 ISO naming and the official Rocky Linux 10 Vagrant box by default:
 
 ```powershell
 $env:RHCSA_PROFILE = 'rhel10'
@@ -240,7 +241,7 @@ $env:RHCSA_BOX = 'rockylinux/10'
 .\RHCSA.ps1 up
 ```
 
-RHEL 10 support is intentionally marked preview until the full lab/exam replay suite is validated on a RHEL 10 baseline. The first RHCSA 10 preview labs cover Flatpak remote setup and systemd timer units; broader RHCSA 10 exams should be added only after the RHEL 10 baseline is runtime-verified.
+The RHCSA 10 content track contains 48 labs and 8 mock exams. It is audit-validated in CI; full VM replay requires a local RHEL 10-compatible baseline with the required ISO and VirtualBox provider.
 
 The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for the track plan.
 

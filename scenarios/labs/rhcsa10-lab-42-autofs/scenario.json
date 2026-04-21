@@ -1,0 +1,65 @@
+{
+  "id": "rhcsa10-lab-42-autofs",
+  "title": "RHCSA 10 Lab 42: Autofs",
+  "description": "Configure automount for NFS exports",
+  "objective_tags": [
+    "filesystems-and-autofs"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 35,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Install autofs if needed.",
+        "Configure /remote10/projects to automount server:/exports/autofs/projects.",
+        "Enable and start autofs."
+      ],
+      "hints": [
+        "Use a direct map or an indirect map.",
+        "Access the path once to trigger mounting."
+      ],
+      "checks": [
+        "rpm -q autofs >/dev/null",
+        "grep -Eq '^/remote10[[:space:]]+/etc/auto.remote10' /etc/auto.master.d/rhcsa10.autofs",
+        "systemctl is-enabled autofs | grep -qx enabled && systemctl is-active autofs | grep -qx active"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Install autofs if needed",
+        "Configure /remote10/projects to automount server:/exports/autofs/project",
+        "Enable and start autofs"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "dnf install -y autofs"
+        ],
+        [
+          "mkdir -p /remote10",
+          "echo '/remote10 /etc/auto.remote10' > /etc/auto.master.d/rhcsa10.autofs",
+          "echo 'projects -ro server:/exports/autofs/projects' > /etc/auto.remote10"
+        ],
+        [
+          "systemctl enable --now autofs",
+          "ls /remote10/projects || true"
+        ]
+      ]
+    }
+  }
+}

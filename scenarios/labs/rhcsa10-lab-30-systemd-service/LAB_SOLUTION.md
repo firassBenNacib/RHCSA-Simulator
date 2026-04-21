@@ -1,0 +1,57 @@
+# RHCSA 10 Lab 30: Custom Service
+
+## Lab Solution
+## Overview
+| Field | Value |
+|---|---|
+| Scenario ID | `rhcsa10-lab-30-systemd-service` |
+| Mode | Lab |
+| Time limit | 25 minutes |
+| Objectives | software-scheduling-time |
+
+Create and enable a custom systemd service.
+
+### Systems
+- client
+
+## General Instructions
+1. Unless a task states otherwise, make all changes persistent across reboots.
+2. Use only persistent configuration methods.
+3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
+
+## Task 01 - Create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to /var/ (client) - 10 pts
+
+```bash
+cat > /usr/local/sbin/rhcsa10-service.sh <<'EOF'
+#!/bin/bash
+echo SERVICE10 > /var/tmp/rhcsa10-service.out
+EOF
+chmod +x /usr/local/sbin/rhcsa10-service.sh
+```
+
+---
+
+## Task 02 - Create a oneshot service named rhcsa10-service.service that runs the scr (client) - 10 pts
+
+```bash
+cat > /etc/systemd/system/rhcsa10-service.service <<'EOF'
+[Unit]
+Description=RHCSA10 oneshot service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rhcsa10-service.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+---
+
+## Task 03 - Enable and start the service (client) - 10 pts
+
+```bash
+systemctl daemon-reload
+systemctl enable --now rhcsa10-service.service
+```

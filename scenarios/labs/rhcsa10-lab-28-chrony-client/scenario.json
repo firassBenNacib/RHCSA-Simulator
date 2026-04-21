@@ -1,0 +1,65 @@
+{
+  "id": "rhcsa10-lab-28-chrony-client",
+  "title": "RHCSA 10 Lab 28: Chrony Client",
+  "description": "Configure time synchronization",
+  "objective_tags": [
+    "software-scheduling-time",
+    "processes-logs-tuning"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Install chrony if needed.",
+        "Configure server as the only NTP source.",
+        "Enable and start chronyd."
+      ],
+      "hints": [
+        "Use /etc/chrony.conf.",
+        "Use server server iburst."
+      ],
+      "checks": [
+        "rpm -q chrony >/dev/null",
+        "grep -Eq '^server server iburst$' /etc/chrony.conf",
+        "systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Install chrony if needed",
+        "Configure server as the only NTP source",
+        "Enable and start chronyd"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "dnf install -y chrony"
+        ],
+        [
+          "sed -i '/^pool /d;/^server /d' /etc/chrony.conf",
+          "echo 'server server iburst' >> /etc/chrony.conf"
+        ],
+        [
+          "systemctl enable --now chronyd",
+          "chronyc sources || true"
+        ]
+      ]
+    }
+  }
+}

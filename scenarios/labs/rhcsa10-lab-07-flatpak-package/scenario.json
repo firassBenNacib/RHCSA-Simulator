@@ -1,0 +1,63 @@
+{
+  "id": "rhcsa10-lab-07-flatpak-package",
+  "title": "RHCSA 10 Lab 07: Flatpak Package",
+  "description": "Install and remove Flatpak applications from a configured remote",
+  "objective_tags": [
+    "software-management"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/flatpak/repo.",
+        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation.",
+        "Remove org.rhcsa.Tools and verify that it is no longer installed."
+      ],
+      "hints": [
+        "Flatpak installs can be scoped with --system.",
+        "Use flatpak list --app to verify installed applications."
+      ],
+      "checks": [
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
+        "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools || test -f /root/org.rhcsa.Tools.removed",
+        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Ensure the system Flatpak remote rhcsa10 exists and points to file:///op",
+        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system ",
+        "Remove org.rhcsa.Tools and verify that it is no longer installed"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo"
+        ],
+        [
+          "flatpak install --system -y rhcsa10 org.rhcsa.Tools"
+        ],
+        [
+          "flatpak uninstall --system -y org.rhcsa.Tools",
+          "touch /root/org.rhcsa.Tools.removed"
+        ]
+      ]
+    }
+  }
+}

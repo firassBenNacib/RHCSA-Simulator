@@ -1,0 +1,64 @@
+{
+  "id": "rhcsa10-lab-40-vfat-filesystem",
+  "title": "RHCSA 10 Lab 40: VFAT Filesystem",
+  "description": "Create and mount a VFAT filesystem",
+  "objective_tags": [
+    "storage-lvm"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create a 256 MiB partition on /dev/sdb.",
+        "Format it as VFAT with label RHCSA10VFAT.",
+        "Mount it persistently at /mnt/vfat10."
+      ],
+      "hints": [
+        "Use mkfs.vfat -n.",
+        "Use vfat in /etc/fstab."
+      ],
+      "checks": [
+        "blkid /dev/sdb1 | grep -q 'TYPE=\"vfat\"'",
+        "blkid /dev/sdb1 | grep -q 'LABEL_FATBOOT=\"RHCSA10VFAT\"\\|LABEL=\"RHCSA10VFAT\"'",
+        "findmnt -no TARGET /mnt/vfat10 | grep -qx /mnt/vfat10"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create a 256 MiB partition on /dev/sdb",
+        "Format it as VFAT with label RHCSA10VFAT",
+        "Mount it persistently at /mnt/vfat10"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "parted -s /dev/sdb mklabel gpt mkpart primary fat32 1MiB 257MiB"
+        ],
+        [
+          "mkfs.vfat -n RHCSA10VFAT /dev/sdb1"
+        ],
+        [
+          "mkdir -p /mnt/vfat10",
+          "echo 'LABEL=RHCSA10VFAT /mnt/vfat10 vfat defaults 0 0' >> /etc/fstab",
+          "mount -a"
+        ]
+      ]
+    }
+  }
+}

@@ -13,6 +13,7 @@ SSHD_DROPIN_DIR="/etc/systemd/system/sshd.service.d"
 SSHD_DROPIN_FILE="${SSHD_DROPIN_DIR}/10-rhcsa-restore-vagrant.conf"
 
 LOG_FILE="/var/log/rhcsa-vagrant-restore.log"
+RHCSA_PROFILE="${RHCSA_PROFILE:-rhel9}"
 
 log() {
   local msg="$1"
@@ -244,6 +245,8 @@ EOF
 }
 
 preload_container_assets() {
+  [[ "$RHCSA_PROFILE" == "rhel9" ]] || return 0
+
   local asset_root="/opt/rhcsa/container-assets"
   local build_root="/var/tmp/rhcsa-httpd-rootfs"
   local rootfs_tar="${asset_root}/rhcsa-httpd-base-rootfs.tar"

@@ -28,6 +28,8 @@ Keep Go package tests beside package source. In Go, colocated `*_test.go` files 
 
 ## RHCSA 10 Track
 
-RHCSA 10 support should stay separate from RHCSA 9 until replay is validated on a RHEL 10-compatible baseline. The first RHCSA 10 preview labs cover Flatpak remote setup and systemd timers. Next additions should focus on RHEL 10 software-management changes and NetworkManager/Rocky 10 differences.
+RHCSA 10 support stays separate from RHCSA 9. The RHCSA 10 catalog now contains 48 labs and 8 mock exams generated from original scenario definitions, with Flatpak, systemd timers, RHEL 10 software management, NetworkManager, storage, SELinux, users, logging, and scheduling coverage.
+
+The content is audit-validated. Full runtime validation still depends on a local RHEL 10-compatible baseline because GitHub-hosted runners cannot run the VirtualBox/RHEL ISO environment used by the simulator.
 
 Do not copy tasks from exam dumps or proprietary PDFs. Use those materials only as a coverage-gap signal.

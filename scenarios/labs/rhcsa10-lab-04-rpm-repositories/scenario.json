@@ -1,0 +1,74 @@
+{
+  "id": "rhcsa10-lab-04-rpm-repositories",
+  "title": "RHCSA 10 Lab 04: RPM Repositories",
+  "description": "Configure BaseOS and AppStream repositories",
+  "objective_tags": [
+    "software-management"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 35,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Configure a persistent BaseOS repository using http://server/repo/BaseOS/.",
+        "Configure a persistent AppStream repository using http://server/repo/AppStream/.",
+        "Disable GPG checks and verify both repositories are enabled."
+      ],
+      "hints": [
+        "Use one file under /etc/yum.repos.d.",
+        "Use dnf repolist to verify both repositories."
+      ],
+      "checks": [
+        "grep -ERq '^\\[rhcsa10-baseos\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d",
+        "grep -ERq '^\\[rhcsa10-appstream\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "grep -ERq '^gpgcheck=0$' /etc/yum.repos.d && dnf repolist --enabled | grep -Eq 'rhcsa10-baseos|rhcsa10-appstream'"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Configure a persistent BaseOS repository using http://server/repo/BaseOS",
+        "Configure a persistent AppStream repository using http://server/repo/App",
+        "Disable GPG checks and verify both repositories are enabled"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cat > /etc/yum.repos.d/rhcsa10.repo <<'EOF'",
+          "[rhcsa10-baseos]",
+          "name=RHCSA10 BaseOS",
+          "baseurl=http://server/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[rhcsa10-appstream]",
+          "name=RHCSA10 AppStream",
+          "baseurl=http://server/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "EOF"
+        ],
+        [
+          "dnf clean all"
+        ],
+        [
+          "dnf repolist --enabled"
+        ]
+      ]
+    }
+  }
+}
