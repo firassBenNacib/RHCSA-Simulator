@@ -14,6 +14,8 @@ type Lab struct {
 	Title           string
 	Description     string
 	TimeLimitMinute int
+	Tracks          []string
+	RHELMajor       int
 	ObjectiveTags   []string
 	RequiresServer  bool
 	SourceManifest  string
@@ -28,6 +30,8 @@ type Exam struct {
 	Title           string
 	Description     string
 	TimeLimitMinute int
+	Tracks          []string
+	RHELMajor       int
 	ObjectiveTags   []string
 	RequiresServer  bool
 	PasswordRecover bool
@@ -43,7 +47,10 @@ type scenarioManifest struct {
 	ObjectiveTags    []string `json:"objective_tags"`
 	SupportedModes   []string `json:"supported_modes"`
 	TimeLimitMinutes int      `json:"time_limit_minutes"`
+	Tracks           []string `json:"tracks"`
+	RHELMajor        int      `json:"rhel_major"`
 	Flags            struct {
+		RequiresServer   bool `json:"requires_server"`
 		RequiresServervm bool `json:"requires_servervm"`
 		PasswordRecovery bool `json:"password_recovery"`
 	} `json:"flags"`
@@ -56,6 +63,10 @@ type scenarioManifest struct {
 }
 
 func Load(root string) ([]Lab, []Exam, error) {
+	return LoadTrack(root, "")
+}
+
+func LoadTrack(root, track string) ([]Lab, []Exam, error) {
 	manifests, err := findScenarioManifests(root)
 	if err != nil {
 		return nil, nil, err
@@ -67,6 +78,9 @@ func Load(root string) ([]Lab, []Exam, error) {
 		item, err := loadScenario(root, manifestPath)
 		if err != nil {
 			return nil, nil, err
+		}
+		if !scenarioMatchesTrack(item.tracks, track) {
+			continue
 		}
 		if item.lab != nil {
 			labs = append(labs, *item.lab)
@@ -95,8 +109,9 @@ func ReadRelative(root, relative string) string {
 }
 
 type scenarioLoadResult struct {
-	lab  *Lab
-	exam *Exam
+	lab    *Lab
+	exam   *Exam
+	tracks []string
 }
 
 func findScenarioManifests(root string) ([]string, error) {
@@ -148,6 +163,13 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 	}
 
 	result := scenarioLoadResult{}
+	tracks := normalizeTracks(manifest.Tracks)
+	rhelMajor := manifest.RHELMajor
+	if rhelMajor == 0 {
+		rhelMajor = 9
+	}
+	requiresServer := manifest.Flags.RequiresServer || manifest.Flags.RequiresServervm
+	result.tracks = tracks
 	modes := make(map[string]bool, len(manifest.SupportedModes))
 	for _, mode := range manifest.SupportedModes {
 		modes[strings.ToLower(strings.TrimSpace(mode))] = true
@@ -159,8 +181,10 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 			Title:           manifest.Title,
 			Description:     manifest.Description,
 			TimeLimitMinute: manifest.TimeLimitMinutes,
+			Tracks:          append([]string{}, tracks...),
+			RHELMajor:       rhelMajor,
 			ObjectiveTags:   append([]string{}, manifest.ObjectiveTags...),
-			RequiresServer:  manifest.Flags.RequiresServervm,
+			RequiresServer:  requiresServer,
 			SourceManifest:  relativeManifest,
 			TasksPath:       relativeTasks("LAB_TASKS.md"),
 			SolutionPath:    relativeTasks("LAB_SOLUTION.md"),
@@ -175,8 +199,10 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 			Title:           manifest.Title,
 			Description:     manifest.Description,
 			TimeLimitMinute: manifest.TimeLimitMinutes,
+			Tracks:          append([]string{}, tracks...),
+			RHELMajor:       rhelMajor,
 			ObjectiveTags:   append([]string{}, manifest.ObjectiveTags...),
-			RequiresServer:  manifest.Flags.RequiresServervm,
+			RequiresServer:  requiresServer,
 			PasswordRecover: manifest.Flags.PasswordRecovery,
 			SourceManifest:  relativeManifest,
 			TasksPath:       relativeTasks("EXAM_TASKS.md"),
@@ -185,6 +211,55 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 	}
 
 	return result, nil
+}
+
+func normalizeTracks(values []string) []string {
+	if len(values) == 0 {
+		return []string{"rhcsa9"}
+	}
+	seen := map[string]bool{}
+	tracks := make([]string, 0, len(values))
+	for _, value := range values {
+		track := normalizeTrack(value)
+		if track == "" || seen[track] {
+			continue
+		}
+		seen[track] = true
+		tracks = append(tracks, track)
+	}
+	if len(tracks) == 0 {
+		return []string{"rhcsa9"}
+	}
+	return tracks
+}
+
+func normalizeTrack(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	value = strings.ReplaceAll(value, "-", "")
+	value = strings.ReplaceAll(value, "_", "")
+	switch value {
+	case "", "all":
+		return ""
+	case "9", "rhel9", "rhcsa9", "ex2009":
+		return "rhcsa9"
+	case "10", "rhel10", "rhcsa10", "ex20010":
+		return "rhcsa10"
+	default:
+		return strings.ToLower(strings.TrimSpace(value))
+	}
+}
+
+func scenarioMatchesTrack(tracks []string, requested string) bool {
+	track := normalizeTrack(requested)
+	if track == "" {
+		return true
+	}
+	for _, candidate := range normalizeTracks(tracks) {
+		if candidate == track {
+			return true
+		}
+	}
+	return false
 }
 
 func renderHints(title string, hints []string) string {
@@ -208,7 +283,14 @@ func renderChecks(relativeManifest string, checks []string) string {
 		return strings.Join(lines, "\n")
 	}
 	for index, command := range checks {
-		lines = append(lines, fmt.Sprintf("# Check %02d", index+1), strings.TrimSpace(command), "")
+		trimmed := strings.TrimSpace(command)
+		target := "client"
+		effective := trimmed
+		if strings.HasPrefix(trimmed, "# server ") {
+			target = "server"
+			effective = strings.TrimPrefix(trimmed, "# server ")
+		}
+		lines = append(lines, fmt.Sprintf("# Check %02d [%s]", index+1, target), effective, "")
 	}
 	return strings.TrimRight(strings.Join(lines, "\n"), "\n")
 }

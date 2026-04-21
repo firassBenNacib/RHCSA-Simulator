@@ -1,7 +1,7 @@
 {
   "id": "lab-08-autofs-nfs",
   "title": "Lab 08: Autofs With NFS",
-  "description": "Configure an indirect automount from servervm",
+  "description": "Configure an indirect automount from server",
   "objective_tags": [
     "filesystems-and-autofs"
   ],
@@ -9,19 +9,23 @@
     "lab"
   ],
   "time_limit_minutes": 40,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On servervm, export /exports/vault8. On clientvm, create user vault8 with password cinder9.",
-        "Configure autofs on clientvm so /netdir/vault8 is mounted on demand from servervm:/exports/vault8.",
+        "On server, export /exports/vault8. On client, create user vault8 with password cinder9.",
+        "Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8.",
         "Leave the configuration persistent across reboot."
       ],
       "hints": [
@@ -29,8 +33,8 @@
         "The export already contains a file named welcome.txt."
       ],
       "checks": [
-        "showmount -e servervm | grep -Eq '(^|[[:space:]])/exports/vault8([[:space:]]|$)' && getent passwd vault8 >/dev/null && getent shadow vault8 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs'",
+        "showmount -e server | grep -Eq '(^|[[:space:]])/exports/vault8([[:space:]]|$)' && getent passwd vault8 >/dev/null && getent shadow vault8 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'",
         "test -f /netdir/vault8/welcome.txt && grep -Fqx 'autofs lab 08' /netdir/vault8/welcome.txt"
       ],
       "solution_outline": [
@@ -48,23 +52,23 @@
       ],
       "solution_commands": [
         [
-          "# On servervm",
+          "# On server",
           "mkdir -p /exports/vault8",
           "echo 'autofs lab 08' > /exports/vault8/welcome.txt",
           "exportfs -arv",
-          "# On clientvm",
+          "# On client",
           "useradd vault8",
           "passwd vault8",
           "# enter: cinder9"
         ],
         [
           "vim /etc/auto.lab8",
-          "vault8 -rw,sync servervm:/exports/vault8",
+          "vault8 -rw,sync server:/exports/vault8",
           "vim /etc/auto.master.d/lab8.autofs",
           "/netdir /etc/auto.lab8",
           "systemctl enable --now autofs",
-          "for attempt in 1 2 3 4 5; do ls /netdir/vault8 >/dev/null 2>&1 && mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs' && break; sleep 2; done",
-          "mount | grep -Eq 'servervm:/exports/vault8 on /netdir/vault8 type nfs'"
+          "for attempt in 1 2 3 4 5; do ls /netdir/vault8 >/dev/null 2>&1 && mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs' && break; sleep 2; done",
+          "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'"
         ],
         [
           "ls -l /netdir/vault8",

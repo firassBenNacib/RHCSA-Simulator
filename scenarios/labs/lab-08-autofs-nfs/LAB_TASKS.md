@@ -9,29 +9,29 @@
 | Time limit | 40 minutes |
 | Objectives | filesystems-and-autofs |
 
-Configure an indirect automount from servervm.
+Configure an indirect automount from server.
 
 ### Systems
-- clientvm
-- servervm
+- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Seed Export And User (clientvm + servervm) - 10 pts
+## Task 01 - Seed Export And User (client + server) - 10 pts
 
-On servervm, export /exports/vault8. On clientvm, create user vault8 with password cinder9.
-
----
-
-## Task 02 - Configure Autofs Map (clientvm) - 10 pts
-
-Configure autofs on clientvm so /netdir/vault8 is mounted on demand from servervm:/exports/vault8.
+On server, export /exports/vault8. On client, create user vault8 with password cinder9.
 
 ---
 
-## Task 03 - Verify Access (clientvm) - 10 pts
+## Task 02 - Configure Autofs Map (client) - 10 pts
+
+Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8.
+
+---
+
+## Task 03 - Verify Access (client) - 10 pts
 
 Leave the configuration persistent across reboot.

@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure the bootloader on clientvm so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
+        "Configure the bootloader on client so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
         "The change must persist across reboots and must not require manual GRUB editing during startup."
       ],
       "hints": [
@@ -33,7 +37,7 @@
         "Use grubby to update all installed kernels."
       ],
       "task_titles": [
-        "Configure the bootloader on clientvm so that every...",
+        "Configure the bootloader on client so that every...",
         "The change must persist across reboots and must not..."
       ],
       "task_points": [

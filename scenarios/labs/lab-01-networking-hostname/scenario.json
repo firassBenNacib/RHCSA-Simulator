@@ -1,7 +1,7 @@
 {
   "id": "lab-01-networking-hostname",
   "title": "Lab 01: Networking And Hostname",
-  "description": "Configure persistent networking and hostname settings on clientvm in RHCSA style",
+  "description": "Configure persistent networking and hostname settings on client in RHCSA style",
   "objective_tags": [
     "networking-and-firewall"
   ],
@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 35,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure the active clientvm connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS Server: 192.168.122.3\nHostname: clientvm.netlab.local",
+        "Configure the active client connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS Server: 192.168.122.3\nHostname: client.netlab.local",
         "Add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3",
         "Verify that the active connection comes back with the same values after reconnecting it."
       ],
@@ -28,7 +32,7 @@
         "Use hostnamectl for the persistent hostname."
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'clientvm.netlab.local'",
+        "hostnamectl --static | grep -qx 'client.netlab.local'",
         "test \"$(nmcli -g connection.interface-name connection show \"System eth1\")\" = 'eth1' && test \"$(nmcli -g ipv4.addresses connection show \"System eth1\")\" = '192.168.122.25/24' && test \"$(nmcli -g ipv4.gateway connection show \"System eth1\")\" = '192.168.122.1' && test \"$(nmcli -g ipv4.dns connection show \"System eth1\")\" = '192.168.122.3' && test \"$(nmcli -g ipv4.method connection show \"System eth1\")\" = 'manual' && test \"$(nmcli -g connection.autoconnect connection show \"System eth1\")\" = 'yes'",
         "grep -Eq '^192\\.168\\.122\\.3[[:space:]]+repo\\.netlab\\.local([[:space:]]|$)' /etc/hosts && getent hosts repo.netlab.local | grep -Eq '^192\\.168\\.122\\.3[[:space:]]+repo\\.netlab\\.local([[:space:]]|$)'"
       ],
@@ -52,7 +56,7 @@
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.25/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection down \"System eth1\"",
           "nmcli connection up \"System eth1\"",
-          "hostnamectl set-hostname clientvm.netlab.local"
+          "hostnamectl set-hostname client.netlab.local"
         ],
         [
           "vim /etc/hosts",

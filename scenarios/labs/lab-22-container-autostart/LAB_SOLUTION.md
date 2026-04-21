@@ -12,14 +12,14 @@
 Run a rootless container as a persistent user service.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Ensure merin22 exists and run the container (clientvm) - 10 pts
+## Task 01 - Ensure merin22 exists and run the container (client) - 10 pts
 
 ```bash
 id merin22 >/dev/null 2>&1 || useradd -m merin22
@@ -32,7 +32,7 @@ exit
 
 ---
 
-## Task 02 - Enable lingering for merin22 (clientvm) - 10 pts
+## Task 02 - Enable lingering for merin22 (client) - 10 pts
 
 ```bash
 loginctl enable-linger merin22
@@ -43,7 +43,7 @@ for i in $(seq 1 30); do [ -S /run/user/$uid/bus ] && break; sleep 1; done
 
 ---
 
-## Task 03 - Generate and enable the user service (clientvm) - 10 pts
+## Task 03 - Generate and enable the user service (client) - 10 pts
 
 ```bash
 runuser -l merin22 -c 'mkdir -p ~/.config/systemd/user'

@@ -231,13 +231,13 @@ configure_local_repo() {
   cat > /etc/yum.repos.d/rhcsa-local.repo <<'EOF'
 [rhcsa-baseos]
 name=RHCSA Local BaseOS
-baseurl=http://servervm/repo/BaseOS/
+baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
 
 [rhcsa-appstream]
 name=RHCSA Local AppStream
-baseurl=http://servervm/repo/AppStream/
+baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF

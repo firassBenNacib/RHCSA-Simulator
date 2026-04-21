@@ -69,7 +69,13 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	if isMousePress(msg) && !m.showHelp && !m.busy && m.confirmKind == "" {
+	if isMousePress(msg) && !m.showHelp && !m.busy {
+		if m.confirmKind != "" {
+			if next, cmd, ok := m.handleConfirmFooterClick(mouseX, mouseY); ok {
+				return next, cmd
+			}
+			return m, nil
+		}
 		if next, cmd, ok := m.handleFooterClick(mouseX, mouseY); ok {
 			return next, cmd
 		}
@@ -192,7 +198,7 @@ func (m model) handleRightClick() (tea.Model, tea.Cmd) {
 
 func (m model) handleFooterClick(mouseX, mouseY int) (tea.Model, tea.Cmd, bool) {
 	for _, bound := range m.footerActionBounds(m.width) {
-		if (mouseY == bound.y || mouseY == bound.y+1) && hitHorizontalBound(mouseX, bound.startX, bound.endX) {
+		if mouseY == bound.y && hitHorizontalBound(mouseX, bound.startX, bound.endX) {
 			next, cmd := m.handleFooterAction(bound.id)
 			return next, cmd, true
 		}
@@ -204,9 +210,36 @@ func hitHorizontalBound(x, startX, endX int) bool {
 	return (x >= startX && x <= endX) || (x-1 >= startX && x-1 <= endX)
 }
 
+func (m model) handleConfirmFooterClick(mouseX, mouseY int) (tea.Model, tea.Cmd, bool) {
+	for _, bound := range m.footerActionBounds(m.width) {
+		if mouseY == bound.y && hitHorizontalBound(mouseX, bound.startX, bound.endX) {
+			var confirmAction footerActionID
+			switch m.confirmKind {
+			case "start":
+				confirmAction = footerActionStart
+			case "reset":
+				confirmAction = footerActionReset
+			}
+			if bound.id == confirmAction {
+				next, cmd := m.confirmCmd()
+				return next, cmd, true
+			}
+			m.confirmKind = ""
+			m.confirmText = ""
+			m.statusText = "Cancelled"
+			return m, nil, true
+		}
+	}
+	return m, nil, false
+}
+
 func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 	switch action {
 	case footerActionStart:
+		if m.activeScenarioID() == m.currentScenarioID() {
+			m.statusText = "Already started - use Reset to start over"
+			return m, nil
+		}
 		m.confirmKind = "start"
 		m.confirmText = m.startConfirmText()
 		m.statusText = m.confirmText
@@ -265,6 +298,10 @@ func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 		m.filterMode = false
 		m.statusText = ""
 		return m, nil
+	case footerActionSSHClient:
+		return m.handleSSHAction("client")
+	case footerActionSSHServer:
+		return m.handleSSHAction("server")
 	default:
 		return m, nil
 	}
@@ -607,6 +644,10 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case "enter", "s", "S":
+		if m.activeScenarioID() == m.currentScenarioID() {
+			m.statusText = "Already started - use Reset to start over"
+			return m, nil
+		}
 		m.confirmKind = "start"
 		m.confirmText = m.startConfirmText()
 		m.statusText = m.confirmText
@@ -616,9 +657,9 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "r", "R":
 		return m.handleResetAction()
 	case "z", "Z":
-		return m.handleSSHAction("clientvm")
+		return m.handleSSHAction("client")
 	case "x", "X":
-		return m.handleSSHAction("servervm")
+		return m.handleSSHAction("server")
 	case "/", ":", "ctrl+f":
 		m.filterMode = true
 		m.statusText = ""
@@ -640,9 +681,18 @@ func (m model) handleCheckAction() (tea.Model, tea.Cmd) {
 		m.statusText = "Checks are available for labs only"
 		return m, nil
 	}
+	activeID := m.activeScenarioID()
+	if activeID == "" {
+		m.statusText = "No lab started\nStart a lab before running checks"
+		return m, nil
+	}
 	m.busy = true
-	m.statusText = "Running checks"
-	return m, m.checkSelectedLabCmd()
+	if activeID != m.currentLab().ID {
+		m.statusText = fmt.Sprintf("Checking %s (active lab)", activeID)
+	} else {
+		m.statusText = "Running checks"
+	}
+	return m, m.checkActiveLabCmd()
 }
 
 func (m model) handleResetAction() (tea.Model, tea.Cmd) {
@@ -651,7 +701,7 @@ func (m model) handleResetAction() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.confirmKind = "reset"
-	m.confirmText = "Reset the active run? Press y or Enter to confirm."
+	m.confirmText = "Reset the active run? Click Reset or press y/Enter to confirm."
 	m.statusText = m.confirmText
 	return m, nil
 }
@@ -669,15 +719,15 @@ func (m model) handleSSHAction(machine string) (tea.Model, tea.Cmd) {
 func (m model) startSelectedCmd() tea.Cmd {
 	if m.activeTab == labsTab {
 		lab := m.currentLab()
-		return runActionCmd(m.runner, "start-lab", lab.ID, "start", "-Id", lab.ID, "-Mode", "Lab")
+		return runActionCmd(m.runner, "start-lab", lab.ID, "start", "-Id", lab.ID, "-Mode", "Lab", "-Track", m.track)
 	}
 	exam := m.currentExam()
-	return runActionCmd(m.runner, "start-exam", exam.ID, "start", "-Id", exam.ID, "-Mode", "Exam")
+	return runActionCmd(m.runner, "start-exam", exam.ID, "start", "-Id", exam.ID, "-Mode", "Exam", "-Track", m.track)
 }
 
-func (m model) checkSelectedLabCmd() tea.Cmd {
-	lab := m.currentLab()
-	return runActionCmd(m.runner, "check-lab", lab.ID, "check", "-Id", lab.ID)
+func (m model) checkActiveLabCmd() tea.Cmd {
+	activeID := m.activeScenarioID()
+	return runActionCmd(m.runner, "check-lab", activeID, "check")
 }
 
 func (m model) resetCmd() tea.Cmd {

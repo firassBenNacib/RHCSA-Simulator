@@ -10,9 +10,9 @@ get_node_name() {
 }
 
 configure_hosts() {
-  grep -q '192.168.122.3 servervm' /etc/hosts || cat >> /etc/hosts <<'EOF'
-192.168.122.3 servervm
-192.168.122.2 clientvm
+  grep -q '192.168.122.3 server' /etc/hosts || cat >> /etc/hosts <<'EOF'
+192.168.122.3 server
+192.168.122.2 client
 EOF
 }
 
@@ -64,14 +64,14 @@ configure_bootstrap_repo() {
     fi
   fi
 
-  if [[ "$node_name" == "servervm" && -d /var/www/html/repo/BaseOS && -d /var/www/html/repo/AppStream ]]; then
+  if [[ "$node_name" == "server" && -d /var/www/html/repo/BaseOS && -d /var/www/html/repo/AppStream ]]; then
     write_bootstrap_repo_file "file:///var/www/html/repo/BaseOS" "file:///var/www/html/repo/AppStream"
     DNF_ARGS=(--disablerepo=* --enablerepo=rhcsa-bootstrap-baseos --enablerepo=rhcsa-bootstrap-appstream)
     return 0
   fi
 
   for _ in $(seq 1 60); do
-    write_bootstrap_repo_file "http://servervm/repo/BaseOS/" "http://servervm/repo/AppStream/"
+    write_bootstrap_repo_file "http://server/repo/BaseOS/" "http://server/repo/AppStream/"
     DNF_ARGS=(--disablerepo=* --enablerepo=rhcsa-bootstrap-baseos --enablerepo=rhcsa-bootstrap-appstream)
     if dnf "${DNF_ARGS[@]}" -q makecache >/dev/null 2>&1; then
       return 0
@@ -90,10 +90,10 @@ cleanup_bootstrap_repo() {
 configure_hosts
 if ! configure_bootstrap_repo; then
   node_name="$(get_node_name)"
-  if [[ "$node_name" == "servervm" ]]; then
-    echo "Failed to prepare the bootstrap repo from the attached ISO on servervm." >&2
+  if [[ "$node_name" == "server" ]]; then
+    echo "Failed to prepare the bootstrap repo from the attached ISO on server." >&2
   else
-    echo "Failed to reach the offline HTTP repo from clientvm. Verify that servervm finished provisioning and is serving http://servervm/repo/." >&2
+    echo "Failed to reach the offline HTTP repo from client. Verify that server finished provisioning and is serving http://server/repo/." >&2
   fi
   exit 1
 fi

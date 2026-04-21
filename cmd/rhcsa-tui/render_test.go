@@ -31,7 +31,7 @@ func buildRenderTestModel(t *testing.T) model {
 		"id": "lab-01-demo", "title": "Lab 01: Networking and Hostname",
 		"description": "Configure networking", "objective_tags": ["networking"],
 		"supported_modes": ["lab"], "time_limit_minutes": 15,
-		"flags": {"password_recovery": false, "requires_servervm": false},
+		"flags": {"password_recovery": false, "requires_server": false},
 		"content": {"lab": {"hints": ["Use nmcli"], "checks": ["grep -q demo /etc/hosts"]}}
 	}`), 0o644)
 
@@ -39,7 +39,7 @@ func buildRenderTestModel(t *testing.T) model {
 		"id": "mock-exam-a", "title": "Mock Exam A: Full RHCSA",
 		"description": "Full mock exam", "objective_tags": ["containers", "storage"],
 		"supported_modes": ["exam"], "time_limit_minutes": 150,
-		"flags": {"password_recovery": true, "requires_servervm": true},
+		"flags": {"password_recovery": true, "requires_server": true},
 		"content": {"lab": {"hints": [], "checks": []}}
 	}`), 0o644)
 
@@ -68,7 +68,7 @@ func buildRenderTestModel(t *testing.T) model {
 		activeTab:    labsTab,
 		detail:       detailPrompt,
 		focus:        focusList,
-		width:        120,
+		width:        160,
 		height:       35,
 	}
 	m.touchViewed()
@@ -198,7 +198,7 @@ func TestRenderRemovesLegacyScrollHintsAndTimePrefixes(t *testing.T) {
 func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	m := buildRenderTestModel(t)
 	stripped := utils.StripAnsi(m.View())
-	for _, snippet := range []string{"c", "Check", "F1", "Tasks", "F2", "Hints", "F3", "Checks", "F4", "Solutions", "q", "Quit"} {
+	for _, snippet := range []string{"c", "Check", "F1", "Tasks", "F2", "Hints", "F3", "Checks", "F4", "Solutions", "z", "Client", "x", "Server", "q", "Quit"} {
 		if !strings.Contains(stripped, snippet) {
 			t.Fatalf("expected footer to contain %q, got:\n%s", snippet, stripped)
 		}
@@ -206,15 +206,20 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	if !strings.Contains(stripped, "1 / 1") {
 		t.Fatalf("expected header to contain selection progress, got:\n%s", stripped)
 	}
+	if !strings.Contains(stripped, "RHCSA 9") {
+		t.Fatalf("expected header to contain track label, got:\n%s", stripped)
+	}
 	if strings.Contains(stripped, "y Copy") {
 		t.Fatalf("expected footer to omit y Copy, got:\n%s", stripped)
 	}
 	if !(strings.Index(stripped, "c Check") < strings.Index(stripped, "F1 Tasks")) {
 		t.Fatalf("expected c Check before F1 Tasks, got:\n%s", stripped)
 	}
-	if !(strings.Index(stripped, "/ Find") < strings.Index(stripped, "? Help") &&
+	if !(strings.Index(stripped, "z Client") < strings.Index(stripped, "x Server") &&
+		strings.Index(stripped, "x Server") < strings.Index(stripped, "/ Find") &&
+		strings.Index(stripped, "/ Find") < strings.Index(stripped, "? Help") &&
 		strings.Index(stripped, "? Help") < strings.Index(stripped, "q Quit")) {
-		t.Fatalf("expected footer to end with Find, Help, Quit ordering, got:\n%s", stripped)
+		t.Fatalf("expected footer order z Client, x Server, / Find, ? Help, q Quit, got:\n%s", stripped)
 	}
 }
 
@@ -250,7 +255,7 @@ func TestFilterFooterOmitsQuitAndKeepsTopTabs(t *testing.T) {
 }
 
 func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
-	description := "Configure persistent networking on clientvm in RHCSA style"
+	description := "Configure persistent networking on client in RHCSA style"
 	body := strings.Join([]string{
 		"## Overview",
 		"| Field | Value |",
@@ -260,7 +265,7 @@ func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
 		"| Time limit | 35 minutes |",
 		"| Objectives | networking-and-firewall |",
 		"",
-		"Configure persistent networking on clientvm in RHCSA style.",
+		"Configure persistent networking on client in RHCSA style.",
 		"",
 		"## Task 01",
 		"Do the work.",
@@ -280,8 +285,8 @@ func TestSanitizeScenarioDocumentDropsOverviewNoise(t *testing.T) {
 func TestTrimActionSectionBoilerplateRemovesSystemsAndGeneralInstructions(t *testing.T) {
 	body := strings.Join([]string{
 		"### Systems",
-		"- clientvm",
-		"- servervm",
+		"- client",
+		"- server",
 		"",
 		"## General Instructions",
 		"1. Keep it persistent.",
@@ -294,7 +299,7 @@ func TestTrimActionSectionBoilerplateRemovesSystemsAndGeneralInstructions(t *tes
 	}, "\n")
 
 	trimmed := trimActionSectionBoilerplate(body)
-	for _, unwanted := range []string{"### Systems", "General Instructions", "clientvm"} {
+	for _, unwanted := range []string{"### Systems", "General Instructions", "client"} {
 		if strings.Contains(trimmed, unwanted) {
 			t.Fatalf("expected trimmed action body to omit %q, got:\n%s", unwanted, trimmed)
 		}
@@ -307,15 +312,15 @@ func TestTrimActionSectionBoilerplateRemovesSystemsAndGeneralInstructions(t *tes
 func TestExtractSystemsFromDocument(t *testing.T) {
 	body := strings.Join([]string{
 		"### Systems",
-		"- clientvm",
-		"- servervm",
+		"- client",
+		"- server",
 		"",
 		"## Task 01",
 		"Do the work.",
 	}, "\n")
 
 	systems := extractSystemsFromDocument(body)
-	if got := strings.Join(systems, ", "); got != "clientvm, servervm" {
+	if got := strings.Join(systems, ", "); got != "client, server" {
 		t.Fatalf("expected systems list, got %q", got)
 	}
 }

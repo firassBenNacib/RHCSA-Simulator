@@ -179,7 +179,7 @@ func (m model) renderListHeader(width int) []string {
 		label = "Exams"
 	}
 
-	metaParts := []string{m.selectionProgressLabel()}
+	metaParts := []string{m.trackLabel(), m.selectionProgressLabel()}
 	if strings.TrimSpace(m.filterQuery) != "" {
 		metaParts = append(metaParts, fmt.Sprintf("filter: %q", m.filterQuery))
 	}
@@ -362,11 +362,10 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	if systems := extractSystemsFromDocument(view.body); len(systems) > 0 {
 		metaParts = append(metaParts, strings.Join(systems, " / "))
 	}
-	if view.active {
-		metaParts = append(metaParts, m.theme.ActiveBadge.Render("ACTIVE"))
-	}
 	if status := m.theme.StatusBadge(view.progress); status != "" {
 		metaParts = append(metaParts, status)
+	} else if view.active {
+		metaParts = append(metaParts, m.theme.ActiveBadge.Render("RUNNING"))
 	}
 	lines := []string{
 		m.fillLine(tabs, "", width),
@@ -907,6 +906,8 @@ const (
 	footerActionQuit
 	footerActionFilterKeep
 	footerActionFilterClear
+	footerActionSSHClient
+	footerActionSSHServer
 )
 
 type footerAction struct {
@@ -956,6 +957,8 @@ func (m model) footerActions() []footerAction {
 		)
 	}
 	actions = append(actions,
+		footerAction{"z", "Client", footerActionSSHClient},
+		footerAction{"x", "Server", footerActionSSHServer},
 		footerAction{"/", "Find", footerActionFind},
 		footerAction{"?", "Help", footerActionHelp},
 		footerAction{"q", "Quit", footerActionQuit},
@@ -967,10 +970,10 @@ func (m model) visibleFooterActions(width int) []footerAction {
 	actions := m.footerActions()
 	parts := make([]string, 0, len(actions))
 	usedWidth := 0
-	for _, action := range actions {
+	for i, action := range actions {
 		part := m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label)
 		partWidth := lipgloss.Width(part)
-		if len(parts) > 0 {
+		if i > 0 {
 			partWidth += 2
 		}
 		if usedWidth+partWidth > width-2 {
@@ -1330,23 +1333,38 @@ func simplifyMarkdownTableLine(trimmed string) (string, bool) {
 	return strings.Join(cells, " │ "), true
 }
 
-func matchesPromptViewKey(msg tea.KeyMsg) bool {
-	switch msg.String() {
-	case "1", "kp1", "f1", "&":
-		return true
-	default:
-		return false
+func matchesDetailModeKey(mode detailMode, msg tea.KeyMsg) bool {
+	switch mode {
+	case detailPrompt:
+		switch msg.String() {
+		case "1", "kp1", "f1", "&":
+			return true
+		}
+	case detailHint:
+		normalized := normalizeTerminalText(msg.String())
+		switch normalized {
+		case "2", "kp2", "f2":
+			return true
+		}
+		return strings.Contains(normalized, "é") || strings.Contains(normalized, "É")
+	case detailCheck:
+		switch msg.String() {
+		case "3", "kp3", "f3", "\"":
+			return true
+		}
+	case detailSolution:
+		switch msg.String() {
+		case "4", "kp4", "f4", "'", "\u2019":
+			return true
+		}
 	}
+	return false
 }
 
-func matchesHintViewKey(msg tea.KeyMsg) bool {
-	normalized := normalizeTerminalText(msg.String())
-	switch normalized {
-	case "2", "kp2", "f2":
-		return true
-	}
-	return strings.Contains(normalized, "é") || strings.Contains(normalized, "É")
-}
+func matchesPromptViewKey(msg tea.KeyMsg) bool   { return matchesDetailModeKey(detailPrompt, msg) }
+func matchesHintViewKey(msg tea.KeyMsg) bool     { return matchesDetailModeKey(detailHint, msg) }
+func matchesCheckViewKey(msg tea.KeyMsg) bool    { return matchesDetailModeKey(detailCheck, msg) }
+func matchesSolutionViewKey(msg tea.KeyMsg) bool { return matchesDetailModeKey(detailSolution, msg) }
 
 func normalizeTerminalText(text string) string {
 	normalized := normalizeUnicode(text)
@@ -1405,22 +1423,4 @@ func filterTextForKey(msg tea.KeyMsg) (string, bool) {
 	}
 
 	return "", false
-}
-
-func matchesSolutionViewKey(msg tea.KeyMsg) bool {
-	switch msg.String() {
-	case "4", "kp4", "f4", "'", "\u2019":
-		return true
-	default:
-		return false
-	}
-}
-
-func matchesCheckViewKey(msg tea.KeyMsg) bool {
-	switch msg.String() {
-	case "3", "kp3", "f3", "\"":
-		return true
-	default:
-		return false
-	}
 }

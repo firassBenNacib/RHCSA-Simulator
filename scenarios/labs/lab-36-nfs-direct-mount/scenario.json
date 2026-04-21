@@ -10,18 +10,22 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Persistently mount the NFS export 192.168.122.3:/exports/direct36 on clientvm at /mnt/direct36.",
+        "Persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.",
         "Use the mount options ro,sync.",
         "Ensure the mount is available after a reboot and that the file nfs36.txt can be read from the mount point."
       ],

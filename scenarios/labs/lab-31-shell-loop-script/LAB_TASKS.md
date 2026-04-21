@@ -12,19 +12,19 @@
 Create a simple shell script that uses a loop to filter files by name.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create an executable script (clientvm) - 10 pts
+## Task 01 - Create an executable script (client) - 10 pts
 
 Create an executable script /usr/local/bin/listlogs31 that loops over the files in /opt/lab31 and writes the absolute path of each file ending in .log to /root/listlogs31.out.
 
 ---
 
-## Task 02 - Run the script once (clientvm) - 10 pts
+## Task 02 - Run the script once (client) - 10 pts
 
 Run the script once.

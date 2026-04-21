@@ -10,29 +10,32 @@
     "lab"
   ],
   "time_limit_minutes": 30,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Ensure the user mesh39 exists on both clientvm and servervm, and set the password on both systems to cinder9.",
-        "As user mesh39 on clientvm, generate an ED25519 SSH key pair with no passphrase.",
-        "Configure passwordless SSH access for mesh39 from clientvm to servervm using public key authentication.",
-        "Using rsync over SSH, copy the directory /home/mesh39/client-data/ from clientvm to /home/mesh39/server-data/ on servervm."
+        "Ensure the user mesh39 exists on both client and server, and set the password on both systems to cinder9.",
+        "As user mesh39 on client, generate an ED25519 SSH key pair with no passphrase.",
+        "Configure passwordless SSH access for mesh39 from client to server using public key authentication.",
+        "Using rsync over SSH, copy the directory /home/mesh39/client-data/ from client to /home/mesh39/server-data/ on server."
       ],
       "hints": [
         "Use the mesh39 account for the SSH key work.",
-        "Verify the transfer by checking the copied file on servervm through SSH."
+        "Verify the transfer by checking the copied file on server through SSH."
       ],
       "checks": [
-        "getent passwd mesh39 >/dev/null && getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "ssh admin@servervm sudo getent passwd mesh39 >/dev/null && ssh admin@servervm sudo getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "# server getent passwd mesh39 >/dev/null && getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
         "test -f /home/mesh39/.ssh/id_ed25519 && test -f /home/mesh39/.ssh/id_ed25519.pub",
         "runuser -l mesh39 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 true'",
         "runuser -l mesh39 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 \"test -f /home/mesh39/server-data/file1.txt\"'"
@@ -56,7 +59,7 @@
         [
           "id mesh39 >/dev/null 2>&1 || useradd -m mesh39",
           "echo 'mesh39:cinder9' | chpasswd",
-          "# Run on servervm",
+          "# Run on server",
           "id mesh39 >/dev/null 2>&1 || useradd -m mesh39",
           "echo 'mesh39:cinder9' | chpasswd"
         ],

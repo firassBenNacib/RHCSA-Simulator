@@ -15,6 +15,7 @@ import (
 
 func main() {
 	projectRoot := flag.String("project-root", "", "path to the RHCSA simulator repository")
+	track := flag.String("track", defaultTrack(), "scenario track to show: rhcsa9, rhcsa10, or all")
 	flag.Parse()
 
 	root, err := findProjectRoot(*projectRoot)
@@ -23,7 +24,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	labs, exams, err := catalog.Load(root)
+	labs, exams, err := catalog.LoadTrack(root, *track)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading catalog: %v\n", err)
 		os.Exit(1)
@@ -42,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	model := newModel(root, labs, exams, runner, progressState, progressPath)
+	model := newModel(root, labs, exams, runner, progressState, progressPath, *track)
 
 	p := tea.NewProgram(
 		model,
@@ -56,6 +57,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error running TUI: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func defaultTrack() string {
+	if value := os.Getenv("RHCSA_TRACK"); value != "" {
+		return value
+	}
+	return "rhcsa9"
 }
 
 func filterNoisyMouseEvents(_ tea.Model, msg tea.Msg) tea.Msg {

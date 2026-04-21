@@ -182,8 +182,8 @@ func NewTheme() Theme {
 		DetailRule: lipgloss.NewStyle().
 			Foreground(border),
 		ActiveBadge: lipgloss.NewStyle().
-			Foreground(bgDark).
-			Background(green).
+			Foreground(textBright).
+			Background(redMuted).
 			Padding(0, 1).
 			Bold(true),
 		OutputPanel: lipgloss.NewStyle().
@@ -288,11 +288,11 @@ func (t Theme) RenderCopyButton() string {
 func (t Theme) StatusBadge(marker string) string {
 	switch marker {
 	case "P":
-		return t.BadgePassed.Render("Passed")
+		return t.BadgePassed.Render("PASSED")
 	case "C":
-		return t.BadgeChecked.Render("Checked")
+		return t.BadgeChecked.Render("CHECKED")
 	case "S":
-		return t.BadgeStarted.Render("Started")
+		return t.BadgeStarted.Render("RUNNING")
 	default:
 		return ""
 	}

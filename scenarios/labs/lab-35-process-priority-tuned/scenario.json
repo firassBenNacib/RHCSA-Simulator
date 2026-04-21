@@ -1,7 +1,7 @@
 {
   "id": "lab-35-process-priority-tuned",
   "title": "Lab 35: Process Priority and Tuned",
-  "description": "Tune servervm and adjust the nice level of a long-running process there.",
+  "description": "Tune server and adjust the nice level of a long-running process there.",
   "objective_tags": [
     "processes-logs-tuning"
   ],
@@ -9,37 +9,41 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Install the tuned package if it is not already present and activate the tuned profile throughput-performance on servervm.",
-        "Start the command sleep 3600 in the background on servervm and save its PID in /root/sleep35.pid.",
-        "On servervm, adjust the nice value of that process so it becomes 5."
+        "Install the tuned package if it is not already present and activate the tuned profile throughput-performance on server.",
+        "Start the command sleep 3600 in the background on server and save its PID in /root/sleep35.pid.",
+        "On server, adjust the nice value of that process so it becomes 5."
       ],
       "hints": [
-        "Keep the tuning task on servervm, not clientvm.",
+        "Keep the tuning task on server, not client.",
         "Store the PID before changing the nice value."
       ],
       "checks": [
-        "ssh admin@servervm sudo tuned-adm active | grep -Fq 'throughput-performance'",
-        "ssh admin@servervm sudo bash -lc 'test -f /root/sleep35.pid && ps -o ni= -p \"$(cat /root/sleep35.pid)\" | tr -d \"[:space:]\" | grep -qx 5'"
+        "# server tuned-adm active | grep -Fq 'throughput-performance'",
+        "# server test -f /root/sleep35.pid && ps -o ni= -p \"$(cat /root/sleep35.pid)\" | tr -d '[:space:]' | grep -qx 5"
       ],
       "solution_outline": [
-        "Enable tuned and set throughput-performance on servervm.",
+        "Enable tuned and set throughput-performance on server.",
         "Launch sleep 3600 in the background and record its PID.",
         "Use renice to move the process to nice value 5."
       ],
       "task_titles": [
-        "Activate the tuned profile on servervm",
-        "Start the long-running sleep process on servervm",
+        "Activate the tuned profile on server",
+        "Start the long-running sleep process on server",
         "Renice the process to 5"
       ],
       "task_points": [
@@ -57,7 +61,7 @@
           "nohup sleep 3600 >/dev/null 2>&1 & echo $! > /root/sleep35.pid"
         ],
         [
-          "# On servervm",
+          "# On server",
           "renice -n 5 -p \"$(cat /root/sleep35.pid)\""
         ]
       ]

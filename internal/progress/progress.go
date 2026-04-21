@@ -85,8 +85,6 @@ func progressMarker(item *ScenarioProgress) string {
 		return "C"
 	case item.StartedAt != "":
 		return "S"
-	case item.ViewedAt != "":
-		return "."
 	default:
 		return " "
 	}

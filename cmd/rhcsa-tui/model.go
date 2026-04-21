@@ -15,10 +15,6 @@ import (
 	"rhcsa_exam_vms/internal/utils"
 )
 
-func StripAnsi(s string) string {
-	return utils.StripAnsi(s)
-}
-
 type tabName int
 
 const (
@@ -57,6 +53,7 @@ type model struct {
 	runner       *backend.Runner
 	progress     *progress.State
 	progressPath string
+	track        string
 	theme        Theme
 
 	activeTab      tabName
@@ -78,7 +75,7 @@ type model struct {
 	cachedActiveID string
 }
 
-func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *backend.Runner, progressState *progress.State, progressPath string) model {
+func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *backend.Runner, progressState *progress.State, progressPath string, track string) model {
 	m := model{
 		root:         root,
 		labs:         labs,
@@ -86,6 +83,7 @@ func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *bac
 		runner:       runner,
 		progress:     progressState,
 		progressPath: progressPath,
+		track:        normalizeTrackLabel(track),
 		theme:        NewTheme(),
 		activeTab:    labsTab,
 		detail:       detailPrompt,
@@ -94,6 +92,22 @@ func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *bac
 	m.refreshActiveScenarioID()
 	m.touchViewed()
 	return m
+}
+
+func normalizeTrackLabel(track string) string {
+	track = strings.ToLower(strings.TrimSpace(track))
+	track = strings.ReplaceAll(track, "-", "")
+	track = strings.ReplaceAll(track, "_", "")
+	switch track {
+	case "", "9", "rhel9", "rhcsa9", "ex2009":
+		return "rhcsa9"
+	case "10", "rhel10", "rhcsa10", "ex20010":
+		return "rhcsa10"
+	case "all":
+		return "all"
+	default:
+		return track
+	}
 }
 
 func (m *model) refreshActiveScenarioID() {
@@ -169,6 +183,13 @@ func (m model) currentExam() catalog.Exam {
 		return catalog.Exam{}
 	}
 	return exams[utils.Clamp(m.selectedExam, 0, len(exams)-1)]
+}
+
+func (m model) currentScenarioID() string {
+	if m.activeTab == labsTab {
+		return m.currentLab().ID
+	}
+	return m.currentExam().ID
 }
 
 func (m model) filteredLabs() []catalog.Lab {
@@ -473,6 +494,17 @@ func (m model) availableDetailModes() []detailMode {
 	return []detailMode{detailPrompt, detailHint, detailCheck, detailSolution}
 }
 
+func (m model) trackLabel() string {
+	switch normalizeTrackLabel(m.track) {
+	case "rhcsa10":
+		return "RHCSA 10"
+	case "all":
+		return "All tracks"
+	default:
+		return "RHCSA 9"
+	}
+}
+
 func (m *model) cycleDetailMode(delta int) {
 	modes := m.availableDetailModes()
 	if len(modes) == 0 || delta == 0 {
@@ -512,9 +544,9 @@ func (m model) selectionProgressLabel() string {
 
 func (m model) startConfirmText() string {
 	if m.activeTab == labsTab {
-		return fmt.Sprintf("Start %s? Press y or Enter to confirm.", m.currentLab().ID)
+		return fmt.Sprintf("Start %s? Click Start or press y/Enter to confirm.", m.currentLab().ID)
 	}
-	return fmt.Sprintf("Start %s? Press y or Enter to confirm.", m.currentExam().ID)
+	return fmt.Sprintf("Start %s? Click Start or press y/Enter to confirm.", m.currentExam().ID)
 }
 
 func (m model) startStatusText() string {
@@ -588,6 +620,7 @@ func (m model) statusLineTone(line string) string {
 		strings.HasPrefix(trimmed, "A new PowerShell window was opened"):
 		return "muted"
 	case strings.HasPrefix(trimmed, "Lab:"),
+		strings.HasPrefix(trimmed, "Already active"),
 		strings.HasPrefix(trimmed, "Progress check"),
 		strings.HasPrefix(trimmed, "Simulator destroyed"),
 		strings.HasPrefix(trimmed, "Lab destroyed"),
@@ -600,7 +633,7 @@ func (m model) statusLineTone(line string) string {
 }
 
 func summarizeActionOutput(output string) string {
-	clean := StripAnsi(output)
+	clean := utils.StripAnsi(output)
 	switch {
 	case strings.Contains(clean, "LockMachine") || strings.Contains(clean, "lock request pending"):
 		return "VirtualBox is busy\nWait a few seconds, then try the action again"
@@ -650,7 +683,7 @@ func summarizeActionOutput(output string) string {
 
 func isSignificantLine(trimmed string) bool {
 	significantPrefixes := []string{
-		"Error:", "Use:", "Started ", "Reset complete", "Progress check",
+		"Error:", "Use:", "Started ", "Already active", "Reset complete", "Progress check",
 		"SSH session opened", "Lab destroyed", "Simulator destroyed",
 		"Baseline ready", "Result:", "Lab:", "A new PowerShell window was opened",
 		"[fail]", "[ok]", "Fail ",
@@ -710,25 +743,28 @@ func (m model) helpBody() string {
 		"RHCSA Help",
 		"",
 		"Navigation",
-		"  Tab / Shift+Tab   Switch pane",
-		"  Left / Right      Switch tabs or docs",
-		"  Up / Down, j / k  Move or scroll",
-		"  PgUp / PgDn       Jump sections",
-		"  g / G             Top / bottom",
+		"",
+		" Tab              Switch pane",
+		" Left / Right     Switch LABS/EXAMS or documents",
+		" Up / Down        Move or scroll",
+		" PgUp / PgDn      Jump by section",
+		" g / G            Top / bottom",
 		"",
 		"Documents",
-		"  F1 / 1 / &        Tasks",
-		"  F2 / 2 / é        Hints",
-		"  F3 / 3 / \"       Checks",
-		"  F4 / 4 / '        Solutions",
+		"",
+		" F1               Tasks",
+		" F2               Hints",
+		" F3               Checks",
+		" F4               Solutions",
 		"",
 		"Actions",
-		"  Enter / s         Start selected item",
-		"  c                 Check active lab",
-		"  r                 Reset active run",
-		"  z / x             SSH clientvm/servervm",
-		"  /                 Find",
-		"  Esc               Close or clear output",
-		"  q / Ctrl+C        Quit",
+		"",
+		" Enter            Start selected item",
+		" c                Check active lab",
+		" r                Reset active run",
+		" z / x            SSH client / server",
+		" /                Find",
+		" Esc              Close overlay or clear output",
+		" q                Quit",
 	}, "\n")
 }

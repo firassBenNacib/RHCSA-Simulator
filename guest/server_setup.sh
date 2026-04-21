@@ -72,7 +72,7 @@ cat > /var/www/html/training/index.html <<'EOF'
 EOF
 
 cat > /srv/rhcsa/objectives/README.txt <<'EOF'
-servervm provides:
+server provides:
 - offline HTTP package content
 - chrony time source
 - NFS exports for mount and autofs scenarios

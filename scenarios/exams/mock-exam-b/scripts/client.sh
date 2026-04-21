@@ -17,7 +17,7 @@ fi
     mkdir -p /root/.repo-backup-client-exam-b
     rhcsa_reset_repo_directory /root/.repo-backup-client-exam-b
     useradd -D -f -1 >/dev/null 2>&1 || true
-    hostnamectl set-hostname clientvm
+    hostnamectl set-hostname client
     rhcsa_remove_matching_lines 'registry.coremesh.lab' /etc/hosts
     connection_name="$(rhcsa_get_lab_connection_name || true)"
     rhcsa_reset_lab_ipv4_profile "$connection_name"

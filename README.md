@@ -20,7 +20,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
 * `rhel-10.1-x86_64-dvd.iso` only if you opt into the preview RHEL 10 profile
-* [Go](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source
+* [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source
 
 ## Installation
 
@@ -50,8 +50,8 @@ Private forks can use the same installer by setting `GITHUB_TOKEN` before runnin
 
 The simulator uses two VMs:
 
-* servervm for the offline repository, NFS exports, and time source
-* clientvm as the main RHCSA workstation
+* server for the offline repository, NFS exports, and time source
+* client as the main RHCSA workstation
 
 Scenario source files live under:
 
@@ -74,12 +74,14 @@ Generated runtime cache is written locally under `.lab-state/generated/`, is cre
 
 ```powershell
 .\RHCSA.ps1 list
+.\RHCSA.ps1 list -Track RHCSA10
 ```
 
 **3) Start a lab**
 
 ```powershell
 .\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab
+.\RHCSA.ps1 start -Id <rhcsa10-lab-id> -Mode Lab -Track RHCSA10
 ```
 
 **4) Check your progress**
@@ -122,6 +124,7 @@ You can also double-click:
 
 ```powershell
 .\.build\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms
+.\.build\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms --track rhcsa10
 ```
 
 The TUI finds `RHCSA.ps1` from:
@@ -130,6 +133,8 @@ The TUI finds `RHCSA.ps1` from:
 * `RHCSA_SIMULATOR_ROOT` if set
 * the current working directory
 * the directory that contains the TUI binary
+
+The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or set `RHCSA_TRACK=rhcsa10` to preview RHCSA 10 content after a RHEL 10-compatible baseline is available.
 
 **Release binaries**
 
@@ -148,8 +153,8 @@ GitHub Releases publish prebuilt Windows, Linux, and macOS TUI binaries. Binarie
 * `c` run checks for the active lab
 * `r` reset the active run
 * `/` open search
-* `z` open SSH to `clientvm`
-* `x` open SSH to `servervm`
+* `z` open SSH to `client`
+* `x` open SSH to `server`
 * `?` open help, then `Esc` or the top-right `X` closes it
 
 Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
@@ -198,7 +203,7 @@ go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 
 ```powershell
 .\RHCSA.ps1 ssh-config
-.\RHCSA.ps1 ssh-config servervm
+.\RHCSA.ps1 ssh-config server
 ```
 
 **Download or rebuild the TUI**
@@ -231,6 +236,8 @@ $env:RHCSA_BOX = 'generic/rocky10'
 ```
 
 RHEL 10 support is intentionally marked preview until the full lab/exam replay suite is validated on a RHEL 10 baseline. RHCSA 10 content should be added as separate scenarios where behavior differs, especially Flatpak package tasks and updated systemd/service-management objectives.
+
+The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for the track plan.
 
 ## Commands
 
@@ -267,6 +274,15 @@ Commands
 
 * -Id <scenario-id>
 * -Mode <Lab|Exam>
+* -Track <RHCSA9|RHCSA10|All>
+
+**list**
+
+* -Track <RHCSA9|RHCSA10|All>
+
+**tui**
+
+* -Track <RHCSA9|RHCSA10|All>
 
 **check**
 
@@ -274,11 +290,11 @@ Commands
 
 **ssh**
 
-* ssh [servervm|clientvm]
+* ssh [server|client]
 
 **ssh-config**
 
-* ssh-config [servervm|clientvm]
+* ssh-config [server|client]
 
 ## License
 

@@ -564,7 +564,7 @@ func TestRawSGRVisibleRepoLabFooterActions(t *testing.T) {
 
 func TestMouseClickFooterFindAndQuit(t *testing.T) {
 	m := buildRenderTestModel(t)
-	m.width = 120
+	m.width = 160
 	m.height = 35
 
 	got, _ := clickFooterAction(m, footerBoundByID(t, m, footerActionFind))
@@ -590,6 +590,7 @@ func TestUppercaseActionKeysWork(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(m.root, ".vagrant", "machines"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	m.cachedActiveID = m.currentLab().ID
 
 	got, _ := m.handleNormalKey(fakeKeyMsg("C"))
 	updated := got.(model)
@@ -763,7 +764,7 @@ func TestSolutionCopyClickCopiesSectionBodyOnly(t *testing.T) {
 	solutionBody := strings.Join([]string{
 		"# Solution",
 		"",
-		"## Task 01 - First Task (clientvm) - 10 pts",
+		"## Task 01 - First Task (client) - 10 pts",
 		"",
 		"```bash",
 		"hostnamectl set-hostname demo",
@@ -772,7 +773,7 @@ func TestSolutionCopyClickCopiesSectionBodyOnly(t *testing.T) {
 		"",
 		"---",
 		"",
-		"## Task 02 - Second Task (clientvm) - 10 pts",
+		"## Task 02 - Second Task (client) - 10 pts",
 		"",
 		"```bash",
 		"touch /root/second",
@@ -817,24 +818,24 @@ func TestSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 		"| Time limit | 35 minutes |",
 		"| Objectives | networking-and-firewall |",
 		"",
-		"Configure persistent networking and hostname settings on clientvm in RHCSA style.",
+		"Configure persistent networking and hostname settings on client in RHCSA style.",
 		"",
 		"### Systems",
-		"- clientvm",
+		"- client",
 		"",
 		"## General Instructions",
 		"1. Unless a task states otherwise, make all changes persistent across reboots.",
 		"",
-		"## Task 01 - Client Network Configuration (clientvm) - 10 pts",
+		"## Task 01 - Client Network Configuration (client) - 10 pts",
 		"",
 		"```bash",
 		"nmcli device status",
-		"hostnamectl set-hostname clientvm.netlab.local",
+		"hostnamectl set-hostname client.netlab.local",
 		"```",
 		"",
 		"---",
 		"",
-		"## Task 02 - Static Host Entry (clientvm) - 10 pts",
+		"## Task 02 - Static Host Entry (client) - 10 pts",
 		"",
 		"```bash",
 		"vim /etc/hosts",
@@ -854,7 +855,7 @@ func TestSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 	if !strings.Contains(updated.statusText, "Copied Task 01") {
 		t.Fatalf("expected first generated task copied status, got %q", updated.statusText)
 	}
-	want := "nmcli device status\nhostnamectl set-hostname clientvm.netlab.local"
+	want := "nmcli device status\nhostnamectl set-hostname client.netlab.local"
 	if *copied != want {
 		t.Fatalf("copied generated solution = %q, want %q", *copied, want)
 	}
@@ -891,24 +892,24 @@ func TestVisibleSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 		"| Time limit | 35 minutes |",
 		"| Objectives | networking-and-firewall |",
 		"",
-		"Configure persistent networking and hostname settings on clientvm in RHCSA style.",
+		"Configure persistent networking and hostname settings on client in RHCSA style.",
 		"",
 		"### Systems",
-		"- clientvm",
+		"- client",
 		"",
 		"## General Instructions",
 		"1. Unless a task states otherwise, make all changes persistent across reboots.",
 		"",
-		"## Task 01 - Client Network Configuration (clientvm) - 10 pts",
+		"## Task 01 - Client Network Configuration (client) - 10 pts",
 		"",
 		"```bash",
 		"nmcli device status",
-		"hostnamectl set-hostname clientvm.netlab.local",
+		"hostnamectl set-hostname client.netlab.local",
 		"```",
 		"",
 		"---",
 		"",
-		"## Task 02 - Static Host Entry (clientvm) - 10 pts",
+		"## Task 02 - Static Host Entry (client) - 10 pts",
 		"",
 		"```bash",
 		"vim /etc/hosts",
@@ -925,7 +926,7 @@ func TestVisibleSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 	if !strings.Contains(updated.statusText, "Copied Task 01") {
 		t.Fatalf("expected visible solution copy click to copy task at %d,%d, got status %q", x, y, updated.statusText)
 	}
-	want := "nmcli device status\nhostnamectl set-hostname clientvm.netlab.local"
+	want := "nmcli device status\nhostnamectl set-hostname client.netlab.local"
 	if *copied != want {
 		t.Fatalf("copied generated solution = %q, want %q", *copied, want)
 	}
@@ -1226,13 +1227,13 @@ func TestHelpOverlayUsesProfessionalLayout(t *testing.T) {
 	for _, want := range []string{
 		"RHCSA Help",
 		"Navigation",
-		"  Tab / Shift+Tab   Switch pane",
 		"Documents",
-		"  F1 / 1 / &        Tasks",
-		"  F2 / 2 / é        Hints",
-		"  F3 / 3 / \"       Checks",
-		"  F4 / 4 / '        Solutions",
+		" F1               Tasks",
+		" F2               Hints",
+		" F3               Checks",
+		" F4               Solutions",
 		"Actions",
+		" z / x            SSH client / server",
 	} {
 		if !strings.Contains(stripped, want) {
 			t.Fatalf("expected help overlay to contain %q, got:\n%s", want, stripped)
@@ -1240,9 +1241,6 @@ func TestHelpOverlayUsesProfessionalLayout(t *testing.T) {
 	}
 	if strings.Contains(stripped, "Mouse") {
 		t.Fatalf("expected help overlay to omit mouse section, got:\n%s", stripped)
-	}
-	if strings.Contains(stripped, "Keyboard Reference") {
-		t.Fatalf("expected help overlay to omit old title, got:\n%s", stripped)
 	}
 }
 

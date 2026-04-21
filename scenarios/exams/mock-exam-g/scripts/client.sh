@@ -15,7 +15,7 @@ mkdir -p /root/.repo-backup-client-exam-g
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-g
 rhcsa_configure_password_recovery disable
 rhcsa_configure_password_recovery enable
-hostnamectl set-hostname clientvm
+hostnamectl set-hostname client
 rhcsa_remove_matching_lines 'vault.deltaforge.lab' /etc/hosts
 connection_name="$(rhcsa_get_lab_connection_name || true)"
 rhcsa_reset_lab_ipv4_profile "$connection_name"

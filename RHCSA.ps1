@@ -22,8 +22,8 @@ param(
         $candidates = switch ($area.ToLowerInvariant()) {
             'help' { @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion') }
             'list' { @('all', 'labs', 'lab', 'exams', 'exam') }
-            'ssh' { @('clientvm', 'servervm') }
-            'ssh-config' { @('clientvm', 'servervm') }
+            'ssh' { @('client', 'server') }
+            'ssh-config' { @('client', 'server') }
             'completion' { @('powershell', 'install') }
             default { @() }
         }
@@ -50,10 +50,10 @@ param(
                 $candidates = @('all', 'labs', 'lab', 'exams', 'exam')
             }
             'ssh/' {
-                $candidates = @('servervm', 'clientvm')
+                $candidates = @('server', 'client')
             }
             'ssh-config/' {
-                $candidates = @('servervm', 'clientvm')
+                $candidates = @('server', 'client')
             }
         }
 
@@ -110,12 +110,25 @@ param(
     })]
     [string]$Mode = 'Lab',
 
-    [ValidateSet('servervm', 'clientvm')]
+    [ValidateSet('RHCSA9', 'RHCSA10', 'All', 'rhcsa9', 'rhcsa10', 'all')]
     [ArgumentCompleter({
         param($commandName, $parameterName, $wordToComplete)
         $null = $commandName, $parameterName
 
-        foreach ($value in @('servervm', 'clientvm')) {
+        foreach ($value in @('RHCSA9', 'RHCSA10', 'All')) {
+            if ($value -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
+            }
+        }
+    })]
+    [string]$Track = 'RHCSA9',
+
+    [ValidateSet('server', 'client', 'servervm', 'clientvm')]
+    [ArgumentCompleter({
+        param($commandName, $parameterName, $wordToComplete)
+        $null = $commandName, $parameterName
+
+        foreach ($value in @('server', 'client', 'servervm', 'clientvm')) {
             if ($value -like "$wordToComplete*") {
                 [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
             }
@@ -224,6 +237,20 @@ function Test-HelpToken {
     return ($Token.ToLowerInvariant() -in @('help', '-h', '--help', '/?'))
 }
 
+function Normalize-VmName {
+    param(
+        [string]$Name
+    )
+
+    $value = if ([string]::IsNullOrWhiteSpace($Name)) { 'client' } else { $Name.ToLowerInvariant() }
+    switch ($value) {
+        'servervm' { return 'server' }
+        'clientvm' { return 'client' }
+        'server' { return 'server' }
+        default { return 'client' }
+    }
+}
+
 function Get-RecommendedHelpCommand {
     param(
         [string]$Area,
@@ -327,7 +354,7 @@ function Get-HelpOutput {
             return @(
                 (Get-UiHeading -Text 'list'),
                 (Format-StyledText -Text 'List available labs and mock exams.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 list [labs|exams]'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 list [labs|exams] [-Track RHCSA9|RHCSA10|All]'),
                 '',
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 list'),
@@ -339,11 +366,12 @@ function Get-HelpOutput {
             return @(
                 (Get-UiHeading -Text 'start'),
                 (Format-StyledText -Text 'Start a lab or exam run.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 start -Id <scenario-id> -Mode <Lab|Exam>'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 start -Id <scenario-id> -Mode <Lab|Exam> [-Track RHCSA9|RHCSA10|All]'),
                 '',
                 'Options:',
                 '  -Id     Scenario id to start',
                 '  -Mode   Lab or Exam',
+                '  -Track  Scenario track, default RHCSA9',
                 '',
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
@@ -363,7 +391,7 @@ function Get-HelpOutput {
         'repo' {
             return @(
                 (Get-UiHeading -Text 'repo'),
-                (Format-StyledText -Text 'Run the offline package repository self-test on servervm and clientvm.' -StyleName 'Muted'),
+                (Format-StyledText -Text 'Run the offline package repository self-test on server and client.' -StyleName 'Muted'),
                 (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 repo'),
                 '',
                 'Example:',
@@ -390,42 +418,43 @@ function Get-HelpOutput {
         'vms' {
             return @(
                 (Get-UiHeading -Text 'vms'),
-                (Format-StyledText -Text 'Show VM state for servervm and clientvm.' -StyleName 'Muted'),
+                (Format-StyledText -Text 'Show VM state for server and client.' -StyleName 'Muted'),
                 (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 vms')
             )
         }
         'ssh' {
             return @(
                 (Get-UiHeading -Text 'ssh'),
-                (Format-StyledText -Text 'Open an SSH session. Defaults to clientvm.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 ssh [servervm|clientvm]'),
+                (Format-StyledText -Text 'Open an SSH session. Defaults to client.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 ssh [server|client]'),
                 '',
                 (Format-StyledText -Text 'On Windows this opens a dedicated PowerShell window for the session.' -StyleName 'Muted'),
                 '',
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh servervm')
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh server')
             )
         }
         'ssh-config' {
             return @(
                 (Get-UiHeading -Text 'ssh-config'),
-                (Format-StyledText -Text 'Print SSH config for external SSH clients. Defaults to clientvm.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 ssh-config [servervm|clientvm]'),
+                (Format-StyledText -Text 'Print SSH config for external SSH clients. Defaults to client.' -StyleName 'Muted'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 ssh-config [server|client]'),
                 '',
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh-config'),
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh-config servervm')
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh-config server')
             )
         }
         'tui' {
             return @(
                 (Get-UiHeading -Text 'tui'),
                 (Format-StyledText -Text 'Open the labs-first interactive terminal UI.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 tui'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 tui [-Track RHCSA9|RHCSA10|All]'),
                 '',
                 'Example:',
-                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui'),
+                (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui -Track RHCSA10')
             )
         }
         'completion' {
@@ -655,19 +684,22 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
         }
         'list' {
             if (`$tokens.Count -le 1) {
-                Complete-RhcsaValues -Value @('labs', 'exams')
+                Complete-RhcsaValues -Value @('labs', 'exams', '-Track')
+            }
+            elseif (`$last -eq '-Track') {
+                Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10', 'All')
             }
             return
         }
         'ssh' {
             if (`$tokens.Count -le 1) {
-                Complete-RhcsaValues -Value @('clientvm', 'servervm')
+                Complete-RhcsaValues -Value @('client', 'server')
             }
             return
         }
         'ssh-config' {
             if (`$tokens.Count -le 1) {
-                Complete-RhcsaValues -Value @('clientvm', 'servervm')
+                Complete-RhcsaValues -Value @('client', 'server')
             }
             return
         }
@@ -686,7 +718,19 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
                 Complete-RhcsaValues -Value @('Lab', 'Exam')
                 return
             }
-            Complete-RhcsaValues -Value @('-Id', '-Mode')
+            if (`$last -eq '-Track') {
+                Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10', 'All')
+                return
+            }
+            Complete-RhcsaValues -Value @('-Id', '-Mode', '-Track')
+            return
+        }
+        'tui' {
+            if (`$last -eq '-Track') {
+                Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10', 'All')
+                return
+            }
+            Complete-RhcsaValues -Value @('-Track')
             return
         }
         'check' {
@@ -831,7 +875,8 @@ function Format-ScenarioCatalogOutput {
     param(
         [object[]]$ScenarioCatalog,
         [ValidateSet('all', 'labs', 'exams')]
-        [string]$Filter = 'all'
+        [string]$Filter = 'all',
+        [string]$Track = 'RHCSA9'
     )
 
     $scenarioList = @($ScenarioCatalog)
@@ -857,6 +902,7 @@ function Format-ScenarioCatalogOutput {
 
     $lines = @(
         (Get-UiHeading -Text 'Scenarios'),
+        (Format-StyledText -Text ("Track: {0}" -f (Normalize-ScenarioTrack -Track $Track).ToUpperInvariant()) -StyleName 'Muted'),
         (Format-StyledText -Text $summary -StyleName 'Muted'),
         ''
     )
@@ -1083,7 +1129,7 @@ function Format-ScenarioStartOutput {
     }
 
     if ($ScenarioResult.Manifest.Flags.PasswordRecovery) {
-        $lines += (Format-StyledText -Text 'Recovery mode uses the clientvm GUI console.' -StyleName 'Warning')
+        $lines += (Format-StyledText -Text 'Recovery mode uses the client GUI console.' -StyleName 'Warning')
     }
 
     return $lines
@@ -1326,12 +1372,12 @@ function Resolve-CommandRoute {
         'check' { return [PSCustomObject]@{ Area = 'scenario'; Command = 'check'; Item = $null; Extra = $tokens; Legacy = $false } }
         'vms' { return [PSCustomObject]@{ Area = 'vm'; Command = 'status'; Item = $null; Extra = $tokens; Legacy = $false } }
         'ssh' {
-            $targetVm = if ($tokens.Count -gt 0) { $tokens[0] } else { 'clientvm' }
+            $targetVm = if ($tokens.Count -gt 0) { $tokens[0] } else { 'client' }
             $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
             return [PSCustomObject]@{ Area = 'vm'; Command = 'ssh'; Item = $targetVm; Extra = $remaining; Legacy = $false }
         }
         'ssh-config' {
-            $targetVm = if ($tokens.Count -gt 0) { $tokens[0] } else { 'clientvm' }
+            $targetVm = if ($tokens.Count -gt 0) { $tokens[0] } else { 'client' }
             $remaining = if ($tokens.Count -gt 1) { @($tokens[1..($tokens.Count - 1)]) } else { @() }
             return [PSCustomObject]@{ Area = 'vm'; Command = 'ssh-config'; Item = $targetVm; Extra = $remaining; Legacy = $false }
         }
@@ -1491,7 +1537,7 @@ try {
 
             $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $projectRoot)
             $vagrantPath = Get-VagrantPath
-            foreach ($machineName in @('servervm', 'clientvm')) {
+            foreach ($machineName in @('server', 'client')) {
                 $current = $machineStatus | Where-Object { $_.Name -eq $machineName } | Select-Object -First 1
                 if ($null -eq $current) {
                     continue
@@ -1603,7 +1649,7 @@ try {
                 }
             }
 
-            Format-ScenarioCatalogOutput -ScenarioCatalog @(Get-ScenarioCatalog -ProjectRoot $projectRoot) -Filter $listFilter | Write-Output
+            Format-ScenarioCatalogOutput -ScenarioCatalog @(Get-ScenarioCatalog -ProjectRoot $projectRoot -Track $Track) -Filter $listFilter -Track $Track | Write-Output
             break
         }
         'scenario/start' {
@@ -1628,7 +1674,7 @@ try {
                 throw 'Scenario start requires -Id <scenario-id>.'
             }
 
-            $result = Start-ScenarioRun -ScenarioId $Id -Mode $Mode -ProjectRoot $projectRoot
+            $result = Start-ScenarioRun -ScenarioId $Id -Mode $Mode -Track $Track -ProjectRoot $projectRoot
             Format-ScenarioStartOutput -ScenarioResult $result | Write-Output
             break
         }
@@ -1807,14 +1853,14 @@ try {
 
             $targetVm = if ($PSBoundParameters.ContainsKey('Vm')) { $Vm } else { $item }
             if ([string]::IsNullOrWhiteSpace($targetVm)) {
-                $targetVm = 'clientvm'
+                $targetVm = 'client'
             }
 
             if ($PSBoundParameters.ContainsKey('Vm') -and $item -and $item -ne $Vm) {
                 throw "Conflicting ssh targets '$item' and '$Vm'."
             }
 
-            $session = Open-VmSshSession -MachineName $targetVm -ProjectRoot $projectRoot
+            $session = Open-VmSshSession -MachineName (Normalize-VmName -Name $targetVm) -ProjectRoot $projectRoot
             Format-VmSshOutput -SessionResult $session | Write-Output
             break
         }
@@ -1842,14 +1888,14 @@ try {
 
             $targetVm = if ($PSBoundParameters.ContainsKey('Vm')) { $Vm } else { $item }
             if ([string]::IsNullOrWhiteSpace($targetVm)) {
-                $targetVm = 'clientvm'
+                $targetVm = 'client'
             }
 
             if ($PSBoundParameters.ContainsKey('Vm') -and $item -and $item -ne $Vm) {
                 throw "Conflicting ssh-config targets '$item' and '$Vm'."
             }
 
-            Get-VmSshConfig -MachineName $targetVm -ProjectRoot $projectRoot | Write-Output
+            Get-VmSshConfig -MachineName (Normalize-VmName -Name $targetVm) -ProjectRoot $projectRoot | Write-Output
             break
         }
         'app/tui' {
@@ -1866,7 +1912,7 @@ try {
                 throw "Unknown tui argument '$($remainingItem[0])'."
             }
 
-            Open-RhcsaTui -ProjectRoot $projectRoot
+            Open-RhcsaTui -ProjectRoot $projectRoot -Track $Track
             break
         }
         'completion/manage' {
