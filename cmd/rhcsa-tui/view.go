@@ -364,8 +364,6 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	}
 	if status := m.theme.StatusBadge(view.progress); status != "" {
 		metaParts = append(metaParts, status)
-	} else if view.active {
-		metaParts = append(metaParts, m.theme.ActiveBadge.Render("RUNNING"))
 	}
 	lines := []string{
 		m.fillLine(tabs, "", width),

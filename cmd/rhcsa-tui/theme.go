@@ -136,7 +136,7 @@ func NewTheme() Theme {
 		ItemNormal: lipgloss.NewStyle().
 			Foreground(textDim),
 		ItemRunning: lipgloss.NewStyle().
-			Foreground(yellow),
+			Foreground(redLight),
 		ItemCursor: lipgloss.NewStyle().
 			Foreground(red).
 			Bold(true),
@@ -291,8 +291,6 @@ func (t Theme) StatusBadge(marker string) string {
 		return t.BadgePassed.Render("PASSED")
 	case "C":
 		return t.BadgeChecked.Render("CHECKED")
-	case "S":
-		return t.BadgeStarted.Render("RUNNING")
 	default:
 		return ""
 	}

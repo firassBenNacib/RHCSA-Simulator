@@ -189,7 +189,7 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 			TasksPath:       relativeTasks("LAB_TASKS.md"),
 			SolutionPath:    relativeTasks("LAB_SOLUTION.md"),
 			HintContent:     renderHints(manifest.Title, manifest.Content.Lab.Hints),
-			CheckContent:    renderChecks(relativeManifest, manifest.Content.Lab.Checks),
+			CheckContent:    renderChecks(manifest.Content.Lab.Checks),
 		}
 	}
 
@@ -276,7 +276,7 @@ func renderHints(title string, hints []string) string {
 	return strings.Join(lines, "\n")
 }
 
-func renderChecks(relativeManifest string, checks []string) string {
+func renderChecks(checks []string) string {
 	lines := []string{}
 	if len(checks) == 0 {
 		lines = append(lines, "# No automated checks are defined for this lab.", `echo "No automated checks are defined for this lab."`)

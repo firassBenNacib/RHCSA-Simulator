@@ -237,7 +237,7 @@ function Test-HelpToken {
     return ($Token.ToLowerInvariant() -in @('help', '-h', '--help', '/?'))
 }
 
-function Normalize-VmName {
+function ConvertTo-VmName {
     param(
         [string]$Name
     )
@@ -902,7 +902,7 @@ function Format-ScenarioCatalogOutput {
 
     $lines = @(
         (Get-UiHeading -Text 'Scenarios'),
-        (Format-StyledText -Text ("Track: {0}" -f (Normalize-ScenarioTrack -Track $Track).ToUpperInvariant()) -StyleName 'Muted'),
+        (Format-StyledText -Text ("Track: {0}" -f (ConvertTo-ScenarioTrack -Track $Track).ToUpperInvariant()) -StyleName 'Muted'),
         (Format-StyledText -Text $summary -StyleName 'Muted'),
         ''
     )
@@ -1860,7 +1860,7 @@ try {
                 throw "Conflicting ssh targets '$item' and '$Vm'."
             }
 
-            $session = Open-VmSshSession -MachineName (Normalize-VmName -Name $targetVm) -ProjectRoot $projectRoot
+            $session = Open-VmSshSession -MachineName (ConvertTo-VmName -Name $targetVm) -ProjectRoot $projectRoot
             Format-VmSshOutput -SessionResult $session | Write-Output
             break
         }
@@ -1895,7 +1895,7 @@ try {
                 throw "Conflicting ssh-config targets '$item' and '$Vm'."
             }
 
-            Get-VmSshConfig -MachineName (Normalize-VmName -Name $targetVm) -ProjectRoot $projectRoot | Write-Output
+            Get-VmSshConfig -MachineName (ConvertTo-VmName -Name $targetVm) -ProjectRoot $projectRoot | Write-Output
             break
         }
         'app/tui' {

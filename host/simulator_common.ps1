@@ -289,7 +289,7 @@ function Get-StringArray {
     return ,$items
 }
 
-function Normalize-ScenarioTrack {
+function ConvertTo-ScenarioTrack {
     param(
         [AllowEmptyString()]
         [string]$Track
@@ -318,7 +318,7 @@ function Get-ScenarioTrackArray {
 
     $tracks = @()
     foreach ($item in $raw) {
-        $track = Normalize-ScenarioTrack -Track $item
+        $track = ConvertTo-ScenarioTrack -Track $item
         if ($track -ne 'all' -and $track -notin $tracks) {
             $tracks += $track
         }
@@ -337,7 +337,7 @@ function Test-ScenarioTrackMatch {
         [string]$Track = 'rhcsa9'
     )
 
-    $normalized = Normalize-ScenarioTrack -Track $Track
+    $normalized = ConvertTo-ScenarioTrack -Track $Track
     if ($normalized -eq 'all') {
         return $true
     }
@@ -820,8 +820,6 @@ function Get-ScenarioLabHintsMarkdown {
 function Get-ScenarioLabCheckScript {
     param(
         [Parameter(Mandatory = $true)]
-        [object]$Manifest,
-        [Parameter(Mandatory = $true)]
         [object[]]$Checks
     )
 
@@ -928,7 +926,7 @@ function Initialize-LabExerciseCache {
         Copy-Item -LiteralPath $Manifest.Docs.LabSolution -Destination $solutionPath -Force
 
         Set-Utf8NoBomFile -Path $hintPath -Content (Get-ScenarioLabHintsMarkdown -Manifest $Manifest)
-        Set-Utf8NoBomFile -Path $checkPath -Content (Get-ScenarioLabCheckScript -Manifest $Manifest -Checks $checks)
+        Set-Utf8NoBomFile -Path $checkPath -Content (Get-ScenarioLabCheckScript -Checks $checks)
 
         $metadata = [ordered]@{
             id = $Manifest.Id
@@ -1335,7 +1333,7 @@ function Get-RhcsaTuiBinaryPath {
     return (Join-Path $buildRoot $binaryName)
 }
 
-function Get-RhcsaTuiSourcePaths {
+function Get-RhcsaTuiSourceFile {
     param(
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
@@ -1374,7 +1372,7 @@ function Test-RhcsaTuiBinaryIsStale {
     }
 
     $binaryTime = (Get-Item -Path $BinaryPath).LastWriteTimeUtc
-    foreach ($sourcePath in Get-RhcsaTuiSourcePaths -ProjectRoot $ProjectRoot) {
+    foreach ($sourcePath in Get-RhcsaTuiSourceFile -ProjectRoot $ProjectRoot) {
         try {
             if ((Get-Item -Path $sourcePath).LastWriteTimeUtc -gt $binaryTime) {
                 return $true
@@ -1643,7 +1641,7 @@ function Invoke-VagrantCommand {
     }
 }
 
-function Start-VagrantMachineStep {
+function Invoke-VagrantMachineStep {
     param(
         [Parameter(Mandatory = $true)]
         [ValidateSet('server', 'client')]
@@ -2964,7 +2962,7 @@ function Confirm-VagrantGuestProvisionReadiness {
         }
 
         Write-WorkflowStatus -Area $Area -Message "Retrying $MachineName startup after a transient post-restore SSH readiness failure"
-        Start-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea $Area
+        Invoke-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea $Area
         Wait-VagrantGuestSshReady `
             -MachineName $MachineName `
             -ProjectRoot $ProjectRoot `
@@ -3261,15 +3259,15 @@ function Start-BaselineSession {
             try {
                 if ($NoProvision) {
                     Write-WorkflowStatus -Area 'baseline' -Message 'Starting server'
-                    Start-VagrantMachineStep -MachineName 'server' -ProjectRoot $ProjectRoot
+                    Invoke-VagrantMachineStep -MachineName 'server' -ProjectRoot $ProjectRoot
                     Write-WorkflowStatus -Area 'baseline' -Message 'Starting client'
-                    Start-VagrantMachineStep -MachineName 'client' -ProjectRoot $ProjectRoot
+                    Invoke-VagrantMachineStep -MachineName 'client' -ProjectRoot $ProjectRoot
                 }
                 else {
                     Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning server'
-                    Start-VagrantMachineStep -MachineName 'server' -Provision -ProjectRoot $ProjectRoot
+                    Invoke-VagrantMachineStep -MachineName 'server' -Provision -ProjectRoot $ProjectRoot
                     Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning client'
-                    Start-VagrantMachineStep -MachineName 'client' -Provision -ProjectRoot $ProjectRoot
+                    Invoke-VagrantMachineStep -MachineName 'client' -Provision -ProjectRoot $ProjectRoot
                 }
             }
             finally {
@@ -3391,7 +3389,7 @@ function Start-ScenarioRun {
     )
 
     $modeLower = $Mode.ToLowerInvariant()
-    $trackLower = Normalize-ScenarioTrack -Track $Track
+    $trackLower = ConvertTo-ScenarioTrack -Track $Track
     $manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot -Track $trackLower
     if ($modeLower -notin $manifest.SupportedModes) {
         throw "Scenario '$ScenarioId' does not support mode '$modeLower'. Supported modes: $($manifest.SupportedModes -join ', ')."
@@ -4110,7 +4108,7 @@ function Invoke-OrphanVmFolderCleanup {
     }
 }
 
-function Remove-LiteralPathWithRetry {
+function Invoke-LiteralPathRemovalWithRetry {
     param(
         [Parameter(Mandatory = $true)]
         [string]$LiteralPath,
@@ -4272,7 +4270,7 @@ function Remove-LabEnvironment {
 
         foreach ($path in $paths) {
             if (Test-Path $path) {
-                if (Remove-LiteralPathWithRetry -LiteralPath $path -Recurse -Force) {
+                if (Invoke-LiteralPathRemovalWithRetry -LiteralPath $path -Recurse -Force) {
                     $removedPaths += $path
                 }
                 else {
@@ -4283,7 +4281,7 @@ function Remove-LabEnvironment {
 
         Get-ChildItem -Path . -Filter '*.vdi' -File -ErrorAction SilentlyContinue |
             ForEach-Object {
-                if (Remove-LiteralPathWithRetry -LiteralPath $_.FullName -Force) {
+                if (Invoke-LiteralPathRemovalWithRetry -LiteralPath $_.FullName -Force) {
                     $removedPaths += $_.FullName
                 }
                 else {
@@ -4359,7 +4357,7 @@ function Open-RhcsaTui {
 
         Invoke-InteractiveExternalCommand `
             -FilePath $launchBinaryPath `
-            -ArgumentList @('--project-root', $ProjectRoot, '--track', (Normalize-ScenarioTrack -Track $Track)) `
+            -ArgumentList @('--project-root', $ProjectRoot, '--track', (ConvertTo-ScenarioTrack -Track $Track)) `
             -FailureMessage 'Failed to open the RHCSA TUI.'
     }
     finally {
