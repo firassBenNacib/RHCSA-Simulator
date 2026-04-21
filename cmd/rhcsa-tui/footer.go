@@ -190,23 +190,6 @@ func (m model) renderHelpWithClose() string {
 	return strings.Join(lines, "\n")
 }
 
-func (m model) detailCopyButtonBounds() (int, int, int, bool) {
-	if !m.canCopyDetail() {
-		return 0, 0, 0, false
-	}
-
-	detailWidth := m.detailPaneWidth()
-	buttonWidth := lipgloss.Width(m.theme.RenderCopyButton())
-	if buttonWidth < 1 || detailWidth < buttonWidth {
-		return 0, 0, 0, false
-	}
-
-	originX, originY := m.detailPaneOrigin()
-	startX := originX + detailWidth - buttonWidth
-	endX := originX + detailWidth - 1
-	return startX, endX, originY, true
-}
-
 type sectionCopyBound struct {
 	section int
 	startX  int

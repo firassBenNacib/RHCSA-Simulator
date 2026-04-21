@@ -100,7 +100,15 @@ func ReadRelative(root, relative string) string {
 		return ""
 	}
 
-	content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+	rootFS, err := os.OpenRoot(root)
+	if err != nil {
+		return fmt.Sprintf("Unable to read %s\n\n%s", relative, err)
+	}
+	defer func() {
+		_ = rootFS.Close()
+	}()
+
+	content, err := rootFS.ReadFile(filepath.FromSlash(relative))
 	if err != nil {
 		return fmt.Sprintf("Unable to read %s\n\n%s", relative, err)
 	}
@@ -136,7 +144,21 @@ func findScenarioManifests(root string) ([]string, error) {
 }
 
 func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
-	raw, err := os.ReadFile(manifestPath)
+	relativeManifest, err := filepath.Rel(root, manifestPath)
+	if err != nil {
+		return scenarioLoadResult{}, fmt.Errorf("resolve manifest path %s: %w", manifestPath, err)
+	}
+	relativeManifest = filepath.ToSlash(relativeManifest)
+
+	rootFS, err := os.OpenRoot(root)
+	if err != nil {
+		return scenarioLoadResult{}, fmt.Errorf("open catalog root %s: %w", root, err)
+	}
+	defer func() {
+		_ = rootFS.Close()
+	}()
+
+	raw, err := rootFS.ReadFile(filepath.FromSlash(relativeManifest))
 	if err != nil {
 		return scenarioLoadResult{}, fmt.Errorf("read scenario manifest %s: %w", manifestPath, err)
 	}
@@ -145,12 +167,6 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 	if err := json.Unmarshal(raw, &manifest); err != nil {
 		return scenarioLoadResult{}, fmt.Errorf("parse scenario manifest %s: %w", manifestPath, err)
 	}
-
-	relativeManifest, err := filepath.Rel(root, manifestPath)
-	if err != nil {
-		return scenarioLoadResult{}, fmt.Errorf("resolve manifest path %s: %w", manifestPath, err)
-	}
-	relativeManifest = filepath.ToSlash(relativeManifest)
 
 	scenarioRoot := filepath.Dir(manifestPath)
 	relativeTasks := func(name string) string {

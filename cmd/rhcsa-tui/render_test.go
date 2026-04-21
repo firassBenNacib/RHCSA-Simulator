@@ -27,26 +27,26 @@ func buildRenderTestModel(t *testing.T) model {
 	longTasks := "# Lab Tasks\n\n- Configure hostname\n- Set up networking\n- Configure DNS\n- Validate connectivity\n- Reboot safely\n- Confirm persistence\n- Review logs\n- Verify route\n- Verify resolver\n- Document final state\n"
 	longSolution := "# Solution\n\n```bash\nhostnamectl set-hostname demo\nnmcli con mod demo ipv4.addresses 192.168.122.50/24\nnmcli con up demo\n```\n\n- Verify with nmcli\n- Verify with ping\n- Verify with hostnamectl\n- Verify persistence after reboot\n"
 
-	os.WriteFile(filepath.Join(labRoot, "scenario.json"), []byte(`{
+	writeRenderTestFile(t, filepath.Join(labRoot, "scenario.json"), `{
 		"id": "lab-01-demo", "title": "Lab 01: Networking and Hostname",
 		"description": "Configure networking", "objective_tags": ["networking"],
 		"supported_modes": ["lab"], "time_limit_minutes": 15,
 		"flags": {"password_recovery": false, "requires_server": false},
 		"content": {"lab": {"hints": ["Use nmcli"], "checks": ["grep -q demo /etc/hosts"]}}
-	}`), 0o644)
+	}`)
 
-	os.WriteFile(filepath.Join(examRoot, "scenario.json"), []byte(`{
+	writeRenderTestFile(t, filepath.Join(examRoot, "scenario.json"), `{
 		"id": "mock-exam-a", "title": "Mock Exam A: Full RHCSA",
 		"description": "Full mock exam", "objective_tags": ["containers", "storage"],
 		"supported_modes": ["exam"], "time_limit_minutes": 150,
 		"flags": {"password_recovery": true, "requires_server": true},
 		"content": {"lab": {"hints": [], "checks": []}}
-	}`), 0o644)
+	}`)
 
-	os.WriteFile(filepath.Join(labRoot, "LAB_TASKS.md"), []byte(longTasks), 0o644)
-	os.WriteFile(filepath.Join(labRoot, "LAB_SOLUTION.md"), []byte(longSolution), 0o644)
-	os.WriteFile(filepath.Join(examRoot, "EXAM_TASKS.md"), []byte("# Exam Tasks\n\n- Complete all tasks within time\n"), 0o644)
-	os.WriteFile(filepath.Join(examRoot, "EXAM_SOLUTION.md"), []byte("# Solution\n\nSee lab solutions.\n"), 0o644)
+	writeRenderTestFile(t, filepath.Join(labRoot, "LAB_TASKS.md"), longTasks)
+	writeRenderTestFile(t, filepath.Join(labRoot, "LAB_SOLUTION.md"), longSolution)
+	writeRenderTestFile(t, filepath.Join(examRoot, "EXAM_TASKS.md"), "# Exam Tasks\n\n- Complete all tasks within time\n")
+	writeRenderTestFile(t, filepath.Join(examRoot, "EXAM_SOLUTION.md"), "# Solution\n\nSee lab solutions.\n")
 
 	labs, exams, err := catalog.Load(root)
 	if err != nil {
@@ -73,6 +73,13 @@ func buildRenderTestModel(t *testing.T) model {
 	}
 	m.touchViewed()
 	return m
+}
+
+func writeRenderTestFile(t *testing.T, path string, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func buildRepoTestModel(t *testing.T) model {
@@ -212,13 +219,13 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	if strings.Contains(stripped, "y Copy") {
 		t.Fatalf("expected footer to omit y Copy, got:\n%s", stripped)
 	}
-	if !(strings.Index(stripped, "c Check") < strings.Index(stripped, "F1 Tasks")) {
+	if strings.Index(stripped, "c Check") >= strings.Index(stripped, "F1 Tasks") {
 		t.Fatalf("expected c Check before F1 Tasks, got:\n%s", stripped)
 	}
-	if !(strings.Index(stripped, "z Client") < strings.Index(stripped, "x Server") &&
-		strings.Index(stripped, "x Server") < strings.Index(stripped, "/ Find") &&
-		strings.Index(stripped, "/ Find") < strings.Index(stripped, "? Help") &&
-		strings.Index(stripped, "? Help") < strings.Index(stripped, "q Quit")) {
+	if strings.Index(stripped, "z Client") >= strings.Index(stripped, "x Server") ||
+		strings.Index(stripped, "x Server") >= strings.Index(stripped, "/ Find") ||
+		strings.Index(stripped, "/ Find") >= strings.Index(stripped, "? Help") ||
+		strings.Index(stripped, "? Help") >= strings.Index(stripped, "q Quit") {
 		t.Fatalf("expected footer order z Client, x Server, / Find, ? Help, q Quit, got:\n%s", stripped)
 	}
 }
