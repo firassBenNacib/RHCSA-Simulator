@@ -9,6 +9,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [Usage](#usage)
 * [Commands](#commands)
 * [Options](#options)
+* [Development](#development)
 * [License](#license)
 * [Author](#author)
 
@@ -20,7 +21,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
 * `rhel-10.1-x86_64-dvd.iso` only if you opt into the preview RHEL 10 profile
-* [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source
+* [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source. Go 1.26 is recommended for release builds.
 
 ## Installation
 
@@ -134,7 +135,7 @@ The TUI finds `RHCSA.ps1` from:
 * the current working directory
 * the directory that contains the TUI binary
 
-The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or set `RHCSA_TRACK=rhcsa10` to preview RHCSA 10 content after a RHEL 10-compatible baseline is available.
+The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or set `RHCSA_TRACK=rhcsa10` to preview RHCSA 10 content after a RHEL 10-compatible baseline is available. RHCSA 9 and RHCSA 10 catalogs are filtered separately, so RHCSA 9 Podman/container labs are not shown in RHCSA 10 mode.
 
 **Release binaries**
 
@@ -214,7 +215,11 @@ Use GitHub Releases for prebuilt binaries, or rebuild locally with:
 go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 ```
 
-The repository includes a GitHub Actions workflow at `.github/workflows/release-tui.yml` that builds and uploads Windows, Linux, and macOS TUI binaries when a GitHub Release is published.
+The repository includes:
+
+* `.github/workflows/ci.yml` for source checks, Go tests/vet/build, Python syntax, scenario audits, PowerShell parsing, and Vagrantfile syntax.
+* `.github/workflows/release-tui.yml` for Windows, Linux, and macOS TUI release binaries.
+* `.github/dependabot.yml` for weekly Go module and GitHub Actions update PRs.
 
 ### Platform profiles
 
@@ -226,18 +231,29 @@ $env:RHCSA_ISO = 'rhel-9.7-x86_64-dvd.iso'
 $env:RHCSA_BOX = 'generic/rocky9'
 ```
 
-The preview RHEL 10 profile uses RHEL 10.1 ISO naming and a Rocky 10 Vagrant box by default:
+The preview RHEL 10 profile uses RHEL 10.1 ISO naming and the official Rocky Linux 10 Vagrant box by default:
 
 ```powershell
 $env:RHCSA_PROFILE = 'rhel10'
 $env:RHCSA_ISO = 'rhel-10.1-x86_64-dvd.iso'
-$env:RHCSA_BOX = 'generic/rocky10'
+$env:RHCSA_BOX = 'rockylinux/10'
 .\RHCSA.ps1 up
 ```
 
-RHEL 10 support is intentionally marked preview until the full lab/exam replay suite is validated on a RHEL 10 baseline. RHCSA 10 content should be added as separate scenarios where behavior differs, especially Flatpak package tasks and updated systemd/service-management objectives.
+RHEL 10 support is intentionally marked preview until the full lab/exam replay suite is validated on a RHEL 10 baseline. The first RHCSA 10 preview labs cover Flatpak remote setup and systemd timer units; broader RHCSA 10 exams should be added only after the RHEL 10 baseline is runtime-verified.
 
 The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for the track plan.
+
+### Host cleanup
+
+The simulator scopes cleanup to this project by default. It should not kill unrelated Vagrant or VirtualBox processes owned by other projects. If a host is stuck behind stale global Vagrant or VirtualBox locks, use the explicit last-resort switch:
+
+```powershell
+.\RHCSA.ps1 up -ForceHostCleanup
+.\RHCSA.ps1 destroy -ForceHostCleanup
+```
+
+You can also set `RHCSA_FORCE_HOST_CLEANUP=1` for one terminal session.
 
 ## Commands
 
@@ -269,6 +285,7 @@ Commands
 * -NormalStart
 * -HeadlessClient
 * -RealisticMode
+* -ForceHostCleanup
 
 **start**
 
@@ -295,6 +312,19 @@ Commands
 **ssh-config**
 
 * ssh-config [server|client]
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure and refactor direction, and [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage.
+
+Keep these compatibility entrypoints working:
+
+```powershell
+.\RHCSA.ps1 tui
+python host/verify_scenario_solutions.py --kind all --audit-only
+```
+
+The Go TUI source under `cmd/rhcsa-tui` and shared packages under `internal` must be committed. Built binaries stay ignored and are published through GitHub Releases.
 
 ## License
 

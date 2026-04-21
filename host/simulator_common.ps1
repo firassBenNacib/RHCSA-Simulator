@@ -3053,11 +3053,64 @@ function Repair-BaselineSnapshotIfNeeded {
     return $true
 }
 
+function Test-ForceHostCleanupEnabled {
+    param(
+        [switch]$ForceHostCleanup
+    )
+
+    if ($ForceHostCleanup.IsPresent) {
+        return $true
+    }
+
+    if ((Test-Path variable:script:ForceHostCleanup) -and [bool]$script:ForceHostCleanup) {
+        return $true
+    }
+
+    return ($env:RHCSA_FORCE_HOST_CLEANUP -match '^(1|true|yes|on)$')
+}
+
+function Get-LabMachineIdList {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return @(
+        Get-OptionalVagrantMachineId -MachineName 'server' -ProjectRoot $ProjectRoot
+        Get-OptionalVagrantMachineId -MachineName 'client' -ProjectRoot $ProjectRoot
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+}
+
+function Test-ProcessCommandLineMatchesLab {
+    param(
+        [string]$CommandLine,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string[]]$MachineIds = @()
+    )
+
+    if ([string]::IsNullOrWhiteSpace($CommandLine)) {
+        return $false
+    }
+
+    $normalizedProjectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+    if ($CommandLine.IndexOf($normalizedProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+        return $true
+    }
+
+    foreach ($machineId in @($MachineIds)) {
+        if (-not [string]::IsNullOrWhiteSpace($machineId) -and $CommandLine.IndexOf($machineId, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 function Invoke-LabHypervisorLockCleanup {
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([int])]
     param(
-        [string]$ProjectRoot = (Get-ProjectRoot)
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$ForceHostCleanup
     )
 
     if (-not $PSCmdlet.ShouldProcess($ProjectRoot, 'Clean stale Vagrant and VirtualBox processes for this lab')) {
@@ -3072,11 +3125,8 @@ function Invoke-LabHypervisorLockCleanup {
             }
     }
 
-    $machineIds = @(
-        Get-OptionalVagrantMachineId -MachineName 'server' -ProjectRoot $ProjectRoot
-        Get-OptionalVagrantMachineId -MachineName 'client' -ProjectRoot $ProjectRoot
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
+    $machineIds = @(Get-LabMachineIdList -ProjectRoot $ProjectRoot)
     $killed = 0
 
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
@@ -3085,16 +3135,11 @@ function Invoke-LabHypervisorLockCleanup {
         $commandLine = [string]$process.CommandLine
         $kill = $false
 
-        if ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe')) {
+        if ($forceCleanup -and $name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe')) {
             $kill = $true
         }
-        elseif ($name -in @('VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
-            foreach ($machineId in $machineIds) {
-                if ($commandLine -and $commandLine -like "*$machineId*") {
-                    $kill = $true
-                    break
-                }
-            }
+        elseif ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+            $kill = Test-ProcessCommandLineMatchesLab -CommandLine $commandLine -ProjectRoot $ProjectRoot -MachineIds $machineIds
         }
 
         if ($kill) {
@@ -3104,7 +3149,7 @@ function Invoke-LabHypervisorLockCleanup {
     }
 
     Start-Sleep -Seconds 2
-    if (Test-LabHypervisorBusy) {
+    if ($forceCleanup -and (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup)) {
         $fallbackNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')
         foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
             if ([string]$process.Name -in $fallbackNames) {
@@ -3120,12 +3165,24 @@ function Invoke-LabHypervisorLockCleanup {
 
 function Test-LabHypervisorBusy {
     [OutputType([bool])]
-    param()
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$ForceHostCleanup
+    )
 
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
+    $machineIds = @(Get-LabMachineIdList -ProjectRoot $ProjectRoot)
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
     foreach ($process in $processes) {
         $name = [string]$process.Name
-        if ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+        if ($forceCleanup -and $name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+            return $true
+        }
+
+        if (
+            $name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe') -and
+            (Test-ProcessCommandLineMatchesLab -CommandLine ([string]$process.CommandLine) -ProjectRoot $ProjectRoot -MachineIds $machineIds)
+        ) {
             return $true
         }
     }
@@ -3136,12 +3193,14 @@ function Test-LabHypervisorBusy {
 function Wait-LabHypervisorQuiescence {
     [OutputType([bool])]
     param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
         [int]$MaxAttempts = 20,
-        [int]$DelaySeconds = 2
+        [int]$DelaySeconds = 2,
+        [switch]$ForceHostCleanup
     )
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if (-not (Test-LabHypervisorBusy)) {
+        if (-not (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup:$ForceHostCleanup)) {
             return $true
         }
         Start-Sleep -Seconds $DelaySeconds
@@ -3152,11 +3211,23 @@ function Wait-LabHypervisorQuiescence {
 
 function Test-VagrantClientBusy {
     [OutputType([bool])]
-    param()
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$ForceHostCleanup
+    )
 
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
+    $machineIds = @(Get-LabMachineIdList -ProjectRoot $ProjectRoot)
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
     foreach ($process in $processes) {
-        if ([string]$process.Name -in @('ruby.exe', 'vagrant.exe')) {
+        if ($forceCleanup -and [string]$process.Name -in @('ruby.exe', 'vagrant.exe')) {
+            return $true
+        }
+
+        if (
+            [string]$process.Name -in @('ruby.exe', 'vagrant.exe') -and
+            (Test-ProcessCommandLineMatchesLab -CommandLine ([string]$process.CommandLine) -ProjectRoot $ProjectRoot -MachineIds $machineIds)
+        ) {
             return $true
         }
     }
@@ -3167,12 +3238,14 @@ function Test-VagrantClientBusy {
 function Wait-VagrantClientQuiescence {
     [OutputType([bool])]
     param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
         [int]$MaxAttempts = 30,
-        [int]$DelaySeconds = 2
+        [int]$DelaySeconds = 2,
+        [switch]$ForceHostCleanup
     )
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if (-not (Test-VagrantClientBusy)) {
+        if (-not (Test-VagrantClientBusy -ProjectRoot $ProjectRoot -ForceHostCleanup:$ForceHostCleanup)) {
             return $true
         }
         Start-Sleep -Seconds $DelaySeconds

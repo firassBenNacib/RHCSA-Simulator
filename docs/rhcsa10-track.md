@@ -8,13 +8,15 @@ Red Hat currently lists EX200 as based on RHEL 10. The public objectives include
 
 Rocky Linux 10 is useful as a compatible community profile, but its AMD/Intel builds require x86-64-v3. The simulator validates that CPU capability before starting a `rhel10` profile on Linux hosts so users do not fail later during provisioning.
 
+The default Vagrant box for the preview `rhel10` profile is `rockylinux/10`. Keep `RHCSA_BOX` as an override for users who maintain a local RHEL 10 or Rocky 10 box.
+
 ## Initial Coverage Matrix
 
 | Area | RHCSA 9 Status | RHCSA 10 Direction |
 |---|---:|---|
 | RPM repositories and packages | covered | keep, update package names only when needed |
-| Flatpak repositories and packages | not covered | add new RHCSA 10 labs |
-| systemd timers | partial service coverage | add timer unit creation, enablement, and verification |
+| Flatpak repositories and packages | not in RHCSA 9 | preview lab added for system remote setup |
+| systemd timers | partial service coverage | preview lab added for service/timer unit creation |
 | NetworkManager DHCP changes | generic networking covered | keep tasks focused on `nmcli` and avoid removed legacy DHCP packages |
 | storage, SELinux, users, SSH, logs | covered | reuse where behavior remains compatible |
 | containers | RHCSA 9 track only for now | keep separate until RHCSA 10 objectives are validated against the runtime |

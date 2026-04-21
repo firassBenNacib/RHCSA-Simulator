@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from functools import lru_cache
 
+from rhcsa_scenarios.tracks import normalize_track
+
 
 HOST_DIR = Path(__file__).resolve().parent
 if str(HOST_DIR) not in sys.path:
@@ -28,7 +30,6 @@ from smoke_test_scenarios import (  # noqa: E402
     ROOT,
     filter_ids,
     get_baseline_status,
-    normalize_track,
     parse_check_output,
     resolve_scenario_token,
     run_ps,

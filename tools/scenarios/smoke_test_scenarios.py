@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from rhcsa_scenarios.tracks import manifest_tracks, normalize_track
+
 
 ROOT = Path(__file__).resolve().parents[2]
 LABS_DIR = ROOT / "scenarios" / "labs"
@@ -60,25 +62,13 @@ def windows_path(path: Path) -> str:
     return proc.stdout.strip()
 
 
-def normalize_track(value: str | None) -> str:
-    value = (value or "").strip().lower().replace("-", "").replace("_", "")
-    if value in {"", "all"}:
-        return "all"
-    if value in {"9", "rhel9", "rhcsa9", "ex2009"}:
-        return "rhcsa9"
-    if value in {"10", "rhel10", "rhcsa10", "ex20010"}:
-        return "rhcsa10"
-    raise SystemExit(f"Unsupported track: {value}")
-
-
 def scenario_matches_track(kind: str, scenario_id: str, track: str) -> bool:
     normalized = normalize_track(track)
     if normalized == "all":
         return True
     manifest_path = scenario_manifest_path(kind, scenario_id)
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    tracks = data.get("tracks") or ["rhcsa9"]
-    return normalized in {normalize_track(item) for item in tracks}
+    return normalized in manifest_tracks(data.get("tracks"))
 
 
 def scenario_ids(kind: str, track: str = "all") -> list[str]:

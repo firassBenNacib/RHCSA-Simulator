@@ -8,7 +8,7 @@ DEFAULT_ISO_BY_PROFILE = {
 }
 DEFAULT_BOX_BY_PROFILE = {
   "rhel9" => "generic/rocky9",
-  "rhel10" => "generic/rocky10"
+  "rhel10" => "rockylinux/10"
 }
 
 unless DEFAULT_ISO_BY_PROFILE.key?(RHCSA_PROFILE)

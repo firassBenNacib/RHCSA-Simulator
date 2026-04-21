@@ -142,7 +142,8 @@ param(
     [switch]$NoProvision,
     [switch]$NormalStart,
     [switch]$HeadlessClient,
-    [switch]$RealisticMode
+    [switch]$RealisticMode,
+    [switch]$ForceHostCleanup
 )
 
 Set-StrictMode -Version Latest
@@ -150,6 +151,7 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'host/simulator_common.ps1')
 $script:ShowWorkflowStatus = $false
+$script:ForceHostCleanup = [bool]$ForceHostCleanup
 
 function Test-UiColorSupport {
     if ($env:NO_COLOR) {
@@ -317,13 +319,14 @@ function Get-HelpOutput {
             return @(
                 (Get-UiHeading -Text 'up'),
                 (Format-StyledText -Text 'Start or refresh the clean baseline.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 up [-NoProvision] [-NormalStart] [-HeadlessClient] [-RealisticMode]'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 up [-NoProvision] [-NormalStart] [-HeadlessClient] [-RealisticMode] [-ForceHostCleanup]'),
                 '',
                 'Options:',
                 '  -NoProvision    Start both VMs without guest provisioning',
                 '  -NormalStart    Compatibility switch; normal behavior is already the default',
                 '  -HeadlessClient Compatibility switch for older workflows',
                 '  -RealisticMode  Compatibility switch for older workflows',
+                '  -ForceHostCleanup Kill global Vagrant/VirtualBox lock holders as a last resort',
                 '',
                 'Examples:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
@@ -344,7 +347,10 @@ function Get-HelpOutput {
             return @(
                 (Get-UiHeading -Text 'destroy'),
                 (Format-StyledText -Text 'Destroy both VMs and clean local simulator state.' -StyleName 'Muted'),
-                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 destroy'),
+                (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 destroy [-ForceHostCleanup]'),
+                '',
+                'Options:',
+                '  -ForceHostCleanup Kill global Vagrant/VirtualBox lock holders as a last resort',
                 '',
                 'Example:',
                 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 destroy')
@@ -680,6 +686,14 @@ Register-ArgumentCompleter -CommandName '.\RHCSA.ps1', 'RHCSA.ps1' -ScriptBlock 
     switch (`$root) {
         'help' {
             Complete-RhcsaValues -Value @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
+            return
+        }
+        'up' {
+            Complete-RhcsaValues -Value @('-NoProvision', '-NormalStart', '-HeadlessClient', '-RealisticMode', '-ForceHostCleanup')
+            return
+        }
+        'destroy' {
+            Complete-RhcsaValues -Value @('-ForceHostCleanup')
             return
         }
         'list' {
