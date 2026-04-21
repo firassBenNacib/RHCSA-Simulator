@@ -10,17 +10,21 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create the executable script /usr/local/bin/usercheck40 on clientvm.",
+        "Create the executable script /usr/local/bin/usercheck40 on client.",
         "The script must accept one username argument.",
         "If the user exists, print EXISTS: username to standard output and exit with status 0.",
         "If the user does not exist, print MISSING: username to standard output and exit with status 1."

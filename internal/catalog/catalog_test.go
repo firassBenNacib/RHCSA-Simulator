@@ -23,7 +23,7 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
   "objective_tags": ["networking-and-firewall"],
   "supported_modes": ["lab"],
   "time_limit_minutes": 15,
-  "flags": { "password_recovery": false, "requires_servervm": false },
+  "flags": { "password_recovery": false, "requires_server": false },
   "content": { "lab": { "hints": ["Use nmcli"], "checks": ["grep -q demo /etc/hosts"] } }
 }`)
 	writeScenarioFile(t, filepath.Join(examRoot, "scenario.json"), `{
@@ -33,7 +33,7 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
   "objective_tags": ["containers"],
   "supported_modes": ["exam"],
   "time_limit_minutes": 150,
-  "flags": { "password_recovery": true, "requires_servervm": true },
+  "flags": { "password_recovery": true, "requires_server": true },
   "content": { "lab": { "hints": [], "checks": [] } }
 }`)
 	writeScenarioFile(t, filepath.Join(labRoot, "LAB_TASKS.md"), "# Lab Tasks")
@@ -64,6 +64,58 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
 	}
 	if !exams[0].PasswordRecover || !exams[0].RequiresServer {
 		t.Fatalf("expected exam flags to load from scenario manifest")
+	}
+}
+
+func TestLoadTrackFiltersScenariosAndDefaultsToRHCSA9(t *testing.T) {
+	root := t.TempDir()
+	lab9Root := filepath.Join(root, "scenarios", "labs", "lab-09-track")
+	lab10Root := filepath.Join(root, "scenarios", "labs", "lab-10-track")
+	for _, path := range []string{lab9Root, lab10Root} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", path, err)
+		}
+		writeScenarioFile(t, filepath.Join(path, "LAB_TASKS.md"), "# Lab Tasks")
+		writeScenarioFile(t, filepath.Join(path, "LAB_SOLUTION.md"), "# Lab Solution")
+	}
+
+	writeScenarioFile(t, filepath.Join(lab9Root, "scenario.json"), `{
+  "id": "lab-09-track",
+  "title": "Lab 09 Track",
+  "description": "Defaults to RHCSA 9",
+  "objective_tags": ["networking-and-firewall"],
+  "supported_modes": ["lab"],
+  "time_limit_minutes": 15,
+  "flags": { "password_recovery": false, "requires_server": false },
+  "content": { "lab": { "hints": [], "checks": [] } }
+}`)
+	writeScenarioFile(t, filepath.Join(lab10Root, "scenario.json"), `{
+  "id": "lab-10-track",
+  "title": "Lab 10 Track",
+  "description": "RHCSA 10 preview lab",
+  "objective_tags": ["software-management"],
+  "supported_modes": ["lab"],
+  "time_limit_minutes": 15,
+  "tracks": ["rhcsa10"],
+  "rhel_major": 10,
+  "flags": { "password_recovery": false, "requires_server": false },
+  "content": { "lab": { "hints": [], "checks": [] } }
+}`)
+
+	labs, _, err := LoadTrack(root, "rhcsa9")
+	if err != nil {
+		t.Fatalf("load RHCSA 9 catalog: %v", err)
+	}
+	if len(labs) != 1 || labs[0].ID != "lab-09-track" || labs[0].RHELMajor != 9 {
+		t.Fatalf("expected RHCSA 9 default lab only, got %#v", labs)
+	}
+
+	labs, _, err = LoadTrack(root, "rhcsa10")
+	if err != nil {
+		t.Fatalf("load RHCSA 10 catalog: %v", err)
+	}
+	if len(labs) != 1 || labs[0].ID != "lab-10-track" || labs[0].RHELMajor != 10 {
+		t.Fatalf("expected RHCSA 10 lab only, got %#v", labs)
 	}
 }
 

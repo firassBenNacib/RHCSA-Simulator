@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "On clientvm, user worker42 has a CPU-bound process whose PID is stored in /home/worker42/cpu.pid. Terminate that process.",
+        "On client, user worker42 has a CPU-bound process whose PID is stored in /home/worker42/cpu.pid. Terminate that process.",
         "User worker42 also has a long-running sleep process whose PID is stored in /home/worker42/sleep.pid. Change the nice value of that process to 10."
       ],
       "hints": [

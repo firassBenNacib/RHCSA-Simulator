@@ -12,8 +12,8 @@
 A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.
 
 ### Systems
-- clientvm
-- servervm
+- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -21,140 +21,140 @@ A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Root Recovery (clientvm) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
-Recover root access on clientvm from the console.
+Recover root access on client from the console.
 
 Set the root password to: cinder9
 
 ---
 
-## Question 02 - Client Network (clientvm) - 5 pts
+## Question 02 - Client Network (client) - 5 pts
 
-Configure networking on clientvm with the following settings:
+Configure networking on client with the following settings:
 
 - **IP Address:** 192.168.122.39
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
 - **DNS Server:** 192.168.122.3
-- **Hostname:** clientvm.deltaforge.lab
+- **Hostname:** client.deltaforge.lab
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
+## Question 03 - Bootloader Kernel Argument (client) - 5 pts
 
-Configure the bootloader on clientvm so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
+Configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
 ---
 
-## Question 04 - Host Entry (clientvm) - 5 pts
+## Question 04 - Host Entry (client) - 5 pts
 
 Add a persistent hosts entry so vault.deltaforge.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 05 - Direct NFS Mount (clientvm) - 5 pts
+## Question 05 - Direct NFS Mount (client) - 5 pts
 
-Mount the server export servervm:/exports/delta-home persistently on clientvm at /mnt/delta-home using NFS.
+Mount the server export server:/exports/delta-home persistently on client at /mnt/delta-home using NFS.
 
 ---
 
-## Question 06 - Ops User And Group (clientvm) - 5 pts
+## Question 06 - Ops User And Group (client) - 5 pts
 
 Create group deltaops and create user pavel with deltaops as a supplementary group. Set the password of pavel to cinder9.
 
 ---
 
-## Question 07 - Sticky Shared Directory (clientvm) - 5 pts
+## Question 07 - Sticky Shared Directory (client) - 5 pts
 
 Create /projects/delta-drop owned by root:deltaops with mode 3770 so group ownership is inherited and only file owners can delete their own files.
 
 ---
 
-## Question 08 - No-Home Audit User (clientvm) - 5 pts
+## Question 08 - No-Home Audit User (client) - 5 pts
 
 Create user auditg without a home directory and with login shell /sbin/nologin.
 
 ---
 
-## Question 09 - Password Aging (clientvm) - 5 pts
+## Question 09 - Password Aging (client) - 5 pts
 
 Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.
 
 ---
 
-## Question 10 - User Umask (clientvm) - 5 pts
+## Question 10 - User Umask (client) - 5 pts
 
 Set a personal umask of 027 for pavel.
 
 ---
 
-## Question 11 - Copy User On Both Systems (clientvm) - 5 pts
+## Question 11 - Copy User On Both Systems (client) - 5 pts
 
 Create user copyg on both systems with password cinder9.
 
 ---
 
-## Question 12 - SSH Key And Secure Copy (clientvm + servervm) - 5 pts
+## Question 12 - SSH Key And Secure Copy (client + server) - 5 pts
 
-As copyg on clientvm, generate an ED25519 SSH key pair with no passphrase, install it on servervm, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on servervm.
+As copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.
 
 ---
 
-## Question 13 - At Job (clientvm) - 4 pts
+## Question 13 - At Job (client) - 4 pts
 
 Queue a one-time at job as user pavel that appends the message "exam-g tick" to /root/exam-g-at.log in 2 minutes.
 
 ---
 
-## Question 14 - Per-User Login Message (clientvm) - 4 pts
+## Question 14 - Per-User Login Message (client) - 4 pts
 
 Append a login message for pavel to ~/.bash_profile that prints "exam-g access" when pavel logs in.
 
 ---
 
-## Question 15 - Find And Copy (clientvm) - 4 pts
+## Question 15 - Find And Copy (client) - 4 pts
 
 Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.
 
 ---
 
-## Question 16 - Grep Filter (clientvm) - 4 pts
+## Question 16 - Grep Filter (client) - 4 pts
 
 Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.
 
 ---
 
-## Question 17 - Archive (clientvm) - 4 pts
+## Question 17 - Archive (client) - 4 pts
 
 Create /root/etc-g.tar.bz2 containing /etc.
 
 ---
 
-## Question 18 - Persistent Journal (clientvm) - 4 pts
+## Question 18 - Persistent Journal (client) - 4 pts
 
-Configure journald on clientvm so logs are stored persistently across reboots.
+Configure journald on client so logs are stored persistently across reboots.
 
 ---
 
-## Question 19 - Process Renice And Kill (clientvm) - 4 pts
+## Question 19 - Process Renice And Kill (client) - 4 pts
 
 User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.
 
 ---
 
-## Question 20 - Swap Space (clientvm) - 4 pts
+## Question 20 - Swap Space (client) - 4 pts
 
 On /dev/sdb, create a 736 MiB swap partition and configure it persistently.
 
 ---
 
-## Question 21 - Create And Mount LV (clientvm) - 4 pts
+## Question 21 - Create And Mount LV (client) - 4 pts
 
 On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.
 
 ---
 
-## Question 22 - Rootless Container Autostart (clientvm) - 4 pts
+## Question 22 - Rootless Container Autostart (client) - 4 pts
 
 As user solg, build localhost/delta-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile. Run the container as pdfg with /opt/ing mounted to /data/input and /opt/outg mounted to /data/output. Generate and enable a systemd user service for that container and enable lingering for solg.

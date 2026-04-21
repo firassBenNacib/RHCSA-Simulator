@@ -12,8 +12,8 @@
 A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.
 
 ### Systems
-- clientvm
-- servervm
+- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -21,7 +21,7 @@ A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo 
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Root Recovery (clientvm) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
 ```bash
 # At the boot menu, edit the selected kernel entry.
@@ -34,7 +34,7 @@ exec /sbin/init
 
 ---
 
-## Question 02 - Client Network (clientvm) - 5 pts
+## Question 02 - Client Network (client) - 5 pts
 
 ```bash
 nmcli device status
@@ -42,12 +42,12 @@ nmcli connection show "System eth1"
 nmcli connection modify "System eth1" ipv4.addresses 192.168.122.26/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection down "System eth1"
 nmcli connection up "System eth1"
-hostnamectl set-hostname clientvm.exam-a.lab
+hostnamectl set-hostname client.exam-a.lab
 ```
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (clientvm) - 5 pts
+## Question 03 - Bootloader Kernel Argument (client) - 5 pts
 
 ```bash
 grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
@@ -55,18 +55,18 @@ grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 
 ---
 
-## Question 04 - Client Repositories (clientvm) - 5 pts
+## Question 04 - Client Repositories (client) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/opsa.repo <<'EOF'
 [opsa-baseos]
 name=OpsA BaseOS
-baseurl=http://servervm/repo/BaseOS/
+baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
 [opsa-appstream]
 name=OpsA AppStream
-baseurl=http://servervm/repo/AppStream/
+baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
@@ -75,19 +75,19 @@ dnf clean all
 
 ---
 
-## Question 05 - Server Repositories (servervm) - 5 pts
+## Question 05 - Server Repositories (server) - 5 pts
 
 ```bash
-# Run on servervm
+# Run on server
 cat > /etc/yum.repos.d/opsa.repo <<'EOF'
 [opsa-baseos]
 name=OpsA BaseOS
-baseurl=http://servervm/repo/BaseOS/
+baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
 [opsa-appstream]
 name=OpsA AppStream
-baseurl=http://servervm/repo/AppStream/
+baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
@@ -96,7 +96,7 @@ dnf clean all
 
 ---
 
-## Question 06 - Apache SELinux Port (clientvm) - 5 pts
+## Question 06 - Apache SELinux Port (client) - 5 pts
 
 ```bash
 vim /etc/httpd/conf/httpd.conf
@@ -110,7 +110,7 @@ systemctl restart httpd
 
 ---
 
-## Question 07 - Users And Group (clientvm) - 5 pts
+## Question 07 - Users And Group (client) - 5 pts
 
 ```bash
 groupadd sysopsa
@@ -121,7 +121,7 @@ useradd -M -s /sbin/nologin frost
 
 ---
 
-## Question 08 - User Passwords (clientvm) - 5 pts
+## Question 08 - User Passwords (client) - 5 pts
 
 ```bash
 echo cinder9 | passwd --stdin violet
@@ -131,7 +131,7 @@ echo cinder9 | passwd --stdin frost
 
 ---
 
-## Question 09 - Delegated Sudo (clientvm) - 5 pts
+## Question 09 - Delegated Sudo (client) - 5 pts
 
 ```bash
 visudo -f /etc/sudoers.d/sysopsa-useradd
@@ -142,7 +142,7 @@ violet ALL=(root) NOPASSWD: /usr/bin/passwd
 
 ---
 
-## Question 10 - Setgid Directory (clientvm) - 5 pts
+## Question 10 - Setgid Directory (client) - 5 pts
 
 ```bash
 mkdir -p /srv/sysopsa
@@ -152,7 +152,7 @@ chmod 2770 /srv/sysopsa
 
 ---
 
-## Question 11 - Cron Logger (clientvm) - 5 pts
+## Question 11 - Cron Logger (client) - 5 pts
 
 ```bash
 crontab -e -u amber
@@ -161,7 +161,7 @@ crontab -e -u amber
 
 ---
 
-## Question 12 - Host Entry (clientvm) - 5 pts
+## Question 12 - Host Entry (client) - 5 pts
 
 ```bash
 vim /etc/hosts
@@ -170,56 +170,7 @@ vim /etc/hosts
 
 ---
 
-## Question 13 - Swap Space (clientvm) - 4 pts
-
-```bash
-parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-uuid=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
-```
-
----
-
-## Question 14 - Resize Existing LV (clientvm) - 4 pts
-
-```bash
-lvextend -L 320M /dev/reviewvga/reviewa
-resize2fs /dev/reviewvga/reviewa
-```
-
----
-
-## Question 15 - Rootless Container (clientvm) - 4 pts
-
-```bash
-su - oriona
-cd /opt/rhcsa/workspaces/exam-a
-podman build -t localhost/opsa-web:latest .
-podman run -d --name pdfa -v /opt/ina:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest
-exit
-```
-
----
-
-## Question 16 - Container Autostart (clientvm) - 4 pts
-
-```bash
-su - oriona
-mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user
-podman generate systemd --name pdfa --files --new
-systemctl --user daemon-reload
-systemctl --user enable --now container-pdfa.service
-exit
-loginctl enable-linger oriona
-```
-
----
-
-## Question 17 - Fixed UID User (clientvm) - 4 pts
+## Question 13 - Fixed UID User (client) - 4 pts
 
 ```bash
 useradd -u 4420 ash420
@@ -228,7 +179,7 @@ echo cinder9 | passwd --stdin ash420
 
 ---
 
-## Question 18 - Find Copy Preserve (clientvm) - 4 pts
+## Question 14 - Find Copy Preserve (client) - 4 pts
 
 ```bash
 mkdir -p /root/amber-files
@@ -237,7 +188,7 @@ find /opt/exam-a/find -user amber -mtime -1 -type f -exec cp --parents {} /root/
 
 ---
 
-## Question 19 - Grep Filter (clientvm) - 4 pts
+## Question 15 - Grep Filter (client) - 4 pts
 
 ```bash
 grep 'delta' /usr/share/dict/words > /root/delta-lines
@@ -245,7 +196,7 @@ grep 'delta' /usr/share/dict/words > /root/delta-lines
 
 ---
 
-## Question 20 - Archive /etc (clientvm) - 4 pts
+## Question 16 - Archive /etc (client) - 4 pts
 
 ```bash
 tar -cjf /root/etc-opsa.tar.bz2 /etc
@@ -253,7 +204,7 @@ tar -cjf /root/etc-opsa.tar.bz2 /etc
 
 ---
 
-## Question 21 - Service Report Script (clientvm) - 4 pts
+## Question 17 - Service Report Script (client) - 4 pts
 
 ```bash
 vim /usr/local/bin/opsa-report
@@ -264,10 +215,70 @@ chmod 755 /usr/local/bin/opsa-report
 
 ---
 
-## Question 22 - Persistent Journal (servervm) - 4 pts
+## Question 18 - Persistent Journal (server) - 4 pts
 
 ```bash
-# Run on servervm
+# Run on server
+mkdir -p /var/log/journal
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 19 - Persistent Journal (server) - 4 pts
+
+```bash
+# Run on server
+mkdir -p /var/log/journal
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 20 - Persistent Journal (server) - 4 pts
+
+```bash
+# Run on server
+mkdir -p /var/log/journal
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 21 - Persistent Journal (server) - 4 pts
+
+```bash
+# Run on server
+mkdir -p /var/log/journal
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 22 - Persistent Journal (server) - 4 pts
+
+```bash
+# Run on server
 mkdir -p /var/log/journal
 mkdir -p /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'

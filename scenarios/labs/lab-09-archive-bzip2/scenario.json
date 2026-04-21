@@ -9,10 +9,14 @@
     "lab"
   ],
   "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {},
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {

@@ -12,27 +12,27 @@
 Configure key-based SSH access and securely transfer files between systems.
 
 ### Systems
-- clientvm
-- servervm
+- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Ensure mesh39 exists on both systems (clientvm) - 10 pts
+## Task 01 - Ensure mesh39 exists on both systems (client) - 10 pts
 
 ```bash
 id mesh39 >/dev/null 2>&1 || useradd -m mesh39
 echo 'mesh39:cinder9' | chpasswd
-# Run on servervm
+# Run on server
 id mesh39 >/dev/null 2>&1 || useradd -m mesh39
 echo 'mesh39:cinder9' | chpasswd
 ```
 
 ---
 
-## Task 02 - generate an ED25519 SSH key pair with no passphrase (clientvm) - 10 pts
+## Task 02 - generate an ED25519 SSH key pair with no passphrase (client) - 10 pts
 
 ```bash
 su - mesh39
@@ -41,7 +41,7 @@ ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 
 ---
 
-## Task 03 - Configure passwordless SSH access for mesh39 from (clientvm) - 10 pts
+## Task 03 - Configure passwordless SSH access for mesh39 from (client) - 10 pts
 
 ```bash
 su - mesh39
@@ -50,7 +50,7 @@ ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3
 
 ---
 
-## Task 04 - Using rsync over SSH, copy the directory (servervm) - 10 pts
+## Task 04 - Using rsync over SSH, copy the directory (server) - 10 pts
 
 ```bash
 su - mesh39

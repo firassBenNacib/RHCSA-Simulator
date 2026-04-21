@@ -28,8 +28,8 @@ __pycache__/
 
 # Go / TUI build output
 .build/
-rhcsa-tui
-rhcsa-tui.exe
+/rhcsa-tui
+/rhcsa-tui.exe
 
 # Editor settings
 .vscode/

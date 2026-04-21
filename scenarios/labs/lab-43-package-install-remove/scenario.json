@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Use the prepared local repositories on clientvm to install tree, then remove dos2unix so tree remains installed."
+        "Use the prepared local repositories on client to install tree, then remove dos2unix so tree remains installed."
       ],
       "hints": [
         "The repositories are already defined for this lab. Focus on package management."

@@ -9,22 +9,22 @@
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms |
 
-Restore the default SELinux context for a web file on servervm and keep httpd enforcing.
+Restore the default SELinux context for a web file on server and keep httpd enforcing.
 
 ### Systems
-- servervm
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Restore the default context on servervm (servervm) - 15 pts
+## Task 01 - Restore the default context on server (server) - 15 pts
 
-On servervm, the file /var/www/html/index45.html has the wrong SELinux context. Restore the default context.
+On server, the file /var/www/html/index45.html has the wrong SELinux context. Restore the default context.
 
 ---
 
-## Task 02 - Enable httpd on servervm with SELinux enforcing (servervm) - 15 pts
+## Task 02 - Enable httpd on server with SELinux enforcing (server) - 15 pts
 
-Ensure the httpd service is enabled and running on servervm. SELinux must remain enforcing.
+Ensure the httpd service is enabled and running on server. SELinux must remain enforcing.

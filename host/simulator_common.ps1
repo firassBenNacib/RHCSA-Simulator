@@ -128,7 +128,7 @@ function Get-ClientLabDiskPath {
 
     $generation = Get-LabDiskGenerationToken -ProjectRoot $ProjectRoot
     $suffix = if ([string]::IsNullOrWhiteSpace($generation)) { '' } else { "-$generation" }
-    return (Join-Path (Get-LabDisksRoot -ProjectRoot $ProjectRoot) ("clientvm-disk{0}{1}.vdi" -f $DiskNumber, $suffix))
+    return (Join-Path (Get-LabDisksRoot -ProjectRoot $ProjectRoot) ("client-disk{0}{1}.vdi" -f $DiskNumber, $suffix))
 }
 
 function Set-LabDiskGeneration {
@@ -287,6 +287,62 @@ function Get-StringArray {
     }
 
     return ,$items
+}
+
+function ConvertTo-ScenarioTrack {
+    param(
+        [AllowEmptyString()]
+        [string]$Track
+    )
+
+    $value = ([string]$Track).Trim().ToLowerInvariant() -replace '[-_]', ''
+    switch ($value) {
+        { $_ -in @('', 'all') } { return 'all' }
+        { $_ -in @('9', 'rhel9', 'rhcsa9', 'ex2009') } { return 'rhcsa9' }
+        { $_ -in @('10', 'rhel10', 'rhcsa10', 'ex20010') } { return 'rhcsa10' }
+        default { throw "Unsupported scenario track '$Track'. Use RHCSA9, RHCSA10, or All." }
+    }
+}
+
+function Get-ScenarioTrackArray {
+    param(
+        [AllowNull()]
+        [object]$Value = $null,
+        [string]$Label = 'tracks'
+    )
+
+    $raw = @(Get-StringArray -Value $Value -Label $Label -AllowEmpty)
+    if ($raw.Count -eq 0) {
+        return ,@('rhcsa9')
+    }
+
+    $tracks = @()
+    foreach ($item in $raw) {
+        $track = ConvertTo-ScenarioTrack -Track $item
+        if ($track -ne 'all' -and $track -notin $tracks) {
+            $tracks += $track
+        }
+    }
+
+    if ($tracks.Count -eq 0) {
+        return ,@('rhcsa9')
+    }
+
+    return ,$tracks
+}
+
+function Test-ScenarioTrackMatch {
+    param(
+        [string[]]$ScenarioTracks = @('rhcsa9'),
+        [string]$Track = 'rhcsa9'
+    )
+
+    $normalized = ConvertTo-ScenarioTrack -Track $Track
+    if ($normalized -eq 'all') {
+        return $true
+    }
+
+    return $normalized -in @($ScenarioTracks)
 }
 
 function Get-IntegerArray {
@@ -462,17 +518,33 @@ function ConvertTo-ScenarioManifest {
         throw "Scenario '$id' time_limit_minutes must be zero or greater."
     }
 
+    $tracks = Get-ScenarioTrackArray -Value (Get-OptionalPropertyValue -Object $raw -Name 'tracks') -Label "Scenario '$id' tracks"
+    $rhelMajorRaw = Get-OptionalPropertyValue -Object $raw -Name 'rhel_major'
+    $rhelMajor = if ($null -eq $rhelMajorRaw -or [string]::IsNullOrWhiteSpace([string]$rhelMajorRaw)) { 9 } else { [int]$rhelMajorRaw }
+    if ($rhelMajor -notin @(9, 10)) {
+        throw "Scenario '$id' rhel_major must be 9 or 10."
+    }
+
     $flags = Get-RequiredProperty -Object $raw -Name 'flags'
     $passwordRecovery = [bool](Get-RequiredProperty -Object $flags -Name 'password_recovery' -AllowZero)
-    $requiresServervm = [bool](Get-RequiredProperty -Object $flags -Name 'requires_servervm' -AllowZero)
+    $requiresServer = [bool](Get-RequiredProperty -Object $flags -Name 'requires_server' -AllowZero)
 
     $vmScriptsRaw = Get-OptionalPropertyValue -Object $raw -Name 'vm_scripts'
     if ($null -eq $vmScriptsRaw) {
         $vmScriptsRaw = [PSCustomObject]@{}
     }
 
-    $serverScript = Resolve-ScenarioScriptPath -ScenarioRoot $scenarioRoot -RelativePath ([string](Get-OptionalPropertyValue -Object $vmScriptsRaw -Name 'servervm')) -Label 'vm_scripts.servervm' -ProjectRoot $ProjectRoot
-    $clientScript = Resolve-ScenarioScriptPath -ScenarioRoot $scenarioRoot -RelativePath ([string](Get-OptionalPropertyValue -Object $vmScriptsRaw -Name 'clientvm')) -Label 'vm_scripts.clientvm' -ProjectRoot $ProjectRoot
+    $serverScriptValue = Get-OptionalPropertyValue -Object $vmScriptsRaw -Name 'server'
+    if ($null -eq $serverScriptValue) {
+        $serverScriptValue = Get-OptionalPropertyValue -Object $vmScriptsRaw -Name 'servervm'
+    }
+    $clientScriptValue = Get-OptionalPropertyValue -Object $vmScriptsRaw -Name 'client'
+    if ($null -eq $clientScriptValue) {
+        $clientScriptValue = Get-OptionalPropertyValue -Object $vmScriptsRaw -Name 'clientvm'
+    }
+
+    $serverScript = Resolve-ScenarioScriptPath -ScenarioRoot $scenarioRoot -RelativePath ([string]$serverScriptValue) -Label 'vm_scripts.server' -ProjectRoot $ProjectRoot
+    $clientScript = Resolve-ScenarioScriptPath -ScenarioRoot $scenarioRoot -RelativePath ([string]$clientScriptValue) -Label 'vm_scripts.client' -ProjectRoot $ProjectRoot
     $content = Get-RequiredProperty -Object $raw -Name 'content'
     $labContent = Get-OptionalPropertyValue -Object $content -Name 'lab'
     $examContent = Get-OptionalPropertyValue -Object $content -Name 'exam'
@@ -577,15 +649,17 @@ function ConvertTo-ScenarioManifest {
         ObjectiveTags = $objectiveTags
         SupportedModes = $supportedModes
         TimeLimitMinutes = $timeLimit
+        Tracks = $tracks
+        RHELMajor = $rhelMajor
         ScenarioRoot = $scenarioRoot
         RelativeScenarioRoot = $relativeScenarioRoot
         ManifestPath = $manifestFullPath
         RelativeManifestPath = (Get-ProjectRelativePath -Path $manifestFullPath -ProjectRoot $ProjectRoot)
         VmScripts = [PSCustomObject]@{
-            Servervm = $serverScript.FullPath
-            ServervmRelative = $serverScript.RelativePath
-            Clientvm = $clientScript.FullPath
-            ClientvmRelative = $clientScript.RelativePath
+            Server = $serverScript.FullPath
+            ServerRelative = $serverScript.RelativePath
+            Client = $clientScript.FullPath
+            ClientRelative = $clientScript.RelativePath
         }
         Docs = [PSCustomObject]@{
             LabTasks = $labTasksDoc.FullPath
@@ -599,7 +673,7 @@ function ConvertTo-ScenarioManifest {
         }
         Flags = [PSCustomObject]@{
             PasswordRecovery = $passwordRecovery
-            RequiresServervm = $requiresServervm
+            RequiresServer = $requiresServer
         }
         Content = [PSCustomObject]@{
             Lab = [PSCustomObject]@{
@@ -623,7 +697,8 @@ function ConvertTo-ScenarioManifest {
 
 function Get-ScenarioCatalog {
     param(
-        [string]$ProjectRoot = (Get-ProjectRoot)
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$Track = 'rhcsa9'
     )
 
     $scenariosRoot = Join-Path $ProjectRoot 'scenarios'
@@ -636,17 +711,18 @@ function Get-ScenarioCatalog {
         ConvertTo-ScenarioManifest -ManifestPath $file.FullName -ProjectRoot $ProjectRoot
     }
 
-    return @($catalog | Sort-Object Category, Id)
+    return @($catalog | Where-Object { Test-ScenarioTrackMatch -ScenarioTracks @($_.Tracks) -Track $Track } | Sort-Object Category, Id)
 }
 
 function Get-ScenarioManifest {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ScenarioId,
-        [string]$ProjectRoot = (Get-ProjectRoot)
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$Track = 'all'
     )
 
-    $matchingManifest = @(Get-ScenarioCatalog -ProjectRoot $ProjectRoot | Where-Object { $_.Id -eq $ScenarioId })
+    $matchingManifest = @(Get-ScenarioCatalog -ProjectRoot $ProjectRoot -Track $Track | Where-Object { $_.Id -eq $ScenarioId })
     if ($matchingManifest.Count -eq 0) {
         throw "Scenario '$ScenarioId' not found."
     }
@@ -659,34 +735,39 @@ function Get-ScenarioManifest {
 }
 
 function ConvertTo-ExerciseCheckEntry {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Command,
-        [Parameter(Mandatory = $true)]
-        [int]$Index
-    )
+param(
+[Parameter(Mandatory = $true)]
+[string]$Command,
+[Parameter(Mandatory = $true)]
+[int]$Index
+)
 
-    $trimmedCommand = $Command.Trim()
-    $target = 'clientvm'
-    $effectiveCommand = $trimmedCommand
+$trimmedCommand = $Command.Trim()
+$target = 'client'
+$effectiveCommand = $trimmedCommand
 
-    if ($trimmedCommand -match '^\s*ssh\s+(?<host>\S*servervm\S*)\s+(?<remote>.+?)\s*$') {
-        $remoteCommand = [string]$matches['remote']
-        $remoteCommand = ($remoteCommand -replace '^\s*sudo\s+', '').Trim()
-        if (-not [string]::IsNullOrWhiteSpace($remoteCommand)) {
-            $target = 'servervm'
-            $effectiveCommand = $trimmedCommand
-            $effectiveCommand = $effectiveCommand -replace '(?i)(^|&&\s*)ssh\s+\S*servervm\S*\s+(?:sudo\s+)?', '$1'
-            $effectiveCommand = $effectiveCommand.Trim()
-        }
-    }
+if ($trimmedCommand -match '^\s*ssh\s+(?<host>\S*server\S*)\s+(?<remote>.+?)\s*$') {
+$remoteCommand = [string]$matches['remote']
+$remoteCommand = ($remoteCommand -replace '^\s*sudo\s+', '').Trim()
+if (-not [string]::IsNullOrWhiteSpace($remoteCommand)) {
+$target = 'server'
+$effectiveCommand = $trimmedCommand
+$effectiveCommand = $effectiveCommand -replace '(?i)(^|&&\s*)ssh\s+\S*server\S*\s+(?:sudo\s+)?', '$1'
+$effectiveCommand = $effectiveCommand.Trim()
+}
+}
+elseif ($trimmedCommand -match '^\s*#\s*server\s+') {
+$target = 'server'
+$effectiveCommand = $trimmedCommand -replace '^\s*#\s*server\s+', ''
+$effectiveCommand = $effectiveCommand.Trim()
+}
 
-    return [PSCustomObject]@{
-        Index = $Index
-        Target = $target
-        OriginalCommand = $trimmedCommand
-        Command = $effectiveCommand
-    }
+return [PSCustomObject]@{
+Index = $Index
+Target = $target
+OriginalCommand = $trimmedCommand
+Command = $effectiveCommand
+}
 }
 
 function Format-ScenarioText {
@@ -738,8 +819,6 @@ function Get-ScenarioLabHintsMarkdown {
 
 function Get-ScenarioLabCheckScript {
     param(
-        [Parameter(Mandatory = $true)]
-        [object]$Manifest,
         [Parameter(Mandatory = $true)]
         [object[]]$Checks
     )
@@ -847,7 +926,7 @@ function Initialize-LabExerciseCache {
         Copy-Item -LiteralPath $Manifest.Docs.LabSolution -Destination $solutionPath -Force
 
         Set-Utf8NoBomFile -Path $hintPath -Content (Get-ScenarioLabHintsMarkdown -Manifest $Manifest)
-        Set-Utf8NoBomFile -Path $checkPath -Content (Get-ScenarioLabCheckScript -Manifest $Manifest -Checks $checks)
+        Set-Utf8NoBomFile -Path $checkPath -Content (Get-ScenarioLabCheckScript -Checks $checks)
 
         $metadata = [ordered]@{
             id = $Manifest.Id
@@ -855,7 +934,7 @@ function Initialize-LabExerciseCache {
             description = $Manifest.Description
             time_limit_minutes = [int]$Manifest.TimeLimitMinutes
             objective_tags = @($Manifest.ObjectiveTags)
-            requires_servervm = [bool]$Manifest.Flags.RequiresServervm
+            requires_server = [bool]$Manifest.Flags.RequiresServer
             source_manifest = $Manifest.RelativeManifestPath
             source_hash = $sourceHash
             paths = [ordered]@{
@@ -905,7 +984,7 @@ function Get-LabExerciseDefinition {
         Description = [string]$metadata.description
         TimeLimitMinutes = [int]$metadata.time_limit_minutes
         ObjectiveTags = @($metadata.objective_tags)
-        RequiresServervm = [bool]$metadata.requires_servervm
+        RequiresServer = [bool]$metadata.requires_server
         SourceManifest = [string]$metadata.source_manifest
         Paths = [PSCustomObject]@{
             Prompt = [string]$metadata.paths.prompt
@@ -967,7 +1046,7 @@ function Format-RunBriefText {
         [datetime]$EndsAt
     )
 
-    $systems = if ($Manifest.Flags.RequiresServervm) { 'clientvm and servervm' } else { 'clientvm' }
+    $systems = if ($Manifest.Flags.RequiresServer) { 'client and server' } else { 'client' }
     $lines = @(
         'RHCSA v9 Simulator Run Brief',
         ('Scenario: {0}' -f $Manifest.Id),
@@ -1069,12 +1148,14 @@ function Export-ActiveRunState {
             description = $Manifest.Description
             objective_tags = @($Manifest.ObjectiveTags)
             supported_modes = @($Manifest.SupportedModes)
+            tracks = @($Manifest.Tracks)
+            rhel_major = [int]$Manifest.RHELMajor
             time_limit_minutes = $Manifest.TimeLimitMinutes
             scenario_root = $Manifest.RelativeScenarioRoot
             manifest_path = $Manifest.RelativeManifestPath
             vm_scripts = [ordered]@{
-                servervm = $Manifest.VmScripts.ServervmRelative
-                clientvm = $Manifest.VmScripts.ClientvmRelative
+                server = $Manifest.VmScripts.ServerRelative
+                client = $Manifest.VmScripts.ClientRelative
             }
             docs = [ordered]@{
                 lab_tasks = $Manifest.Docs.LabTasksRelative
@@ -1084,7 +1165,7 @@ function Export-ActiveRunState {
             }
             flags = [ordered]@{
                 password_recovery = $Manifest.Flags.PasswordRecovery
-                requires_servervm = $Manifest.Flags.RequiresServervm
+                requires_server = $Manifest.Flags.RequiresServer
             }
         }
     }
@@ -1250,6 +1331,59 @@ function Get-RhcsaTuiBinaryPath {
     $isWindowsHost = ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT)
     $binaryName = if ($isWindowsHost) { 'rhcsa-tui.exe' } else { 'rhcsa-tui' }
     return (Join-Path $buildRoot $binaryName)
+}
+
+function Get-RhcsaTuiSourceFile {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $paths = @()
+    foreach ($sourceRoot in @(
+        (Join-Path $ProjectRoot 'cmd/rhcsa-tui'),
+        (Join-Path $ProjectRoot 'internal')
+    )) {
+        $goFiles = Get-ChildItem -Path $sourceRoot -Filter '*.go' -File -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName
+        if ($null -ne $goFiles) {
+            $paths += $goFiles.FullName
+        }
+    }
+
+    foreach ($path in @(
+        (Join-Path $ProjectRoot 'go.mod'),
+        (Join-Path $ProjectRoot 'go.sum')
+    )) {
+        if (Test-Path $path -PathType Leaf) {
+            $paths += $path
+        }
+    }
+
+    return $paths
+}
+
+function Test-RhcsaTuiBinaryIsStale {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$BinaryPath = (Get-RhcsaTuiBinaryPath -ProjectRoot $ProjectRoot)
+    )
+
+    if (-not (Test-Path $BinaryPath -PathType Leaf)) {
+        return $true
+    }
+
+    $binaryTime = (Get-Item -Path $BinaryPath).LastWriteTimeUtc
+    foreach ($sourcePath in Get-RhcsaTuiSourceFile -ProjectRoot $ProjectRoot) {
+        try {
+            if ((Get-Item -Path $sourcePath).LastWriteTimeUtc -gt $binaryTime) {
+                return $true
+            }
+        }
+        catch {
+            continue
+        }
+    }
+
+    return $false
 }
 
 function Get-NativeExitCode {
@@ -1507,10 +1641,10 @@ function Invoke-VagrantCommand {
     }
 }
 
-function Start-VagrantMachineStep {
+function Invoke-VagrantMachineStep {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [switch]$Provision,
         [string]$ProjectRoot = (Get-ProjectRoot),
@@ -1713,7 +1847,7 @@ function Get-VagrantMachineStatus {
         }
     }
 
-    $machineStatus = foreach ($machineName in @('servervm', 'clientvm')) {
+    $machineStatus = foreach ($machineName in @('server', 'client')) {
         if ($statusMap.ContainsKey($machineName)) {
             [PSCustomObject]$statusMap[$machineName]
         }
@@ -1754,7 +1888,7 @@ function Get-VirtualBoxMachineStatusFallback {
     $vboxManage = Get-OptionalVBoxManagePath
     $fallbackStatus = @()
 
-    foreach ($machineName in @('servervm', 'clientvm')) {
+    foreach ($machineName in @('server', 'client')) {
         $machineId = Get-OptionalVagrantMachineId -MachineName $machineName -ProjectRoot $ProjectRoot
         if ([string]::IsNullOrWhiteSpace($machineId)) {
             $fallbackStatus += [PSCustomObject]@{
@@ -1810,7 +1944,7 @@ function Get-VirtualBoxMachineStatusFallback {
 function Get-VmSshConfig {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
@@ -1847,7 +1981,7 @@ function Get-VmSshConfig {
 function Get-VmSshConnectionInfo {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
@@ -1967,7 +2101,7 @@ function Get-SshExecutablePath {
 function Invoke-SshWithVmConfig {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string[]]$RemoteCommand = @(),
         [switch]$Interactive,
@@ -2003,13 +2137,13 @@ function Invoke-SshWithVmConfig {
 function Get-LabCheckScriptPath {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
     $stateRoot = Initialize-LabStateLayout -ProjectRoot $ProjectRoot
-    $fileName = if ($MachineName -eq 'servervm') { 'check-server.sh' } else { 'check-client.sh' }
+    $fileName = if ($MachineName -eq 'server') { 'check-server.sh' } else { 'check-client.sh' }
     return (Join-Path $stateRoot $fileName)
 }
 
@@ -2018,7 +2152,7 @@ function Clear-LabCheckScriptState {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    foreach ($machineName in @('servervm', 'clientvm')) {
+    foreach ($machineName in @('server', 'client')) {
         $scriptPath = Get-LabCheckScriptPath -MachineName $machineName -ProjectRoot $ProjectRoot
         Remove-Item -Path $scriptPath -Force -ErrorAction SilentlyContinue
     }
@@ -2027,11 +2161,11 @@ function Clear-LabCheckScriptState {
 function Get-LabCheckProvisionerName {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName
     )
 
-    if ($MachineName -eq 'servervm') {
+    if ($MachineName -eq 'server') {
         return 'check-server'
     }
 
@@ -2041,7 +2175,7 @@ function Get-LabCheckProvisionerName {
 function Write-LabCheckScript {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [Parameter(Mandatory = $true)]
         [string]$Command,
@@ -2067,7 +2201,7 @@ function New-SshSessionKeyFile {
         [Parameter(Mandatory = $true)]
         [string]$SourcePath,
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName
     )
 
@@ -2087,7 +2221,7 @@ function New-SshSessionKeyFile {
 function Get-VmDirectSshLaunchSpec {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot),
         [switch]$BatchMode
@@ -2132,7 +2266,7 @@ function Get-VmDirectSshLaunchSpec {
 function Open-VmSshSession {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
@@ -2202,7 +2336,7 @@ function ConvertTo-PowerShellSingleQuotedString {
 function Test-VagrantSshConnectivity {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot),
         [int]$RetryCount = 5,
@@ -2259,7 +2393,7 @@ function Test-VagrantSshConnectivity {
 function Invoke-VagrantVmShellCommandCapture {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [Parameter(Mandatory = $true)]
         [string]$Command,
@@ -2302,22 +2436,22 @@ function Test-BaselineOfflineRepoHealth {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    $repoCommand = 'curl -fsS http://servervm/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://servervm/repo/AppStream/repodata/repomd.xml >/dev/null'
+    $repoCommand = 'curl -fsS http://server/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://server/repo/AppStream/repodata/repomd.xml >/dev/null'
 
-    Test-VagrantSshConnectivity -MachineName 'servervm' -ProjectRoot $ProjectRoot
-    Test-VagrantSshConnectivity -MachineName 'clientvm' -ProjectRoot $ProjectRoot
+    Test-VagrantSshConnectivity -MachineName 'server' -ProjectRoot $ProjectRoot
+    Test-VagrantSshConnectivity -MachineName 'client' -ProjectRoot $ProjectRoot
 
-    $serverResult = Invoke-VagrantVmShellCommandCapture -MachineName 'servervm' -Command $repoCommand -ProjectRoot $ProjectRoot
-    $clientResult = Invoke-VagrantVmShellCommandCapture -MachineName 'clientvm' -Command $repoCommand -ProjectRoot $ProjectRoot
+    $serverResult = Invoke-VagrantVmShellCommandCapture -MachineName 'server' -Command $repoCommand -ProjectRoot $ProjectRoot
+    $clientResult = Invoke-VagrantVmShellCommandCapture -MachineName 'client' -Command $repoCommand -ProjectRoot $ProjectRoot
 
     $results = @(
         [PSCustomObject]@{
-            MachineName = 'servervm'
+            MachineName = 'server'
             ExitCode = [int]$serverResult.ExitCode
             Passed = ([int]$serverResult.ExitCode -eq 0)
         }
         [PSCustomObject]@{
-            MachineName = 'clientvm'
+            MachineName = 'client'
             ExitCode = [int]$clientResult.ExitCode
             Passed = ([int]$clientResult.ExitCode -eq 0)
         }
@@ -2583,7 +2717,7 @@ function Get-BaselineStatus {
     )
 
     $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $ProjectRoot)
-    $machineNames = @('servervm', 'clientvm')
+    $machineNames = @('server', 'client')
     $snapshotReady = @{}
 
     foreach ($machineName in $machineNames) {
@@ -2603,7 +2737,7 @@ function Get-BaselineStatus {
 
     $runningCount = @($machineStatus | Where-Object { [string]$_.StateHuman -eq 'running' }).Count
     $createdCount = @($machineStatus | Where-Object { [string]$_.StateHuman -ne 'not created' }).Count
-    $snapshotsReady = ($snapshotReady['servervm'] -and $snapshotReady['clientvm'])
+    $snapshotsReady = ($snapshotReady['server'] -and $snapshotReady['client'])
 
     $state = 'missing'
     $stateText = 'not built'
@@ -2630,8 +2764,8 @@ function Get-BaselineStatus {
         SnapshotsReady = $snapshotsReady
         MachineStatus = $machineStatus
         SnapshotReady = [PSCustomObject]@{
-            Servervm = $snapshotReady['servervm']
-            Clientvm = $snapshotReady['clientvm']
+            Server = $snapshotReady['server']
+            Client = $snapshotReady['client']
         }
     }
 }
@@ -2647,7 +2781,7 @@ function Invoke-BaseSnapshotInitialization {
     $targetMachine = @()
     $machineIdMap = @{}
 
-    foreach ($machine in @('servervm', 'clientvm')) {
+    foreach ($machine in @('server', 'client')) {
         $machineId = Get-OptionalVagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
         if ([string]::IsNullOrWhiteSpace($machineId)) {
             throw "Cannot create base snapshots because '$machine' has not been created yet."
@@ -2666,7 +2800,7 @@ function Invoke-BaseSnapshotInitialization {
 
     Push-Location $ProjectRoot
     try {
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             Stop-VBoxMachineForSnapshot -MachineName $machine -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage -VagrantPath $vagrant
         }
 
@@ -2678,7 +2812,7 @@ function Invoke-BaseSnapshotInitialization {
             Invoke-VBoxSnapshotCommand -VmId $vmId -SnapshotArgumentList @('take', 'base-clean', '--description=RHCSA-v9-simulator-clean-baseline') -FailureMessage "Failed to create base-clean snapshot for $machine." -VBoxManagePath $vboxManage
         }
 
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             if (-not $machineIdMap.ContainsKey($machine)) {
                 $machineIdMap[$machine] = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
             }
@@ -2686,7 +2820,7 @@ function Invoke-BaseSnapshotInitialization {
 
         Export-BaseSnapshotState -MachineIdMap $machineIdMap -ProjectRoot $ProjectRoot | Out-Null
 
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             $vmId = $machineIdMap[$machine]
             Invoke-ExternalCommand -FilePath $vboxManage -ArgumentList @('startvm', $vmId, '--type', 'headless') -FailureMessage "Failed to restart $machine after snapshot creation." -SuppressOutput
         }
@@ -2710,11 +2844,11 @@ function Invoke-BaseSnapshotRestore {
 
     Push-Location $ProjectRoot
     try {
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             Stop-VBoxMachineForSnapshot -MachineName $machine -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage -VagrantPath $vagrant
         }
 
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             $vmId = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
             $restoreSucceeded = $false
             $lastRestoreError = $null
@@ -2747,7 +2881,7 @@ function Invoke-BaseSnapshotRestore {
             }
         }
 
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             $vmId = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
             Invoke-ExternalCommand -FilePath $vboxManage -ArgumentList @('startvm', $vmId, '--type', 'headless') -FailureMessage "Failed to start $machine after restoring base snapshots." -SuppressOutput
         }
@@ -2800,7 +2934,7 @@ function Wait-VagrantGuestSshReady {
 function Confirm-VagrantGuestProvisionReadiness {
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('servervm', 'clientvm')]
+        [ValidateSet('server', 'client')]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot),
         [string]$Area = 'scenario',
@@ -2828,7 +2962,7 @@ function Confirm-VagrantGuestProvisionReadiness {
         }
 
         Write-WorkflowStatus -Area $Area -Message "Retrying $MachineName startup after a transient post-restore SSH readiness failure"
-        Start-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea $Area
+        Invoke-VagrantMachineStep -MachineName $MachineName -ProjectRoot $ProjectRoot -RetryArea $Area
         Wait-VagrantGuestSshReady `
             -MachineName $MachineName `
             -ProjectRoot $ProjectRoot `
@@ -2849,25 +2983,20 @@ function Invoke-ScenarioProvisioning {
 
     Push-Location $ProjectRoot
     try {
-        # Snapshot restore can report success just before the guest SSH service is
-        # fully ready for a second Vagrant connection, especially on Windows hosts.
         Start-Sleep -Seconds 5
 
-        # Always wait for both guests to settle after a snapshot restore. Single-VM
-        # overlays were more likely to fail because the other VM was not provisioned
-        # first, which accidentally acted like an extra readiness delay.
-        Confirm-VagrantGuestProvisionReadiness -MachineName 'servervm' -ProjectRoot $ProjectRoot -AllowStartupRetry
-        Confirm-VagrantGuestProvisionReadiness -MachineName 'clientvm' -ProjectRoot $ProjectRoot -AllowStartupRetry
+        Confirm-VagrantGuestProvisionReadiness -MachineName 'server' -ProjectRoot $ProjectRoot -AllowStartupRetry
+        Confirm-VagrantGuestProvisionReadiness -MachineName 'client' -ProjectRoot $ProjectRoot -AllowStartupRetry
 
-        if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ServervmRelative)) {
-            Write-WorkflowStatus -Area 'scenario' -Message "Applying the servervm overlay for '$($Manifest.Id)'"
-            Invoke-VagrantCommand -ArgumentList @('provision', 'servervm', '--provision-with', 'scenario-server', '--no-color') -FailureMessage "Failed to apply server scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the servervm overlay for '$($Manifest.Id)' after a transient SSH/provider failure"
+        if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ServerRelative)) {
+            Write-WorkflowStatus -Area 'scenario' -Message "Applying the server overlay for '$($Manifest.Id)'"
+            Invoke-VagrantCommand -ArgumentList @('provision', 'server', '--provision-with', 'scenario-server', '--no-color') -FailureMessage "Failed to apply server scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the server overlay for '$($Manifest.Id)' after a transient SSH/provider failure"
         }
 
-        if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ClientvmRelative)) {
-            Confirm-VagrantGuestProvisionReadiness -MachineName 'clientvm' -ProjectRoot $ProjectRoot -MaxAttempts 6 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2 -AllowStartupRetry
-            Write-WorkflowStatus -Area 'scenario' -Message "Applying the clientvm overlay for '$($Manifest.Id)'"
-            Invoke-VagrantCommand -ArgumentList @('provision', 'clientvm', '--provision-with', 'scenario-client', '--no-color') -FailureMessage "Failed to apply client scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the clientvm overlay for '$($Manifest.Id)' after a transient SSH/provider failure" -RetryCount 3 -RetryDelaySeconds 10
+        if (-not [string]::IsNullOrWhiteSpace($Manifest.VmScripts.ClientRelative)) {
+            Confirm-VagrantGuestProvisionReadiness -MachineName 'client' -ProjectRoot $ProjectRoot -MaxAttempts 6 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2 -AllowStartupRetry
+            Write-WorkflowStatus -Area 'scenario' -Message "Applying the client overlay for '$($Manifest.Id)'"
+            Invoke-VagrantCommand -ArgumentList @('provision', 'client', '--provision-with', 'scenario-client', '--no-color') -FailureMessage "Failed to apply client scenario overlay for '$($Manifest.Id)'." -RetryArea 'scenario' -RetryMessage "Retrying the client overlay for '$($Manifest.Id)' after a transient SSH/provider failure" -RetryCount 3 -RetryDelaySeconds 10
         }
     }
     finally {
@@ -2896,9 +3025,9 @@ function Repair-BaselineSnapshotIfNeeded {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    $machineToCheck = @('clientvm')
-    if ($Manifest.Flags.RequiresServervm) {
-        $machineToCheck = @('servervm', 'clientvm')
+    $machineToCheck = @('client')
+    if ($Manifest.Flags.RequiresServer) {
+        $machineToCheck = @('server', 'client')
     }
 
     $missingBaseline = @()
@@ -2924,11 +3053,64 @@ function Repair-BaselineSnapshotIfNeeded {
     return $true
 }
 
+function Test-ForceHostCleanupEnabled {
+    param(
+        [switch]$ForceHostCleanup
+    )
+
+    if ($ForceHostCleanup.IsPresent) {
+        return $true
+    }
+
+    if ((Test-Path variable:script:ForceHostCleanup) -and [bool]$script:ForceHostCleanup) {
+        return $true
+    }
+
+    return ($env:RHCSA_FORCE_HOST_CLEANUP -match '^(1|true|yes|on)$')
+}
+
+function Get-LabMachineIdList {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return @(
+        Get-OptionalVagrantMachineId -MachineName 'server' -ProjectRoot $ProjectRoot
+        Get-OptionalVagrantMachineId -MachineName 'client' -ProjectRoot $ProjectRoot
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+}
+
+function Test-ProcessCommandLineMatchesLab {
+    param(
+        [string]$CommandLine,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string[]]$MachineIds = @()
+    )
+
+    if ([string]::IsNullOrWhiteSpace($CommandLine)) {
+        return $false
+    }
+
+    $normalizedProjectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+    if ($CommandLine.IndexOf($normalizedProjectRoot, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+        return $true
+    }
+
+    foreach ($machineId in @($MachineIds)) {
+        if (-not [string]::IsNullOrWhiteSpace($machineId) -and $CommandLine.IndexOf($machineId, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 function Invoke-LabHypervisorLockCleanup {
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([int])]
     param(
-        [string]$ProjectRoot = (Get-ProjectRoot)
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$ForceHostCleanup
     )
 
     if (-not $PSCmdlet.ShouldProcess($ProjectRoot, 'Clean stale Vagrant and VirtualBox processes for this lab')) {
@@ -2943,11 +3125,8 @@ function Invoke-LabHypervisorLockCleanup {
             }
     }
 
-    $machineIds = @(
-        Get-OptionalVagrantMachineId -MachineName 'servervm' -ProjectRoot $ProjectRoot
-        Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
+    $machineIds = @(Get-LabMachineIdList -ProjectRoot $ProjectRoot)
     $killed = 0
 
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
@@ -2956,16 +3135,11 @@ function Invoke-LabHypervisorLockCleanup {
         $commandLine = [string]$process.CommandLine
         $kill = $false
 
-        if ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe')) {
+        if ($forceCleanup -and $name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe')) {
             $kill = $true
         }
-        elseif ($name -in @('VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
-            foreach ($machineId in $machineIds) {
-                if ($commandLine -and $commandLine -like "*$machineId*") {
-                    $kill = $true
-                    break
-                }
-            }
+        elseif ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+            $kill = Test-ProcessCommandLineMatchesLab -CommandLine $commandLine -ProjectRoot $ProjectRoot -MachineIds $machineIds
         }
 
         if ($kill) {
@@ -2975,7 +3149,7 @@ function Invoke-LabHypervisorLockCleanup {
     }
 
     Start-Sleep -Seconds 2
-    if (Test-LabHypervisorBusy) {
+    if ($forceCleanup -and (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup)) {
         $fallbackNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')
         foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
             if ([string]$process.Name -in $fallbackNames) {
@@ -2991,12 +3165,24 @@ function Invoke-LabHypervisorLockCleanup {
 
 function Test-LabHypervisorBusy {
     [OutputType([bool])]
-    param()
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$ForceHostCleanup
+    )
 
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
+    $machineIds = @(Get-LabMachineIdList -ProjectRoot $ProjectRoot)
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
     foreach ($process in $processes) {
         $name = [string]$process.Name
-        if ($name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+        if ($forceCleanup -and $name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')) {
+            return $true
+        }
+
+        if (
+            $name -in @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe') -and
+            (Test-ProcessCommandLineMatchesLab -CommandLine ([string]$process.CommandLine) -ProjectRoot $ProjectRoot -MachineIds $machineIds)
+        ) {
             return $true
         }
     }
@@ -3007,12 +3193,14 @@ function Test-LabHypervisorBusy {
 function Wait-LabHypervisorQuiescence {
     [OutputType([bool])]
     param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
         [int]$MaxAttempts = 20,
-        [int]$DelaySeconds = 2
+        [int]$DelaySeconds = 2,
+        [switch]$ForceHostCleanup
     )
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if (-not (Test-LabHypervisorBusy)) {
+        if (-not (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup:$ForceHostCleanup)) {
             return $true
         }
         Start-Sleep -Seconds $DelaySeconds
@@ -3023,11 +3211,23 @@ function Wait-LabHypervisorQuiescence {
 
 function Test-VagrantClientBusy {
     [OutputType([bool])]
-    param()
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [switch]$ForceHostCleanup
+    )
 
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
+    $machineIds = @(Get-LabMachineIdList -ProjectRoot $ProjectRoot)
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
     foreach ($process in $processes) {
-        if ([string]$process.Name -in @('ruby.exe', 'vagrant.exe')) {
+        if ($forceCleanup -and [string]$process.Name -in @('ruby.exe', 'vagrant.exe')) {
+            return $true
+        }
+
+        if (
+            [string]$process.Name -in @('ruby.exe', 'vagrant.exe') -and
+            (Test-ProcessCommandLineMatchesLab -CommandLine ([string]$process.CommandLine) -ProjectRoot $ProjectRoot -MachineIds $machineIds)
+        ) {
             return $true
         }
     }
@@ -3038,12 +3238,14 @@ function Test-VagrantClientBusy {
 function Wait-VagrantClientQuiescence {
     [OutputType([bool])]
     param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
         [int]$MaxAttempts = 30,
-        [int]$DelaySeconds = 2
+        [int]$DelaySeconds = 2,
+        [switch]$ForceHostCleanup
     )
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if (-not (Test-VagrantClientBusy)) {
+        if (-not (Test-VagrantClientBusy -ProjectRoot $ProjectRoot -ForceHostCleanup:$ForceHostCleanup)) {
             return $true
         }
         Start-Sleep -Seconds $DelaySeconds
@@ -3061,10 +3263,10 @@ function Invoke-ClientRecoveryConsole {
 
     Push-Location $ProjectRoot
     try {
-        Write-WorkflowStatus -Area 'scenario' -Message 'Opening the clientvm recovery console'
-        Invoke-ExternalCommand -FilePath (Get-VagrantPath) -ArgumentList @('halt', 'clientvm', '-f') -FailureMessage 'Failed to stop clientvm before starting recovery console.' -IgnoreExitCode
-        $clientId = Get-VagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot
-        Invoke-ExternalCommand -FilePath $vboxManage -ArgumentList @('startvm', $clientId, '--type', 'gui') -FailureMessage 'Failed to start clientvm in GUI mode for password recovery.'
+        Write-WorkflowStatus -Area 'scenario' -Message 'Opening the client recovery console'
+        Invoke-ExternalCommand -FilePath (Get-VagrantPath) -ArgumentList @('halt', 'client', '-f') -FailureMessage 'Failed to stop client before starting recovery console.' -IgnoreExitCode
+        $clientId = Get-VagrantMachineId -MachineName 'client' -ProjectRoot $ProjectRoot
+        Invoke-ExternalCommand -FilePath $vboxManage -ArgumentList @('startvm', $clientId, '--type', 'gui') -FailureMessage 'Failed to start client in GUI mode for password recovery.'
     }
     finally {
         Pop-Location
@@ -3113,7 +3315,7 @@ function Start-BaselineSession {
     Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
     Wait-LabHypervisorQuiescence | Out-Null
     Remove-OrphanLabDiskSet -ProjectRoot $ProjectRoot | Out-Null
-    if ([string]::IsNullOrWhiteSpace((Get-OptionalVagrantMachineId -MachineName 'clientvm' -ProjectRoot $ProjectRoot))) {
+    if ([string]::IsNullOrWhiteSpace((Get-OptionalVagrantMachineId -MachineName 'client' -ProjectRoot $ProjectRoot))) {
         Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
     }
     Initialize-ClientLabDiskSet -ProjectRoot $ProjectRoot | Out-Null
@@ -3129,16 +3331,16 @@ function Start-BaselineSession {
             Push-Location $ProjectRoot
             try {
                 if ($NoProvision) {
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting servervm'
-                    Start-VagrantMachineStep -MachineName 'servervm' -ProjectRoot $ProjectRoot
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting clientvm'
-                    Start-VagrantMachineStep -MachineName 'clientvm' -ProjectRoot $ProjectRoot
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting server'
+                    Invoke-VagrantMachineStep -MachineName 'server' -ProjectRoot $ProjectRoot
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting client'
+                    Invoke-VagrantMachineStep -MachineName 'client' -ProjectRoot $ProjectRoot
                 }
                 else {
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning servervm'
-                    Start-VagrantMachineStep -MachineName 'servervm' -Provision -ProjectRoot $ProjectRoot
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning clientvm'
-                    Start-VagrantMachineStep -MachineName 'clientvm' -Provision -ProjectRoot $ProjectRoot
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning server'
+                    Invoke-VagrantMachineStep -MachineName 'server' -Provision -ProjectRoot $ProjectRoot
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning client'
+                    Invoke-VagrantMachineStep -MachineName 'client' -Provision -ProjectRoot $ProjectRoot
                 }
             }
             finally {
@@ -3165,11 +3367,11 @@ function Start-BaselineSession {
 
             if (
                 -not $SkipEnvironmentRecovery -and
-                $message -match 'clientvm-disk[0-9]+(?:-[0-9A-Za-z_-]+)?\.vdi' -and
+                $message -match 'client-disk[0-9]+(?:-[0-9A-Za-z_-]+)?\.vdi' -and
                 $message -match 'VERR_ALREADY_EXISTS|VERR_FILE_NOT_FOUND|Invalid UUID or filename|Could not find file for the medium'
             ) {
                 @(Remove-OrphanLabDiskSet -Force -ProjectRoot $ProjectRoot) | Out-Null
-                $notices += 'Rebuilt the clientvm lab disk set after a stale or missing disk error.'
+                $notices += 'Rebuilt the client lab disk set after a stale or missing disk error.'
                 Set-LabDiskGeneration -ProjectRoot $ProjectRoot | Out-Null
                 Remove-LabEnvironment -PreserveState -ProjectRoot $ProjectRoot | Out-Null
                 $recoveryResult = Start-BaselineSession `
@@ -3189,8 +3391,8 @@ function Start-BaselineSession {
         $createdBaseSnapshot = $false
         $snapshotReady = $false
         if ($NoProvision) {
-            $snapshotReady = (Test-BaseSnapshot -MachineName 'servervm' -ProjectRoot $ProjectRoot) -and
-                             (Test-BaseSnapshot -MachineName 'clientvm' -ProjectRoot $ProjectRoot)
+            $snapshotReady = (Test-BaseSnapshot -MachineName 'server' -ProjectRoot $ProjectRoot) -and
+                             (Test-BaseSnapshot -MachineName 'client' -ProjectRoot $ProjectRoot)
             if (-not $snapshotReady) {
                 $notices += "Baseline VMs are running, but 'base-clean' snapshots were not created because -NoProvision was used."
             }
@@ -3253,12 +3455,15 @@ function Start-ScenarioRun {
         [Parameter(Mandatory = $true)]
         [ValidateSet('Lab', 'Exam')]
         [string]$Mode,
+        [ValidateSet('RHCSA9', 'RHCSA10', 'All', 'rhcsa9', 'rhcsa10', 'all')]
+        [string]$Track = 'RHCSA9',
         [switch]$ForceRestart,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
     $modeLower = $Mode.ToLowerInvariant()
-    $manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot
+    $trackLower = ConvertTo-ScenarioTrack -Track $Track
+    $manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot -Track $trackLower
     if ($modeLower -notin $manifest.SupportedModes) {
         throw "Scenario '$ScenarioId' does not support mode '$modeLower'. Supported modes: $($manifest.SupportedModes -join ', ')."
     }
@@ -3294,14 +3499,14 @@ function Start-ScenarioRun {
     }
 
     $needsBaselineBootstrap = $false
-    foreach ($machine in @('servervm', 'clientvm')) {
+    foreach ($machine in @('server', 'client')) {
         if (-not (Test-Path (Join-Path $ProjectRoot ".vagrant\machines\$machine\virtualbox\id"))) {
             $needsBaselineBootstrap = $true
         }
     }
 
     if (-not $needsBaselineBootstrap) {
-        foreach ($machine in @('servervm', 'clientvm')) {
+        foreach ($machine in @('server', 'client')) {
             if (-not (Test-BaseSnapshot -MachineName $machine -ProjectRoot $ProjectRoot)) {
                 $needsBaselineBootstrap = $true
             }
@@ -3315,7 +3520,7 @@ function Start-ScenarioRun {
         $baselineResult = Start-BaselineSession -NormalStart -ProjectRoot $ProjectRoot
     }
 
-    foreach ($machine in @('servervm', 'clientvm')) {
+    foreach ($machine in @('server', 'client')) {
         if (-not (Test-BaseSnapshot -MachineName $machine -ProjectRoot $ProjectRoot)) {
             throw "Missing 'base-clean' snapshot for $machine. Recreate the baseline with .\RHCSA.ps1 up and try again."
         }
@@ -3372,12 +3577,24 @@ function Get-ScenarioStatus {
         return $null
     }
 
+    $tracks = @($activeRun.scenario.tracks)
+    if ($tracks.Count -eq 0) {
+        $tracks = @('rhcsa9')
+    }
+
+    $rhelMajor = 9
+    if ($null -ne $activeRun.scenario.rhel_major) {
+        $rhelMajor = [int]$activeRun.scenario.rhel_major
+    }
+
     return [PSCustomObject]@{
         ScenarioId = [string]$activeRun.scenario.id
         Category = [string]$activeRun.scenario.category
         Title = [string]$activeRun.scenario.title
         Mode = [string]$activeRun.mode
         ObjectiveTags = @($activeRun.scenario.objective_tags)
+        Tracks = $tracks
+        RHELMajor = $rhelMajor
         RunId = [string]$activeRun.run_id
         StartedAt = [string]$activeRun.started_at
         EndsAt = [string]$activeRun.ends_at
@@ -3543,8 +3760,10 @@ function Reset-ScenarioRun {
         return $null
     }
 
+    $tracks = @($activeRun.scenario.tracks)
+    $track = if ($tracks.Count -gt 0) { [string]$tracks[0] } else { 'rhcsa9' }
     $mode = ([string]$activeRun.mode).Substring(0, 1).ToUpperInvariant() + ([string]$activeRun.mode).Substring(1)
-    return Start-ScenarioRun -ScenarioId $activeRun.scenario.id -Mode $mode -ForceRestart -ProjectRoot $ProjectRoot
+    return Start-ScenarioRun -ScenarioId $activeRun.scenario.id -Mode $mode -Track $track -ForceRestart -ProjectRoot $ProjectRoot
 }
 
 function Get-VBoxMachineFolder {
@@ -3610,7 +3829,7 @@ function Get-LabVBoxVmCandidate {
     $registeredVm = @(Get-VBoxVmCatalog -VBoxManagePath $VBoxManagePath)
     $candidate = @()
 
-    foreach ($machineName in @('servervm', 'clientvm')) {
+    foreach ($machineName in @('server', 'client')) {
         $vmId = Get-OptionalVagrantMachineId -MachineName $machineName -ProjectRoot $ProjectRoot
         if ($vmId) {
             $match = $registeredVm | Where-Object { $_.Id -eq $vmId } | Select-Object -First 1
@@ -3620,8 +3839,8 @@ function Get-LabVBoxVmCandidate {
         }
     }
 
-    $namePattern = '^' + [regex]::Escape($projectName) + '_(servervm|clientvm)_'
-    $legacyPattern = '^rhcsa-ex200-(servervm|clientvm)'
+    $namePattern = '^' + [regex]::Escape($projectName) + '_(server|client)_'
+    $legacyPattern = '^rhcsa-ex200-(server|client)'
 
     foreach ($machine in $registeredVm) {
         if ($machine.Name -match $namePattern -or $machine.Name -match $legacyPattern) {
@@ -3638,8 +3857,8 @@ function Remove-OrphanLabDiskSet {
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([object[]])]
     param(
-        [ValidateSet('clientvm')]
-        [string]$MachineName = 'clientvm',
+        [ValidateSet('client')]
+        [string]$MachineName = 'client',
         [switch]$Force,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
@@ -3948,10 +4167,10 @@ function Invoke-OrphanVmFolderCleanup {
     }
 
     $patterns = @(
-        "${ProjectName}_servervm_*",
-        "${ProjectName}_clientvm_*",
-        'rhcsa-ex200-servervm*',
-        'rhcsa-ex200-clientvm*'
+        "${ProjectName}_server_*",
+        "${ProjectName}_client_*",
+        'rhcsa-ex200-server*',
+        'rhcsa-ex200-client*'
     )
 
     foreach ($pattern in $patterns) {
@@ -3962,7 +4181,7 @@ function Invoke-OrphanVmFolderCleanup {
     }
 }
 
-function Remove-LiteralPathWithRetry {
+function Invoke-LiteralPathRemovalWithRetry {
     param(
         [Parameter(Mandatory = $true)]
         [string]$LiteralPath,
@@ -4124,7 +4343,7 @@ function Remove-LabEnvironment {
 
         foreach ($path in $paths) {
             if (Test-Path $path) {
-                if (Remove-LiteralPathWithRetry -LiteralPath $path -Recurse -Force) {
+                if (Invoke-LiteralPathRemovalWithRetry -LiteralPath $path -Recurse -Force) {
                     $removedPaths += $path
                 }
                 else {
@@ -4135,7 +4354,7 @@ function Remove-LabEnvironment {
 
         Get-ChildItem -Path . -Filter '*.vdi' -File -ErrorAction SilentlyContinue |
             ForEach-Object {
-                if (Remove-LiteralPathWithRetry -LiteralPath $_.FullName -Force) {
+                if (Invoke-LiteralPathRemovalWithRetry -LiteralPath $_.FullName -Force) {
                     $removedPaths += $_.FullName
                 }
                 else {
@@ -4164,7 +4383,9 @@ function Remove-LabEnvironment {
 
 function Open-RhcsaTui {
     param(
-        [string]$ProjectRoot = (Get-ProjectRoot)
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [ValidateSet('RHCSA9', 'RHCSA10', 'All', 'rhcsa9', 'rhcsa10', 'all')]
+        [string]$Track = 'RHCSA9'
     )
 
     $goPath = Get-GoExecutablePath
@@ -4180,27 +4401,36 @@ function Open-RhcsaTui {
 
         $isWindowsHost = ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT)
         if ($isWindowsHost) {
-            Get-ChildItem -Path $buildRoot -Filter 'rhcsa-tui-*.exe' -ErrorAction SilentlyContinue | ForEach-Object {
-                try {
-                    Remove-Item -Path $_.FullName -Force -ErrorAction Stop
-                }
-                catch {
-                    Write-Verbose "Skipping removal of stale TUI launcher '$($_.FullName)' because it is currently locked."
+            $staleFiles = Get-ChildItem -Path $buildRoot -Filter 'rhcsa-tui-*.exe' -ErrorAction SilentlyContinue
+            if ($null -ne $staleFiles) {
+                foreach ($file in $staleFiles) {
+                    try {
+                        Remove-Item -Path $file.FullName -Force -ErrorAction Stop
+                    }
+                    catch {
+                        Write-Verbose "Skipping removal of stale TUI launcher '$($file.FullName)' because it is currently locked."
+                    }
                 }
             }
 
             $launchBinaryPath = Join-Path $buildRoot ("rhcsa-tui-{0}.exe" -f ([guid]::NewGuid().ToString('N')))
         }
 
-        Invoke-ExternalCommand `
-            -FilePath $goPath `
-            -ArgumentList @('build', '-o', $launchBinaryPath, './cmd/rhcsa-tui') `
-            -FailureMessage 'Failed to build the RHCSA TUI.' `
-            -SuppressOutput
+        if (Test-RhcsaTuiBinaryIsStale -ProjectRoot $ProjectRoot -BinaryPath $binaryPath) {
+            Invoke-ExternalCommand `
+                -FilePath $goPath `
+                -ArgumentList @('build', '-o', $binaryPath, './cmd/rhcsa-tui') `
+                -FailureMessage 'Failed to build the RHCSA TUI.' `
+                -SuppressOutput
+        }
+
+        if ($isWindowsHost) {
+            Copy-Item -Path $binaryPath -Destination $launchBinaryPath -Force
+        }
 
         Invoke-InteractiveExternalCommand `
             -FilePath $launchBinaryPath `
-            -ArgumentList @('--project-root', $ProjectRoot) `
+            -ArgumentList @('--project-root', $ProjectRoot, '--track', (ConvertTo-ScenarioTrack -Track $Track)) `
             -FailureMessage 'Failed to open the RHCSA TUI.'
     }
     finally {

@@ -12,14 +12,14 @@
 Extract matching lines from a seeded words file.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Extract the ich matches into /root/lines (clientvm) - 10 pts
+## Task 01 - Extract the ich matches into /root/lines (client) - 10 pts
 
 ```bash
 grep "ich" /usr/share/dict/words > /root/lines

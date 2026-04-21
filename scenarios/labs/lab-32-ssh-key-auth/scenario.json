@@ -1,7 +1,7 @@
 {
   "id": "lab-32-ssh-key-auth",
   "title": "Lab 32: SSH Key Authentication",
-  "description": "Configure passwordless SSH login from clientvm to servervm using a key pair",
+  "description": "Configure passwordless SSH login from client to server using a key pair",
   "objective_tags": [
     "users-sudo-ssh"
   ],
@@ -9,19 +9,23 @@
     "lab"
   ],
   "time_limit_minutes": 35,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh",
-    "servervm": "scripts/servervm.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": true
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create user relay32 on clientvm and user vault32 on servervm. Set the password of both users to cinder9.",
-        "Configure key-based SSH authentication so that user relay32 on clientvm can log in to vault32@servervm without a password prompt.",
+        "Create user relay32 on client and user vault32 on server. Set the password of both users to cinder9.",
+        "Configure key-based SSH authentication so that user relay32 on client can log in to vault32@server without a password prompt.",
         "Do not disable PasswordAuthentication globally for this task."
       ],
       "hints": [
@@ -30,14 +34,14 @@
       ],
       "checks": [
         "getent passwd relay32 >/dev/null && getent shadow relay32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@servervm true'",
+        "runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@server true'",
         "sshd -T | grep -Eq '^passwordauthentication yes$'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Create user relay32 on clientvm and user vault32 on...",
+        "Create user relay32 on client and user vault32 on...",
         "Configure key-based SSH authentication so that user...",
         "Do not disable PasswordAuthentication globally for..."
       ],
@@ -51,7 +55,7 @@
           "id relay32 >/dev/null 2>&1 || useradd -m relay32",
           "passwd relay32",
           "# enter: cinder9",
-          "# on servervm",
+          "# on server",
           "id vault32 >/dev/null 2>&1 || useradd -m vault32",
           "passwd vault32",
           "# enter: cinder9"
@@ -59,11 +63,11 @@
         [
           "su - relay32",
           "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519",
-          "ssh-copy-id -o StrictHostKeyChecking=no vault32@servervm"
+          "ssh-copy-id -o StrictHostKeyChecking=no vault32@server"
         ],
         [
           "su - relay32",
-          "ssh -o StrictHostKeyChecking=no vault32@servervm true"
+          "ssh -o StrictHostKeyChecking=no vault32@server true"
         ]
       ]
     }

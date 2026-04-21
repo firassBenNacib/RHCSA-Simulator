@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 35,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure Apache on clientvm so it listens on TCP port 9082 and starts automatically at boot.",
+        "Configure Apache on client so it listens on TCP port 9082 and starts automatically at boot.",
         "Allow TCP port 9082 through the firewall permanently.",
         "Make the SELinux changes needed so Apache serves the existing /var/www/html content on that port."
       ],
@@ -36,7 +40,7 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Configure Apache on clientvm so it listens on TCP...",
+        "Configure Apache on client so it listens on TCP...",
         "Allow TCP port 9082 through the firewall permanently",
         "Make the SELinux changes needed so Apache serves..."
       ],

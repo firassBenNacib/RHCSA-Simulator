@@ -12,14 +12,14 @@
 Serve an existing custom document root on a non-default port with SELinux enforcing.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Serve the custom document root on port 8088 (clientvm) - 10 pts
+## Task 01 - Serve the custom document root on port 8088 (client) - 10 pts
 
 ```bash
 cat > /etc/httpd/conf.d/lab28.conf <<'EOF'
@@ -32,7 +32,7 @@ EOF
 
 ---
 
-## Task 02 - Apply the required SELinux and firewall changes (clientvm) - 10 pts
+## Task 02 - Apply the required SELinux and firewall changes (client) - 10 pts
 
 ```bash
 semanage fcontext -a -t httpd_sys_content_t '/srv/lab28/site(/.*)?'
@@ -44,7 +44,7 @@ firewall-cmd --reload
 
 ---
 
-## Task 03 - Leave the provided content intact (clientvm) - 10 pts
+## Task 03 - Leave the provided content intact (client) - 10 pts
 
 ```bash
 systemctl enable --now httpd

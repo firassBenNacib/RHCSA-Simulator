@@ -12,26 +12,26 @@
 Configure offline BaseOS and AppStream repositories on both systems.
 
 ### Systems
-- clientvm
-- servervm
+- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Client Repositories (clientvm) - 10 pts
+## Task 01 - Client Repositories (client) - 10 pts
 
 ```bash
 vim /etc/yum.repos.d/rhcsa.repo
 [rhcsa-baseos]
 name=RHCSA BaseOS
-baseurl=http://servervm/repo/BaseOS/
+baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
 [rhcsa-appstream]
 name=RHCSA AppStream
-baseurl=http://servervm/repo/AppStream/
+baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 dnf clean all
@@ -39,19 +39,19 @@ dnf clean all
 
 ---
 
-## Task 02 - Server Repositories (servervm) - 10 pts
+## Task 02 - Server Repositories (server) - 10 pts
 
 ```bash
-# Run on servervm
+# Run on server
 vim /etc/yum.repos.d/rhcsa.repo
 [rhcsa-baseos]
 name=RHCSA BaseOS
-baseurl=http://servervm/repo/BaseOS/
+baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
 [rhcsa-appstream]
 name=RHCSA AppStream
-baseurl=http://servervm/repo/AppStream/
+baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 dnf clean all
@@ -59,10 +59,10 @@ dnf clean all
 
 ---
 
-## Task 03 - Verify Repositories (clientvm) - 10 pts
+## Task 03 - Verify Repositories (client) - 10 pts
 
 ```bash
 dnf repolist
-# Run on servervm
+# Run on server
 dnf repolist
 ```

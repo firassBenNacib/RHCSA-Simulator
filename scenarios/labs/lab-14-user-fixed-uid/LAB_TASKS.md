@@ -12,13 +12,13 @@
 Create a local user with a specific UID.
 
 ### Systems
-- clientvm
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create user tavric with UID 4111 and set its (clientvm) - 10 pts
+## Task 01 - Create user tavric with UID 4111 and set its (client) - 10 pts
 
 Create user tavric with UID 4111 and set its password to cinder9.

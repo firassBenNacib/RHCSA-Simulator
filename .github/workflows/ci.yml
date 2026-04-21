@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - feature/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    name: Source Checks
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+
+      - name: Go test
+        run: go test ./...
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Build TUI
+        run: go build ./cmd/rhcsa-tui
+
+      - name: Python syntax
+        shell: bash
+        run: python -m py_compile host/*.py tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
+
+      - name: Scenario audit
+        shell: bash
+        run: python tools/scenarios/audit_scenarios.py
+
+      - name: Scenario replay audit
+        shell: bash
+        run: python host/verify_scenario_solutions.py --kind all --track all --audit-only
+
+      - name: PowerShell parser validation
+        shell: pwsh
+        run: |
+          $errors = $null
+          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1')) {
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) {
+              $errors | Format-List | Out-String | Write-Error
+              exit 1
+            }
+          }
+
+      - name: Vagrantfile syntax
+        shell: bash
+        run: |
+          if command -v ruby >/dev/null 2>&1; then
+            ruby -c Vagrantfile
+          else
+            echo "Ruby is not available on this runner; skipping Vagrantfile syntax check."
+          fi
+
+      - name: Whitespace check
+        shell: bash
+        run: git diff --check

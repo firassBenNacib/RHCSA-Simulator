@@ -9,17 +9,21 @@
     "lab"
   ],
   "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa9"
+  ],
+  "rhel_major": 9,
   "vm_scripts": {
-    "clientvm": "scripts/clientvm.sh"
+    "client": "scripts/client.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_servervm": false
+    "requires_server": false
   },
   "content": {
     "lab": {
       "tasks": [
-        "On clientvm, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently while SELinux remains in enforcing mode."
+        "On client, configure the SELinux boolean httpd_can_network_connect so it is enabled persistently while SELinux remains in enforcing mode."
       ],
       "hints": [
         "Use a persistent SELinux boolean command."
