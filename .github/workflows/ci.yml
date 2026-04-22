@@ -65,21 +65,25 @@ jobs:
       - name: Install Python dev dependencies
         run: python -m pip install -r requirements-dev.txt
 
-      - name: Python syntax
-        shell: bash
-        run: python -m py_compile host/*.py tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
+  - name: Python syntax
+    shell: bash
+    run: python -m py_compile tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
 
-      - name: Python unit tests
-        shell: bash
-        run: python -m unittest discover tools/scenarios/tests
+  - name: Python unit tests
+    shell: bash
+    run: python -m pytest tools/scenarios/tests/ -v
 
-      - name: Scenario audit
-        shell: bash
-        run: python tools/scenarios/audit_scenarios.py
+  - name: Python lint
+    shell: bash
+    run: python -m ruff check tools/scenarios/
 
-      - name: Scenario replay audit
-        shell: bash
-        run: python host/verify_scenario_solutions.py --kind all --track all --audit-only
+  - name: Scenario audit
+    shell: bash
+    run: python tools/scenarios/audit_scenarios.py
+
+  - name: Scenario replay audit
+    shell: bash
+    run: python tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
 
       - name: PowerShell parser validation
         shell: pwsh
