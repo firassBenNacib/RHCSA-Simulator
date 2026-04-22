@@ -8,9 +8,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"rhcsa_exam_vms/internal/backend"
-	"rhcsa_exam_vms/internal/catalog"
-	"rhcsa_exam_vms/internal/progress"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/backend"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/progress"
 )
 
 var version = "dev"

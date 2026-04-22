@@ -1,4 +1,4 @@
-module rhcsa_exam_vms
+module github.com/firassBenNacib/rhcsa_exam_vms
 
 go 1.25.8
 
