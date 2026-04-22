@@ -33,22 +33,22 @@
         "Configure chronyd on client so it synchronizes only with server and starts automatically at boot.",
         "Set the default inactive period for newly created local users to 20 days.",
         "Create user cato421 with UID 4421, no home directory, and password cinder9.",
-        "Create user mira with a home directory and password cinder9.",
         "Create user jonas with a home directory, password cinder9, and password aging of maximum 45 days, minimum 5 days, warning 7 days.",
         "Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
         "Allow mira to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.",
         "On server, configure sshd to listen on TCP port 2222 and keep password and public key authentication enabled.",
         "On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
-        "As mira on client, generate an ED25519 SSH key pair with no passphrase.",
+        "Create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.",
         "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
         "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
-        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
-        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
-        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
-        "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222."
+        "Set a personal umask of 027 for mira.",
+        "Find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.",
+        "Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.",
+        "Create /root/usr-local-b.tar.bz2 containing /usr/local.",
+        "Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.",
+        "On /dev/sdb, create a 600 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "On /dev/sdc, create a volume group reviewvgb with a physical extent size of 8 MiB and a logical volume reviewb of 50 extents. Format it with ext4 and mount it persistently on /mnt/reviewb.",
+        "Apply the recommended tuned profile and leave it active."
       ],
       "task_titles": [
         "Client Network",
@@ -57,8 +57,7 @@
         "Chrony Client",
         "Useradd Defaults",
         "No-Home UID User",
-        "Primary Login User",
-        "Password Aging",
+        "Login User With Password Aging",
         "Pwquality Policy",
         "Delegated Sudo",
         "SSH Port",
@@ -66,13 +65,14 @@
         "SSH Key Generation",
         "Passwordless SSH",
         "Rsync Transfer",
-        "Passwordless SSH",
-        "Rsync Transfer",
-        "Passwordless SSH",
-        "Rsync Transfer",
-        "Passwordless SSH",
-        "Rsync Transfer",
-        "Passwordless SSH"
+        "User Umask",
+        "Find And Copy",
+        "Grep Filter",
+        "Archive",
+        "Shell Script",
+        "Swap Space",
+        "Create And Mount LV",
+        "Recommended Tuned Profile"
       ],
       "task_points": [
         5,
@@ -139,10 +139,6 @@
           "echo cinder9 | passwd --stdin cato421"
         ],
         [
-          "useradd mira",
-          "echo cinder9 | passwd --stdin mira"
-        ],
-        [
           "useradd jonas",
           "echo cinder9 | passwd --stdin jonas",
           "chage -M 45 -m 5 -W 7 jonas"
@@ -172,6 +168,8 @@
           "firewall-cmd --reload"
         ],
         [
+          "useradd mira",
+          "echo cinder9 | passwd --stdin mira",
           "su - mira",
           "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
         ],
@@ -191,61 +189,51 @@
           "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
         ],
         [
-          "# Run on server",
-          "id meshremote >/dev/null 2>&1 || useradd meshremote",
-          "echo cinder9 | passwd --stdin meshremote",
-          "mkdir -p /home/meshremote/inbox",
-          "chown meshremote:meshremote /home/meshremote/inbox",
-          "chmod 0755 /home/meshremote/inbox",
-          "su - mira",
-          "ssh-copy-id -p 2222 meshremote@server",
-          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+          "echo 'umask 027' >> /home/mira/.bash_profile"
         ],
         [
-          "su - mira",
-          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+          "mkdir -p /root/mira-files",
+          "find /opt/exam-b/find -user mira -mtime -1 -type f -exec cp --parents {} /root/mira-files \\;"
         ],
         [
-          "# Run on server",
-          "id meshremote >/dev/null 2>&1 || useradd meshremote",
-          "echo cinder9 | passwd --stdin meshremote",
-          "mkdir -p /home/meshremote/inbox",
-          "chown meshremote:meshremote /home/meshremote/inbox",
-          "chmod 0755 /home/meshremote/inbox",
-          "su - mira",
-          "ssh-copy-id -p 2222 meshremote@server",
-          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+          "grep proto /usr/share/dict/words > /root/proto-lines"
         ],
         [
-          "su - mira",
-          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+          "tar -cjf /root/usr-local-b.tar.bz2 /usr/local"
         ],
         [
-          "# Run on server",
-          "id meshremote >/dev/null 2>&1 || useradd meshremote",
-          "echo cinder9 | passwd --stdin meshremote",
-          "mkdir -p /home/meshremote/inbox",
-          "chown meshremote:meshremote /home/meshremote/inbox",
-          "chmod 0755 /home/meshremote/inbox",
-          "su - mira",
-          "ssh-copy-id -p 2222 meshremote@server",
-          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+          "cat > /usr/local/bin/corecheck <<'SCRIPT'",
+          "#!/bin/bash",
+          "> /root/coremesh-units.txt",
+          "for unit in $(cat /usr/local/share/exam-b/units.lst); do",
+          "  systemctl is-active \"$unit\" >> /root/coremesh-units.txt",
+          "done",
+          "SCRIPT",
+          "chmod +x /usr/local/bin/corecheck",
+          "/usr/local/bin/corecheck"
         ],
         [
-          "su - mira",
-          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+          "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 601MiB",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ],
         [
-          "# Run on server",
-          "id meshremote >/dev/null 2>&1 || useradd -m meshremote",
-          "echo cinder9 | passwd --stdin meshremote",
-          "mkdir -p /home/meshremote/inbox",
-          "chown meshremote:meshremote /home/meshremote/inbox",
-          "chmod 0755 /home/meshremote/inbox",
-          "# Run on client",
-          "su - mira",
-          "ssh-copy-id -p 2222 meshremote@server",
-          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+          "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
+          "partprobe /dev/sdc",
+          "pvcreate /dev/sdc1",
+          "vgcreate -s 8M reviewvgb /dev/sdc1",
+          "lvcreate -n reviewb -l 50 reviewvgb",
+          "mkfs.ext4 /dev/reviewvgb/reviewb",
+          "mkdir -p /mnt/reviewb",
+          "uuid=$(blkid -s UUID -o value /dev/reviewvgb/reviewb)",
+          "echo \"UUID=$uuid /mnt/reviewb ext4 defaults 0 0\" >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "tuned-adm profile \"$(tuned-adm recommend)\""
         ]
       ],
       "checks": [

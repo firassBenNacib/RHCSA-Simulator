@@ -216,9 +216,9 @@ tar -czf /root/usr-local-h.tar.gz /usr/local
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 673MiB
 partprobe /dev/sdb
 mkswap /dev/sdb1
+swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
 echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
-swapon -a
 ```
 
 ---
@@ -247,7 +247,6 @@ systemctl disable --now postfix
 ```bash
 dnf install -y tree dos2unix
 dnf remove -y dos2unix
-rpm -q tree
 ```
 
 ---
@@ -255,12 +254,12 @@ rpm -q tree
 ## Question 21 - Inspect Container Image (client) - 4 pts
 
 ```bash
-useradd -m inspecth
-passwd inspecth
-# enter: cinder9
+id inspecth >/dev/null 2>&1 || useradd -m inspecth
+echo cinder9 | passwd --stdin inspecth
 su - inspecth
 podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
 podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt
+exit
 ```
 
 ---
@@ -268,6 +267,5 @@ podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.Workin
 ## Question 22 - Recommended Tuned Profile (client) - 4 pts
 
 ```bash
-tuned-adm profile $(tuned-adm recommend)
-tuned-adm active
+tuned-adm profile "$(tuned-adm recommend)"
 ```

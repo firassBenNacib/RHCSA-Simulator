@@ -123,36 +123,40 @@ Create /srv/summit-audit on client with mode 0750 and ownership root:root.
 
 ---
 
-## Question 17 - Audit Directory (client) - 4 pts
-
-Create /srv/summit-audit on client with mode 0750 and ownership root:root.
-
----
-
-## Question 18 - Audit Directory (client) - 4 pts
-
-Create /srv/summit-audit on client with mode 0750 and ownership root:root.
-
----
-
-## Question 19 - Audit Directory (client) - 4 pts
-
-Create /srv/summit-audit on client with mode 0750 and ownership root:root.
-
----
-
-## Question 20 - Audit Directory (client) - 4 pts
-
-Create /srv/summit-audit on client with mode 0750 and ownership root:root.
-
----
-
-## Question 21 - Find And Copy (client) - 4 pts
+## Question 17 - Find And Copy (client) - 4 pts
 
 Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/foragerd-files while preserving the source directory structure.
 
 ---
 
-## Question 22 - Grep Filter (client) - 4 pts
+## Question 18 - Grep Filter (client) - 4 pts
 
 Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.
+
+---
+
+## Question 19 - Archive (client) - 4 pts
+
+Create /root/summit-etc.tar.gz containing /etc.
+
+---
+
+## Question 20 - Shell Script (client) - 4 pts
+
+Create executable script /usr/local/bin/summit-scan that writes the active state of each unit listed in /usr/local/share/exam-d/units.lst to /root/summit-units.txt.
+
+---
+
+## Question 21 - Swap Space (client) - 4 pts
+
+On /dev/sdb, create a 512 MiB swap partition.
+
+**Requirements**
+- Enable it immediately.
+- Configure it persistently.
+
+---
+
+## Question 22 - Create And Mount LV (client) - 4 pts
+
+On /dev/sdc, create a volume group summitvg with a physical extent size of 16 MiB and a logical volume summitlv of 16 extents. Format it with xfs and mount it persistently on /mnt/summitlv.

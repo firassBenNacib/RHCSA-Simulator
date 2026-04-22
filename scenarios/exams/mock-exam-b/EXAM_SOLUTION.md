@@ -90,16 +90,7 @@ echo cinder9 | passwd --stdin cato421
 
 ---
 
-## Question 07 - Primary Login User (client) - 5 pts
-
-```bash
-useradd mira
-echo cinder9 | passwd --stdin mira
-```
-
----
-
-## Question 08 - Password Aging (client) - 5 pts
+## Question 07 - Login User With Password Aging (client) - 5 pts
 
 ```bash
 useradd jonas
@@ -109,7 +100,7 @@ chage -M 45 -m 5 -W 7 jonas
 
 ---
 
-## Question 09 - Pwquality Policy (client) - 5 pts
+## Question 08 - Pwquality Policy (client) - 5 pts
 
 ```bash
 mkdir -p /etc/security/pwquality.conf.d
@@ -121,7 +112,7 @@ EOF
 
 ---
 
-## Question 10 - Delegated Sudo (client) - 5 pts
+## Question 09 - Delegated Sudo (client) - 5 pts
 
 ```bash
 visudo -f /etc/sudoers.d/mira-firewalld
@@ -130,7 +121,7 @@ mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
 
 ---
 
-## Question 11 - SSH Port (server) - 5 pts
+## Question 10 - SSH Port (server) - 5 pts
 
 ```bash
 # Run on server
@@ -143,7 +134,7 @@ systemctl restart sshd
 
 ---
 
-## Question 12 - Rich Rule (server) - 5 pts
+## Question 11 - Rich Rule (server) - 5 pts
 
 ```bash
 # Run on server
@@ -153,16 +144,18 @@ firewall-cmd --reload
 
 ---
 
-## Question 13 - SSH Key Generation (client) - 4 pts
+## Question 12 - SSH Key Generation (client) - 5 pts
 
 ```bash
+useradd mira
+echo cinder9 | passwd --stdin mira
 su - mira
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 ```
 
 ---
 
-## Question 14 - Passwordless SSH (server) - 4 pts
+## Question 13 - Passwordless SSH (server) - 4 pts
 
 ```bash
 # Run on server
@@ -178,7 +171,7 @@ ssh -p 2222 -o BatchMode=yes meshremote@server true
 
 ---
 
-## Question 15 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (server) - 4 pts
 
 ```bash
 su - mira
@@ -187,92 +180,87 @@ rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@server:/home/meshremote
 
 ---
 
-## Question 16 - Passwordless SSH (server) - 4 pts
+## Question 15 - User Umask (client) - 4 pts
 
 ```bash
-# Run on server
-id meshremote >/dev/null 2>&1 || useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@server
-ssh -p 2222 -o BatchMode=yes meshremote@server true
+echo 'umask 027' >> /home/mira/.bash_profile
 ```
 
 ---
 
-## Question 17 - Rsync Transfer (server) - 4 pts
+## Question 16 - Find And Copy (client) - 4 pts
 
 ```bash
-su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt
+mkdir -p /root/mira-files
+find /opt/exam-b/find -user mira -mtime -1 -type f -exec cp --parents {} /root/mira-files \;
 ```
 
 ---
 
-## Question 18 - Passwordless SSH (server) - 4 pts
+## Question 17 - Grep Filter (client) - 4 pts
 
 ```bash
-# Run on server
-id meshremote >/dev/null 2>&1 || useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@server
-ssh -p 2222 -o BatchMode=yes meshremote@server true
+grep proto /usr/share/dict/words > /root/proto-lines
 ```
 
 ---
 
-## Question 19 - Rsync Transfer (server) - 4 pts
+## Question 18 - Archive (client) - 4 pts
 
 ```bash
-su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt
+tar -cjf /root/usr-local-b.tar.bz2 /usr/local
 ```
 
 ---
 
-## Question 20 - Passwordless SSH (server) - 4 pts
+## Question 19 - Shell Script (client) - 4 pts
 
 ```bash
-# Run on server
-id meshremote >/dev/null 2>&1 || useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-su - mira
-ssh-copy-id -p 2222 meshremote@server
-ssh -p 2222 -o BatchMode=yes meshremote@server true
+cat > /usr/local/bin/corecheck <<'SCRIPT'
+#!/bin/bash
+> /root/coremesh-units.txt
+for unit in $(cat /usr/local/share/exam-b/units.lst); do
+  systemctl is-active "$unit" >> /root/coremesh-units.txt
+done
+SCRIPT
+chmod +x /usr/local/bin/corecheck
+/usr/local/bin/corecheck
 ```
 
 ---
 
-## Question 21 - Rsync Transfer (server) - 4 pts
+## Question 20 - Swap Space (client) - 4 pts
 
 ```bash
-su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 601MiB
+partprobe /dev/sdb
+mkswap /dev/sdb1
+swapon /dev/sdb1
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```
 
 ---
 
-## Question 22 - Passwordless SSH (server) - 4 pts
+## Question 21 - Create And Mount LV (client) - 4 pts
 
 ```bash
-# Run on server
-id meshremote >/dev/null 2>&1 || useradd -m meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-# Run on client
-su - mira
-ssh-copy-id -p 2222 meshremote@server
-ssh -p 2222 -o BatchMode=yes meshremote@server true
+parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
+partprobe /dev/sdc
+pvcreate /dev/sdc1
+vgcreate -s 8M reviewvgb /dev/sdc1
+lvcreate -n reviewb -l 50 reviewvgb
+mkfs.ext4 /dev/reviewvgb/reviewb
+mkdir -p /mnt/reviewb
+uuid=$(blkid -s UUID -o value /dev/reviewvgb/reviewb)
+echo "UUID=$uuid /mnt/reviewb ext4 defaults 0 0" >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 22 - Recommended Tuned Profile (client) - 4 pts
+
+```bash
+tuned-adm profile "$(tuned-adm recommend)"
 ```

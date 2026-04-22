@@ -49,4 +49,4 @@ jobs:
 
       - name: Replay scenarios
         shell: pwsh
-        run: python .\host\verify_scenario_solutions.py --kind ${{ inputs.kind }} --track ${{ inputs.track }}
+        run: python .\tools\scenarios\verify_scenario_solutions.py --kind ${{ inputs.kind }} --track ${{ inputs.track }}

@@ -198,47 +198,7 @@ chmod 0750 /srv/summit-audit
 
 ---
 
-## Question 17 - Audit Directory (client) - 4 pts
-
-```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
-```
-
----
-
-## Question 18 - Audit Directory (client) - 4 pts
-
-```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
-```
-
----
-
-## Question 19 - Audit Directory (client) - 4 pts
-
-```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
-```
-
----
-
-## Question 20 - Audit Directory (client) - 4 pts
-
-```bash
-mkdir -p /srv/summit-audit
-chown root:root /srv/summit-audit
-chmod 0750 /srv/summit-audit
-```
-
----
-
-## Question 21 - Find And Copy (client) - 4 pts
+## Question 17 - Find And Copy (client) - 4 pts
 
 ```bash
 mkdir -p /root/foragerd-files
@@ -247,8 +207,62 @@ find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-## Question 22 - Grep Filter (client) - 4 pts
+## Question 18 - Grep Filter (client) - 4 pts
 
 ```bash
-grep 'alpha' /usr/share/dict/words > /root/alpha-lines
+grep alpha /usr/share/dict/words > /root/alpha-lines
+```
+
+---
+
+## Question 19 - Archive (client) - 4 pts
+
+```bash
+tar -czf /root/summit-etc.tar.gz /etc
+```
+
+---
+
+## Question 20 - Shell Script (client) - 4 pts
+
+```bash
+cat > /usr/local/bin/summit-scan <<'SCRIPT'
+#!/bin/bash
+> /root/summit-units.txt
+for unit in $(cat /usr/local/share/exam-d/units.lst); do
+  systemctl is-active "$unit" >> /root/summit-units.txt
+done
+SCRIPT
+chmod +x /usr/local/bin/summit-scan
+/usr/local/bin/summit-scan
+```
+
+---
+
+## Question 21 - Swap Space (client) - 4 pts
+
+```bash
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB
+partprobe /dev/sdb
+mkswap /dev/sdb1
+swapon /dev/sdb1
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+```
+
+---
+
+## Question 22 - Create And Mount LV (client) - 4 pts
+
+```bash
+parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
+partprobe /dev/sdc
+pvcreate /dev/sdc1
+vgcreate -s 16M summitvg /dev/sdc1
+lvcreate -n summitlv -l 16 summitvg
+mkfs.xfs -f /dev/summitvg/summitlv
+mkdir -p /mnt/summitlv
+uuid=$(blkid -s UUID -o value /dev/summitvg/summitlv)
+echo "UUID=$uuid /mnt/summitlv xfs defaults 0 0" >> /etc/fstab
+mount -a
 ```

@@ -17,7 +17,7 @@ go-build:
 	$(GO) build ./cmd/rhcsa-tui
 
 python-compile:
-	$(PYTHON) -m py_compile host/*.py tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
+	$(PYTHON) -m py_compile tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
 
 python-test:
 	$(PYTHON) -m unittest discover tools/scenarios/tests
@@ -26,7 +26,7 @@ scenario-audit:
 	$(PYTHON) tools/scenarios/audit_scenarios.py
 
 scenario-replay-audit:
-	$(PYTHON) host/verify_scenario_solutions.py --kind all --track all --audit-only
+	$(PYTHON) tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
 
 vagrant-validate:
 	vagrant validate

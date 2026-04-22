@@ -236,7 +236,7 @@ func normalizeTracks(values []string) []string {
 	seen := map[string]bool{}
 	tracks := make([]string, 0, len(values))
 	for _, value := range values {
-		track := normalizeTrack(value)
+		track := NormalizeTrack(value)
 		if track == "" || seen[track] {
 			continue
 		}
@@ -249,7 +249,7 @@ func normalizeTracks(values []string) []string {
 	return tracks
 }
 
-func normalizeTrack(value string) string {
+func NormalizeTrack(value string) string {
 	value = strings.ToLower(strings.TrimSpace(value))
 	value = strings.ReplaceAll(value, "-", "")
 	value = strings.ReplaceAll(value, "_", "")
@@ -266,7 +266,7 @@ func normalizeTrack(value string) string {
 }
 
 func scenarioMatchesTrack(tracks []string, requested string) bool {
-	track := normalizeTrack(requested)
+	track := NormalizeTrack(requested)
 	if track == "" {
 		return true
 	}
@@ -320,8 +320,9 @@ func normalizeTaskText(value string) string {
 		lines = append(lines, strings.TrimRight(line, " \t"))
 	}
 	if len(lines) == 1 && lines[0] != "" {
-		last := lines[0][len(lines[0])-1]
-		if !strings.ContainsRune(".:!?", rune(last)) {
+		runes := []rune(lines[0])
+		last := runes[len(runes)-1]
+		if !strings.ContainsRune(".:!?", last) {
 			lines[0] += "."
 		}
 	}

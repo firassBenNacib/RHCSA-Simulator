@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"rhcsa_exam_vms/internal/catalog"
-	"rhcsa_exam_vms/internal/utils"
 )
 
 var (
@@ -18,13 +17,6 @@ var (
 	failDetailPattern   = regexp.MustCompile(`(?i)^fail\s+(\d+):\s*\[([^\]]*)\]\s*(.*)$`)
 	sectionTitlePattern = regexp.MustCompile(`(?i)^(?:task|check|question|hint)\s+\d+\b.*$`)
 )
-
-func catalogReadRelative(root, relative string) (string, error) {
-	if relative == "" {
-		return "", nil
-	}
-	return catalog.ReadRelative(root, relative), nil
-}
 
 func (m model) View() string {
 	if m.width == 0 || m.height == 0 {
@@ -97,7 +89,7 @@ func (m model) renderWideContent() string {
 
 func (m model) renderStackedContent() string {
 	ch := m.contentHeight()
-	listH := utils.MaxInt(ch/3, 6)
+	listH := max(ch/3, 6)
 	detailH := ch - listH
 
 	listPane := padRenderedBlock(m.renderList(m.width, listH), m.width, listH)
@@ -153,7 +145,7 @@ func blockLines(text string, width, height int) []string {
 
 func (m model) renderList(width, height int) string {
 	header := m.renderListHeader(width)
-	bodyHeight := utils.MaxInt(height-len(header), 1)
+	bodyHeight := max(height-len(header), 1)
 	items := strings.Split(m.renderListItems(width, bodyHeight), "\n")
 	for len(items) < bodyHeight {
 		items = append(items, "")
@@ -247,7 +239,7 @@ func (m model) renderListItems(width, height int) string {
 }
 
 func (m model) renderListRow(entry listEntry, width int) string {
-	innerWidth := utils.MaxInt(width-2, 8)
+	innerWidth := max(width-2, 8)
 	title := truncateLine(entry.title, innerWidth-2)
 	content := " " + title
 
@@ -268,7 +260,7 @@ func (m model) renderListRow(entry listEntry, width int) string {
 
 func (m model) renderDetail(width, height int) string {
 	header := m.renderDetailHeaderLines(width)
-	bodyHeight := utils.MaxInt(height-len(header), 1)
+	bodyHeight := max(height-len(header), 1)
 	bodyLines := m.renderDetailBodyLines(m.detailTextWidth())
 	lines := make([]string, 0, len(bodyLines))
 	for _, line := range bodyLines {
@@ -315,11 +307,11 @@ func (m model) currentScenarioView() scenarioView {
 		body := lab.HintContent
 		switch m.detail {
 		case detailSolution:
-			body, _ = catalogReadRelative(m.root, lab.SolutionPath)
+			body = catalog.ReadRelative(m.root, lab.SolutionPath)
 		case detailCheck:
 			body = lab.CheckContent
 		case detailPrompt:
-			body, _ = catalogReadRelative(m.root, lab.TasksPath)
+			body = catalog.ReadRelative(m.root, lab.TasksPath)
 		}
 		return scenarioView{
 			id:          lab.ID,
@@ -334,9 +326,9 @@ func (m model) currentScenarioView() scenarioView {
 	}
 
 	exam := m.currentExam()
-	body, _ := catalogReadRelative(m.root, exam.TasksPath)
+	body := catalog.ReadRelative(m.root, exam.TasksPath)
 	if m.detail == detailSolution {
-		body, _ = catalogReadRelative(m.root, exam.SolutionPath)
+		body = catalog.ReadRelative(m.root, exam.SolutionPath)
 	}
 	return scenarioView{
 		id:          exam.ID,
@@ -357,7 +349,7 @@ func (m model) renderDetailHeaderLines(width int) []string {
 	}
 
 	tabs := m.theme.RenderViewModes(m.detail, m.activeTab == examsTab)
-	title := m.theme.PaneTitle.Render("  " + truncateLine(view.title, utils.MaxInt(width-2, 1)))
+	title := m.theme.PaneTitle.Render("  " + truncateLine(view.title, max(width-3, 1)))
 	metaParts := []string{view.id, fmt.Sprintf("%d min", view.minutes)}
 	if systems := extractSystemsFromDocument(view.body); len(systems) > 0 {
 		metaParts = append(metaParts, strings.Join(systems, " / "))
@@ -375,7 +367,7 @@ func (m model) renderDetailHeaderLines(width int) []string {
 		if m.focus == focusDetail {
 			metaStyle = m.theme.PaneHeaderFocused
 		}
-		lines = append(lines, metaStyle.Render("  "+truncateLine(meta, utils.MaxInt(width-2, 1))))
+		lines = append(lines, metaStyle.Render(" "+truncateLine(meta, max(width-2, 1))))
 	}
 
 	lines = append(lines, m.renderPaneRule(width))
@@ -670,7 +662,7 @@ func (m model) processMarkdownLines(content string, width int, mode detailMode) 
 
 		switch {
 		case strings.Trim(trimmed, "-") == "" && len(trimmed) > 2:
-			rendered = append(rendered, detailRenderedLine{text: m.theme.DetailRule.Render("  " + strings.Repeat("─", utils.MinInt(width-8, 60))), copySection: -1})
+		rendered = append(rendered, detailRenderedLine{text: m.theme.DetailRule.Render(" " + strings.Repeat("─", min(width-8, 60))), copySection: -1})
 		case inCode:
 			if mode == detailSolution || mode == detailCheck {
 				rendered = appendCommandLines(rendered, strings.TrimSpace(line), width, m.theme)
@@ -753,7 +745,7 @@ func normalizedSectionHeading(line string) (string, bool) {
 func (m model) renderCopyableHeadingLine(heading string, width int, copySection int) []detailRenderedLine {
 	button := m.theme.RenderCopyButton()
 	buttonWidth := lipgloss.Width(button)
-	textWidth := utils.MaxInt(width-buttonWidth-3, 12)
+	textWidth := max(width-buttonWidth-3, 12)
 	title := truncateLine(heading, textWidth)
 	line := m.theme.DetailH2.Render("  "+title) + " " + button
 	return []detailRenderedLine{{text: line, copySection: copySection}}
@@ -891,7 +883,7 @@ func (m model) detailSectionOffsets() []int {
 	lines := m.renderDetailBodyLines(m.detailTextWidth())
 	offsets := make([]int, 0, 8)
 	for i, line := range lines {
-		stripped := strings.TrimSpace(utils.StripAnsi(line.text))
+		stripped := strings.TrimSpace(StripAnsi(line.text))
 		if _, ok := normalizedSectionHeading(stripped); ok {
 			offsets = append(offsets, i)
 		}
@@ -923,9 +915,7 @@ func (m model) catalogTabBounds() (labsStart, labsEnd, examsStart, examsEnd, y i
 
 func (m model) detailTabBounds() map[detailMode][2]int {
 	bounds := map[detailMode][2]int{}
-	originX, originY := m.detailPaneOrigin()
-	_ = originY
-	x := originX
+	x, _ := m.detailPaneOrigin()
 
 	modes := m.availableDetailModes()
 	for _, mode := range modes {
@@ -940,7 +930,7 @@ func (m model) detailTabBounds() map[detailMode][2]int {
 func (m model) fillLine(left, right string, width int) string {
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
-	gap := utils.MaxInt(width-leftWidth-rightWidth, 1)
+	gap := max(width-leftWidth-rightWidth, 1)
 	return left + strings.Repeat(" ", gap) + right
 }
 
