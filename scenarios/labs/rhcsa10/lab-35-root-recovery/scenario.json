@@ -1,0 +1,62 @@
+{
+  "id": "lab-35-root-recovery",
+  "title": "RHCSA 10 Lab 35: Root Recovery",
+  "description": "Practice the root password recovery workflow",
+  "objective_tags": [
+    "boot-and-recovery"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "From the console, interrupt boot and enter emergency recovery mode.",
+        "Set the root password to cinder9.",
+        "Relabel the system if SELinux requires it."
+      ],
+      "hints": [
+        "This is a console workflow.",
+        "Use rd.break or emergency target practice in a real VM console."
+      ],
+      "checks": [
+        "echo 'console-only password recovery workflow is skipped in SSH replay mode'"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "From the console, interrupt boot and enter emergency recovery mode",
+        "Set the root password to cinder9",
+        "Relabel the system if SELinux requires it"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "# console task: interrupt GRUB and boot with rd.break"
+        ],
+        [
+          "passwd root",
+          "# enter: cinder9"
+        ],
+        [
+          "touch /.autorelabel",
+          "reboot"
+        ]
+      ]
+    }
+  }
+}

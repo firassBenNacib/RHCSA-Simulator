@@ -1,0 +1,62 @@
+{
+  "id": "lab-41-nfs-mount",
+  "title": "RHCSA 10 Lab 41: NFS Direct Mount",
+  "description": "Mount a network filesystem persistently",
+  "objective_tags": [
+    "filesystems-and-autofs"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create mount point /mnt/serverdirect10.",
+        "Mount server:/exports/direct at /mnt/serverdirect10.",
+        "Make the mount persistent across reboots."
+      ],
+      "hints": [
+        "Use nfs as the filesystem type.",
+        "Use _netdev for network mounts."
+      ],
+      "checks": [
+        "test -d /mnt/serverdirect10",
+        "findmnt -no SOURCE,TARGET /mnt/serverdirect10 | grep -qx 'server:/exports/direct /mnt/serverdirect10'",
+        "grep -Eq '^server:/exports/direct[[:space:]]+/mnt/serverdirect10[[:space:]]+nfs' /etc/fstab"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create mount point /mnt/serverdirect10",
+        "Mount server:/exports/direct at /mnt/serverdirect10",
+        "Make the mount persistent across reboots"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "mkdir -p /mnt/serverdirect10"
+        ],
+        [
+          "mount -t nfs server:/exports/direct /mnt/serverdirect10"
+        ],
+        [
+          "echo 'server:/exports/direct /mnt/serverdirect10 nfs defaults,_netdev 0 0' >> /etc/fstab"
+        ]
+      ]
+    }
+  }
+}
