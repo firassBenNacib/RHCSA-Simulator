@@ -43,12 +43,12 @@
         "Create user cedar540 with UID 4540 and set its password to cinder9.",
         "Set a personal umask of 027 for miles.",
         "Create /srv/summit-audit on client with mode 0750 and ownership root:root.",
-        "Create /srv/summit-audit on client with mode 0750 and ownership root:root.",
-        "Create /srv/summit-audit on client with mode 0750 and ownership root:root.",
-        "Create /srv/summit-audit on client with mode 0750 and ownership root:root.",
-        "Create /srv/summit-audit on client with mode 0750 and ownership root:root.",
         "Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/foragerd-files while preserving the source directory structure.",
-        "Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines."
+        "Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.",
+        "Create /root/summit-etc.tar.gz containing /etc.",
+        "Create executable script /usr/local/bin/summit-scan that writes the active state of each unit listed in /usr/local/share/exam-d/units.lst to /root/summit-units.txt.",
+        "On /dev/sdb, create a 512 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "On /dev/sdc, create a volume group summitvg with a physical extent size of 16 MiB and a logical volume summitlv of 16 extents. Format it with xfs and mount it persistently on /mnt/summitlv."
       ],
       "task_titles": [
         "Client Network",
@@ -67,12 +67,12 @@
         "Fixed UID User",
         "User Umask",
         "Audit Directory",
-        "Audit Directory",
-        "Audit Directory",
-        "Audit Directory",
-        "Audit Directory",
         "Find And Copy",
-        "Grep Filter"
+        "Grep Filter",
+        "Archive",
+        "Shell Script",
+        "Swap Space",
+        "Create And Mount LV"
       ],
       "task_points": [
         5,
@@ -197,31 +197,45 @@
           "chmod 0750 /srv/summit-audit"
         ],
         [
-          "mkdir -p /srv/summit-audit",
-          "chown root:root /srv/summit-audit",
-          "chmod 0750 /srv/summit-audit"
-        ],
-        [
-          "mkdir -p /srv/summit-audit",
-          "chown root:root /srv/summit-audit",
-          "chmod 0750 /srv/summit-audit"
-        ],
-        [
-          "mkdir -p /srv/summit-audit",
-          "chown root:root /srv/summit-audit",
-          "chmod 0750 /srv/summit-audit"
-        ],
-        [
-          "mkdir -p /srv/summit-audit",
-          "chown root:root /srv/summit-audit",
-          "chmod 0750 /srv/summit-audit"
-        ],
-        [
           "mkdir -p /root/foragerd-files",
           "find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/foragerd-files \\;"
         ],
         [
-          "grep 'alpha' /usr/share/dict/words > /root/alpha-lines"
+          "grep alpha /usr/share/dict/words > /root/alpha-lines"
+        ],
+        [
+          "tar -czf /root/summit-etc.tar.gz /etc"
+        ],
+        [
+          "cat > /usr/local/bin/summit-scan <<'SCRIPT'",
+          "#!/bin/bash",
+          "> /root/summit-units.txt",
+          "for unit in $(cat /usr/local/share/exam-d/units.lst); do",
+          "  systemctl is-active \"$unit\" >> /root/summit-units.txt",
+          "done",
+          "SCRIPT",
+          "chmod +x /usr/local/bin/summit-scan",
+          "/usr/local/bin/summit-scan"
+        ],
+        [
+          "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
+        ],
+        [
+          "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
+          "partprobe /dev/sdc",
+          "pvcreate /dev/sdc1",
+          "vgcreate -s 16M summitvg /dev/sdc1",
+          "lvcreate -n summitlv -l 16 summitvg",
+          "mkfs.xfs -f /dev/summitvg/summitlv",
+          "mkdir -p /mnt/summitlv",
+          "uuid=$(blkid -s UUID -o value /dev/summitvg/summitlv)",
+          "echo \"UUID=$uuid /mnt/summitlv xfs defaults 0 0\" >> /etc/fstab",
+          "mount -a"
         ]
       ],
       "checks": [

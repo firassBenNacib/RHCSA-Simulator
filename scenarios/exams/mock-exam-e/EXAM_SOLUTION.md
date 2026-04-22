@@ -239,12 +239,13 @@ tar -cjf /root/var-tmp-harbor.tar.bz2 /var/tmp
 ## Question 19 - Shell Script (client) - 4 pts
 
 ```bash
-vim /usr/local/bin/harbor-check
+cat > /usr/local/bin/harbor-check <<'SCRIPT'
 #!/bin/bash
 > /root/harbor-services.txt
 for svc in $(cat /usr/local/share/exam-e/services.lst); do
-    systemctl is-active "$svc" >> /root/harbor-services.txt
+  systemctl is-active "$svc" >> /root/harbor-services.txt
 done
+SCRIPT
 chmod +x /usr/local/bin/harbor-check
 /usr/local/bin/harbor-check
 ```
@@ -276,6 +277,5 @@ resize2fs /dev/reviewvge/reviewe
 ## Question 22 - Recommended Tuned Profile (client) - 4 pts
 
 ```bash
-tuned-adm recommend
-tuned-adm profile <recommended-profile>
+tuned-adm profile "$(tuned-adm recommend)"
 ```

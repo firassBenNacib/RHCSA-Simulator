@@ -63,96 +63,100 @@ Create user cato421 with UID 4421, no home directory, and password cinder9.
 
 ---
 
-## Question 07 - Primary Login User (client) - 5 pts
-
-Create user mira with a home directory and password cinder9.
-
----
-
-## Question 08 - Password Aging (client) - 5 pts
+## Question 07 - Login User With Password Aging (client) - 5 pts
 
 Create user jonas with a home directory, password cinder9, and password aging of maximum 45 days, minimum 5 days, warning 7 days.
 
 ---
 
-## Question 09 - Pwquality Policy (client) - 5 pts
+## Question 08 - Pwquality Policy (client) - 5 pts
 
 Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.
 
 ---
 
-## Question 10 - Delegated Sudo (client) - 5 pts
+## Question 09 - Delegated Sudo (client) - 5 pts
 
 Allow mira to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.
 
 ---
 
-## Question 11 - SSH Port (server) - 5 pts
+## Question 10 - SSH Port (server) - 5 pts
 
 On server, configure sshd to listen on TCP port 2222 and keep password and public key authentication enabled.
 
 ---
 
-## Question 12 - Rich Rule (server) - 5 pts
+## Question 11 - Rich Rule (server) - 5 pts
 
 On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.
 
 ---
 
-## Question 13 - SSH Key Generation (client) - 4 pts
+## Question 12 - SSH Key Generation (client) - 5 pts
 
-As mira on client, generate an ED25519 SSH key pair with no passphrase.
+Create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.
 
 ---
 
-## Question 14 - Passwordless SSH (server) - 4 pts
+## Question 13 - Passwordless SSH (server) - 4 pts
 
 On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
 
 ---
 
-## Question 15 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (server) - 4 pts
 
 Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
 
 ---
 
-## Question 16 - Passwordless SSH (server) - 4 pts
+## Question 15 - User Umask (client) - 4 pts
 
-On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
-
----
-
-## Question 17 - Rsync Transfer (server) - 4 pts
-
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
+Set a personal umask of 027 for mira.
 
 ---
 
-## Question 18 - Passwordless SSH (server) - 4 pts
+## Question 16 - Find And Copy (client) - 4 pts
 
-On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
-
----
-
-## Question 19 - Rsync Transfer (server) - 4 pts
-
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
+Find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.
 
 ---
 
-## Question 20 - Passwordless SSH (server) - 4 pts
+## Question 17 - Grep Filter (client) - 4 pts
 
-On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
-
----
-
-## Question 21 - Rsync Transfer (server) - 4 pts
-
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
+Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.
 
 ---
 
-## Question 22 - Passwordless SSH (server) - 4 pts
+## Question 18 - Archive (client) - 4 pts
 
-On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
+Create /root/usr-local-b.tar.bz2 containing /usr/local.
+
+---
+
+## Question 19 - Shell Script (client) - 4 pts
+
+Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.
+
+---
+
+## Question 20 - Swap Space (client) - 4 pts
+
+On /dev/sdb, create a 600 MiB swap partition.
+
+**Requirements**
+- Enable it immediately.
+- Configure it persistently.
+
+---
+
+## Question 21 - Create And Mount LV (client) - 4 pts
+
+On /dev/sdc, create a volume group reviewvgb with a physical extent size of 8 MiB and a logical volume reviewb of 50 extents. Format it with ext4 and mount it persistently on /mnt/reviewb.
+
+---
+
+## Question 22 - Recommended Tuned Profile (client) - 4 pts
+
+Apply the recommended tuned profile and leave it active.

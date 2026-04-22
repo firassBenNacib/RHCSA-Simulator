@@ -77,84 +77,84 @@ Create user auditg without a home directory and with login shell /sbin/nologin.
 
 ---
 
-## Question 09 - Password Aging (client) - 5 pts
+## Question 09 - Password Aging And Umask (client) - 5 pts
 
-Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.
-
----
-
-## Question 10 - User Umask (client) - 5 pts
-
-Set a personal umask of 027 for pavel.
+Set password aging for pavel to maximum 45 days, minimum 5 days, warning 7 days, and set a personal umask of 027 for pavel.
 
 ---
 
-## Question 11 - Copy User On Both Systems (client) - 5 pts
+## Question 10 - Copy User On Both Systems (client) - 5 pts
 
 Create user copyg on both systems with password cinder9.
 
 ---
 
-## Question 12 - SSH Key And Secure Copy (client + server) - 5 pts
+## Question 11 - SSH Key And Secure Copy (client + server) - 5 pts
 
 As copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.
 
 ---
 
-## Question 13 - At Job (client) - 4 pts
+## Question 12 - At Job (client) - 5 pts
 
 Queue a one-time at job as user pavel that appends the message "exam-g tick" to /root/exam-g-at.log in 2 minutes.
 
 ---
 
-## Question 14 - Per-User Login Message (client) - 4 pts
+## Question 13 - Per-User Login Message (client) - 4 pts
 
 Append a login message for pavel to ~/.bash_profile that prints "exam-g access" when pavel logs in.
 
 ---
 
-## Question 15 - Find And Copy (client) - 4 pts
+## Question 14 - Find And Copy (client) - 4 pts
 
 Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.
 
 ---
 
-## Question 16 - Grep Filter (client) - 4 pts
+## Question 15 - Grep Filter (client) - 4 pts
 
 Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.
 
 ---
 
-## Question 17 - Archive (client) - 4 pts
+## Question 16 - Archive (client) - 4 pts
 
 Create /root/etc-g.tar.bz2 containing /etc.
 
 ---
 
-## Question 18 - Persistent Journal (client) - 4 pts
+## Question 17 - Persistent Journal (client) - 4 pts
 
-Configure journald on client so logs are stored persistently across reboots.
+On client, enable persistent systemd journal storage and restart systemd-journald.
 
 ---
 
-## Question 19 - Process Renice And Kill (client) - 4 pts
+## Question 18 - Process Renice And Kill (client) - 4 pts
 
 User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 19 - Swap Space (client) - 4 pts
 
 On /dev/sdb, create a 736 MiB swap partition and configure it persistently.
 
 ---
 
-## Question 21 - Create And Mount LV (client) - 4 pts
+## Question 20 - Create And Mount LV (client) - 4 pts
 
 On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.
 
 ---
 
-## Question 22 - Rootless Container Autostart (client) - 4 pts
+## Question 21 - Rootless Container (client) - 4 pts
 
-As user solg, build localhost/delta-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile. Run the container as pdfg with /opt/ing mounted to /data/input and /opt/outg mounted to /data/output. Generate and enable a systemd user service for that container and enable lingering for solg.
+As user solg, build localhost/deltaforge-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile, then run container pdfg with /opt/inc mounted to /data/input and /opt/outg mounted to /data/output.
+
+---
+
+## Question 22 - Container Autostart (client) - 4 pts
+
+Generate and enable a systemd user service for pdfg and enable lingering for solg.

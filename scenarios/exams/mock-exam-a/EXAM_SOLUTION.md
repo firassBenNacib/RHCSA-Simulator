@@ -179,7 +179,7 @@ echo cinder9 | passwd --stdin ash420
 
 ---
 
-## Question 14 - Find Copy Preserve (client) - 4 pts
+## Question 14 - Find And Copy (client) - 4 pts
 
 ```bash
 mkdir -p /root/amber-files
@@ -191,12 +191,12 @@ find /opt/exam-a/find -user amber -mtime -1 -type f -exec cp --parents {} /root/
 ## Question 15 - Grep Filter (client) - 4 pts
 
 ```bash
-grep 'delta' /usr/share/dict/words > /root/delta-lines
+grep delta /usr/share/dict/words > /root/delta-lines
 ```
 
 ---
 
-## Question 16 - Archive /etc (client) - 4 pts
+## Question 16 - Archive (client) - 4 pts
 
 ```bash
 tar -cjf /root/etc-opsa.tar.bz2 /etc
@@ -207,70 +207,64 @@ tar -cjf /root/etc-opsa.tar.bz2 /etc
 ## Question 17 - Service Report Script (client) - 4 pts
 
 ```bash
-vim /usr/local/bin/opsa-report
+cat > /usr/local/bin/opsa-report <<'SCRIPT'
 #!/bin/bash
-while read -r unit; do systemctl is-active "$unit"; done < /usr/local/share/exam-a/services.lst > /root/opsa-services.txt
-chmod 755 /usr/local/bin/opsa-report
+> /root/opsa-services.txt
+for svc in $(cat /usr/local/share/exam-a/services.lst); do
+  systemctl is-active "$svc" >> /root/opsa-services.txt
+done
+SCRIPT
+chmod +x /usr/local/bin/opsa-report
+/usr/local/bin/opsa-report
 ```
 
 ---
 
-## Question 18 - Persistent Journal (server) - 4 pts
+## Question 18 - Swap Space (client) - 4 pts
 
 ```bash
-# Run on server
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB
+partprobe /dev/sdb
+mkswap /dev/sdb1
+swapon /dev/sdb1
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```
 
 ---
 
-## Question 19 - Persistent Journal (server) - 4 pts
+## Question 19 - Resize Existing LV (client) - 4 pts
 
 ```bash
-# Run on server
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+lvextend -L 320M /dev/reviewvga/reviewa
+resize2fs /dev/reviewvga/reviewa
 ```
 
 ---
 
-## Question 20 - Persistent Journal (server) - 4 pts
+## Question 20 - Rootless Container (client) - 4 pts
 
 ```bash
-# Run on server
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+su - oriona
+cd /opt/rhcsa/workspaces/exam-a
+podman build -t localhost/opsa-web:latest .
+podman run -d --name pdfa -v /opt/inc:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest
+exit
 ```
 
 ---
 
-## Question 21 - Persistent Journal (server) - 4 pts
+## Question 21 - Container Autostart (client) - 4 pts
 
 ```bash
-# Run on server
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
-systemctl restart systemd-journald
+su - oriona
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+podman generate systemd --name pdfa --files --new
+systemctl --user daemon-reload
+systemctl --user enable --now container-pdfa.service
+exit
+loginctl enable-linger oriona
 ```
 
 ---
