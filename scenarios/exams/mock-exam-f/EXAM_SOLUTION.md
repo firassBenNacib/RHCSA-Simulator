@@ -208,12 +208,13 @@ tar -czf /root/usr-local-f.tar.gz /usr/local
 ## Question 19 - Shell Script (client) - 4 pts
 
 ```bash
-vim /usr/local/bin/aurora-report
+cat > /usr/local/bin/aurora-report <<'SCRIPT'
 #!/bin/bash
 > /root/aurora-units.txt
 for unit in $(cat /usr/local/share/exam-f/units.lst); do
-    systemctl is-active "$unit" >> /root/aurora-units.txt
+  systemctl is-active "$unit" >> /root/aurora-units.txt
 done
+SCRIPT
 chmod +x /usr/local/bin/aurora-report
 /usr/local/bin/aurora-report
 ```

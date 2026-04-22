@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -109,7 +108,6 @@ def task_lengths_ok(path: Path, scenario: dict[str, Any], findings: list[Finding
 
 
 def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
-    text = scenario_text(scenario)
     content = scenario["content"]["lab" if "lab" in scenario["content"] else "exam"]
     tasks_text = "\n".join(content["tasks"])
     solutions = content["solution_commands"]
@@ -134,12 +132,12 @@ def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Fi
                     rf"crontab\b[^\n]*-u\s+{re.escape(username)}\b",
                     rf"ssh-copy-id\b[^\n]*\b{re.escape(username)}@",
                     rf"ssh\b[^\n]*\b{re.escape(username)}@",
-                    rf"systemctl\s+--user\b",
-                    rf"\.bash_(profile|rc)\b",
-                    rf"\bpodman\b",
-                    rf"passwordless ssh",
-                    rf"ssh key",
-                    rf"home directory",
+                    r"systemctl\s+--user\b",
+                    r"\.bash_(profile|rc)\b",
+                    r"\bpodman\b",
+                    r"passwordless ssh",
+                    r"ssh key",
+                    r"home directory",
                 )
             )
         if not home_related:

@@ -1,1 +1,1 @@
-__all__ = ["tracks"]
+__all__ = ["tracks", "text"]

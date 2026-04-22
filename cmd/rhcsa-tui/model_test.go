@@ -10,8 +10,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-
-	"rhcsa_exam_vms/internal/utils"
 )
 
 func fakeKeyMsg(s string) tea.KeyMsg {
@@ -314,7 +312,7 @@ func clickFooterAction(m model, bound footerActionBound) (tea.Model, tea.Cmd) {
 
 func visibleTextPoint(t *testing.T, m model, target string) (int, int) {
 	t.Helper()
-	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	lines := strings.Split(StripAnsi(m.View()), "\n")
 	for y, line := range lines {
 		idx := strings.Index(line, target)
 		if idx < 0 {
@@ -328,7 +326,7 @@ func visibleTextPoint(t *testing.T, m model, target string) (int, int) {
 
 func visibleTextEndPoint(t *testing.T, m model, target string) (int, int) {
 	t.Helper()
-	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	lines := strings.Split(StripAnsi(m.View()), "\n")
 	for y, line := range lines {
 		idx := strings.Index(line, target)
 		if idx < 0 {
@@ -1243,7 +1241,7 @@ func TestHelpOverlayUsesProfessionalLayout(t *testing.T) {
 	m.height = 35
 	m.showHelp = true
 
-	stripped := utils.StripAnsi(m.View())
+	stripped := StripAnsi(m.View())
 	for _, want := range []string{
 		"RHCSA Help",
 		"Navigation",

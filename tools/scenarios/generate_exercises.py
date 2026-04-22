@@ -6,8 +6,9 @@ import hashlib
 import json
 import re
 import shutil
-import textwrap
 from pathlib import Path
+
+from rhcsa_scenarios.text import normalize_task_text
 from typing import Any, TypedDict, cast
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -55,14 +56,6 @@ def remove_tree(path: Path) -> None:
 
 def relpath(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
-
-
-def normalize_task_text(value: str) -> str:
-    value = textwrap.dedent(value).strip("\n")
-    lines = [line.rstrip() for line in value.splitlines()]
-    if len(lines) == 1 and lines[0] and lines[0][-1] not in ".:!?":
-        lines[0] += "."
-    return "\n".join(lines).strip()
 
 
 def render_hints(title: str, hints: list[str]) -> str:

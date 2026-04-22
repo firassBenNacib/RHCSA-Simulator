@@ -6,13 +6,13 @@ The simulator has three public surfaces:
 
 * `RHCSA.ps1` for users.
 * `cmd/rhcsa-tui` for the terminal UI source.
-* `host/*.py` wrappers for existing scenario tooling commands.
+* `tools/scenarios` for scenario tooling commands.
 
 The implementation is intentionally split between PowerShell orchestration, Go TUI code, Python scenario tools, and guest shell provisioning. This is normal for a VM-based lab simulator, but large files should keep shrinking behind stable entrypoints.
 
 ## Recommended Direction
 
-Keep `RHCSA.ps1` as a small facade over focused PowerShell modules:
+Keep `RHCSA.ps1` as a small facade over focused PowerShell modules. The first module boundary is `host/modules/RhcsaSimulator`, which imports the current host implementation and owns runtime options. The remaining work is to split `host/simulator_common.ps1` into smaller module files behind that boundary:
 
 * catalog and scenario state
 * Vagrant and VirtualBox lifecycle
@@ -22,7 +22,7 @@ Keep `RHCSA.ps1` as a small facade over focused PowerShell modules:
 * output formatting
 * TUI launcher
 
-Keep Python implementation in `tools/scenarios/`. The `host/*.py` files should remain as compatibility wrappers for one release, then can be deprecated after documentation and CI call the `tools` entrypoints directly.
+Keep Python implementation in `tools/scenarios/`. Host orchestration should stay in PowerShell; Python tooling should not be mixed back into `host/`.
 
 Keep Go package tests beside package source. In Go, colocated `*_test.go` files are idiomatic. A separate `tests/` directory should only be used for end-to-end flows, fixtures, or black-box integration tests that span multiple packages.
 
@@ -36,7 +36,7 @@ AustinNicely's `rhcsa-simulator` is a Python-first, single-host simulator with g
 * document installation and extension paths clearly
 * keep release assets out of git and publish them through GitHub Releases
 
-Those ideas map here to `tools/scenarios`, `Makefile`, Python unit tests in CI, GoReleaser release packaging, and compatibility wrappers under `host/`.
+Those ideas map here to `tools/scenarios`, `Makefile`, Python unit tests in CI, GoReleaser release packaging, and PowerShell orchestration under `host/`.
 
 ## RHCSA 10 Track
 

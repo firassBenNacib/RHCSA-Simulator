@@ -1,6 +1,6 @@
 module rhcsa_exam_vms
 
-go 1.26.2
+go 1.25.8
 
 require (
 	github.com/charmbracelet/bubbletea v1.3.10

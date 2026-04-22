@@ -36,8 +36,7 @@
         "Create group deltaops and create user pavel with deltaops as a supplementary group. Set the password of pavel to cinder9.",
         "Create /projects/delta-drop owned by root:deltaops with mode 3770 so group ownership is inherited and only file owners can delete their own files.",
         "Create user auditg without a home directory and with login shell /sbin/nologin.",
-        "Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.",
-        "Set a personal umask of 027 for pavel.",
+        "Set password aging for pavel to maximum 45 days, minimum 5 days, warning 7 days, and set a personal umask of 027 for pavel.",
         "Create user copyg on both systems with password cinder9.",
         "As copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.",
         "Queue a one-time at job as user pavel that appends the message \"exam-g tick\" to /root/exam-g-at.log in 2 minutes.",
@@ -45,11 +44,12 @@
         "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.",
         "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.",
         "Create /root/etc-g.tar.bz2 containing /etc.",
-        "Configure journald on client so logs are stored persistently across reboots.",
+        "On client, enable persistent systemd journal storage and restart systemd-journald.",
         "User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.",
         "On /dev/sdb, create a 736 MiB swap partition and configure it persistently.",
         "On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.",
-        "As user solg, build localhost/delta-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile. Run the container as pdfg with /opt/ing mounted to /data/input and /opt/outg mounted to /data/output. Generate and enable a systemd user service for that container and enable lingering for solg."
+        "As user solg, build localhost/deltaforge-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile, then run container pdfg with /opt/inc mounted to /data/input and /opt/outg mounted to /data/output.",
+        "Generate and enable a systemd user service for pdfg and enable lingering for solg."
       ],
       "task_titles": [
         "Root Recovery",
@@ -60,8 +60,7 @@
         "Ops User And Group",
         "Sticky Shared Directory",
         "No-Home Audit User",
-        "Password Aging",
-        "User Umask",
+        "Password Aging And Umask",
         "Copy User On Both Systems",
         "SSH Key And Secure Copy",
         "At Job",
@@ -73,7 +72,8 @@
         "Process Renice And Kill",
         "Swap Space",
         "Create And Mount LV",
-        "Rootless Container Autostart"
+        "Rootless Container",
+        "Container Autostart"
       ],
       "task_points": [
         5,
@@ -143,9 +143,7 @@
           "useradd -M -s /sbin/nologin auditg"
         ],
         [
-          "chage -M 45 -m 5 -W 7 pavel"
-        ],
-        [
+          "chage -M 45 -m 5 -W 7 pavel",
           "echo 'umask 027' >> /home/pavel/.bash_profile"
         ],
         [
@@ -184,8 +182,11 @@
         ],
         [
           "mkdir -p /var/log/journal",
-          "vim /etc/systemd/journald.conf",
-          "# Set: Storage=persistent",
+          "mkdir -p /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
+          "[Journal]",
+          "Storage=persistent",
+          "EOF",
           "systemctl restart systemd-journald"
         ],
         [
@@ -196,9 +197,9 @@
           "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 737MiB",
           "partprobe /dev/sdb",
           "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
           "uuid=$(blkid -s UUID -o value /dev/sdb1)",
-          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
-          "swapon -a"
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ],
         [
           "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 701MiB set 1 lvm on",
@@ -214,12 +215,19 @@
         ],
         [
           "su - solg",
-          "cd /opt/rhcsa/workspaces/exam-g && podman build -t localhost/delta-web:latest .",
-          "podman run -d --name pdfg -v /opt/ing:/data/input:Z -v /opt/outg:/data/output:Z localhost/delta-web:latest",
+          "cd /opt/rhcsa/workspaces/exam-g",
+          "podman build -t localhost/deltaforge-web:latest .",
+          "podman run -d --name pdfg -v /opt/inc:/data/input:Z -v /opt/outg:/data/output:Z localhost/deltaforge-web:latest",
+          "exit"
+        ],
+        [
+          "su - solg",
           "mkdir -p ~/.config/systemd/user",
-          "cd ~/.config/systemd/user && podman generate systemd --name pdfg --files --new",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name pdfg --files --new",
           "systemctl --user daemon-reload",
           "systemctl --user enable --now container-pdfg.service",
+          "exit",
           "loginctl enable-linger solg"
         ]
       ],

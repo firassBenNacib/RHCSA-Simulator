@@ -5,20 +5,20 @@ This project is a Windows-first RHCSA lab simulator with portable source builds 
 ```powershell
 .\RHCSA.ps1 up
 .\RHCSA.ps1 tui
-python host/verify_scenario_solutions.py --kind all --audit-only
+python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
 ```
 
 ## Repository Layout
 
 * `RHCSA.ps1` is the user-facing PowerShell entrypoint.
-* `host/` contains host orchestration and compatibility wrappers.
+* `host/` contains host orchestration.
 * `tools/scenarios/` contains scenario authoring, audit, smoke, and replay tooling.
 * `cmd/rhcsa-tui/` contains the Go terminal UI source.
 * `internal/` contains shared Go packages for the TUI.
 * `scenarios/labs/` and `scenarios/exams/` contain the authored scenario corpus.
 * `guest/` contains provisioning scripts that run inside the VMs.
 
-The `host/*.py` files are compatibility wrappers for existing automation. New Python implementation code should go under `tools/scenarios/`, preferably inside the `rhcsa_scenarios` package.
+Python implementation code belongs under `tools/scenarios/`, preferably inside the `rhcsa_scenarios` package.
 
 Keep `cmd/rhcsa-tui`, `internal`, `tools`, workflows, docs, and scenario sources tracked. Do not commit `.build/`, `.vagrant/`, ISO files, runtime state, or compiled binaries.
 
@@ -36,8 +36,8 @@ On Windows PowerShell, run the equivalent commands directly:
 go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
-python host/verify_scenario_solutions.py --kind all --audit-only
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
+python tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
 python tools/scenarios/audit_scenarios.py
 python -m unittest discover tools/scenarios/tests
 vagrant validate

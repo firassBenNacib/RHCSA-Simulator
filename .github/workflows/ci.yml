@@ -32,6 +32,13 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Go module consistency
+        shell: bash
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          go mod verify
+
       - name: Go test
         shell: bash
         run: go test -coverprofile=coverage.out ./...
@@ -67,11 +74,15 @@ jobs:
 
       - name: Python syntax
         shell: bash
-        run: python -m py_compile host/*.py tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
+        run: python -m py_compile tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
 
       - name: Python unit tests
         shell: bash
-        run: python -m unittest discover tools/scenarios/tests
+        run: python -m pytest tools/scenarios/tests/ -q -s
+
+      - name: Python lint
+        shell: bash
+        run: python -m ruff check tools/scenarios/
 
       - name: Scenario audit
         shell: bash
@@ -79,13 +90,13 @@ jobs:
 
       - name: Scenario replay audit
         shell: bash
-        run: python host/verify_scenario_solutions.py --kind all --track all --audit-only
+        run: python tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
 
       - name: PowerShell parser validation
         shell: pwsh
         run: |
           $errors = $null
-          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1', 'install.ps1')) {
+          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1', 'host/modules/RhcsaSimulator/RhcsaSimulator.psm1', 'host/modules/RhcsaSimulator/RhcsaSimulator.psd1', 'install.ps1')) {
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null
             if ($errors) {
               $errors | Format-List | Out-String | Write-Error
@@ -101,7 +112,7 @@ jobs:
             Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
           }
           $issues = @()
-          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1', 'install.ps1')) {
+          foreach ($file in @('RHCSA.ps1', 'host/simulator_common.ps1', 'host/modules/RhcsaSimulator/RhcsaSimulator.psm1', 'install.ps1')) {
             $issues += Invoke-ScriptAnalyzer -Path $file -Severity Error, Warning
           }
           if ($issues.Count -gt 0) {

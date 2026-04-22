@@ -127,7 +127,7 @@ Create user ash420 with UID 4420 and set its password to cinder9.
 
 ---
 
-## Question 14 - Find Copy Preserve (client) - 4 pts
+## Question 14 - Find And Copy (client) - 4 pts
 
 Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours. Copy them to /root/amber-files while preserving the source directory structure.
 
@@ -139,7 +139,7 @@ Extract lines containing delta from /usr/share/dict/words into /root/delta-lines
 
 ---
 
-## Question 16 - Archive /etc (client) - 4 pts
+## Question 16 - Archive (client) - 4 pts
 
 Create /root/etc-opsa.tar.bz2 containing /etc.
 
@@ -147,31 +147,35 @@ Create /root/etc-opsa.tar.bz2 containing /etc.
 
 ## Question 17 - Service Report Script (client) - 4 pts
 
-Create executable script /usr/local/bin/opsa-report that writes the active state of each unit listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
+Create executable script /usr/local/bin/opsa-report that writes the active state of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
 
 ---
 
-## Question 18 - Persistent Journal (server) - 4 pts
+## Question 18 - Swap Space (client) - 4 pts
 
-On server, enable persistent systemd journal storage and restart systemd-journald.
+On /dev/sdb, create a 700 MiB swap partition.
 
----
-
-## Question 19 - Persistent Journal (server) - 4 pts
-
-On server, enable persistent systemd journal storage and restart systemd-journald.
+**Requirements**
+- Enable it immediately.
+- Configure it persistently.
 
 ---
 
-## Question 20 - Persistent Journal (server) - 4 pts
+## Question 19 - Resize Existing LV (client) - 4 pts
 
-On server, enable persistent systemd journal storage and restart systemd-journald.
+Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing data.
 
 ---
 
-## Question 21 - Persistent Journal (server) - 4 pts
+## Question 20 - Rootless Container (client) - 4 pts
 
-On server, enable persistent systemd journal storage and restart systemd-journald.
+As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/inc mounted to /data/input and /opt/outa mounted to /data/output.
+
+---
+
+## Question 21 - Container Autostart (client) - 4 pts
+
+Generate and enable a systemd user service for pdfa and enable lingering for oriona.
 
 ---
 

@@ -55,7 +55,7 @@ func isRightClick(msg tea.MouseMsg) bool {
 
 func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	mouseX := msg.X
-	mouseY := m.normalizeMouseY(msg.Y)
+	mouseY := msg.Y
 
 	if isRightClick(msg) {
 		return m.handleRightClick()
