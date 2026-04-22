@@ -103,23 +103,16 @@ useradd -M -s /sbin/nologin auditg
 
 ---
 
-## Question 09 - Password Aging (client) - 5 pts
+## Question 09 - Password Aging And Umask (client) - 5 pts
 
 ```bash
 chage -M 45 -m 5 -W 7 pavel
-```
-
----
-
-## Question 10 - User Umask (client) - 5 pts
-
-```bash
 echo 'umask 027' >> /home/pavel/.bash_profile
 ```
 
 ---
 
-## Question 11 - Copy User On Both Systems (client) - 5 pts
+## Question 10 - Copy User On Both Systems (client) - 5 pts
 
 ```bash
 useradd copyg
@@ -134,7 +127,7 @@ chmod 0755 /home/copyg/inbox
 
 ---
 
-## Question 12 - SSH Key And Secure Copy (client + server) - 5 pts
+## Question 11 - SSH Key And Secure Copy (client + server) - 5 pts
 
 ```bash
 su - copyg
@@ -145,7 +138,7 @@ scp /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
 
 ---
 
-## Question 13 - At Job (client) - 4 pts
+## Question 12 - At Job (client) - 5 pts
 
 ```bash
 su - pavel
@@ -155,7 +148,7 @@ systemctl enable --now atd
 
 ---
 
-## Question 14 - Per-User Login Message (client) - 4 pts
+## Question 13 - Per-User Login Message (client) - 4 pts
 
 ```bash
 echo 'echo exam-g access' >> /home/pavel/.bash_profile
@@ -163,7 +156,7 @@ echo 'echo exam-g access' >> /home/pavel/.bash_profile
 
 ---
 
-## Question 15 - Find And Copy (client) - 4 pts
+## Question 14 - Find And Copy (client) - 4 pts
 
 ```bash
 mkdir -p /root/trackerg-files
@@ -172,7 +165,7 @@ find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /ro
 
 ---
 
-## Question 16 - Grep Filter (client) - 4 pts
+## Question 15 - Grep Filter (client) - 4 pts
 
 ```bash
 grep ember /usr/share/dict/words > /root/ember-lines
@@ -180,7 +173,7 @@ grep ember /usr/share/dict/words > /root/ember-lines
 
 ---
 
-## Question 17 - Archive (client) - 4 pts
+## Question 16 - Archive (client) - 4 pts
 
 ```bash
 tar -cjf /root/etc-g.tar.bz2 /etc
@@ -188,18 +181,21 @@ tar -cjf /root/etc-g.tar.bz2 /etc
 
 ---
 
-## Question 18 - Persistent Journal (client) - 4 pts
+## Question 17 - Persistent Journal (client) - 4 pts
 
 ```bash
 mkdir -p /var/log/journal
-vim /etc/systemd/journald.conf
-# Set: Storage=persistent
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
 systemctl restart systemd-journald
 ```
 
 ---
 
-## Question 19 - Process Renice And Kill (client) - 4 pts
+## Question 18 - Process Renice And Kill (client) - 4 pts
 
 ```bash
 kill "$(cat /home/workerg/cpu.pid)"
@@ -208,20 +204,20 @@ renice 10 -p "$(cat /home/workerg/sleep.pid)"
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 19 - Swap Space (client) - 4 pts
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 737MiB
 partprobe /dev/sdb
 mkswap /dev/sdb1
+swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
 echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
-swapon -a
 ```
 
 ---
 
-## Question 21 - Create And Mount LV (client) - 4 pts
+## Question 20 - Create And Mount LV (client) - 4 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 701MiB set 1 lvm on
@@ -238,15 +234,27 @@ mount -a
 
 ---
 
-## Question 22 - Rootless Container Autostart (client) - 4 pts
+## Question 21 - Rootless Container (client) - 4 pts
 
 ```bash
 su - solg
-cd /opt/rhcsa/workspaces/exam-g && podman build -t localhost/delta-web:latest .
-podman run -d --name pdfg -v /opt/ing:/data/input:Z -v /opt/outg:/data/output:Z localhost/delta-web:latest
+cd /opt/rhcsa/workspaces/exam-g
+podman build -t localhost/deltaforge-web:latest .
+podman run -d --name pdfg -v /opt/inc:/data/input:Z -v /opt/outg:/data/output:Z localhost/deltaforge-web:latest
+exit
+```
+
+---
+
+## Question 22 - Container Autostart (client) - 4 pts
+
+```bash
+su - solg
 mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user && podman generate systemd --name pdfg --files --new
+cd ~/.config/systemd/user
+podman generate systemd --name pdfg --files --new
 systemctl --user daemon-reload
 systemctl --user enable --now container-pdfg.service
+exit
 loginctl enable-linger solg
 ```

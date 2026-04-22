@@ -23,11 +23,6 @@ def block(title: str, task: str, commands: list[str]) -> tuple[str, str, list[st
     return (title, task.strip(), commands)
 
 
-def slice_blocks(exam: dict, start: int, end: int) -> list[tuple[str, str, list[str]]]:
-    content = exam["content"]["exam"]
-    return list(zip(content["task_titles"][start:end], content["tasks"][start:end], content["solution_commands"][start:end]))
-
-
 def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: list[str], password_recovery: bool, blocks: list[tuple[str, str, list[str]]], checks: list[str]) -> None:
     data = load_exam(exam_id)
     exam = data["content"]["exam"]
@@ -44,17 +39,6 @@ def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: 
 
 
 def main() -> int:
-    exams = {exam_id: load_exam(exam_id) for exam_id in (
-        "mock-exam-a",
-        "mock-exam-b",
-        "mock-exam-c",
-        "mock-exam-d",
-        "mock-exam-e",
-        "mock-exam-f",
-        "mock-exam-g",
-        "mock-exam-h",
-    )}
-
     apply_blocks(
         "mock-exam-a",
         title="Mock Exam A",
@@ -144,20 +128,73 @@ def main() -> int:
             block("Cron Logger", "Configure a cron job for amber that runs every 2 minutes and logs the message \"exam-a tick\".", [
                 "(crontab -l -u amber 2>/dev/null; echo '*/2 * * * * logger \"exam-a tick\"') | crontab -u amber -",
             ]),
-            block("Host Entry", "Add a persistent hosts entry on client so api.exam-a.lab resolves to 192.168.122.3.", [
-                "grep -q 'api.exam-a.lab' /etc/hosts || echo '192.168.122.3 api.exam-a.lab' >> /etc/hosts",
-            ]),
-            *slice_blocks(exams["mock-exam-a"], 13, 22),
-            block("Persistent Journal", "On server, enable persistent systemd journal storage and restart systemd-journald.", [
-                "# Run on server",
-                "mkdir -p /var/log/journal",
-                "mkdir -p /etc/systemd/journald.conf.d",
-                "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
-                "[Journal]",
-                "Storage=persistent",
-                "EOF",
-                "systemctl restart systemd-journald",
-            ]),
+        block("Host Entry", "Add a persistent hosts entry on client so api.exam-a.lab resolves to 192.168.122.3.", [
+            "grep -q 'api.exam-a.lab' /etc/hosts || echo '192.168.122.3 api.exam-a.lab' >> /etc/hosts",
+        ]),
+        block("Fixed UID User", "Create user ash420 with UID 4420 and set its password to cinder9.", [
+            "useradd -u 4420 ash420",
+            "echo cinder9 | passwd --stdin ash420",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours. Copy them to /root/amber-files while preserving the source directory structure.", [
+            "mkdir -p /root/amber-files",
+            "find /opt/exam-a/find -user amber -mtime -1 -type f -exec cp --parents {} /root/amber-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.", [
+            "grep delta /usr/share/dict/words > /root/delta-lines",
+        ]),
+        block("Archive", "Create /root/etc-opsa.tar.bz2 containing /etc.", [
+            "tar -cjf /root/etc-opsa.tar.bz2 /etc",
+        ]),
+        block("Service Report Script", "Create executable script /usr/local/bin/opsa-report that writes the active state of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.", [
+            "cat > /usr/local/bin/opsa-report <<'SCRIPT'",
+            "#!/bin/bash",
+            "> /root/opsa-services.txt",
+            "for svc in $(cat /usr/local/share/exam-a/services.lst); do",
+            "  systemctl is-active \"$svc\" >> /root/opsa-services.txt",
+            "done",
+            "SCRIPT",
+            "chmod +x /usr/local/bin/opsa-report",
+            "/usr/local/bin/opsa-report",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 700 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Resize Existing LV", "Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing data.", [
+            "lvextend -L 320M /dev/reviewvga/reviewa",
+            "resize2fs /dev/reviewvga/reviewa",
+        ]),
+        block("Rootless Container", "As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/inc mounted to /data/input and /opt/outa mounted to /data/output.", [
+            "su - oriona",
+            "cd /opt/rhcsa/workspaces/exam-a",
+            "podman build -t localhost/opsa-web:latest .",
+            "podman run -d --name pdfa -v /opt/inc:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest",
+            "exit",
+        ]),
+        block("Container Autostart", "Generate and enable a systemd user service for pdfa and enable lingering for oriona.", [
+            "su - oriona",
+            "mkdir -p ~/.config/systemd/user",
+            "cd ~/.config/systemd/user",
+            "podman generate systemd --name pdfa --files --new",
+            "systemctl --user daemon-reload",
+            "systemctl --user enable --now container-pdfa.service",
+            "exit",
+            "loginctl enable-linger oriona",
+        ]),
+        block("Persistent Journal", "On server, enable persistent systemd journal storage and restart systemd-journald.", [
+            "# Run on server",
+            "mkdir -p /var/log/journal",
+            "mkdir -p /etc/systemd/journald.conf.d",
+            "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
+            "[Journal]",
+            "Storage=persistent",
+            "EOF",
+            "systemctl restart systemd-journald",
+        ]),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'client.exam-a.lab' && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192' && grep -Fqx '192.168.122.3 api.exam-a.lab' /etc/hosts",
@@ -213,15 +250,11 @@ def main() -> int:
                 "useradd -M -u 4421 cato421",
                 "echo cinder9 | passwd --stdin cato421",
             ]),
-            block("Primary Login User", "Create user mira with a home directory and password cinder9.", [
-                "useradd mira",
-                "echo cinder9 | passwd --stdin mira",
-            ]),
-            block("Password Aging", "Create user jonas with a home directory, password cinder9, and password aging of maximum 45 days, minimum 5 days, warning 7 days.", [
-                "useradd jonas",
-                "echo cinder9 | passwd --stdin jonas",
-                "chage -M 45 -m 5 -W 7 jonas",
-            ]),
+        block("Login User With Password Aging", "Create user jonas with a home directory, password cinder9, and password aging of maximum 45 days, minimum 5 days, warning 7 days.", [
+            "useradd jonas",
+            "echo cinder9 | passwd --stdin jonas",
+            "chage -M 45 -m 5 -W 7 jonas",
+        ]),
             block("Pwquality Policy", "Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.", [
                 "mkdir -p /etc/security/pwquality.conf.d",
                 "cat > /etc/security/pwquality.conf.d/coremesh.conf <<'EOF'",
@@ -254,9 +287,11 @@ def main() -> int:
                 "firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.0/24\" port protocol=\"tcp\" port=\"2222\" accept'",
                 "firewall-cmd --reload",
             ]),
-            block("SSH Key Generation", "As mira on client, generate an ED25519 SSH key pair with no passphrase.", [
-                "runuser -l mira -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'",
-            ]),
+        block("SSH Key Generation", "Create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.", [
+            "useradd mira",
+            "echo cinder9 | passwd --stdin mira",
+            "runuser -l mira -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'",
+        ]),
             block("Passwordless SSH", "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.", [
                 "# Run on server",
                 "id meshremote >/dev/null 2>&1 || useradd meshremote",
@@ -265,10 +300,56 @@ def main() -> int:
                 "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@server'",
                 "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@server true'",
             ]),
-            block("Rsync Transfer", "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.", [
-                "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt'",
-            ]),
-            *slice_blocks(exams["mock-exam-b"], 13, 20),
+        block("Rsync Transfer", "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.", [
+            "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt'",
+        ]),
+        block("User Umask", "Set a personal umask of 027 for mira.", [
+            "echo 'umask 027' >> /home/mira/.bash_profile",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.", [
+            "mkdir -p /root/mira-files",
+            "find /opt/exam-b/find -user mira -mtime -1 -type f -exec cp --parents {} /root/mira-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.", [
+            "grep proto /usr/share/dict/words > /root/proto-lines",
+        ]),
+        block("Archive", "Create /root/usr-local-b.tar.bz2 containing /usr/local.", [
+            "tar -cjf /root/usr-local-b.tar.bz2 /usr/local",
+        ]),
+        block("Shell Script", "Create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.", [
+            "cat > /usr/local/bin/corecheck <<'SCRIPT'",
+            "#!/bin/bash",
+            "> /root/coremesh-units.txt",
+            "for unit in $(cat /usr/local/share/exam-b/units.lst); do",
+            "  systemctl is-active \"$unit\" >> /root/coremesh-units.txt",
+            "done",
+            "SCRIPT",
+            "chmod +x /usr/local/bin/corecheck",
+            "/usr/local/bin/corecheck",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 600 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 601MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Create And Mount LV", "On /dev/sdc, create a volume group reviewvgb with a physical extent size of 8 MiB and a logical volume reviewb of 50 extents. Format it with ext4 and mount it persistently on /mnt/reviewb.", [
+            "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
+            "partprobe /dev/sdc",
+            "pvcreate /dev/sdc1",
+            "vgcreate -s 8M reviewvgb /dev/sdc1",
+            "lvcreate -n reviewb -l 50 reviewvgb",
+            "mkfs.ext4 /dev/reviewvgb/reviewb",
+            "mkdir -p /mnt/reviewb",
+            "uuid=$(blkid -s UUID -o value /dev/reviewvgb/reviewb)",
+            "echo \"UUID=$uuid /mnt/reviewb ext4 defaults 0 0\" >> /etc/fstab",
+            "mount -a",
+        ]),
+        block("Recommended Tuned Profile", "Apply the recommended tuned profile and leave it active.", [
+            "tuned-adm profile \"$(tuned-adm recommend)\"",
+        ]),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'client.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts",
@@ -347,10 +428,62 @@ def main() -> int:
             block("User Umask", "Set a personal umask of 027 for user ren.", [
                 "echo 'umask 027' >> /home/ren/.bash_profile",
             ]),
-            block("Per-User Login Message", "Append a login message for ren to ~/.bash_profile that prints \"exam-c access\" when ren logs in.", [
-                "echo 'echo exam-c access' >> /home/ren/.bash_profile",
-            ]),
-            *slice_blocks(exams["mock-exam-c"], 13, 22),
+        block("Per-User Login Message", "Append a login message for ren to ~/.bash_profile that prints \"exam-c access\" when ren logs in.", [
+            "echo 'echo exam-c access' >> /home/ren/.bash_profile",
+        ]),
+        block("Fixed UID User", "Create user kian431 with UID 4431 and set its password to cinder9.", [
+            "useradd -u 4431 kian431",
+            "echo cinder9 | passwd --stdin kian431",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.", [
+            "mkdir -p /root/ren-files",
+            "find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/ren-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.", [
+            "grep orbit /usr/share/dict/words > /root/orbit-lines",
+        ]),
+        block("Archive", "Create /root/etc-c.tar.bz2 containing /etc.", [
+            "tar -cjf /root/etc-c.tar.bz2 /etc",
+        ]),
+        block("Service Status Script", "Create executable script /usr/local/bin/northcheck that writes the active state of each service listed in /usr/local/share/exam-c/check.lst to /root/north-services.txt.", [
+            "cat > /usr/local/bin/northcheck <<'SCRIPT'",
+            "#!/usr/bin/env bash",
+            "while read -r svc; do",
+            "  systemctl is-active \"$svc\" >> /root/north-services.txt",
+            "done < /usr/local/share/exam-c/check.lst",
+            "SCRIPT",
+            "chmod 755 /usr/local/bin/northcheck",
+            "/usr/local/bin/northcheck",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 700 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Resize Existing LV", "Resize /dev/reviewvgc/reviewc so the final size is 340 MiB without losing data.", [
+            "lvextend -L 340M /dev/reviewvgc/reviewc",
+            "resize2fs /dev/reviewvgc/reviewc",
+        ]),
+        block("Rootless Container", "As user eirac, build localhost/northstar-web:latest from /opt/rhcsa/workspaces/exam-c/Containerfile, then run container pdfc with /opt/inc mounted to /data/input and /opt/outc mounted to /data/output.", [
+            "su - eirac",
+            "cd /opt/rhcsa/workspaces/exam-c",
+            "podman build -t localhost/northstar-web:latest .",
+            "podman run -d --name pdfc -v /opt/inc:/data/input:Z -v /opt/outc:/data/output:Z localhost/northstar-web:latest",
+            "exit",
+        ]),
+        block("Container Autostart", "Generate and enable a systemd user service for pdfc and enable lingering for eirac.", [
+            "su - eirac",
+            "mkdir -p ~/.config/systemd/user",
+            "cd ~/.config/systemd/user",
+            "podman generate systemd --name pdfc --files --new",
+            "systemctl --user daemon-reload",
+            "systemctl --user enable --now container-pdfc.service",
+            "exit",
+            "loginctl enable-linger eirac",
+        ]),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'client.exam-c.lab' && grep -Fqx '192.168.122.3 vault.exam-c.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
@@ -458,10 +591,50 @@ def main() -> int:
             block("User Umask", "Set a personal umask of 027 for miles.", [
                 "echo 'umask 027' >> /home/miles/.bash_profile",
             ]),
-            block("Audit Directory", "Create /srv/summit-audit on client with mode 0750 and ownership root:root.", [
-                "install -d -m 0750 -o root -g root /srv/summit-audit",
-            ]),
-            *slice_blocks(exams["mock-exam-d"], 15, 21),
+        block("Audit Directory", "Create /srv/summit-audit on client with mode 0750 and ownership root:root.", [
+            "install -d -m 0750 -o root -g root /srv/summit-audit",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/foragerd-files while preserving the source directory structure.", [
+            "mkdir -p /root/foragerd-files",
+            "find /opt/exam-d/find -user foragerd -mtime -1 -type f -exec cp --parents {} /root/foragerd-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.", [
+            "grep alpha /usr/share/dict/words > /root/alpha-lines",
+        ]),
+        block("Archive", "Create /root/summit-etc.tar.gz containing /etc.", [
+            "tar -czf /root/summit-etc.tar.gz /etc",
+        ]),
+        block("Shell Script", "Create executable script /usr/local/bin/summit-scan that writes the active state of each unit listed in /usr/local/share/exam-d/units.lst to /root/summit-units.txt.", [
+            "cat > /usr/local/bin/summit-scan <<'SCRIPT'",
+            "#!/bin/bash",
+            "> /root/summit-units.txt",
+            "for unit in $(cat /usr/local/share/exam-d/units.lst); do",
+            "  systemctl is-active \"$unit\" >> /root/summit-units.txt",
+            "done",
+            "SCRIPT",
+            "chmod +x /usr/local/bin/summit-scan",
+            "/usr/local/bin/summit-scan",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 512 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Create And Mount LV", "On /dev/sdc, create a volume group summitvg with a physical extent size of 16 MiB and a logical volume summitlv of 16 extents. Format it with xfs and mount it persistently on /mnt/summitlv.", [
+            "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
+            "partprobe /dev/sdc",
+            "pvcreate /dev/sdc1",
+            "vgcreate -s 16M summitvg /dev/sdc1",
+            "lvcreate -n summitlv -l 16 summitvg",
+            "mkfs.xfs -f /dev/summitvg/summitlv",
+            "mkdir -p /mnt/summitlv",
+            "uuid=$(blkid -s UUID -o value /dev/summitvg/summitlv)",
+            "echo \"UUID=$uuid /mnt/summitlv xfs defaults 0 0\" >> /etc/fstab",
+            "mount -a",
+        ]),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'client.summit.lab' && grep -Fqx '192.168.122.3 mirror.summit.lab' /etc/hosts && curl -fsS http://server/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://server/repo/AppStream/repodata/repomd.xml >/dev/null",
@@ -586,11 +759,46 @@ def main() -> int:
             block("Per-User Login Message", "Append a login message for ivor to ~/.bash_profile that prints \"exam-e access\" when ivor logs in.", [
                 "echo 'echo exam-e access' >> /home/ivor/.bash_profile",
             ]),
-            block("Fixed UID User", "Create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.", [
-                "useradd -M -u 4551 -s /sbin/nologin maple551",
-                "echo cinder9 | passwd --stdin maple551",
-            ]),
-            *slice_blocks(exams["mock-exam-e"], 15, 22),
+        block("Fixed UID User", "Create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.", [
+            "useradd -M -u 4551 -s /sbin/nologin maple551",
+            "echo cinder9 | passwd --stdin maple551",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.", [
+            "mkdir -p /root/scoutte-files",
+            "find /opt/exam-e/find -user scoutte -mtime -1 -type f -exec cp --parents {} /root/scoutte-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.", [
+            "grep beacon /usr/share/dict/words > /root/beacon-lines",
+        ]),
+        block("Archive", "Create /root/var-tmp-harbor.tar.bz2 containing /var/tmp.", [
+            "tar -cjf /root/var-tmp-harbor.tar.bz2 /var/tmp",
+        ]),
+        block("Shell Script", "Create executable script /usr/local/bin/harbor-check that writes the active state of each service listed in /usr/local/share/exam-e/services.lst to /root/harbor-services.txt.", [
+            "cat > /usr/local/bin/harbor-check <<'SCRIPT'",
+            "#!/bin/bash",
+            "> /root/harbor-services.txt",
+            "for svc in $(cat /usr/local/share/exam-e/services.lst); do",
+            "  systemctl is-active \"$svc\" >> /root/harbor-services.txt",
+            "done",
+            "SCRIPT",
+            "chmod +x /usr/local/bin/harbor-check",
+            "/usr/local/bin/harbor-check",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 640 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Resize Existing LV", "Resize /dev/reviewvge/reviewe so the final size is 360 MiB without losing the existing filesystem data.", [
+            "lvextend -L 360M /dev/reviewvge/reviewe",
+            "resize2fs /dev/reviewvge/reviewe",
+        ]),
+        block("Recommended Tuned Profile", "Apply the recommended tuned profile and leave it active.", [
+            "tuned-adm profile \"$(tuned-adm recommend)\"",
+        ]),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'client.exam-e.lab' && grep -Fqx '192.168.122.3 registry.exam-e.lab' /etc/hosts && curl -fsS http://server/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://server/repo/AppStream/repodata/repomd.xml >/dev/null",
@@ -691,10 +899,50 @@ def main() -> int:
             block("Rsync Transfer", "Use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.", [
                 "runuser -l elio -c 'rsync -e \"ssh -p 2222\" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt'",
             ]),
-            block("User Umask", "Set a personal umask of 027 for elio.", [
-                "echo 'umask 027' >> /home/elio/.bash_profile",
-            ]),
-            *slice_blocks(exams["mock-exam-f"], 15, 21),
+        block("User Umask", "Set a personal umask of 027 for elio.", [
+            "echo 'umask 027' >> /home/elio/.bash_profile",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.", [
+            "mkdir -p /root/seekerf-files",
+            "find /opt/exam-f/find -user seekerf -mtime -1 -type f -exec cp --parents {} /root/seekerf-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing comet from /usr/share/dict/words into /root/comet-lines.", [
+            "grep comet /usr/share/dict/words > /root/comet-lines",
+        ]),
+        block("Archive", "Create /root/usr-local-f.tar.gz containing /usr/local.", [
+            "tar -czf /root/usr-local-f.tar.gz /usr/local",
+        ]),
+        block("Shell Script", "Create executable script /usr/local/bin/aurora-report that writes the active state of each unit listed in /usr/local/share/exam-f/units.lst to /root/aurora-units.txt.", [
+            "cat > /usr/local/bin/aurora-report <<'SCRIPT'",
+            "#!/bin/bash",
+            "> /root/aurora-units.txt",
+            "for unit in $(cat /usr/local/share/exam-f/units.lst); do",
+            "  systemctl is-active \"$unit\" >> /root/aurora-units.txt",
+            "done",
+            "SCRIPT",
+            "chmod +x /usr/local/bin/aurora-report",
+            "/usr/local/bin/aurora-report",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 704 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 705MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Create And Mount LV", "On /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB and a logical volume auroralv of 50 extents. Format it with xfs and mount it persistently on /mnt/auroralv.", [
+            "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
+            "partprobe /dev/sdc",
+            "pvcreate /dev/sdc1",
+            "vgcreate -s 8M auroravg /dev/sdc1",
+            "lvcreate -n auroralv -l 50 auroravg",
+            "mkfs.xfs -f /dev/auroravg/auroralv",
+            "mkdir -p /mnt/auroralv",
+            "uuid=$(blkid -s UUID -o value /dev/auroravg/auroralv)",
+            "echo \"UUID=$uuid /mnt/auroralv xfs defaults 0 0\" >> /etc/fstab",
+            "mount -a",
+        ]),
             block("Recommended Tuned Profile", "Apply the recommended tuned profile and leave it active.", [
                 "tuned-adm profile \"$(tuned-adm recommend)\"",
             ]),
@@ -753,12 +1001,10 @@ def main() -> int:
             block("No-Home Audit User", "Create user auditg without a home directory and with login shell /sbin/nologin.", [
                 "useradd -M -s /sbin/nologin auditg",
             ]),
-            block("Password Aging", "Set password aging for pavel to maximum 45 days, minimum 5 days, and warning 7 days.", [
-                "chage -M 45 -m 5 -W 7 pavel",
-            ]),
-            block("User Umask", "Set a personal umask of 027 for pavel.", [
-                "echo 'umask 027' >> /home/pavel/.bash_profile",
-            ]),
+        block("Password Aging And Umask", "Set password aging for pavel to maximum 45 days, minimum 5 days, warning 7 days, and set a personal umask of 027 for pavel.", [
+            "chage -M 45 -m 5 -W 7 pavel",
+            "echo 'umask 027' >> /home/pavel/.bash_profile",
+        ]),
             block("Copy User On Both Systems", "Create user copyg on both systems with password cinder9.", [
                 "useradd copyg",
                 "echo cinder9 | passwd --stdin copyg",
@@ -776,10 +1022,69 @@ def main() -> int:
                 "runuser -l pavel -c 'echo \"echo exam-g tick >> /root/exam-g-at.log\" | at now + 2 minutes'",
                 "systemctl enable --now atd",
             ]),
-            block("Per-User Login Message", "Append a login message for pavel to ~/.bash_profile that prints \"exam-g access\" when pavel logs in.", [
-                "echo 'echo exam-g access' >> /home/pavel/.bash_profile",
-            ]),
-            *slice_blocks(exams["mock-exam-g"], 14, 22),
+        block("Per-User Login Message", "Append a login message for pavel to ~/.bash_profile that prints \"exam-g access\" when pavel logs in.", [
+            "echo 'echo exam-g access' >> /home/pavel/.bash_profile",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.", [
+            "mkdir -p /root/trackerg-files",
+            "find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /root/trackerg-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing ember from /usr/share/dict/words into /root/ember-lines.", [
+            "grep ember /usr/share/dict/words > /root/ember-lines",
+        ]),
+        block("Archive", "Create /root/etc-g.tar.bz2 containing /etc.", [
+            "tar -cjf /root/etc-g.tar.bz2 /etc",
+        ]),
+        block("Persistent Journal", "On client, enable persistent systemd journal storage and restart systemd-journald.", [
+            "mkdir -p /var/log/journal",
+            "mkdir -p /etc/systemd/journald.conf.d",
+            "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
+            "[Journal]",
+            "Storage=persistent",
+            "EOF",
+            "systemctl restart systemd-journald",
+        ]),
+        block("Process Renice And Kill", "User workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.", [
+            "kill \"$(cat /home/workerg/cpu.pid)\"",
+            "renice 10 -p \"$(cat /home/workerg/sleep.pid)\"",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 736 MiB swap partition and configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 737MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Create And Mount LV", "On /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.", [
+            "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 701MiB set 1 lvm on",
+            "partprobe /dev/sdc",
+            "pvcreate /dev/sdc1",
+            "vgcreate -s 16M deltavg /dev/sdc1",
+            "lvcreate -n deltalv -l 40 deltavg",
+            "mkfs.ext4 /dev/deltavg/deltalv",
+            "mkdir -p /mnt/deltalv",
+            "uuid=$(blkid -s UUID -o value /dev/deltavg/deltalv)",
+            "echo \"UUID=$uuid /mnt/deltalv ext4 defaults 0 0\" >> /etc/fstab",
+            "mount -a",
+        ]),
+        block("Rootless Container", "As user solg, build localhost/deltaforge-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile, then run container pdfg with /opt/inc mounted to /data/input and /opt/outg mounted to /data/output.", [
+            "su - solg",
+            "cd /opt/rhcsa/workspaces/exam-g",
+            "podman build -t localhost/deltaforge-web:latest .",
+            "podman run -d --name pdfg -v /opt/inc:/data/input:Z -v /opt/outg:/data/output:Z localhost/deltaforge-web:latest",
+            "exit",
+        ]),
+        block("Container Autostart", "Generate and enable a systemd user service for pdfg and enable lingering for solg.", [
+            "su - solg",
+            "mkdir -p ~/.config/systemd/user",
+            "cd ~/.config/systemd/user",
+            "podman generate systemd --name pdfg --files --new",
+            "systemctl --user daemon-reload",
+            "systemctl --user enable --now container-pdfg.service",
+            "exit",
+            "loginctl enable-linger solg",
+        ]),
         ],
         checks=[
             "hostnamectl --static | grep -qx 'client.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
@@ -891,12 +1196,53 @@ def main() -> int:
                 "firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.0/24\" port protocol=\"tcp\" port=\"2222\" accept'",
                 "firewall-cmd --reload",
             ]),
-            block("Useradd Defaults", "Set the default inactive period for newly created local users to 10 days.", [
-                "useradd -D -f 10",
-            ]),
-            *slice_blocks(exams["mock-exam-h"], 13, 22),
-        ],
-        checks=[
+        block("Useradd Defaults", "Set the default inactive period for newly created local users to 10 days.", [
+            "useradd -D -f 10",
+        ]),
+        block("Find And Copy", "Find all files under /opt/exam-h/find that are owned by watcherh and were modified within the last 24 hours, then copy them to /root/watcherh-files while preserving the source directory structure.", [
+            "mkdir -p /root/watcherh-files",
+            "find /opt/exam-h/find -user watcherh -mtime -1 -type f -exec cp --parents {} /root/watcherh-files \\;",
+        ]),
+        block("Grep Filter", "Extract lines containing silver from /usr/share/dict/words into /root/silver-lines.", [
+            "grep silver /usr/share/dict/words > /root/silver-lines",
+        ]),
+        block("Archive", "Create /root/usr-local-h.tar.gz containing /usr/local.", [
+            "tar -czf /root/usr-local-h.tar.gz /usr/local",
+        ]),
+        block("Swap Space", "On /dev/sdb, create a 672 MiB swap partition and configure it persistently.", [
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 673MiB",
+            "partprobe /dev/sdb",
+            "mkswap /dev/sdb1",
+            "swapon /dev/sdb1",
+            "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+            "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+        ]),
+        block("Resize Existing LV", "Resize /dev/reviewvgh/reviewh so the final size is 320 MiB without losing the existing file system or data.", [
+            "lvextend -L 320M /dev/reviewvgh/reviewh",
+            "resize2fs /dev/reviewvgh/reviewh",
+        ]),
+        block("Boot Target And Services", "Configure client to boot into multi-user.target by default. Ensure rsyslog is enabled and running. If postfix is installed, disable it and stop it.", [
+            "systemctl set-default multi-user.target",
+            "systemctl enable --now rsyslog",
+            "systemctl disable --now postfix",
+        ]),
+        block("Install And Remove Packages", "Use the prepared local repositories to install the packages tree and dos2unix on client. Remove dos2unix and leave tree installed.", [
+            "dnf install -y tree dos2unix",
+            "dnf remove -y dos2unix",
+        ]),
+        block("Inspect Container Image", "Create user inspecth with password cinder9 if it does not already exist. As that user, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage and write the configured working directory of localhost/rhcsa-httpd-base:latest to /home/inspecth/workdir.txt.", [
+            "id inspecth >/dev/null 2>&1 || useradd -m inspecth",
+            "echo cinder9 | passwd --stdin inspecth",
+            "su - inspecth",
+            "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar",
+            "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt",
+            "exit",
+        ]),
+        block("Recommended Tuned Profile", "Apply the recommended tuned profile and leave it active.", [
+            "tuned-adm profile \"$(tuned-adm recommend)\"",
+        ]),
+    ],
+    checks=[
             "hostnamectl --static | grep -qx 'client.exam-h.lab' && grep -Fqx '192.168.122.3 registry.exam-h.lab' /etc/hosts && curl -fsS http://server/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://server/repo/AppStream/repodata/repomd.xml >/dev/null",
             "curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8181\\b' && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
             "grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'",

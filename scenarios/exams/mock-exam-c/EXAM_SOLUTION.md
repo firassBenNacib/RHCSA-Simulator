@@ -158,8 +158,7 @@ echo 'echo exam-c access' >> /home/ren/.bash_profile
 
 ```bash
 useradd -u 4431 kian431
-passwd kian431
-# enter: cinder9
+echo cinder9 | passwd --stdin kian431
 ```
 
 ---
@@ -167,6 +166,7 @@ passwd kian431
 ## Question 15 - Find And Copy (client) - 4 pts
 
 ```bash
+mkdir -p /root/ren-files
 find /opt/exam-c/find -type f -user ren -mtime -1 -exec cp --parents {} /root/ren-files \;
 ```
 
@@ -191,11 +191,12 @@ tar -cjf /root/etc-c.tar.bz2 /etc
 ## Question 18 - Service Status Script (client) - 4 pts
 
 ```bash
-vim /usr/local/bin/northcheck
+cat > /usr/local/bin/northcheck <<'SCRIPT'
 #!/usr/bin/env bash
 while read -r svc; do
   systemctl is-active "$svc" >> /root/north-services.txt
 done < /usr/local/share/exam-c/check.lst
+SCRIPT
 chmod 755 /usr/local/bin/northcheck
 /usr/local/bin/northcheck
 ```

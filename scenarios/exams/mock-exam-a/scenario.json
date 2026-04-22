@@ -44,11 +44,11 @@
         "Find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours. Copy them to /root/amber-files while preserving the source directory structure.",
         "Extract lines containing delta from /usr/share/dict/words into /root/delta-lines.",
         "Create /root/etc-opsa.tar.bz2 containing /etc.",
-        "Create executable script /usr/local/bin/opsa-report that writes the active state of each unit listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.",
-        "On server, enable persistent systemd journal storage and restart systemd-journald.",
-        "On server, enable persistent systemd journal storage and restart systemd-journald.",
-        "On server, enable persistent systemd journal storage and restart systemd-journald.",
-        "On server, enable persistent systemd journal storage and restart systemd-journald.",
+        "Create executable script /usr/local/bin/opsa-report that writes the active state of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.",
+        "On /dev/sdb, create a 700 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "Resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing data.",
+        "As user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/inc mounted to /data/input and /opt/outa mounted to /data/output.",
+        "Generate and enable a systemd user service for pdfa and enable lingering for oriona.",
         "On server, enable persistent systemd journal storage and restart systemd-journald."
       ],
       "task_titles": [
@@ -65,14 +65,14 @@
         "Cron Logger",
         "Host Entry",
         "Fixed UID User",
-        "Find Copy Preserve",
+        "Find And Copy",
         "Grep Filter",
-        "Archive /etc",
+        "Archive",
         "Service Report Script",
-        "Persistent Journal",
-        "Persistent Journal",
-        "Persistent Journal",
-        "Persistent Journal",
+        "Swap Space",
+        "Resize Existing LV",
+        "Rootless Container",
+        "Container Autostart",
         "Persistent Journal"
       ],
       "task_points": [
@@ -198,56 +198,50 @@
           "find /opt/exam-a/find -user amber -mtime -1 -type f -exec cp --parents {} /root/amber-files \\;"
         ],
         [
-          "grep 'delta' /usr/share/dict/words > /root/delta-lines"
+          "grep delta /usr/share/dict/words > /root/delta-lines"
         ],
         [
           "tar -cjf /root/etc-opsa.tar.bz2 /etc"
         ],
         [
-          "vim /usr/local/bin/opsa-report",
+          "cat > /usr/local/bin/opsa-report <<'SCRIPT'",
           "#!/bin/bash",
-          "while read -r unit; do systemctl is-active \"$unit\"; done < /usr/local/share/exam-a/services.lst > /root/opsa-services.txt",
-          "chmod 755 /usr/local/bin/opsa-report"
+          "> /root/opsa-services.txt",
+          "for svc in $(cat /usr/local/share/exam-a/services.lst); do",
+          "  systemctl is-active \"$svc\" >> /root/opsa-services.txt",
+          "done",
+          "SCRIPT",
+          "chmod +x /usr/local/bin/opsa-report",
+          "/usr/local/bin/opsa-report"
         ],
         [
-          "# Run on server",
-          "mkdir -p /var/log/journal",
-          "mkdir -p /etc/systemd/journald.conf.d",
-          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
-          "[Journal]",
-          "Storage=persistent",
-          "EOF",
-          "systemctl restart systemd-journald"
+          "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB",
+          "partprobe /dev/sdb",
+          "mkswap /dev/sdb1",
+          "swapon /dev/sdb1",
+          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ],
         [
-          "# Run on server",
-          "mkdir -p /var/log/journal",
-          "mkdir -p /etc/systemd/journald.conf.d",
-          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
-          "[Journal]",
-          "Storage=persistent",
-          "EOF",
-          "systemctl restart systemd-journald"
+          "lvextend -L 320M /dev/reviewvga/reviewa",
+          "resize2fs /dev/reviewvga/reviewa"
         ],
         [
-          "# Run on server",
-          "mkdir -p /var/log/journal",
-          "mkdir -p /etc/systemd/journald.conf.d",
-          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
-          "[Journal]",
-          "Storage=persistent",
-          "EOF",
-          "systemctl restart systemd-journald"
+          "su - oriona",
+          "cd /opt/rhcsa/workspaces/exam-a",
+          "podman build -t localhost/opsa-web:latest .",
+          "podman run -d --name pdfa -v /opt/inc:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest",
+          "exit"
         ],
         [
-          "# Run on server",
-          "mkdir -p /var/log/journal",
-          "mkdir -p /etc/systemd/journald.conf.d",
-          "cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'",
-          "[Journal]",
-          "Storage=persistent",
-          "EOF",
-          "systemctl restart systemd-journald"
+          "su - oriona",
+          "mkdir -p ~/.config/systemd/user",
+          "cd ~/.config/systemd/user",
+          "podman generate systemd --name pdfa --files --new",
+          "systemctl --user daemon-reload",
+          "systemctl --user enable --now container-pdfa.service",
+          "exit",
+          "loginctl enable-linger oriona"
         ],
         [
           "# Run on server",
