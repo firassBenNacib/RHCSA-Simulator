@@ -18,12 +18,7 @@ def clean_text(value: str) -> str:
     return value.strip()
 
 
-def normalize_task_text(value: str) -> str:
-    value = textwrap.dedent(value).strip("\n")
-    lines = [line.rstrip() for line in value.splitlines()]
-    if len(lines) == 1 and lines[0] and lines[0][-1] not in ".:!?":
-        lines[0] += "."
-    return "\n".join(lines).strip()
+from rhcsa_scenarios.text import normalize_task_text
 
 
 def _split_blocks(text: str) -> list[list[str]]:
@@ -310,8 +305,9 @@ def remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
-for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
-    scenario_root = manifest_path.parent
+def main() -> int:
+    for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
+        scenario_root = manifest_path.parent
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
     supported_modes = [m.lower() for m in data.get("supported_modes", [])]
     requires_server = bool(data.get("flags", {}).get("requires_server", False))
@@ -363,3 +359,8 @@ for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
     else:
         remove_if_exists(scenario_root / "EXAM_TASKS.md")
         remove_if_exists(scenario_root / "EXAM_SOLUTION.md")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
