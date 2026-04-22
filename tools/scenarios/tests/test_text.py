@@ -7,7 +7,7 @@ from pathlib import Path
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOL_ROOT))
 
-from rhcsa_scenarios.text import normalize_task_text
+from rhcsa_scenarios.text import normalize_task_text  # noqa: E402
 
 
 class NormalizeTaskTextTests(unittest.TestCase):

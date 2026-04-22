@@ -6,6 +6,8 @@ import re
 import textwrap
 from pathlib import Path
 
+from rhcsa_scenarios.text import normalize_task_text
+
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIOS_ROOT = ROOT / "scenarios"
 
@@ -16,9 +18,6 @@ def write_text(path: Path, content: str) -> None:
 
 def clean_text(value: str) -> str:
     return value.strip()
-
-
-from rhcsa_scenarios.text import normalize_task_text
 
 
 def _split_blocks(text: str) -> list[list[str]]:

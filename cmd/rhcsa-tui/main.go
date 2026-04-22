@@ -57,7 +57,6 @@ func main() {
 		model,
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
-		tea.WithFPS(30),
 		tea.WithFilter(filterNoisyMouseEvents),
 	)
 
@@ -113,7 +112,7 @@ func findProjectRoot(configured string) (string, error) {
 		}
 	}
 
-	return cwd, nil
+	return "", fmt.Errorf("RHCSA.ps1 marker file not found: searched %s, $RHCSA_SIMULATOR_ROOT, and executable directory", cwd)
 }
 
 func searchForProjectRoot(start string) (string, bool) {

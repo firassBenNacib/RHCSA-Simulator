@@ -149,9 +149,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path $PSScriptRoot 'host/simulator_common.ps1')
+$simulatorModulePath = Join-Path $PSScriptRoot 'host/modules/RhcsaSimulator/RhcsaSimulator.psd1'
+Import-Module $simulatorModulePath -Force
 $script:ShowWorkflowStatus = $false
 $script:ForceHostCleanup = [bool]$ForceHostCleanup
+Initialize-RhcsaSimulatorRuntime -ShowWorkflowStatus:$script:ShowWorkflowStatus -ForceHostCleanup:$script:ForceHostCleanup
 
 function Test-UiColorSupport {
     if ($env:NO_COLOR) {
@@ -1509,6 +1511,7 @@ try {
             Write-Output ''
             $previousWorkflowPreference = $script:ShowWorkflowStatus
             $script:ShowWorkflowStatus = $true
+            Initialize-RhcsaSimulatorRuntime -ShowWorkflowStatus:$script:ShowWorkflowStatus -ForceHostCleanup:$script:ForceHostCleanup
             try {
                 $result = Start-BaselineSession `
                     -NoProvision:$NoProvision `
@@ -1519,6 +1522,7 @@ try {
             }
             finally {
                 $script:ShowWorkflowStatus = $previousWorkflowPreference
+                Initialize-RhcsaSimulatorRuntime -ShowWorkflowStatus:$script:ShowWorkflowStatus -ForceHostCleanup:$script:ForceHostCleanup
             }
             Format-BaselineStartOutput -BaselineResult $result -BaselineStatus (Get-BaselineStatus -ProjectRoot $projectRoot) | Write-Output
             break
