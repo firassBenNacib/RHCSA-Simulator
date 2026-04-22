@@ -1,0 +1,67 @@
+{
+  "id": "lab-18-ssh-key-auth",
+  "title": "RHCSA 10 Lab 18: SSH Key Authentication",
+  "description": "Configure key-based SSH authentication",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create user key10 and set password cinder9.",
+        "Create /home/key10/.ssh/authorized_keys with the provided public key text ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10.",
+        "Set secure ownership and permissions on the SSH directory and authorized_keys file."
+      ],
+      "hints": [
+        "The .ssh directory should be 700.",
+        "authorized_keys should be 600 and owned by the user."
+      ],
+      "checks": [
+        "getent passwd key10 >/dev/null",
+        "grep -Fqx 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' /home/key10/.ssh/authorized_keys",
+        "stat -c '%U:%a' /home/key10/.ssh /home/key10/.ssh/authorized_keys | grep -qx 'key10:700' && stat -c '%U:%a' /home/key10/.ssh/authorized_keys | grep -qx 'key10:600'"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create user key10 and set password cinder9",
+        "Create /home/key10/.ssh/authorized_keys with the provided public key tex",
+        "Set secure ownership and permissions on the SSH directory and authorized"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "useradd -m key10",
+          "passwd key10",
+          "# enter: cinder9"
+        ],
+        [
+          "install -d -m 700 -o key10 -g key10 /home/key10/.ssh",
+          "echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' > /home/key10/.ssh/authorized_keys"
+        ],
+        [
+          "chown key10:key10 /home/key10/.ssh/authorized_keys",
+          "chmod 600 /home/key10/.ssh/authorized_keys",
+          "restorecon -RF /home/key10/.ssh"
+        ]
+      ]
+    }
+  }
+}

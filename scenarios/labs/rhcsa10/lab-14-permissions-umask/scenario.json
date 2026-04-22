@@ -1,0 +1,63 @@
+{
+  "id": "lab-14-permissions-umask",
+  "title": "RHCSA 10 Lab 14: Permissions And Umask",
+  "description": "Manage default permissions",
+  "objective_tags": [
+    "selinux-and-default-perms"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 20,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Set root's shell umask to 027 using /root/.bashrc.",
+        "Create /srv/rhcsa10-private with owner root and group root.",
+        "Set directory permissions to 750."
+      ],
+      "hints": [
+        "Use umask 027 in the shell startup file.",
+        "Use chmod with octal permissions."
+      ],
+      "checks": [
+        "grep -Eq '^umask 027$' /root/.bashrc",
+        "stat -c '%U:%G' /srv/rhcsa10-private | grep -qx root:root",
+        "stat -c '%a' /srv/rhcsa10-private | grep -qx 750"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Set root's shell umask to 027 using /root/.bashrc",
+        "Create /srv/rhcsa10-private with owner root and group root",
+        "Set directory permissions to 750"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "grep -qx 'umask 027' /root/.bashrc || echo 'umask 027' >> /root/.bashrc"
+        ],
+        [
+          "mkdir -p /srv/rhcsa10-private",
+          "chown root:root /srv/rhcsa10-private"
+        ],
+        [
+          "chmod 750 /srv/rhcsa10-private"
+        ]
+      ]
+    }
+  }
+}
