@@ -7,7 +7,7 @@ from pathlib import Path
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOL_ROOT))
 
-from rhcsa_scenarios.tracks import manifest_tracks, normalize_track
+from rhcsa_scenarios.tracks import manifest_tracks, normalize_track  # noqa: E402
 
 
 class TrackTests(unittest.TestCase):
@@ -27,4 +27,3 @@ class TrackTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

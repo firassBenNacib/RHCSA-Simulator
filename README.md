@@ -21,7 +21,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
 * `rhel-10.1-x86_64-dvd.iso` if you use the RHCSA 10 profile
-* [Go 1.26+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
+* [Go 1.25.0+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
 
 ## Installation
 
@@ -335,14 +335,14 @@ go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
 python -m unittest discover tools/scenarios/tests
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+python tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
 ```
 
-Keep these compatibility entrypoints working:
+Keep these user entrypoints working:
 
 ```powershell
 .\RHCSA.ps1 tui
-python host/verify_scenario_solutions.py --kind all --audit-only
+python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
 ```
 
 The Go TUI source under `cmd/rhcsa-tui` and shared packages under `internal` must be committed. Built binaries stay ignored and are published through GitHub Releases.

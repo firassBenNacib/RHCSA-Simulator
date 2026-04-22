@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-
-	"rhcsa_exam_vms/internal/utils"
 )
 
 type footerActionID int
@@ -118,7 +116,7 @@ func (m model) footerActionBounds(width int) []footerActionBound {
 	actions := m.visibleFooterActions(width)
 	bounds := make([]footerActionBound, 0, len(actions))
 
-	rendered := utils.StripAnsi(m.renderFooter(width))
+	rendered := StripAnsi(m.renderFooter(width))
 	lines := strings.Split(rendered, "\n")
 	if len(lines) == 0 {
 		return bounds
@@ -149,7 +147,7 @@ func (m model) helpCloseBtnBounds() (startX, endX, y int, ok bool) {
 	if !m.showHelp {
 		return 0, 0, 0, false
 	}
-	view := utils.StripAnsi(m.View())
+	view := StripAnsi(m.View())
 	lines := strings.Split(view, "\n")
 	for row, line := range lines {
 		idx := strings.Index(line, helpCloseBtn)
@@ -180,7 +178,7 @@ func (m model) renderHelpWithClose() string {
 			maxWidth = w
 		}
 	}
-	maxWidth = utils.MaxInt(maxWidth, 52)
+	maxWidth = max(maxWidth, 52)
 	btn := m.theme.HelpCloseBtn.Render(helpCloseBtn)
 	btnWidth := lipgloss.Width(btn)
 	if maxWidth < btnWidth+2 {
@@ -218,7 +216,7 @@ func (m model) detailSectionCopyBounds() []sectionCopyBound {
 		offset = len(bodyLines)
 	}
 	visible := bodyLines[offset:]
-	bodyHeight := utils.MaxInt(m.detailPaneHeight()-len(m.renderDetailHeaderLines(m.detailPaneWidth())), 1)
+	bodyHeight := max(m.detailPaneHeight()-len(m.renderDetailHeaderLines(m.detailPaneWidth())), 1)
 	if len(visible) > bodyHeight {
 		visible = visible[:bodyHeight]
 	}
@@ -226,7 +224,7 @@ func (m model) detailSectionCopyBounds() []sectionCopyBound {
 	originX, originY := m.detailPaneOrigin()
 	headerHeight := len(m.renderDetailHeaderLines(m.detailPaneWidth()))
 	bounds := make([]sectionCopyBound, 0, 8)
-	button := utils.StripAnsi(m.theme.RenderCopyButton())
+	button := StripAnsi(m.theme.RenderCopyButton())
 	buttonLabel := "[COPY]"
 	leftPad := strings.Index(button, buttonLabel)
 	if leftPad < 0 {
@@ -236,7 +234,7 @@ func (m model) detailSectionCopyBounds() []sectionCopyBound {
 		if line.copySection < 0 {
 			continue
 		}
-		stripped := utils.StripAnsi(line.text)
+		stripped := StripAnsi(line.text)
 		idx := strings.LastIndex(stripped, button)
 		target := button
 		if idx < 0 {

@@ -8,7 +8,6 @@ import (
 
 	"rhcsa_exam_vms/internal/catalog"
 	"rhcsa_exam_vms/internal/progress"
-	"rhcsa_exam_vms/internal/utils"
 )
 
 func buildRenderTestModel(t *testing.T) model {
@@ -122,7 +121,7 @@ func TestRenderFullView(t *testing.T) {
 	if output == "" {
 		t.Fatal("expected non-empty view output")
 	}
-	stripped := utils.StripAnsi(output)
+	stripped := StripAnsi(output)
 
 	checks := []string{
 		"LABS",
@@ -151,13 +150,13 @@ func TestRenderFullView(t *testing.T) {
 	m.width = 120
 	m.height = 35
 	examView := m.View()
-	strippedExam := utils.StripAnsi(examView)
+	strippedExam := StripAnsi(examView)
 	if !strings.Contains(strippedExam, "Mock Exam A") {
 		t.Error("expected exam tab to show Mock Exam A")
 	}
 	m.showHelp = true
 	helpView := m.View()
-	strippedHelp := utils.StripAnsi(helpView)
+	strippedHelp := StripAnsi(helpView)
 	if !strings.Contains(strippedHelp, "RHCSA Help") {
 		t.Error("expected help overlay to show RHCSA help title")
 	}
@@ -165,7 +164,7 @@ func TestRenderFullView(t *testing.T) {
 	m.filterMode = true
 	m.filterQuery = "network"
 	filterView := m.View()
-	strippedFilter := utils.StripAnsi(filterView)
+	strippedFilter := StripAnsi(filterView)
 	if !strings.Contains(strippedFilter, "network") {
 		t.Error("expected filter mode to show search query")
 	}
@@ -173,7 +172,7 @@ func TestRenderFullView(t *testing.T) {
 	m.activeTab = labsTab
 	m.statusText = "Started lab-01-demo\nResult: complete (1/1)"
 	statusView := m.View()
-	strippedStatus := utils.StripAnsi(statusView)
+	strippedStatus := StripAnsi(statusView)
 	if !strings.Contains(strippedStatus, "Started lab-01-demo") {
 		t.Error("expected status text to appear in output panel")
 	}
@@ -193,7 +192,7 @@ func TestRenderRemovesLegacyScrollHintsAndTimePrefixes(t *testing.T) {
 	m.width = 120
 	m.height = 20
 
-	stripped := utils.StripAnsi(m.View())
+	stripped := StripAnsi(m.View())
 	legacySnippets := []string{"more above", "more below", "scroll up()", "scroll up", "15m  Lab"}
 	for _, snippet := range legacySnippets {
 		if strings.Contains(stripped, snippet) {
@@ -204,7 +203,7 @@ func TestRenderRemovesLegacyScrollHintsAndTimePrefixes(t *testing.T) {
 
 func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	m := buildRenderTestModel(t)
-	stripped := utils.StripAnsi(m.View())
+	stripped := StripAnsi(m.View())
 	for _, snippet := range []string{"c", "Check", "F1", "Tasks", "F2", "Hints", "F3", "Checks", "F4", "Solutions", "z", "Client", "x", "Server", "q", "Quit"} {
 		if !strings.Contains(stripped, snippet) {
 			t.Fatalf("expected footer to contain %q, got:\n%s", snippet, stripped)
@@ -235,7 +234,7 @@ func TestViewRendersExactTerminalHeight(t *testing.T) {
 	m.width = 120
 	m.height = 35
 
-	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	lines := strings.Split(StripAnsi(m.View()), "\n")
 	if len(lines) != m.height {
 		t.Fatalf("expected view to render %d lines, got %d", m.height, len(lines))
 	}
@@ -249,7 +248,7 @@ func TestFilterFooterOmitsQuitAndKeepsTopTabs(t *testing.T) {
 	m.filterQuery = "nfs"
 	m.statusText = "Search: nfs"
 
-	stripped := utils.StripAnsi(m.View())
+	stripped := StripAnsi(m.View())
 	if !strings.Contains(stripped, "LABS") || !strings.Contains(stripped, "EXAMS") {
 		t.Fatalf("expected top catalog tabs to remain visible during search, got:\n%s", stripped)
 	}
@@ -336,7 +335,7 @@ func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.detail = detailSolution
 
-	stripped := utils.StripAnsi(m.View())
+	stripped := StripAnsi(m.View())
 	if !strings.Contains(stripped, "[COPY]") {
 		t.Fatalf("expected solution view to show [COPY], got:\n%s", stripped)
 	}
@@ -363,7 +362,7 @@ func TestPromptViewDoesNotShowCopyButtonsForStructuredContent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stripped := utils.StripAnsi(m.renderDetailBody())
+	stripped := StripAnsi(m.renderDetailBody())
 	if strings.Contains(stripped, "[COPY]") {
 		t.Fatalf("expected task view to omit copy buttons, got:\n%s", stripped)
 	}
@@ -389,7 +388,7 @@ func TestExamSolutionShowsPerQuestionCopyButtons(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stripped := utils.StripAnsi(m.renderDetailBody())
+	stripped := StripAnsi(m.renderDetailBody())
 	if strings.Count(stripped, "[COPY]") < 2 {
 		t.Fatalf("expected per-question copy buttons in exam solutions, got:\n%s", stripped)
 	}
@@ -397,7 +396,7 @@ func TestExamSolutionShowsPerQuestionCopyButtons(t *testing.T) {
 
 func TestPromptViewTrimsBoilerplateAndShowsTaskSooner(t *testing.T) {
 	m := buildRenderTestModel(t)
-	stripped := utils.StripAnsi(m.View())
+	stripped := StripAnsi(m.View())
 
 	for _, unwanted := range []string{"Systems", "General Instructions"} {
 		if strings.Contains(stripped, unwanted) {
@@ -412,7 +411,7 @@ func TestPromptViewTrimsBoilerplateAndShowsTaskSooner(t *testing.T) {
 func TestSolutionRenderingUsesTerminalPromptStyle(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.detail = detailSolution
-	rendered := utils.StripAnsi(m.renderDetailBody())
+	rendered := StripAnsi(m.renderDetailBody())
 	if !strings.Contains(rendered, "$ hostnamectl set-hostname demo") {
 		t.Fatalf("expected solution rendering to prefix commands with $, got:\n%s", rendered)
 	}
@@ -423,7 +422,7 @@ func TestWideLayoutKeepsDetailFlushWithSeparator(t *testing.T) {
 	m.width = 120
 	m.height = 35
 
-	lines := strings.Split(utils.StripAnsi(m.View()), "\n")
+	lines := strings.Split(StripAnsi(m.View()), "\n")
 	if len(lines) < 6 {
 		t.Fatalf("expected wide layout output, got:\n%s", m.View())
 	}
