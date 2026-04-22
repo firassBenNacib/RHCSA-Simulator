@@ -1,9 +1,9 @@
 GO ?= go
 PYTHON ?= python3
 
-.PHONY: test ci go-test go-vet go-build python-compile python-test scenario-audit scenario-replay-audit vagrant-validate release-snapshot clean
+.PHONY: test ci go-test go-vet go-build go-lint go-tidy go-check generate python-compile python-test scenario-audit scenario-replay-audit vagrant-validate release-snapshot clean
 
-test: go-test go-vet go-build python-compile python-test scenario-audit scenario-replay-audit
+test: go-test go-vet go-build go-lint python-compile python-test scenario-audit scenario-replay-audit
 
 ci: test vagrant-validate
 
@@ -16,11 +16,22 @@ go-vet:
 go-build:
 	$(GO) build ./cmd/rhcsa-tui
 
+go-lint:
+	golangci-lint run ./...
+
+go-tidy:
+	$(GO) mod tidy
+
+go-check: go-vet go-lint go-test
+
+generate:
+	$(PYTHON) tools/scenarios/generate_scenario_markdown.py
+
 python-compile:
 	$(PYTHON) -m py_compile tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
 
 python-test:
-	$(PYTHON) -m unittest discover tools/scenarios/tests
+	$(PYTHON) -m pytest tools/scenarios/tests
 
 scenario-audit:
 	$(PYTHON) tools/scenarios/audit_scenarios.py

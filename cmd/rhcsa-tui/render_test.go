@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"rhcsa_exam_vms/internal/catalog"
-	"rhcsa_exam_vms/internal/progress"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/progress"
 )
 
 func buildRenderTestModel(t *testing.T) model {

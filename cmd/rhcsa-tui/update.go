@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"rhcsa_exam_vms/internal/backend"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/backend"
 )
 
 func normalizeUnicode(s string) string {
