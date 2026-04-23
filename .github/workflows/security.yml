@@ -29,11 +29,15 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Govulncheck
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+  - name: Govulncheck
+    env:
+      GOTOOLCHAIN: auto
+    run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
-      - name: Gosec
-        run: go run github.com/securego/gosec/v2/cmd/gosec@latest -exclude=G204 ./...
+  - name: Gosec
+    env:
+      GOTOOLCHAIN: auto
+    run: go run github.com/securego/gosec/v2/cmd/gosec@latest -exclude=G204 ./...
 
   dependency-review:
     name: Dependency review
