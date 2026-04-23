@@ -10,17 +10,39 @@ The simulator has three public surfaces:
 
 The implementation is intentionally split between PowerShell orchestration, Go TUI code, Python scenario tools, and guest shell provisioning. This is normal for a VM-based lab simulator, but large files should keep shrinking behind stable entrypoints.
 
+## Scenario Directory Layout
+
+Scenarios are organized into track-specific subdirectories:
+
+```
+scenarios/
+  labs/
+    rhcsa9/     # 48 RHCSA 9 labs
+    rhcsa10/    # 48 RHCSA 10 labs
+  exams/
+    rhcsa9/     # 8 RHCSA 9 mock exams
+    rhcsa10/    # 8 RHCSA 10 mock exams
+```
+
+Each scenario directory contains `scenario.json`, `LAB_TASKS.md`/`EXAM_TASKS.md`, `LAB_SOLUTION.md`/`EXAM_SOLUTION.md`, and any guest provisioning scripts. Scenario IDs are unique within a track (e.g., both `rhcsa9/` and `rhcsa10/` can have `mock-exam-a`), so progress tracking uses composite `track/id` keys.
+
+## PowerShell Modules
+
+The PowerShell host code is split into focused `.psm1` modules under `host/modules/`:
+
+| Module | Responsibility |
+|---|---|
+| FileHelpers | File I/O, UTF-8 no-BOM writes |
+| UI | Console formatting, colors |
+| LabState | Active-run state, progress JSON |
+| Scenarios | Catalog loading, manifest parsing |
+| Toolchain | Vagrant/VirtualBox path resolution |
+| VMControl | VM lifecycle, SSH, interactive commands |
+| Checks | Lab check execution and scoring |
+
 ## Recommended Direction
 
-Keep `RHCSA.ps1` as a small facade over focused PowerShell modules. The first module boundary is `host/modules/RhcsaSimulator`, which imports the current host implementation and owns runtime options. The remaining work is to split `host/simulator_common.ps1` into smaller module files behind that boundary:
-
-* catalog and scenario state
-* Vagrant and VirtualBox lifecycle
-* SSH helpers
-* baseline recovery
-* cleanup
-* output formatting
-* TUI launcher
+Keep `RHCSA.ps1` as a small facade over focused PowerShell modules. The modules live under `host/modules/` and are imported by `host/modules/RhcsaSimulator`.
 
 Keep Python implementation in `tools/scenarios/`. Host orchestration should stay in PowerShell; Python tooling should not be mixed back into `host/`.
 

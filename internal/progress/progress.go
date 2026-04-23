@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -20,6 +21,18 @@ type ExamProgress = ScenarioProgress
 type State struct {
 	Labs  map[string]*LabProgress  `json:"labs"`
 	Exams map[string]*ExamProgress `json:"exams"`
+}
+
+func CompositeKey(track, id string) string {
+	return track + "/" + id
+}
+
+func SplitCompositeKey(key string) (track, id string) {
+	parts := strings.SplitN(key, "/", 2)
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+	return "", parts[0]
 }
 
 func Load(path string) (*State, error) {
@@ -60,6 +73,8 @@ func Load(path string) (*State, error) {
 	if state.Exams == nil {
 		state.Exams = map[string]*ExamProgress{}
 	}
+
+	state.migrateFlatKeys()
 
 	return &state, nil
 }
@@ -184,4 +199,21 @@ func (s *State) ensureExam(id string) *ExamProgress {
 
 func now() string {
 	return time.Now().Format(time.RFC3339)
+}
+
+func (s *State) migrateFlatKeys() {
+	s.Labs = migrateMapKeys(s.Labs)
+	s.Exams = migrateMapKeys(s.Exams)
+}
+
+func migrateMapKeys[T any](m map[string]*T) map[string]*T {
+	updated := map[string]*T{}
+	for key, value := range m {
+		if strings.Contains(key, "/") {
+			updated[key] = value
+			continue
+		}
+		updated[CompositeKey("rhcsa9", key)] = value
+	}
+	return updated
 }

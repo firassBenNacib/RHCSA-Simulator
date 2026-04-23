@@ -1,0 +1,71 @@
+{
+  "id": "lab-09-shell-loop",
+  "title": "RHCSA 10 Lab 09: Loop Script",
+  "description": "Create a shell script that loops over input",
+  "objective_tags": [
+    "shell-scripting"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /usr/local/bin/rhcsa10-lines.",
+        "The script must read /etc/passwd and write every account name that starts with r to /root/rhcsa10-lines.txt.",
+        "The script must overwrite the output file each time it runs."
+      ],
+      "hints": [
+        "Use a while read loop or awk.",
+        "Account names are the first colon-separated field."
+      ],
+      "checks": [
+        "test -x /usr/local/bin/rhcsa10-lines",
+        "/usr/local/bin/rhcsa10-lines && test -s /root/rhcsa10-lines.txt",
+        "grep -Ev '^r' /root/rhcsa10-lines.txt >/dev/null 2>&1 && exit 1 || true"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /usr/local/bin/rhcsa10-lines",
+        "The script must read /etc/passwd and write every account name that start",
+        "The script must overwrite the output file each time it runs"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cat > /usr/local/bin/rhcsa10-lines <<'EOF'",
+          "#!/bin/bash",
+          ": > /root/rhcsa10-lines.txt",
+          "while IFS=: read -r name _; do",
+          "  case \"$name\" in",
+          "    r*) echo \"$name\" >> /root/rhcsa10-lines.txt ;;",
+          "  esac",
+          "done < /etc/passwd",
+          "EOF"
+        ],
+        [
+          "chmod +x /usr/local/bin/rhcsa10-lines"
+        ],
+        [
+          "/usr/local/bin/rhcsa10-lines",
+          "cat /root/rhcsa10-lines.txt"
+        ]
+      ]
+    }
+  }
+}

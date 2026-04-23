@@ -15,7 +15,7 @@ python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
 * `tools/scenarios/` contains scenario authoring, audit, smoke, and replay tooling.
 * `cmd/rhcsa-tui/` contains the Go terminal UI source.
 * `internal/` contains shared Go packages for the TUI.
-* `scenarios/labs/` and `scenarios/exams/` contain the authored scenario corpus.
+* `scenarios/labs/<track>/` and `scenarios/exams/<track>/` contain the authored scenario corpus (e.g. `rhcsa9/`, `rhcsa10/`).
 * `guest/` contains provisioning scripts that run inside the VMs.
 
 Python implementation code belongs under `tools/scenarios/`, preferably inside the `rhcsa_scenarios` package.

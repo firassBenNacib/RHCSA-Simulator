@@ -21,19 +21,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
+    - name: Check out repository
+      uses: actions/checkout@v6
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
 
-      - name: Govulncheck
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+    - name: Tidy go modules
+      run: go mod tidy
 
-      - name: Gosec
-        run: go run github.com/securego/gosec/v2/cmd/gosec@latest -exclude=G204 ./...
+    - name: Govulncheck
+      run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+    - name: Gosec
+      run: go run github.com/securego/gosec/v2/cmd/gosec@latest -exclude=G204 ./...
 
   dependency-review:
     name: Dependency review

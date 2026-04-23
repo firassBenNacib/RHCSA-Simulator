@@ -613,7 +613,7 @@ func TestPageDownSnapsToNextDetailSection(t *testing.T) {
 	m.width = 120
 	m.height = 14
 	m.focus = focusDetail
-	taskPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_TASKS.md")
+	taskPath := filepath.Join(m.root, "scenarios", "labs", "rhcsa9", "lab-01-demo", "LAB_TASKS.md")
 	taskBody := strings.Join([]string{
 		"## Task 01 - First",
 		"",
@@ -643,7 +643,7 @@ func TestExamQuestionsProduceSectionOffsets(t *testing.T) {
 	m.activeTab = examsTab
 	m.width = 120
 	m.height = 18
-	examTaskPath := filepath.Join(m.root, "scenarios", "exams", "mock-exam-a", "EXAM_TASKS.md")
+	examTaskPath := filepath.Join(m.root, "scenarios", "exams", "rhcsa9", "mock-exam-a", "EXAM_TASKS.md")
 	taskBody := strings.Join([]string{
 		"# Mock Exam A",
 		"",
@@ -778,7 +778,7 @@ func TestSolutionCopyClickCopiesSectionBodyOnly(t *testing.T) {
 	m.detail = detailSolution
 	copied := captureClipboardCopy(t)
 
-	solutionPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_SOLUTION.md")
+	solutionPath := filepath.Join(m.root, "scenarios", "labs", "rhcsa9", "lab-01-demo", "LAB_SOLUTION.md")
 	solutionBody := strings.Join([]string{
 		"# Solution",
 		"",
@@ -823,7 +823,7 @@ func TestSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 	m.detail = detailSolution
 	copied := captureClipboardCopy(t)
 
-	solutionPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_SOLUTION.md")
+	solutionPath := filepath.Join(m.root, "scenarios", "labs", "rhcsa9", "lab-01-demo", "LAB_SOLUTION.md")
 	solutionBody := strings.Join([]string{
 		"# Lab 01: Networking And Hostname",
 		"",
@@ -897,7 +897,7 @@ func TestVisibleSolutionCopyClickWorksWithGeneratedPreamble(t *testing.T) {
 	m.detail = detailSolution
 	copied := captureClipboardCopy(t)
 
-	solutionPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_SOLUTION.md")
+	solutionPath := filepath.Join(m.root, "scenarios", "labs", "rhcsa9", "lab-01-demo", "LAB_SOLUTION.md")
 	solutionBody := strings.Join([]string{
 		"# Lab 01: Networking And Hostname",
 		"",
@@ -1039,7 +1039,7 @@ func TestExamSolutionCopyClickCopiesClickedQuestion(t *testing.T) {
 	m.detail = detailSolution
 	copied := captureClipboardCopy(t)
 
-	solutionPath := filepath.Join(m.root, "scenarios", "exams", "mock-exam-a", "EXAM_SOLUTION.md")
+	solutionPath := filepath.Join(m.root, "scenarios", "exams", "rhcsa9", "mock-exam-a", "EXAM_SOLUTION.md")
 	solutionBody := strings.Join([]string{
 		"# Mock Exam A",
 		"",

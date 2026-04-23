@@ -1,0 +1,85 @@
+{
+  "id": "lab-31-systemd-timer",
+  "title": "RHCSA 10 Lab 31: Systemd Timer",
+  "description": "Create and enable a persistent systemd timer",
+  "objective_tags": [
+    "software-scheduling-time"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 25,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to /var/log/rhcsa10-timer.log.",
+        "Create a oneshot service named rhcsa10-timer.service that runs /usr/local/sbin/rhcsa10-timer.sh.",
+        "Create rhcsa10-timer.timer so it runs every 5 minutes, is persistent, and starts automatically at boot."
+      ],
+      "hints": [
+        "Enable the timer unit, not the service unit.",
+        "Use OnCalendar and Persistent in the timer unit."
+      ],
+      "checks": [
+        "test -x /usr/local/sbin/rhcsa10-timer.sh && grep -Fqx 'echo TIMER OK >> /var/log/rhcsa10-timer.log' /usr/local/sbin/rhcsa10-timer.sh",
+        "systemctl cat rhcsa10-timer.service | grep -Fqx 'ExecStart=/usr/local/sbin/rhcsa10-timer.sh' && systemctl cat rhcsa10-timer.service | grep -Fqx 'Type=oneshot'",
+        "systemctl cat rhcsa10-timer.timer | grep -Fqx 'OnCalendar=*:0/5' && systemctl cat rhcsa10-timer.timer | grep -Fqx 'Persistent=true' && systemctl is-enabled rhcsa10-timer.timer | grep -qx enabled"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to /var/l",
+        "Create a oneshot service named rhcsa10-timer.service that runs /usr/loca",
+        "Create rhcsa10-timer.timer so it runs every 5 minutes, is persistent, an"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "cat > /usr/local/sbin/rhcsa10-timer.sh <<'EOF'",
+          "#!/bin/bash",
+          "echo TIMER OK >> /var/log/rhcsa10-timer.log",
+          "EOF",
+          "chmod +x /usr/local/sbin/rhcsa10-timer.sh"
+        ],
+        [
+          "cat > /etc/systemd/system/rhcsa10-timer.service <<'EOF'",
+          "[Unit]",
+          "Description=rhcsa10-timer service",
+          "",
+          "[Service]",
+          "Type=oneshot",
+          "ExecStart=/usr/local/sbin/rhcsa10-timer.sh",
+          "EOF"
+        ],
+        [
+          "cat > /etc/systemd/system/rhcsa10-timer.timer <<'EOF'",
+          "[Unit]",
+          "Description=Run rhcsa10-timer",
+          "",
+          "[Timer]",
+          "OnCalendar=*:0/5",
+          "Persistent=true",
+          "",
+          "[Install]",
+          "WantedBy=timers.target",
+          "EOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now rhcsa10-timer.timer"
+        ]
+      ]
+    }
+  }
+}

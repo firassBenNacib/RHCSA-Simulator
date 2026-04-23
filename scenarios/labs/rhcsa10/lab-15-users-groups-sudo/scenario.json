@@ -1,0 +1,65 @@
+{
+  "id": "lab-15-users-groups-sudo",
+  "title": "RHCSA 10 Lab 15: Users Groups And Sudo",
+  "description": "Create local identities and delegate limited administrative access",
+  "objective_tags": [
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 30,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create local group ops10.",
+        "Create user relay10, set the password to cinder9, and make ops10 the user's supplementary group.",
+        "Allow members of ops10 to run /usr/bin/systemctl with sudo without a password by using a sudoers drop-in."
+      ],
+      "hints": [
+        "Use a file under /etc/sudoers.d.",
+        "Validate sudoers syntax with visudo -cf."
+      ],
+      "checks": [
+        "getent group ops10 >/dev/null",
+        "id -nG relay10 | tr ' ' '\\n' | grep -qx ops10 && getent shadow relay10 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
+        "grep -ERq '^%ops10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d && visudo -cf /etc/sudoers >/dev/null"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create local group ops10",
+        "Create user relay10, set the password to cinder9, and make ops10 the use",
+        "Allow members of ops10 to run /usr/bin/systemctl with sudo without a pas"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "groupadd ops10"
+        ],
+        [
+          "useradd -G ops10 relay10",
+          "passwd relay10",
+          "# enter: cinder9"
+        ],
+        [
+          "echo '%ops10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/ops10",
+          "chmod 440 /etc/sudoers.d/ops10"
+        ]
+      ]
+    }
+  }
+}

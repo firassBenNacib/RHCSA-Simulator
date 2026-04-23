@@ -8,8 +8,8 @@ import (
 
 func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
 	root := t.TempDir()
-	labRoot := filepath.Join(root, "scenarios", "labs", "lab-01-demo")
-	examRoot := filepath.Join(root, "scenarios", "exams", "mock-exam-a")
+	labRoot := filepath.Join(root, "scenarios", "labs", "rhcsa9", "lab-01-demo")
+	examRoot := filepath.Join(root, "scenarios", "exams", "rhcsa9", "mock-exam-a")
 	for _, path := range []string{labRoot, examRoot} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", path, err)
@@ -53,13 +53,13 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
 		t.Fatalf("expected 1 exam, got %d", len(exams))
 	}
 
-	if labs[0].TasksPath != "scenarios/labs/lab-01-demo/LAB_TASKS.md" {
+	if labs[0].TasksPath != "scenarios/labs/rhcsa9/lab-01-demo/LAB_TASKS.md" {
 		t.Fatalf("unexpected lab tasks path: %q", labs[0].TasksPath)
 	}
 	if labs[0].HintContent == "" || labs[0].CheckContent == "" {
 		t.Fatalf("expected inline hint/check content to be populated")
 	}
-	if exams[0].TasksPath != "scenarios/exams/mock-exam-a/EXAM_TASKS.md" {
+	if exams[0].TasksPath != "scenarios/exams/rhcsa9/mock-exam-a/EXAM_TASKS.md" {
 		t.Fatalf("unexpected exam tasks path: %q", exams[0].TasksPath)
 	}
 	if !exams[0].PasswordRecover || !exams[0].RequiresServer {
@@ -69,8 +69,8 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
 
 func TestLoadTrackFiltersScenariosAndDefaultsToRHCSA9(t *testing.T) {
 	root := t.TempDir()
-	lab9Root := filepath.Join(root, "scenarios", "labs", "lab-09-track")
-	lab10Root := filepath.Join(root, "scenarios", "labs", "lab-10-track")
+	lab9Root := filepath.Join(root, "scenarios", "labs", "rhcsa9", "lab-09-track")
+	lab10Root := filepath.Join(root, "scenarios", "labs", "rhcsa10", "lab-10-track")
 	for _, path := range []string{lab9Root, lab10Root} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", path, err)

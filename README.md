@@ -21,7 +21,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
 * `rhel-10.1-x86_64-dvd.iso` if you use the RHCSA 10 profile
-* [Go 1.25.8+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
+* [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
 
 ## Installation
 
@@ -56,8 +56,8 @@ The simulator uses two VMs:
 
 Scenario source files live under:
 
-* `scenarios/labs`
-* `scenarios/exams`
+* `scenarios/labs/<track>/` (e.g. `scenarios/labs/rhcsa9/`, `scenarios/labs/rhcsa10/`)
+* `scenarios/exams/<track>/` (e.g. `scenarios/exams/rhcsa9/`, `scenarios/exams/rhcsa10/`)
 
 Only one run is active at a time.
 

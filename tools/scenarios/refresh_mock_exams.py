@@ -11,12 +11,22 @@ EXAMS_DIR = ROOT / "scenarios" / "exams"
 POINTS = [5] * 12 + [4] * 10
 
 
+def discover_track(exam_id: str) -> str:
+    for track in ("rhcsa9", "rhcsa10"):
+        candidate = EXAMS_DIR / track / exam_id / "scenario.json"
+        if candidate.exists():
+            return track
+    raise FileNotFoundError(f"Exam '{exam_id}' not found in any track under {EXAMS_DIR}")
+
+
 def load_exam(exam_id: str) -> dict:
-    return json.loads((EXAMS_DIR / exam_id / "scenario.json").read_text())
+    track = discover_track(exam_id)
+    return json.loads((EXAMS_DIR / track / exam_id / "scenario.json").read_text())
 
 
 def save_exam(exam_id: str, data: dict) -> None:
-    (EXAMS_DIR / exam_id / "scenario.json").write_text(json.dumps(data, indent=2) + "\n")
+    track = discover_track(exam_id)
+    (EXAMS_DIR / track / exam_id / "scenario.json").write_text(json.dumps(data, indent=2) + "\n")
 
 
 def block(title: str, task: str, commands: list[str]) -> tuple[str, str, list[str]]:
