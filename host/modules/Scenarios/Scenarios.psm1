@@ -139,12 +139,10 @@ $scenarioRoot = Split-Path -Parent $manifestFullPath
 $relativeScenarioRoot = Get-ProjectRelativePath -Path $scenarioRoot -ProjectRoot $ProjectRoot
 $segments = $relativeScenarioRoot -split '/'
 
-if ($segments.Count -ne 3 -or $segments[0] -ne 'scenarios' -or $segments[1] -notin @('labs', 'exams')) {
-throw "Scenario root '$relativeScenarioRoot' must be in the form scenarios/labs/<id> or scenarios/exams/<id>."
-}
-
-$scenarioCategory = $segments[1]
-$scenarioFolderName = $segments[2]
+ if ($segments.Count -ne 4 -or $segments[0] -ne 'scenarios' -or $segments[1] -notin @('labs', 'exams') -or $segments[2] -notin @('rhcsa9', 'rhcsa10')) {
+ throw "Scenario root '$relativeScenarioRoot' must be in the form scenarios/labs/<track>/<id> or scenarios/exams/<track>/<id>." } $scenarioCategory = $segments[1]
+ $scenarioTrack = $segments[2]
+ $scenarioFolderName = $segments[3]
 $raw = Get-Content $manifestFullPath -Raw | ConvertFrom-Json
 
 $id = [string](Get-RequiredProperty -Object $raw -Name 'id')
@@ -300,9 +298,10 @@ throw "Scenario '$id' content.exam.task_points must sum to 100."
 }
 }
 
-return [PSCustomObject]@{
-Id = $id
-Category = $scenarioCategory
+ return [PSCustomObject]@{
+ Id = $id
+ Category = $scenarioCategory
+ Track = $scenarioTrack
 Title = $title
 Description = $description
 ObjectiveTags = $objectiveTags
@@ -378,7 +377,7 @@ param(
 [Parameter(Mandatory = $true)]
 [string]$ScenarioId,
 [string]$ProjectRoot = (Get-ProjectRoot),
-[string]$Track = 'all'
+[string]$Track = 'rhcsa9'
 )
 
 $matchingManifest = @(Get-ScenarioCatalog -ProjectRoot $ProjectRoot -Track $Track | Where-Object { $_.Id -eq $ScenarioId })

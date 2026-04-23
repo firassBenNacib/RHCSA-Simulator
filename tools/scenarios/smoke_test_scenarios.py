@@ -66,15 +66,23 @@ def scenario_matches_track(kind: str, scenario_id: str, track: str) -> bool:
     normalized = normalize_track(track)
     if normalized == "all":
         return True
-    manifest_path = scenario_manifest_path(kind, scenario_id)
-    data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    return normalized in manifest_tracks(data.get("tracks"))
+    discovered = discover_track(kind, scenario_id)
+    return discovered == normalized
 
 
 def scenario_ids(kind: str, track: str = "all") -> list[str]:
     base = LABS_DIR if kind == "lab" else EXAMS_DIR
-    ids = [path.parent.name for path in sorted(base.glob("*/scenario.json"))]
-    return [scenario_id for scenario_id in ids if scenario_matches_track(kind, scenario_id, track)]
+    normalized = normalize_track(track)
+    ids: list[str] = []
+    for track_dir in sorted(base.iterdir()):
+        if not track_dir.is_dir():
+            continue
+        if normalized != "all" and track_dir.name != normalized:
+            continue
+        for scenario_dir in sorted(track_dir.iterdir()):
+            if (scenario_dir / "scenario.json").exists():
+                ids.append(scenario_dir.name)
+    return ids
 
 
 def normalize_scenario_token(value: str) -> str:
@@ -109,9 +117,21 @@ def resolve_scenario_token(ids: list[str], token: str) -> str:
     raise SystemExit(f"Unknown scenario id: {token}")
 
 
+def discover_track(kind: str, scenario_id: str) -> str:
+    base = LABS_DIR if kind == "lab" else EXAMS_DIR
+    for track_dir in sorted(base.iterdir()):
+        if not track_dir.is_dir():
+            continue
+        candidate = track_dir / scenario_id / "scenario.json"
+        if candidate.exists():
+            return track_dir.name
+    return "rhcsa9"
+
+
 def scenario_manifest_path(kind: str, scenario_id: str) -> Path:
     base = LABS_DIR if kind == "lab" else EXAMS_DIR
-    return base / scenario_id / "scenario.json"
+    track = discover_track(kind, scenario_id)
+    return base / track / scenario_id / "scenario.json"
 
 
 def scenario_requires_server(kind: str, scenario_id: str) -> bool:

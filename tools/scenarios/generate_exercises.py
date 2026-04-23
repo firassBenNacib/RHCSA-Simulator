@@ -182,7 +182,7 @@ def main() -> None:
     args = parse_args()
     GENERATED_ROOT.mkdir(parents=True, exist_ok=True)
 
-    manifest_paths = sorted(LABS_ROOT.glob("*/scenario.json"))
+    manifest_paths = sorted(LABS_ROOT.glob("*/*/scenario.json"))
     wanted = {scenario_id.strip() for scenario_id in args.scenario_ids if scenario_id.strip()}
     expected_ids: set[str] = set()
 
