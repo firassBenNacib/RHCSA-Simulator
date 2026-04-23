@@ -5,10 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-
-	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
 )
 
 var (

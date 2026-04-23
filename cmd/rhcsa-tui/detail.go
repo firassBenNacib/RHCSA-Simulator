@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
-
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) renderDetail(width, height int) string {
