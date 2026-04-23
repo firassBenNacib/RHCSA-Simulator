@@ -380,20 +380,20 @@ func (m model) handleActionResult(msg actionResultMsg) (tea.Model, tea.Cmd) {
 		m.statusText = summarizeActionOutput(msg.output)
 		if msg.kind == "start-lab" {
 			m.refreshActiveScenarioID()
-			m.progress.TouchStarted(msg.labID)
+			m.progress.TouchStarted(progress.CompositeKey(m.track, msg.labID))
 			if err := m.progress.Save(m.progressPath); err != nil {
 				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
 			}
 		}
 		if msg.kind == "start-exam" {
 			m.refreshActiveScenarioID()
-			m.progress.TouchExamStarted(msg.labID)
+			m.progress.TouchExamStarted(progress.CompositeKey(m.track, msg.labID))
 			if err := m.progress.Save(m.progressPath); err != nil {
 				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
 			}
 		}
 		if msg.kind == "check-lab" {
-			m.progress.TouchChecked(msg.labID, msg.passed)
+			m.progress.TouchChecked(progress.CompositeKey(m.track, msg.labID), msg.passed)
 			if err := m.progress.Save(m.progressPath); err != nil {
 				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
 			}
