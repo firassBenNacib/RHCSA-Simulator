@@ -19,8 +19,6 @@ jobs:
   go-vulnerability-scan:
     name: Go security scans
     runs-on: ubuntu-latest
-    env:
-      GOTOOLCHAIN: auto
 
     steps:
     - name: Check out repository
@@ -30,6 +28,9 @@ jobs:
       uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
+
+    - name: Tidy go modules
+      run: go mod tidy
 
     - name: Govulncheck
       run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
