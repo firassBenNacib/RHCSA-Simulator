@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"rhcsa_exam_vms/internal/backend"
-	"rhcsa_exam_vms/internal/catalog"
-	"rhcsa_exam_vms/internal/progress"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/backend"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
+	"github.com/firassBenNacib/rhcsa_exam_vms/internal/progress"
 )
 
 type tabName int
@@ -120,14 +120,14 @@ func (m model) progressMarker(id string) string {
 	if m.progress == nil {
 		return " "
 	}
-	return m.progress.Marker(id)
+	return m.progress.Marker(progress.CompositeKey(m.track, id))
 }
 
 func (m model) examProgressMarker(id string) string {
 	if m.progress == nil {
 		return " "
 	}
-	return m.progress.ExamMarker(id)
+	return m.progress.ExamMarker(progress.CompositeKey(m.track, id))
 }
 
 func (m model) simulatorBuilt() bool {
@@ -141,11 +141,11 @@ func (m *model) touchViewed() {
 	}
 	if m.activeTab == labsTab {
 		if lab := m.currentLab(); lab.ID != "" {
-			m.progress.TouchViewed(lab.ID)
+			m.progress.TouchViewed(progress.CompositeKey(m.track, lab.ID))
 		}
 	} else {
 		if exam := m.currentExam(); exam.ID != "" {
-			m.progress.TouchExamViewed(exam.ID)
+			m.progress.TouchExamViewed(progress.CompositeKey(m.track, exam.ID))
 		}
 	}
 }

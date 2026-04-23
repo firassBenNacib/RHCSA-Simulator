@@ -1,0 +1,62 @@
+{
+  "id": "lab-47-documentation",
+  "title": "RHCSA 10 Lab 47: Local Documentation",
+  "description": "Locate and use local documentation",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /root/rhcsa10-man.txt.",
+        "Write the first SYNOPSIS line from man useradd to the file.",
+        "Ensure the file is not empty."
+      ],
+      "hints": [
+        "Use man useradd.",
+        "Use grep to find SYNOPSIS."
+      ],
+      "checks": [
+        "test -s /root/rhcsa10-man.txt",
+        "grep -qi SYNOPSIS /root/rhcsa10-man.txt",
+        "wc -l /root/rhcsa10-man.txt | awk '{exit !($1 >= 1)}'"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /root/rhcsa10-man.txt",
+        "Write the first SYNOPSIS line from man useradd to the file",
+        "Ensure the file is not empty"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "man useradd | col -b | grep -m1 -A1 '^SYNOPSIS' > /root/rhcsa10-man.txt"
+        ],
+        [
+          "cat /root/rhcsa10-man.txt"
+        ],
+        [
+          "test -s /root/rhcsa10-man.txt"
+        ]
+      ]
+    }
+  }
+}

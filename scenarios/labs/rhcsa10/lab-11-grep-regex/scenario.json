@@ -1,0 +1,62 @@
+{
+  "id": "lab-11-grep-regex",
+  "title": "RHCSA 10 Lab 11: Grep Regex",
+  "description": "Filter text with grep and regular expressions",
+  "objective_tags": [
+    "essential-tools"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Create /root/rhcsa10-shell-users.txt.",
+        "Populate it with account names from /etc/passwd whose shell ends in sh.",
+        "Sort the output alphabetically."
+      ],
+      "hints": [
+        "Use grep or awk.",
+        "The login shell is the last colon-separated field."
+      ],
+      "checks": [
+        "test -s /root/rhcsa10-shell-users.txt",
+        "diff -u <(awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort) /root/rhcsa10-shell-users.txt",
+        "grep -q '^root$' /root/rhcsa10-shell-users.txt"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Create /root/rhcsa10-shell-users.txt",
+        "Populate it with account names from /etc/passwd whose shell ends in sh",
+        "Sort the output alphabetically"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/rhcsa10-shell-users.txt"
+        ],
+        [
+          "cat /root/rhcsa10-shell-users.txt"
+        ],
+        [
+          "grep '^root$' /root/rhcsa10-shell-users.txt"
+        ]
+      ]
+    }
+  }
+}

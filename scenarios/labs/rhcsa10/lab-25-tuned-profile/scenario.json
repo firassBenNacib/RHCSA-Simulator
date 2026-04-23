@@ -1,0 +1,62 @@
+{
+  "id": "lab-25-tuned-profile",
+  "title": "RHCSA 10 Lab 25: Tuned Profile",
+  "description": "Manage tuned profiles",
+  "objective_tags": [
+    "processes-logs-tuning"
+  ],
+  "supported_modes": [
+    "lab"
+  ],
+  "time_limit_minutes": 15,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": false
+  },
+  "content": {
+    "lab": {
+      "tasks": [
+        "Ensure tuned is enabled and running.",
+        "Activate the throughput-performance tuned profile.",
+        "Verify the active profile."
+      ],
+      "hints": [
+        "Use tuned-adm profile.",
+        "Use tuned-adm active to verify."
+      ],
+      "checks": [
+        "systemctl is-enabled tuned | grep -qx enabled && systemctl is-active tuned | grep -qx active",
+        "tuned-adm active | grep -q throughput-performance",
+        "tuned-adm active >/dev/null"
+      ],
+      "solution_outline": [
+        "Make the requested configuration persistent and verify it before finishing."
+      ],
+      "task_titles": [
+        "Ensure tuned is enabled and running",
+        "Activate the throughput-performance tuned profile",
+        "Verify the active profile"
+      ],
+      "task_points": [
+        10,
+        10,
+        10
+      ],
+      "solution_commands": [
+        [
+          "systemctl enable --now tuned"
+        ],
+        [
+          "tuned-adm profile throughput-performance"
+        ],
+        [
+          "tuned-adm active"
+        ]
+      ]
+    }
+  }
+}

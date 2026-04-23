@@ -1,27 +1,38 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path $PSScriptRoot '../../simulator_common.ps1')
+Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../UI/UI.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../Toolchain/Toolchain.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../VMControl/VMControl.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../Checks/Checks.psd1') -Force
+
+$script:RuntimeShowWorkflowStatus = $false
+$script:RuntimeForceHostCleanup = $false
 
 function Initialize-RhcsaSimulatorRuntime {
-    [CmdletBinding()]
-    param(
-        [bool]$ShowWorkflowStatus = $false,
-        [bool]$ForceHostCleanup = $false
-    )
+[CmdletBinding()]
+param(
+[bool]$ShowWorkflowStatus = $false,
+[bool]$ForceHostCleanup = $false
+)
 
-    $script:ShowWorkflowStatus = $ShowWorkflowStatus
-    $script:ForceHostCleanup = $ForceHostCleanup
+$script:RuntimeShowWorkflowStatus = $ShowWorkflowStatus
+$script:RuntimeForceHostCleanup = $ForceHostCleanup
+Set-ShowWorkflowStatus -Enabled $ShowWorkflowStatus
+Set-ForceHostCleanup -Enabled $ForceHostCleanup
 }
 
 function Get-RhcsaSimulatorRuntimeOption {
-    [CmdletBinding()]
-    param()
+[CmdletBinding()]
+param()
 
-    [PSCustomObject]@{
-        ShowWorkflowStatus = ((Test-Path variable:script:ShowWorkflowStatus) -and [bool]$script:ShowWorkflowStatus)
-        ForceHostCleanup = ((Test-Path variable:script:ForceHostCleanup) -and [bool]$script:ForceHostCleanup)
-    }
+[PSCustomObject]@{
+ShowWorkflowStatus = [bool]$script:RuntimeShowWorkflowStatus
+ForceHostCleanup = [bool]$script:RuntimeForceHostCleanup
+}
 }
 
 Export-ModuleMember -Function *
