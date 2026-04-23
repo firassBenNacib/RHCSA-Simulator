@@ -9,7 +9,7 @@ This project uses original scenario wording. Public Red Hat objectives and priva
 | RHCSA 9 | 56 | validated with audit-only checks |
 | RHCSA 10 | 56 | audit-validated, runtime replay pending on a RHEL 10-compatible baseline |
 
-RHCSA 9 scenarios stay on `tracks: ["rhcsa9"]`. RHCSA 10-specific scenarios use `tracks: ["rhcsa10"]` and `rhel_major: 10`.
+RHCSA 9 scenarios live under `scenarios/labs/rhcsa9/` and `scenarios/exams/rhcsa9/` with `tracks: ["rhcsa9"]`. RHCSA 10-specific scenarios live under `scenarios/labs/rhcsa10/` and `scenarios/exams/rhcsa10/` with `tracks: ["rhcsa10"]` and `rhel_major: 10`.
 
 ## Topic Gap Findings
 

@@ -56,8 +56,8 @@ The simulator uses two VMs:
 
 Scenario source files live under:
 
-* `scenarios/labs`
-* `scenarios/exams`
+* `scenarios/labs/<track>/` (e.g. `scenarios/labs/rhcsa9/`, `scenarios/labs/rhcsa10/`)
+* `scenarios/exams/<track>/` (e.g. `scenarios/exams/rhcsa9/`, `scenarios/exams/rhcsa10/`)
 
 Only one run is active at a time.
 
