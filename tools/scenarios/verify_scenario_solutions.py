@@ -24,10 +24,11 @@ if str(HOST_DIR) not in sys.path:
     sys.path.insert(0, str(HOST_DIR))
 
 from scenario_solution_normalizer import normalize_command_list  # noqa: E402
-from smoke_test_scenarios import (  # noqa: E402
+from smoke_test_scenarios import ( # noqa: E402
     EXAMS_DIR,
     LABS_DIR,
     ROOT,
+    discover_track,
     filter_ids,
     get_baseline_status,
     parse_check_output,
@@ -276,7 +277,8 @@ def render_background_network_bounce(commands: list[str]) -> str:
 
 def load_manifest(kind: str, scenario_id: str) -> dict:
     base = LABS_DIR if kind == "lab" else EXAMS_DIR
-    return json.loads((base / scenario_id / "scenario.json").read_text(encoding="utf-8"))
+    track = discover_track(kind, scenario_id)
+    return json.loads((base / track / scenario_id / "scenario.json").read_text(encoding="utf-8"))
 
 
 @lru_cache(maxsize=1)

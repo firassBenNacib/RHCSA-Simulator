@@ -187,13 +187,13 @@ def main() -> int:
     labs: list[tuple[Path, dict[str, Any]]] = []
     exams: list[tuple[Path, dict[str, Any]]] = []
 
-    for path in sorted(SCENARIOS_DIR.glob("labs/*/scenario.json")):
+    for path in sorted(SCENARIOS_DIR.glob("labs/*/*/scenario.json")):
         scenario = load_json(path)
         labs.append((path, scenario))
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
 
-    for path in sorted(SCENARIOS_DIR.glob("exams/*/scenario.json")):
+    for path in sorted(SCENARIOS_DIR.glob("exams/*/*/scenario.json")):
         scenario = load_json(path)
         exams.append((path, scenario))
         task_lengths_ok(path, scenario, findings)

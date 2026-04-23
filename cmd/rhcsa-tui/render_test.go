@@ -15,8 +15,8 @@ func buildRenderTestModel(t *testing.T) model {
 
 	root := t.TempDir()
 
-	labRoot := filepath.Join(root, "scenarios", "labs", "lab-01-demo")
-	examRoot := filepath.Join(root, "scenarios", "exams", "mock-exam-a")
+	labRoot := filepath.Join(root, "scenarios", "labs", "rhcsa9", "lab-01-demo")
+	examRoot := filepath.Join(root, "scenarios", "exams", "rhcsa9", "mock-exam-a")
 	for _, p := range []string{labRoot, examRoot} {
 		if err := os.MkdirAll(p, 0o755); err != nil {
 			t.Fatal(err)
@@ -348,7 +348,7 @@ func TestSolutionViewShowsCopyButtonAndTrimmedBoilerplate(t *testing.T) {
 
 func TestPromptViewDoesNotShowCopyButtonsForStructuredContent(t *testing.T) {
 	m := buildRenderTestModel(t)
-	taskPath := filepath.Join(m.root, "scenarios", "labs", "lab-01-demo", "LAB_TASKS.md")
+	taskPath := filepath.Join(m.root, "scenarios", "labs", "rhcsa9", "lab-01-demo", "LAB_TASKS.md")
 	taskBody := strings.Join([]string{
 		"## Task 01 - First",
 		"",
@@ -372,7 +372,7 @@ func TestExamSolutionShowsPerQuestionCopyButtons(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.activeTab = examsTab
 	m.detail = detailSolution
-	solutionPath := filepath.Join(m.root, "scenarios", "exams", "mock-exam-a", "EXAM_SOLUTION.md")
+	solutionPath := filepath.Join(m.root, "scenarios", "exams", "rhcsa9", "mock-exam-a", "EXAM_SOLUTION.md")
 	solutionBody := strings.Join([]string{
 		"# Mock Exam A",
 		"",
