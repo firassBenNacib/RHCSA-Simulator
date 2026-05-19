@@ -92,9 +92,11 @@ firewalld
 chronyd
 EOF
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
 wipefs -a /dev/sdc >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+partprobe /dev/sdc >/dev/null 2>&1 || true
 sed -i '\#/mnt/summitlv#d' /etc/fstab
 umount /mnt/summitlv >/dev/null 2>&1 || true
 lvremove -fy /dev/summitvg/summitlv >/dev/null 2>&1 || true

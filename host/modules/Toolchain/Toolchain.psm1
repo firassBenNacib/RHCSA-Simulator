@@ -1,9 +1,9 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1')
+Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1')
+Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1')
 
 function Get-OptionalVBoxManagePath {
 $command = Get-Command VBoxManage -ErrorAction SilentlyContinue
@@ -56,6 +56,204 @@ throw 'Vagrant not found. Install Vagrant or add it to PATH.'
 }
 
 return $path
+}
+
+function Set-VagrantHostToolPath {
+if ([string]::IsNullOrWhiteSpace($env:WINDIR)) {
+return
+}
+
+$system32 = Join-Path $env:WINDIR 'System32'
+if (-not (Test-Path $system32 -PathType Container)) {
+return
+}
+
+$vagrantBin = Join-Path $env:ProgramFiles 'Vagrant\bin'
+$currentPath = [System.Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Process)
+if ([string]::IsNullOrWhiteSpace($currentPath)) {
+$currentPath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Process)
+}
+if ([string]::IsNullOrWhiteSpace($currentPath)) {
+$currentPath = [string]$env:Path
+}
+
+$pathParts = @()
+foreach ($pathPart in @($system32, $vagrantBin) + @(([string]$currentPath -split ';'))) {
+if ([string]::IsNullOrWhiteSpace($pathPart)) {
+continue
+}
+
+if ($pathParts -notcontains $pathPart) {
+$pathParts += $pathPart
+}
+}
+
+$newPath = ($pathParts -join ';')
+if ($newPath -ne $currentPath) {
+[System.Environment]::SetEnvironmentVariable('Path', $newPath, [System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('PATH', $newPath, [System.EnvironmentVariableTarget]::Process)
+$env:Path = $newPath
+}
+
+$pathExt = [System.Environment]::GetEnvironmentVariable('PATHEXT', [System.EnvironmentVariableTarget]::Process)
+if ([string]::IsNullOrWhiteSpace($pathExt) -or $pathExt -notmatch '(?i)(^|;)\.EXE($|;)') {
+$pathExt = '.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL'
+[System.Environment]::SetEnvironmentVariable('PATHEXT', $pathExt, [System.EnvironmentVariableTarget]::Process)
+$env:PATHEXT = $pathExt
+}
+}
+
+function Get-VagrantCommandSpec {
+param()
+
+Set-VagrantHostToolPath
+$vagrantPath = Get-VagrantPath
+if (-not [string]::IsNullOrWhiteSpace($env:ComSpec) -and (Test-Path $env:ComSpec -PathType Leaf)) {
+return [PSCustomObject]@{
+FilePath = $env:ComSpec
+PrefixArgumentList = @('/d', '/s', '/c', 'vagrant')
+}
+}
+
+return [PSCustomObject]@{
+FilePath = $vagrantPath
+PrefixArgumentList = @()
+}
+}
+
+function Get-ProjectVagrantBoxName {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot),
+[AllowEmptyString()]
+[string]$Profile = ''
+)
+
+if ([string]::IsNullOrWhiteSpace($Profile)) {
+$Profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+}
+
+$override = [string]$env:RHCSA_BOX
+if (-not [string]::IsNullOrWhiteSpace($override)) {
+return $override.Trim()
+}
+
+switch (ConvertTo-ProjectProfile -Profile $Profile) {
+'rhel10' { return 'boxomatic/almalinux-10' }
+default { return 'generic/rocky9' }
+}
+}
+
+function Get-ProjectVagrantBoxUrl {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot),
+[AllowEmptyString()]
+[string]$Profile = ''
+)
+
+if ([string]::IsNullOrWhiteSpace($Profile)) {
+$Profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+}
+
+$override = [string]$env:RHCSA_BOX_URL
+if (-not [string]::IsNullOrWhiteSpace($override)) {
+return $override.Trim()
+}
+
+switch (ConvertTo-ProjectProfile -Profile $Profile) {
+default { return '' }
+}
+}
+
+function Test-CurlExecutableAvailable {
+if ($null -ne (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
+return $true
+}
+
+$windowsCurl = Join-Path $env:WINDIR 'System32\curl.exe'
+return (Test-Path $windowsCurl -PathType Leaf)
+}
+
+function Test-VagrantArchiveExtractorAvailable {
+if ($null -ne (Get-Command bsdtar.exe -ErrorAction SilentlyContinue)) {
+return $true
+}
+
+if ($null -ne (Get-Command tar.exe -ErrorAction SilentlyContinue)) {
+return $true
+}
+
+$windowsTar = Join-Path $env:WINDIR 'System32\tar.exe'
+return (Test-Path $windowsTar -PathType Leaf)
+}
+
+function Test-VagrantBoxInstalled {
+param(
+[Parameter(Mandatory = $true)]
+[string]$BoxName,
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+$vagrantCommand = Get-VagrantCommandSpec
+$result = Invoke-ExternalCapture -FilePath $vagrantCommand.FilePath -ArgumentList @($vagrantCommand.PrefixArgumentList + @('box', 'list')) -TimeoutSeconds 180
+if ($result.ExitCode -ne 0) {
+return $false
+}
+
+$pattern = '^{0}\s+\(' -f [regex]::Escape($BoxName)
+foreach ($line in @($result.StdOut)) {
+if ([string]$line -match $pattern) {
+return $true
+}
+}
+
+return $false
+}
+
+function Assert-ProjectVagrantBoxReady {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot),
+[AllowEmptyString()]
+[string]$Profile = ''
+)
+
+if ([string]::IsNullOrWhiteSpace($Profile)) {
+$Profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+}
+
+$boxName = Get-ProjectVagrantBoxName -ProjectRoot $ProjectRoot -Profile $Profile
+if (Test-VagrantBoxInstalled -BoxName $boxName -ProjectRoot $ProjectRoot) {
+return
+}
+
+$boxUrl = Get-ProjectVagrantBoxUrl -ProjectRoot $ProjectRoot -Profile $Profile
+
+$missing = @()
+if (-not (Test-CurlExecutableAvailable)) {
+$missing += 'curl.exe'
+}
+if (-not (Test-VagrantArchiveExtractorAvailable)) {
+$missing += 'tar.exe or bsdtar.exe'
+}
+
+if ($missing.Count -eq 0) {
+return
+}
+
+$missingText = if ($missing.Count -gt 0) {
+" Missing host prerequisites: $($missing -join ', ')."
+}
+else {
+''
+}
+
+$installCommand = if ([string]::IsNullOrWhiteSpace($boxUrl)) {
+"vagrant box add $boxName --provider virtualbox"
+}
+else {
+"vagrant box add $boxName $boxUrl --provider virtualbox"
+}
+
+throw "The configured Vagrant box '$boxName' is not installed for this project profile.$missingText Install it first with: $installCommand"
 }
 
 function Get-VBoxManagePath {
@@ -148,14 +346,18 @@ return $false
 function Open-RhcsaTui {
 param(
 [string]$ProjectRoot = (Get-ProjectRoot),
-[ValidateSet('RHCSA9', 'RHCSA10', 'All', 'rhcsa9', 'rhcsa10', 'all')]
-[string]$Track = 'RHCSA9'
+[AllowEmptyString()]
+[string]$Track = ''
 )
 
 $goPath = Get-GoExecutablePath
 $binaryPath = Get-RhcsaTuiBinaryPath -ProjectRoot $ProjectRoot
 $buildRoot = Split-Path -Parent $binaryPath
 $launchBinaryPath = $binaryPath
+
+if ([string]::IsNullOrWhiteSpace($Track)) {
+    $Track = Get-ProjectScenarioTrack -ProjectRoot $ProjectRoot
+}
 
 Push-Location $ProjectRoot
 try {

@@ -26,6 +26,10 @@ text = text.replace('Listen 8181', 'Listen 80')
 p.write_text(text)
 EOF
 systemctl disable --now httpd >/dev/null 2>&1 || true
+rm -f /etc/httpd/conf.d/silverpeak-listen.conf
+mkdir -p /var/www/html
+echo 'exam-h portal' > /var/www/html/index.html
+restorecon -Rv /var/www/html >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-port=8181/tcp >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept' >/dev/null 2>&1 || true
 firewall-cmd --reload >/dev/null 2>&1 || true
@@ -70,14 +74,15 @@ EOF
 swapoff /dev/sdb1 >/dev/null 2>&1 || true
 sed -i '\#swap#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
 umount /mnt/reviewh >/dev/null 2>&1 || true
 sed -i '\#/mnt/reviewh#d' /etc/fstab
 lvremove -fy /dev/reviewvgh/reviewh >/dev/null 2>&1 || true
 vgremove -fy reviewvgh >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
 wipefs -a /dev/sdc >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
 printf 'label: gpt
 ,700M,L
 ' | sfdisk /dev/sdc >/dev/null 2>&1
@@ -113,4 +118,6 @@ runuser -l inspecth -c 'podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/nu
 rm -f /home/inspecth/workdir.txt
 systemctl set-default graphical.target >/dev/null 2>&1 || true
 systemctl disable --now rsyslog >/dev/null 2>&1 || true
-systemctl enable --now postfix >/dev/null 2>&1 || true
+if rpm -q postfix >/dev/null 2>&1; then
+  systemctl enable --now postfix >/dev/null 2>&1 || true
+fi

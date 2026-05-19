@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-44-permission-repair` |
+| Scenario ID | `lab-44-permission-repair` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |

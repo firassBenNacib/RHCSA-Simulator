@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-13-links` |
+| Scenario ID | `lab-13-links` |
 | Mode | Lab |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |

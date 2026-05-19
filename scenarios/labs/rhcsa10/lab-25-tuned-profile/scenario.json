@@ -21,8 +21,7 @@
     "lab": {
       "tasks": [
         "Ensure tuned is enabled and running.",
-        "Activate the throughput-performance tuned profile.",
-        "Verify the active profile."
+        "Activate the throughput-performance tuned profile."
       ],
       "hints": [
         "Use tuned-adm profile.",
@@ -30,33 +29,31 @@
       ],
       "checks": [
         "systemctl is-enabled tuned | grep -qx enabled && systemctl is-active tuned | grep -qx active",
-        "tuned-adm active | grep -q throughput-performance",
-        "tuned-adm active >/dev/null"
+        "(tuned-adm active | grep -q throughput-performance) && (tuned-adm active >/dev/null)"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Ensure tuned is enabled and running",
-        "Activate the throughput-performance tuned profile",
-        "Verify the active profile"
+        "Activate the throughput-performance tuned profile"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
           "systemctl enable --now tuned"
         ],
         [
-          "tuned-adm profile throughput-performance"
-        ],
-        [
+          "tuned-adm profile throughput-performance",
           "tuned-adm active"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

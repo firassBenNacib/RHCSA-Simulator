@@ -20,43 +20,31 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /root/rhcsa10-etc.tar.gz containing /etc/hosts and /etc/fstab.",
-        "Ensure the archive uses gzip compression.",
-        "List the archive contents without extracting it."
+        "Create /root/rhcsa10-etc.tar.gz as a gzip archive containing /etc/hosts and /etc/fstab."
       ],
       "hints": [
         "Use tar -czf.",
         "Use tar -tzf to inspect gzip archives."
       ],
       "checks": [
-        "test -f /root/rhcsa10-etc.tar.gz",
-        "file /root/rhcsa10-etc.tar.gz | grep -qi gzip",
-        "tar -tzf /root/rhcsa10-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'"
+        "test -f /root/rhcsa10-etc.tar.gz && file /root/rhcsa10-etc.tar.gz | grep -qi gzip && tar -tzf /root/rhcsa10-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /root/rhcsa10-etc.tar.gz containing /etc/hosts and /etc/fstab",
-        "Ensure the archive uses gzip compression",
-        "List the archive contents without extracting it"
+        "Create /root/rhcsa10-etc.tar.gz as a gzip archive containing /etc/hosts "
       ],
       "task_points": [
-        10,
-        10,
         10
       ],
       "solution_commands": [
         [
-          "tar -czf /root/rhcsa10-etc.tar.gz /etc/hosts /etc/fstab"
-        ],
-        [
-          "file /root/rhcsa10-etc.tar.gz"
-        ],
-        [
+          "tar -czf /root/rhcsa10-etc.tar.gz /etc/hosts /etc/fstab",
           "tar -tzf /root/rhcsa10-etc.tar.gz"
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

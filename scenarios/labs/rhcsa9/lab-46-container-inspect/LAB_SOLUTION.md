@@ -23,8 +23,7 @@ Load a provided container image into user storage and inspect its metadata with 
 
 ```bash
 id scope46 >/dev/null 2>&1 || useradd -m scope46
-passwd scope46
-# enter: cinder9
+echo 'scope46:cinder9' | chpasswd
 ```
 
 ---
@@ -32,8 +31,7 @@ passwd scope46
 ## Task 02 - load the image archive /opt/rhcsa/container- (client) - 10 pts
 
 ```bash
-su - scope46
-podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
+runuser -l scope46 -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'
 ```
 
 ---
@@ -41,8 +39,7 @@ podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
 ## Task 03 - inspect localhost/rhcsa-httpd-base:latest and write (client) - 10 pts
 
 ```bash
-su - scope46
-podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt
+runuser -l scope46 -c 'podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > /home/scope46/workdir.txt'
 ```
 
 ---
@@ -50,6 +47,7 @@ podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.Workin
 ## Task 04 - If the image has no explicit configured user, write (client) - 10 pts
 
 ```bash
-su - scope46
-u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); echo "${u:-root}" > ~/user.txt
+u="$(runuser -l scope46 -c 'podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}')"
+echo "${u:-root}" > /home/scope46/user.txt
+chown scope46:scope46 /home/scope46/user.txt
 ```

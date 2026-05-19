@@ -1,13 +1,13 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../UI/UI.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../Toolchain/Toolchain.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../VMControl/VMControl.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../Checks/Checks.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1')
+Import-Module (Join-Path $PSScriptRoot '../UI/UI.psd1')
+Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1')
+Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1')
+Import-Module (Join-Path $PSScriptRoot '../Toolchain/Toolchain.psd1')
+Import-Module (Join-Path $PSScriptRoot '../VMControl/VMControl.psd1')
+Import-Module (Join-Path $PSScriptRoot '../Checks/Checks.psd1')
 
 $script:RuntimeShowWorkflowStatus = $false
 $script:RuntimeForceHostCleanup = $false

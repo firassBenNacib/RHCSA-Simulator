@@ -33,11 +33,9 @@
         "Use visudo to edit sudo policy safely. Plain visudo as root is fine unless a task explicitly requires a drop-in file."
       ],
       "checks": [
-        "# server id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && getent passwd brenor >/dev/null",
-        "# server id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && getent passwd lyessa >/dev/null",
-        "# server getent passwd quillan >/dev/null && passwd -S brenor | awk '{exit !($2 ~ /^P/)}' && passwd -S lyessa | awk '{exit !($2 ~ /^P/)}' && passwd -S quillan | awk '{exit !($2 ~ /^P/)}' && getent passwd sarahx | awk -F: '{exit !($7==\"/sbin/nologin\")}' && test ! -d /home/sarahx",
-        "# server visudo -cf /etc/sudoers >/dev/null && grep -ERq '^%opsrune[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null",
-        "# server visudo -cf /etc/sudoers >/dev/null && grep -ERq '^brenor[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null"
+        "# server getent group opsrune >/dev/null && id -nG brenor | tr ' ' '\\n' | grep -qx opsrune && id -nG lyessa | tr ' ' '\\n' | grep -qx opsrune && getent passwd quillan >/dev/null && getent passwd sarahx | awk -F: '{exit !($7==\"/sbin/nologin\")}' && test ! -d /home/sarahx",
+        "# server getent shadow brenor | awk -F: '{ok=(length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/)} END{exit !ok}' && getent shadow lyessa | awk -F: '{ok=(length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/)} END{exit !ok}' && getent shadow quillan | awk -F: '{ok=(length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/)} END{exit !ok}'",
+        "# server visudo -cf /etc/sudoers >/dev/null && grep -ERq '^%opsrune[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+/usr/sbin/useradd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null && grep -ERq '^brenor[[:space:]]+ALL=\\((ALL|root)\\)[[:space:]]+NOPASSWD:[[:space:]]+/usr/bin/passwd[[:space:]]*$' /etc/sudoers /etc/sudoers.d 2>/dev/null"
       ],
       "solution_outline": [
         "Create the group and all four accounts on server.",

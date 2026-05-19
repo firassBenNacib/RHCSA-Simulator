@@ -20,44 +20,33 @@
   "content": {
     "lab": {
       "tasks": [
-        "Find an RPM named tree under /var/www/html/repo or the mounted ISO.",
-        "Install the local RPM file without enabling external repositories.",
-        "Verify that tree is installed."
+        "Install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories."
       ],
       "hints": [
         "Use find to locate tree*.rpm.",
         "Use dnf install /path/to/package.rpm."
       ],
       "checks": [
-        "rpm -q tree >/dev/null",
-        "command -v tree >/dev/null",
-        "rpm -q tree >/dev/null"
+        "command -v tree >/dev/null && rpm -q tree >/dev/null"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Find an RPM named tree under /var/www/html/repo or the mounted ISO",
-        "Install the local RPM file without enabling external repositories",
-        "Verify that tree is installed"
+        "Install the local tree RPM from /var/www/html/repo or the mounted ISO wi"
       ],
       "task_points": [
-        10,
-        10,
         10
       ],
       "solution_commands": [
         [
-          "rpm_path=$(find /var/www/html/repo /mnt/rhcsa-bootstrap-iso -name 'tree-*.rpm' 2>/dev/null | head -n1)",
-          "test -n \"$rpm_path\""
-        ],
-        [
-          "dnf install -y \"$rpm_path\""
-        ],
-        [
+          "dnf install -y --disablerepo='*' --enablerepo=rhcsa-baseos --enablerepo=rhcsa-appstream tree",
           "rpm -q tree"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

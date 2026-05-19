@@ -20,9 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Start a background sleep process and save its PID in /run/rhcsa10-sleep.pid.",
-        "Change the process nice value to 8.",
-        "Verify the process priority."
+        "Start a detached background sleep process and save its PID in /run/rhcsa10-sleep.pid.",
+        "Change the process nice value to 8."
       ],
       "hints": [
         "Use nohup or shell backgrounding.",
@@ -30,33 +29,32 @@
       ],
       "checks": [
         "test -s /run/rhcsa10-sleep.pid && kill -0 $(cat /run/rhcsa10-sleep.pid)",
-        "ps -o ni= -p $(cat /run/rhcsa10-sleep.pid) | awk '{exit !($1 == 8)}'",
-        "kill -0 $(cat /run/rhcsa10-sleep.pid)"
+        "(ps -o ni= -p $(cat /run/rhcsa10-sleep.pid) | awk '{exit !($1 == 8)}') && (kill -0 $(cat /run/rhcsa10-sleep.pid))"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Start a background sleep process and save its PID in /run/rhcsa10-sleep.",
-        "Change the process nice value to 8",
-        "Verify the process priority"
+        "Start a detached background sleep process and save its PID in /run/rhcsa",
+        "Change the process nice value to 8"
       ],
       "task_points": [
-        10,
         10,
         10
       ],
       "solution_commands": [
         [
-          "sleep 3600 & echo $! > /run/rhcsa10-sleep.pid"
+          "nohup sleep 3600 >/dev/null 2>&1 & echo $! > /run/rhcsa10-sleep.pid",
+          "cat /run/rhcsa10-sleep.pid"
         ],
         [
-          "renice -n 8 -p $(cat /run/rhcsa10-sleep.pid)"
-        ],
-        [
+          "renice -n 8 -p $(cat /run/rhcsa10-sleep.pid)",
           "ps -o pid,ni,comm -p $(cat /run/rhcsa10-sleep.pid)"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

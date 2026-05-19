@@ -8,6 +8,7 @@ import re
 import shutil
 from pathlib import Path
 
+from rhcsa_scenarios.lab_normalization import normalize_lab_block
 from rhcsa_scenarios.text import normalize_task_text
 from typing import Any, TypedDict, cast
 
@@ -141,7 +142,7 @@ def build_runtime_cache(manifest_path: Path) -> ExerciseMetadata:
     solution_path = runtime_root / "solution.md"
     metadata_path = runtime_root / "exercise.json"
 
-    lab = cast(dict[str, Any], data["content"]["lab"])
+    lab = normalize_lab_block(cast(dict[str, Any], data["content"]["lab"]))
     checks = [normalize_check_entry(command, index) for index, command in enumerate(cast(list[str], lab.get("checks", [])), start=1)]
 
     shutil.copyfile(scenario_root / "LAB_TASKS.md", prompt_path)

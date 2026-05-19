@@ -21,13 +21,13 @@ Create a small shell script that processes arguments and returns the correct exi
 
 ## Task 01 - Create the executable script (client) - 10 pts
 
-Create the executable script /usr/local/bin/usercheck40 on client.
+Create the script file /usr/local/bin/usercheck40 on client.
 
 ---
 
 ## Task 02 - The script must accept one username argument (client) - 10 pts
 
-The script must accept one username argument.
+Make /usr/local/bin/usercheck40 executable.
 
 ---
 

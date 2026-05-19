@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-01-hostname-resolution` |
+| Scenario ID | `lab-01-hostname-resolution` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | networking-and-firewall |
@@ -19,7 +19,7 @@ Configure persistent hostname and local name resolution.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Set the persistent hostname to client10.lab.example (client) - 10 pts
+## Task 01 - set the persistent hostname to client10.lab.example (client) - 10 pts
 
 ```bash
 hostnamectl set-hostname client10.lab.example
@@ -27,17 +27,10 @@ hostnamectl set-hostname client10.lab.example
 
 ---
 
-## Task 02 - Add a persistent hosts entry mapping server10.lab.example to 192.168.122 (client) - 10 pts
+## Task 02 - add a persistent hosts entry mapping server10.lab.example to 192.168.122 (client) - 20 pts
 
 ```bash
 echo '192.168.122.3 server10.lab.example' >> /etc/hosts
-```
-
----
-
-## Task 03 - Verify local hostname and name resolution (client) - 10 pts
-
-```bash
 hostnamectl --static
 getent hosts server10.lab.example
 ```

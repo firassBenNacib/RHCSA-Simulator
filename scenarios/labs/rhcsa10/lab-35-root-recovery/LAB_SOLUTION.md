@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-35-root-recovery` |
+| Scenario ID | `lab-35-root-recovery` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | boot-and-recovery |

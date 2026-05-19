@@ -22,7 +22,7 @@
       "tasks": [
         "Create physical volume /dev/sdb.",
         "Create volume group vg10.",
-        "Create a 256 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently."
+        "Create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently."
       ],
       "hints": [
         "Use pvcreate, vgcreate, and lvcreate.",
@@ -30,8 +30,8 @@
       ],
       "checks": [
         "pvs /dev/sdb >/dev/null",
-        "vgs vg10 >/dev/null && lvs /dev/vg10/lvdata >/dev/null",
-        "findmnt -no TARGET /mnt/lvdata10 | grep -qx /mnt/lvdata10 && grep -Eq '/dev/vg10/lvdata[[:space:]]+/mnt/lvdata10' /etc/fstab"
+        "vgs vg10 >/dev/null",
+        "lvs /dev/vg10/lvdata >/dev/null && findmnt -no TARGET /mnt/lvdata10 | grep -qx /mnt/lvdata10 && grep -Eq '/dev/vg10/lvdata[[:space:]]+/mnt/lvdata10[[:space:]]+xfs' /etc/fstab"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -39,7 +39,7 @@
       "task_titles": [
         "Create physical volume /dev/sdb",
         "Create volume group vg10",
-        "Create a 256 MiB logical volume lvdata formatted with XFS and mounted at"
+        "Create a 384 MiB logical volume lvdata formatted with XFS and mounted at"
       ],
       "task_points": [
         10,
@@ -48,13 +48,15 @@
       ],
       "solution_commands": [
         [
-          "pvcreate /dev/sdb"
+          "wipefs -a /dev/sdb >/dev/null 2>&1 || true",
+          "sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true",
+          "pvcreate -ff -y /dev/sdb"
         ],
         [
           "vgcreate vg10 /dev/sdb"
         ],
         [
-          "lvcreate -L 256M -n lvdata vg10",
+          "lvcreate -L 384M -n lvdata vg10",
           "mkfs.xfs -f /dev/vg10/lvdata",
           "mkdir -p /mnt/lvdata10",
           "echo '/dev/vg10/lvdata /mnt/lvdata10 xfs defaults 0 0' >> /etc/fstab",
@@ -62,5 +64,8 @@
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

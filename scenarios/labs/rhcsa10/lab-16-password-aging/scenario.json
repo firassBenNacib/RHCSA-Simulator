@@ -31,7 +31,7 @@
       "checks": [
         "getent passwd aging10 >/dev/null",
         "chage -l aging10 | grep -Eq 'Maximum.*60'",
-        "chage -l aging10 | grep -Eq 'warning.*7|Warning.*7'"
+        "chage -l aging10 | grep -Eq 'warning.*7|Warning.*7' && getent shadow aging10 | awk -F: '$6 == 7 {ok=1} END {exit !ok}'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -60,5 +60,8 @@
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

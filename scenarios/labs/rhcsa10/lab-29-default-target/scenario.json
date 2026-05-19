@@ -20,43 +20,33 @@
   "content": {
     "lab": {
       "tasks": [
-        "Set the default systemd target to multi-user.target.",
-        "Verify the default target.",
-        "Do not reboot the system."
+        "Set the default systemd target to multi-user.target without rebooting."
       ],
       "hints": [
         "Use systemctl set-default.",
         "Use systemctl get-default to verify."
       ],
       "checks": [
-        "systemctl get-default | grep -qx multi-user.target",
-        "test -L /etc/systemd/system/default.target",
-        "readlink /etc/systemd/system/default.target | grep -q multi-user.target"
+        "systemctl get-default | grep -qx multi-user.target && readlink /etc/systemd/system/default.target | grep -q multi-user.target"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Set the default systemd target to multi-user.target",
-        "Verify the default target",
-        "Do not reboot the system"
+        "Set the default systemd target to multi-user.target without rebooting"
       ],
       "task_points": [
-        10,
-        10,
         10
       ],
       "solution_commands": [
         [
-          "systemctl set-default multi-user.target"
-        ],
-        [
+          "systemctl set-default multi-user.target",
           "systemctl get-default"
-        ],
-        [
-          "readlink /etc/systemd/system/default.target"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

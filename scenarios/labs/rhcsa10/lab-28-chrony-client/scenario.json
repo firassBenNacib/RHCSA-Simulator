@@ -14,6 +14,9 @@
     "rhcsa10"
   ],
   "rhel_major": 10,
+  "vm_scripts": {
+    "client": "scripts/client.sh"
+  },
   "flags": {
     "password_recovery": false,
     "requires_server": true
@@ -21,9 +24,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Install chrony if needed.",
-        "Configure server as the only NTP source.",
-        "Enable and start chronyd."
+        "On client, install chrony if needed.",
+        "On client, configure server as the only NTP source.",
+        "On client, enable and start chronyd."
       ],
       "hints": [
         "Use /etc/chrony.conf.",
@@ -38,9 +41,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Install chrony if needed",
-        "Configure server as the only NTP source",
-        "Enable and start chronyd"
+        "install chrony if needed",
+        "configure server as the only NTP source",
+        "enable and start chronyd"
       ],
       "task_points": [
         10,

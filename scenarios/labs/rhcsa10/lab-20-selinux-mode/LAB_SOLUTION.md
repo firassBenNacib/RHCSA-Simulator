@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-20-selinux-mode` |
+| Scenario ID | `lab-20-selinux-mode` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |
@@ -27,17 +27,10 @@ setenforce 1
 
 ---
 
-## Task 02 - Configure SELinux to boot in enforcing mode (client) - 10 pts
+## Task 02 - Configure SELinux to boot in enforcing mode (client) - 20 pts
 
 ```bash
 sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
-```
-
----
-
-## Task 03 - Verify current and persistent SELinux mode (client) - 10 pts
-
-```bash
 getenforce
 grep '^SELINUX=' /etc/selinux/config
 ```

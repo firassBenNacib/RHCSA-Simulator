@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-10-find-copy` |
+| Scenario ID | `lab-10-find-copy` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | essential-tools |
@@ -31,12 +31,5 @@ mkdir -p /root/rhcsa10-found
 
 ```bash
 find /etc/skel -type f -size -1k -exec cp -a {} /root/rhcsa10-found/ \;
-```
-
----
-
-## Task 03 - Verify that at least one copied file exists (client) - 10 pts
-
-```bash
 find /root/rhcsa10-found -type f -ls
 ```

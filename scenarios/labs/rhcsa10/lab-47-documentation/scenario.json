@@ -20,43 +20,31 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /root/rhcsa10-man.txt.",
-        "Write the first SYNOPSIS line from man useradd to the file.",
-        "Ensure the file is not empty."
+        "Write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation."
       ],
       "hints": [
         "Use man useradd.",
         "Use grep to find SYNOPSIS."
       ],
       "checks": [
-        "test -s /root/rhcsa10-man.txt",
-        "grep -qi SYNOPSIS /root/rhcsa10-man.txt",
-        "wc -l /root/rhcsa10-man.txt | awk '{exit !($1 >= 1)}'"
+        "test -s /root/rhcsa10-man.txt && grep -Eqi 'SYNOPSIS|Usage:.*useradd' /root/rhcsa10-man.txt"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /root/rhcsa10-man.txt",
-        "Write the first SYNOPSIS line from man useradd to the file",
-        "Ensure the file is not empty"
+        "Write the first usage summary for useradd to /root/rhcsa10-man.txt using"
       ],
       "task_points": [
-        10,
-        10,
         10
       ],
       "solution_commands": [
         [
-          "man useradd | col -b | grep -m1 -A1 '^SYNOPSIS' > /root/rhcsa10-man.txt"
-        ],
-        [
+          "if man useradd >/tmp/rhcsa10-useradd-man.txt 2>/dev/null; then man useradd | col -b | grep -m1 -A1 '^SYNOPSIS' > /root/rhcsa10-man.txt; else useradd --help | grep -m1 -A1 '^Usage' > /root/rhcsa10-man.txt; fi",
           "cat /root/rhcsa10-man.txt"
-        ],
-        [
-          "test -s /root/rhcsa10-man.txt"
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

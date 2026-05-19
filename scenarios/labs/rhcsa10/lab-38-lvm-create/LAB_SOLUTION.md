@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-38-lvm-create` |
+| Scenario ID | `lab-38-lvm-create` |
 | Mode | Lab |
 | Time limit | 40 minutes |
 | Objectives | storage-lvm |
@@ -22,7 +22,9 @@ Create and mount a logical volume.
 ## Task 01 - Create physical volume /dev/sdb (client) - 10 pts
 
 ```bash
-pvcreate /dev/sdb
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+pvcreate -ff -y /dev/sdb
 ```
 
 ---
@@ -35,10 +37,10 @@ vgcreate vg10 /dev/sdb
 
 ---
 
-## Task 03 - Create a 256 MiB logical volume lvdata formatted with XFS and mounted at (client) - 10 pts
+## Task 03 - Create a 384 MiB logical volume lvdata formatted with XFS and mounted at (client) - 10 pts
 
 ```bash
-lvcreate -L 256M -n lvdata vg10
+lvcreate -L 384M -n lvdata vg10
 mkfs.xfs -f /dev/vg10/lvdata
 mkdir -p /mnt/lvdata10
 echo '/dev/vg10/lvdata /mnt/lvdata10 xfs defaults 0 0' >> /etc/fstab

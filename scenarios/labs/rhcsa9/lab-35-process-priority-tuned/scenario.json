@@ -34,6 +34,7 @@
       ],
       "checks": [
         "# server tuned-adm active | grep -Fq 'throughput-performance'",
+        "# server test -f /root/sleep35.pid && ps -p \"$(cat /root/sleep35.pid)\" >/dev/null",
         "# server test -f /root/sleep35.pid && ps -o ni= -p \"$(cat /root/sleep35.pid)\" | tr -d '[:space:]' | grep -qx 5"
       ],
       "solution_outline": [

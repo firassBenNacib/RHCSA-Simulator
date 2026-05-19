@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-22-selinux-port` |
+| Scenario ID | `lab-22-selinux-port` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms, networking-and-firewall |
@@ -27,17 +27,10 @@ semanage port -a -t http_port_t -p tcp 8010 || semanage port -m -t http_port_t -
 
 ---
 
-## Task 02 - Configure firewalld to allow TCP port 8010 permanently (client) - 10 pts
+## Task 02 - Configure firewalld to allow TCP port 8010 permanently (client) - 20 pts
 
 ```bash
 firewall-cmd --permanent --add-port=8010/tcp
-```
-
----
-
-## Task 03 - Verify SELinux and firewall configuration (client) - 10 pts
-
-```bash
 firewall-cmd --reload
 semanage port -l | grep http_port_t
 ```

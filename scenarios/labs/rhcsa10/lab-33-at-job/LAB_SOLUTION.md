@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-33-at-job` |
+| Scenario ID | `lab-33-at-job` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |

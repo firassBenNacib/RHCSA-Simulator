@@ -112,7 +112,7 @@ Set the default inactive period for newly created local users to 10 days.
 
 ## Question 14 - Find And Copy (client) - 4 pts
 
-Find all files under /opt/exam-h/find that are owned by watcherh and were modified within the last 24 hours, then copy them to /root/watcherh-files while preserving the source directory structure.
+On client, find all files under /opt/exam-h/find that are owned by watcherh and were modified within the last 24 hours, then copy them to /root/watcherh-files while preserving the source directory structure.
 
 ---
 

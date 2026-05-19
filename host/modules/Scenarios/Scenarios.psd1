@@ -7,7 +7,24 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'Scenario catalog, manifest parsing, and exercise caching for the RHCSA Simulator.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'ConvertTo-ExerciseCheckEntry'
+    'ConvertTo-ScenarioManifest'
+    'ConvertTo-ScenarioTrack'
+    'Format-ScenarioText'
+    'Get-LabExerciseDefinition'
+    'Get-ScenarioCatalog'
+    'Get-ScenarioLabCheckScript'
+    'Get-ScenarioLabHintsMarkdown'
+    'Get-ScenarioManifest'
+    'Get-ScenarioSourceHash'
+    'Get-ScenarioStatus'
+    'Get-ScenarioTrackArray'
+    'Initialize-LabExerciseCache'
+    'Resolve-ScenarioDocPath'
+    'Resolve-ScenarioScriptPath'
+    'Test-ScenarioTrackMatch'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

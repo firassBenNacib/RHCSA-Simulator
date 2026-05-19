@@ -1,7 +1,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1')
 
 function Get-PowerShellCompletionScript {
 param(
@@ -66,7 +66,7 @@ else {
 }
 
 if (`$tokens.Count -eq 0) {
-Complete-RhcsaValues -Value @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion', 'help')
+Complete-RhcsaValues -Value @('up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion', 'help')
 return
 }
 
@@ -75,11 +75,19 @@ return
 
 switch (`$root) {
 'help' {
-Complete-RhcsaValues -Value @('up', 'down', 'destroy', 'list', 'start', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'completion')
+Complete-RhcsaValues -Value @('up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')
 return
 }
 'up' {
-Complete-RhcsaValues -Value @('-NoProvision', '-NormalStart', '-HeadlessClient', '-RealisticMode', '-ForceHostCleanup')
+if (`$last -eq '-Profile') {
+Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10')
+return
+}
+Complete-RhcsaValues -Value @('-Profile', '-Refresh', '-NoProvision', '-NormalStart', '-HeadlessClient', '-RealisticMode', '-ForceHostCleanup')
+return
+}
+'resume' {
+Complete-RhcsaValues -Value @('-ForceHostCleanup')
 return
 }
 'destroy' {
@@ -91,7 +99,7 @@ if (`$tokens.Count -le 1) {
 Complete-RhcsaValues -Value @('labs', 'exams', '-Track')
 }
 elseif (`$last -eq '-Track') {
-Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10', 'All')
+Complete-RhcsaValues -Value @('Auto', 'RHCSA9', 'RHCSA10', 'All')
 }
 return
 }
@@ -123,7 +131,7 @@ Complete-RhcsaValues -Value @('Lab', 'Exam')
 return
 }
 if (`$last -eq '-Track') {
-Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10', 'All')
+Complete-RhcsaValues -Value @('Auto', 'RHCSA9', 'RHCSA10', 'All')
 return
 }
 Complete-RhcsaValues -Value @('-Id', '-Mode', '-Track')
@@ -131,15 +139,27 @@ return
 }
 'tui' {
 if (`$last -eq '-Track') {
-Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10', 'All')
+Complete-RhcsaValues -Value @('Auto', 'RHCSA9', 'RHCSA10', 'All')
 return
 }
 Complete-RhcsaValues -Value @('-Track')
 return
 }
+'profile' {
+if (`$tokens.Count -le 1) {
+Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10')
+}
+return
+}
+'timer' {
+if (`$tokens.Count -le 1) {
+Complete-RhcsaValues -Value @('on', 'off', 'status')
+}
+return
+}
 'check' {
 if (`$last -eq '-Id') {
-Complete-RhcsaValues -Value (Get-RhcsaScenarioIds -LabsOnly)
+Complete-RhcsaValues -Value (Get-RhcsaScenarioIds)
 return
 }
 Complete-RhcsaValues -Value @('-Id')

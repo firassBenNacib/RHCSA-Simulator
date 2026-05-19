@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 	"unicode"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,7 +26,16 @@ func normalizeUnicode(s string) string {
 }
 
 func (m model) Init() tea.Cmd {
+	if m.timerEnabled {
+		return scheduleUITick()
+	}
 	return nil
+}
+
+func scheduleUITick() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return uiTickMsg(t)
+	})
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -39,6 +50,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case actionResultMsg:
 		return m.handleActionResult(msg)
+	case uiTickMsg:
+		m.now = time.Time(msg)
+		if m.busy || m.timerEnabled {
+			return m, scheduleUITick()
+		}
+		return m, nil
 	case tea.KeyMsg:
 		return m.handleKeyMsg(msg)
 	}
@@ -59,7 +76,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	mouseY := msg.Y
 
 	if isRightClick(msg) {
-		return m.handleRightClick()
+		return m.handleRightClick(mouseX, mouseY)
 	}
 
 	if isMousePress(msg) && m.showHelp {
@@ -70,8 +87,24 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	if isMousePress(msg) && !m.showHelp {
+		if sx, ex, y, ok := m.timerButtonBounds(); ok && mouseY == y && mouseX >= sx && mouseX <= ex {
+			return m.toggleTimer()
+		}
+	}
+
 	if isMousePress(msg) && !m.showHelp && !m.busy {
 		if m.confirmKind != "" {
+			if m.confirmKind == "start" && m.mouseInListPane(mouseX, mouseY) {
+				index, ok := m.selectListRowAt(mouseY)
+				if ok && m.isListDoubleClick(index) {
+					return m.confirmCmd()
+				}
+				if ok {
+					m.recordListClick(index)
+				}
+				return m, nil
+			}
 			if next, cmd, ok := m.handleConfirmFooterClick(mouseX, mouseY); ok {
 				return next, cmd
 			}
@@ -82,7 +115,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.filterMode || m.showHelp || m.busy || m.confirmKind != "" {
+	if m.showHelp || m.busy || m.confirmKind != "" {
 		return m, nil
 	}
 
@@ -119,6 +152,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			case mouseX >= labsStart && mouseX <= labsEnd:
 				m.activeTab = labsTab
 				m.ensureValidDetailMode()
+				m.normalizeSelection()
 				m.adjustListOffset()
 				m.resetDetailOffsets()
 				m.focus = focusList
@@ -127,6 +161,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			case mouseX >= examsStart && mouseX <= examsEnd:
 				m.activeTab = examsTab
 				m.ensureValidDetailMode()
+				m.normalizeSelection()
 				m.adjustListOffset()
 				m.resetDetailOffsets()
 				m.focus = focusList
@@ -150,7 +185,18 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		}
 		if m.mouseInListPane(mouseX, mouseY) {
 			m.focus = focusList
-			m.selectListRowAt(mouseY)
+			index, ok := m.selectListRowAt(mouseY)
+			if ok && m.isListDoubleClick(index) {
+				m.filterMode = false
+				m.confirmKind = "start"
+				m.confirmText = m.startConfirmText()
+				m.statusText = m.confirmText
+				m.recordListClick(index)
+				return m, nil
+			}
+			if ok {
+				m.recordListClick(index)
+			}
 			return m, nil
 		}
 		if m.mouseInDetailPane(mouseX, mouseY) {
@@ -161,7 +207,7 @@ func (m model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) handleRightClick() (tea.Model, tea.Cmd) {
+func (m model) handleRightClick(mouseX, mouseY int) (tea.Model, tea.Cmd) {
 	if m.showHelp {
 		m.showHelp = false
 		return m, nil
@@ -186,6 +232,22 @@ func (m model) handleRightClick() (tea.Model, tea.Cmd) {
 	if strings.TrimSpace(m.statusText) != "" {
 		m.statusText = ""
 		return m, nil
+	}
+	if !m.busy && m.mouseInListPane(mouseX, mouseY) {
+		index, ok := m.selectListRowAt(mouseY)
+		if ok {
+			m.refreshActiveScenarioID()
+			if m.isListDoubleClick(index) {
+				m.recordListClick(index)
+				if m.cachedActiveID != "" && m.currentScenarioID() == m.cachedActiveID {
+					return m.confirmExitRunAction()
+				}
+				m.statusText = "Select the active lab or exam to exit it"
+				return m, nil
+			}
+			m.recordListClick(index)
+			return m, nil
+		}
 	}
 	if m.focus == focusDetail {
 		m.focus = focusList
@@ -217,6 +279,8 @@ func (m model) handleConfirmFooterClick(mouseX, mouseY int) (tea.Model, tea.Cmd,
 				confirmAction = footerActionStart
 			case "reset":
 				confirmAction = footerActionReset
+			case "exit-run":
+				confirmAction = footerActionExitRun
 			}
 			if bound.id == confirmAction {
 				next, cmd := m.confirmCmd()
@@ -234,16 +298,14 @@ func (m model) handleConfirmFooterClick(mouseX, mouseY int) (tea.Model, tea.Cmd,
 func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 	switch action {
 	case footerActionStart:
-		if m.activeScenarioID() == m.currentScenarioID() {
-			m.statusText = "Already started - use Reset to start over"
-			return m, nil
-		}
 		m.confirmKind = "start"
 		m.confirmText = m.startConfirmText()
 		m.statusText = m.confirmText
 		return m, nil
 	case footerActionReset:
 		return m.handleResetAction()
+	case footerActionExitRun:
+		return m.confirmExitRunAction()
 	case footerActionPane:
 		m.switchPaneFocus()
 		return m, nil
@@ -269,9 +331,7 @@ func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case footerActionChecks:
-		if m.activeTab == labsTab {
-			m.setDetailMode(detailCheck)
-		}
+		m.setDetailMode(detailCheck)
 		return m, nil
 	case footerActionSolutions:
 		m.setDetailMode(detailSolution)
@@ -300,6 +360,8 @@ func (m model) handleFooterAction(action footerActionID) (tea.Model, tea.Cmd) {
 		return m.handleSSHAction("client")
 	case footerActionSSHServer:
 		return m.handleSSHAction("server")
+	case footerActionTimer:
+		return m.toggleTimer()
 	default:
 		return m, nil
 	}
@@ -321,39 +383,53 @@ func (m model) mouseInDetailPane(x, y int) bool {
 	return x >= originX && x < originX+m.detailPaneWidth() && y >= originY && y < originY+m.detailPaneHeight()
 }
 
-func (m *model) selectListRowAt(y int) {
+func (m *model) selectListRowAt(y int) (int, bool) {
 	contentY := 2
 	listY := y - contentY
 	if m.useStackedLayout() {
 		if listY < 0 || listY >= m.listPaneHeight() {
-			return
+			return -1, false
 		}
 	} else if listY < 0 || listY >= m.contentHeight() {
-		return
+		return -1, false
 	}
 
 	row := listY - 2
 	if row < 0 {
-		return
+		return -1, false
 	}
 
 	index := m.listOffset + row
 	if m.activeTab == labsTab {
 		labs := m.filteredLabs()
 		if index < 0 || index >= len(labs) {
-			return
+			return -1, false
 		}
 		m.selectedLab = index
 		m.touchViewed()
 	} else {
 		exams := m.filteredExams()
 		if index < 0 || index >= len(exams) {
-			return
+			return -1, false
 		}
 		m.selectedExam = index
 	}
 	m.adjustListOffset()
 	m.resetDetailOffsets()
+	return index, true
+}
+
+func (m model) isListDoubleClick(index int) bool {
+	if index < 0 || m.lastListClickIndex != index || m.lastListClickTab != m.activeTab {
+		return false
+	}
+	return time.Since(m.lastListClickAt) <= 550*time.Millisecond
+}
+
+func (m *model) recordListClick(index int) {
+	m.lastListClickTab = m.activeTab
+	m.lastListClickIndex = index
+	m.lastListClickAt = time.Now()
 }
 
 func (m model) copyDetailSection(index int) model {
@@ -372,6 +448,7 @@ func (m model) copyDetailSection(index int) model {
 
 func (m model) handleActionResult(msg actionResultMsg) (tea.Model, tea.Cmd) {
 	m.busy = false
+	m.actionStarted = time.Time{}
 	if msg.err != nil {
 		m.statusText = summarizeActionOutput(msg.output)
 		if m.statusText == "" {
@@ -379,22 +456,39 @@ func (m model) handleActionResult(msg actionResultMsg) (tea.Model, tea.Cmd) {
 		}
 	} else {
 		m.statusText = summarizeActionOutput(msg.output)
+		track := preferredTrack(msg.track, nil)
 		if msg.kind == "start-lab" {
 			m.refreshActiveScenarioID()
-			m.progress.TouchStarted(progress.CompositeKey(m.track, msg.labID))
+			if m.timerEnabled || m.timerDefaultEnabled {
+				m.now = time.Now()
+				m.timerEnabled = true
+				m.timerEndsAt = m.timerStartDeadline()
+			}
+			m.progress.TouchStarted(progress.CompositeKey(track, msg.labID))
 			if err := m.progress.Save(m.progressPath); err != nil {
 				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
 			}
 		}
 		if msg.kind == "start-exam" {
 			m.refreshActiveScenarioID()
-			m.progress.TouchExamStarted(progress.CompositeKey(m.track, msg.labID))
+			if m.timerEnabled || m.timerDefaultEnabled {
+				m.now = time.Now()
+				m.timerEnabled = true
+				m.timerEndsAt = m.timerStartDeadline()
+			}
+			m.progress.TouchExamStarted(progress.CompositeKey(track, msg.labID))
 			if err := m.progress.Save(m.progressPath); err != nil {
 				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
 			}
 		}
 		if msg.kind == "check-lab" {
-			m.progress.TouchChecked(progress.CompositeKey(m.track, msg.labID), msg.passed)
+			m.progress.TouchChecked(progress.CompositeKey(track, msg.labID), msg.passed)
+			if err := m.progress.Save(m.progressPath); err != nil {
+				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
+			}
+		}
+		if msg.kind == "check-exam" {
+			m.progress.TouchExamChecked(progress.CompositeKey(track, msg.labID), msg.passed)
 			if err := m.progress.Save(m.progressPath); err != nil {
 				m.statusText += "\nWarning: Failed to save progress: " + err.Error()
 			}
@@ -424,12 +518,6 @@ func (m model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) handleFilterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if text, ok := filterTextForKey(msg); ok {
-		m.filterQuery += text
-		m.normalizeSelection()
-		m.adjustListOffset()
-		return m, nil
-	}
 	switch msg.Type {
 	case tea.KeyEsc:
 		if m.filterQuery != "" {
@@ -444,6 +532,46 @@ func (m model) handleFilterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.filterMode = false
 		m.statusText = ""
 		return m, nil
+	case tea.KeyUp:
+		m.moveSelection(-1)
+		return m, nil
+	case tea.KeyDown:
+		m.moveSelection(1)
+		return m, nil
+	case tea.KeyPgUp:
+		m.moveSelection(-(m.listPageSize() - 1))
+		return m, nil
+	case tea.KeyPgDown:
+		m.moveSelection(m.listPageSize() - 1)
+		return m, nil
+	case tea.KeyHome:
+		if m.activeTab == labsTab {
+			m.selectedLab = 0
+			m.touchViewed()
+		} else {
+			m.selectedExam = 0
+		}
+		m.adjustListOffset()
+		m.resetDetailOffsets()
+		return m, nil
+	case tea.KeyEnd:
+		if m.activeTab == labsTab && len(m.filteredLabs()) > 0 {
+			m.selectedLab = len(m.filteredLabs()) - 1
+			m.touchViewed()
+		} else if m.activeTab == examsTab && len(m.filteredExams()) > 0 {
+			m.selectedExam = len(m.filteredExams()) - 1
+		}
+		m.adjustListOffset()
+		m.resetDetailOffsets()
+		return m, nil
+	case tea.KeyTab, tea.KeyShiftTab, tea.KeyLeft, tea.KeyRight:
+		if m.activeTab == labsTab {
+			m.switchCatalogTab(1)
+		} else {
+			m.switchCatalogTab(-1)
+		}
+		m.normalizeSelection()
+		return m, nil
 	case tea.KeyBackspace, tea.KeyDelete:
 		if len(m.filterQuery) > 0 {
 			runes := []rune(m.filterQuery)
@@ -454,6 +582,40 @@ func (m model) handleFilterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyCtrlU:
 		m.filterQuery = ""
+		m.normalizeSelection()
+		m.adjustListOffset()
+		return m, nil
+	}
+	switch msg.String() {
+	case "k":
+		m.moveSelection(-1)
+		return m, nil
+	case "j":
+		m.moveSelection(1)
+		return m, nil
+	case "g":
+		if m.activeTab == labsTab {
+			m.selectedLab = 0
+			m.touchViewed()
+		} else {
+			m.selectedExam = 0
+		}
+		m.adjustListOffset()
+		m.resetDetailOffsets()
+		return m, nil
+	case "G":
+		if m.activeTab == labsTab && len(m.filteredLabs()) > 0 {
+			m.selectedLab = len(m.filteredLabs()) - 1
+			m.touchViewed()
+		} else if m.activeTab == examsTab && len(m.filteredExams()) > 0 {
+			m.selectedExam = len(m.filteredExams()) - 1
+		}
+		m.adjustListOffset()
+		m.resetDetailOffsets()
+		return m, nil
+	}
+	if text, ok := filterTextForKey(msg); ok {
+		m.filterQuery += text
 		m.normalizeSelection()
 		m.adjustListOffset()
 		return m, nil
@@ -476,6 +638,8 @@ func (m model) handleBusyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q", "Q":
 		return m, tea.Quit
+	case "t", "T":
+		return m.toggleTimer()
 	}
 	return m, nil
 }
@@ -509,17 +673,15 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.setDetailMode(detailSolution)
 		return m, nil
 	case matchesCheckViewKey(msg):
-		if m.activeTab == labsTab {
-			m.setDetailMode(detailCheck)
-		} else {
-			m.setDetailMode(detailPrompt)
-		}
+		m.setDetailMode(detailCheck)
 		return m, nil
 	}
 
 	switch msg.String() {
 	case "ctrl+c", "q", "Q":
 		return m, tea.Quit
+	case "t", "T":
+		return m.toggleTimer()
 	case "tab", "shift+tab":
 		m.switchPaneFocus()
 		return m, nil
@@ -618,10 +780,6 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case "enter", "s", "S":
-		if m.activeScenarioID() == m.currentScenarioID() {
-			m.statusText = "Already started - use Reset to start over"
-			return m, nil
-		}
 		m.confirmKind = "start"
 		m.confirmText = m.startConfirmText()
 		m.statusText = m.confirmText
@@ -630,6 +788,8 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleCheckAction()
 	case "r", "R":
 		return m.handleResetAction()
+	case "e", "E":
+		return m.confirmExitRunAction()
 	case "z", "Z":
 		return m.handleSSHAction("client")
 	case "x", "X":
@@ -648,25 +808,27 @@ func (m model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m model) handleCheckAction() (tea.Model, tea.Cmd) {
 	if !m.simulatorBuilt() {
-		m.statusText = "Simulator not built\nRun 'RHCSA.ps1 up' or start a lab first"
+		m.statusText = "Simulator not built\nRun 'RHCSA.ps1 up' or start a lab or exam first"
 		return m, nil
 	}
-	if m.activeTab != labsTab {
-		m.statusText = "Checks are available for labs only"
-		return m, nil
-	}
+	m.refreshActiveScenarioID()
 	activeID := m.activeScenarioID()
 	if activeID == "" {
-		m.statusText = "No lab started\nStart a lab before running checks"
+		m.statusText = "No active lab or exam\nStart a lab or exam before running checks"
 		return m, nil
 	}
 	m.busy = true
-	if activeID != m.currentLab().ID {
-		m.statusText = fmt.Sprintf("Checking %s (active lab)", activeID)
+	m.actionStarted = time.Now()
+	mode := m.activeScenarioMode()
+	if mode == "" {
+		mode = m.scenarioModeByID(activeID)
+	}
+	if activeID != m.currentScenarioID() {
+		m.statusText = fmt.Sprintf("Checking %s (active run)", activeID)
 	} else {
 		m.statusText = "Running checks"
 	}
-	return m, m.checkActiveLabCmd()
+	return m, tea.Batch(m.checkActiveRunCmd(activeID, mode), scheduleUITick())
 }
 
 func (m model) handleResetAction() (tea.Model, tea.Cmd) {
@@ -680,68 +842,191 @@ func (m model) handleResetAction() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) confirmExitRunAction() (tea.Model, tea.Cmd) {
+	m.refreshActiveScenarioID()
+	activeID := m.activeScenarioID()
+	if activeID == "" {
+		m.timerEnabled = false
+		m.timerEndsAt = time.Time{}
+		m.statusText = "No active lab or exam"
+		return m, nil
+	}
+
+	m.confirmKind = "exit-run"
+	m.confirmText = fmt.Sprintf("Exit %s? Press y/Enter or click Exit.", activeID)
+	m.statusText = m.confirmText
+	return m, nil
+}
+
+func (m model) handleExitRunAction() (tea.Model, tea.Cmd) {
+	m.refreshActiveScenarioID()
+	activeID := m.activeScenarioID()
+	if activeID == "" {
+		m.timerEnabled = false
+		m.timerEndsAt = time.Time{}
+		m.statusText = "No active lab or exam"
+		return m, nil
+	}
+
+	if err := os.Remove(m.activeRunPath()); err != nil && !os.IsNotExist(err) {
+		m.statusText = "Exit run failed\n" + err.Error()
+		return m, nil
+	}
+
+	m.cachedActiveID = ""
+	m.cachedActiveMode = ""
+	m.cachedStartedAt = time.Time{}
+	m.cachedEndsAt = time.Time{}
+	m.cachedTimeLimitMinutes = 0
+	m.timerEnabled = false
+	m.timerEndsAt = time.Time{}
+	m.statusText = fmt.Sprintf("Exited %s", activeID)
+	return m, nil
+}
+
 func (m model) handleSSHAction(machine string) (tea.Model, tea.Cmd) {
 	if !m.simulatorBuilt() {
 		m.statusText = "Simulator not built\nRun 'RHCSA.ps1 up' or start a lab first"
 		return m, nil
 	}
+	m.refreshActiveScenarioID()
+	if m.activeScenarioID() == "" {
+		m.statusText = "No active lab or exam\nStart a lab or exam before opening SSH"
+		return m, nil
+	}
 	m.busy = true
+	m.actionStarted = time.Now()
 	m.statusText = fmt.Sprintf("Opening SSH for %s", machine)
-	return m, m.sshCmd(machine)
+	return m, tea.Batch(m.sshCmd(machine), scheduleUITick())
 }
 
 func (m model) startSelectedCmd() tea.Cmd {
 	if m.activeTab == labsTab {
 		lab := m.currentLab()
-		return runActionCmd(m.runner, "start-lab", lab.ID, "start", "-Id", lab.ID, "-Mode", "Lab", "-Track", m.track)
+		track := preferredTrack(m.track, lab.Tracks)
+		return runActionCmd(m.runner, "start-lab", lab.ID, track, "start", "-Id", lab.ID, "-Mode", "Lab", "-Track", track)
 	}
 	exam := m.currentExam()
-	return runActionCmd(m.runner, "start-exam", exam.ID, "start", "-Id", exam.ID, "-Mode", "Exam", "-Track", m.track)
+	track := preferredTrack(m.track, exam.Tracks)
+	return runActionCmd(m.runner, "start-exam", exam.ID, track, "start", "-Id", exam.ID, "-Mode", "Exam", "-Track", track)
 }
 
-func (m model) checkActiveLabCmd() tea.Cmd {
-	activeID := m.activeScenarioID()
-	return runActionCmd(m.runner, "check-lab", activeID, "check")
+func (m model) startSelectedNow() (tea.Model, tea.Cmd) {
+	m.confirmKind = ""
+	m.confirmText = ""
+	m.busy = true
+	m.actionStarted = time.Now()
+	m.statusText = m.startStatusText()
+	if m.timerEnabled {
+		m.now = m.actionStarted
+		m.timerEndsAt = m.timerStartDeadline()
+	}
+	return m, tea.Batch(m.startSelectedCmd(), scheduleUITick())
+}
+
+func (m model) checkActiveRunCmd(activeID, mode string) tea.Cmd {
+	track := preferredTrack(m.track, m.scenarioTracksByID(activeID))
+	kind := "check-lab"
+	if mode == "exam" {
+		kind = "check-exam"
+	}
+	return runActionCmd(m.runner, kind, activeID, track, "check")
 }
 
 func (m model) resetCmd() tea.Cmd {
-	return runActionCmd(m.runner, "reset", "", "reset")
+	return runActionCmd(m.runner, "reset", "", "", "reset")
 }
 
 func (m model) sshCmd(machine string) tea.Cmd {
-	return runActionCmd(m.runner, "ssh-"+machine, "", "ssh", machine)
+	return runActionCmd(m.runner, "ssh-"+machine, "", "", "ssh", machine)
 }
 
 func (m model) confirmCmd() (tea.Model, tea.Cmd) {
 	switch m.confirmKind {
 	case "start":
-		m.confirmKind = ""
-		m.confirmText = ""
-		m.busy = true
-		m.statusText = m.startStatusText()
-		return m, m.startSelectedCmd()
+		return m.startSelectedNow()
 	case "reset":
 		m.confirmKind = ""
 		m.confirmText = ""
 		m.busy = true
+		m.actionStarted = time.Now()
 		m.statusText = "Resetting the active run..."
-		return m, m.resetCmd()
+		return m, tea.Batch(m.resetCmd(), scheduleUITick())
+	case "exit-run":
+		m.confirmKind = ""
+		m.confirmText = ""
+		return m.handleExitRunAction()
 	default:
 		return m, nil
 	}
 }
 
-func runActionCmd(runner *backend.Runner, kind, labID string, args ...string) tea.Cmd {
+func (m model) toggleTimer() (tea.Model, tea.Cmd) {
+	m.now = time.Now()
+	m.refreshActiveScenarioID()
+	if m.timerEnabled {
+		m.timerEnabled = false
+		m.timerEndsAt = time.Time{}
+		m.statusText = ""
+		return m, nil
+	}
+
+	if m.cachedActiveID == "" {
+		m.timerEnabled = false
+		m.timerEndsAt = time.Time{}
+		m.statusText = ""
+		return m, nil
+	}
+
+	deadline, err := m.restartActiveRunTimer(m.now)
+	if err != nil {
+		m.timerEnabled = false
+		m.timerEndsAt = time.Time{}
+		m.statusText = "Timer restart failed\n" + err.Error()
+		return m, nil
+	}
+
+	m.timerEnabled = true
+	m.timerEndsAt = deadline
+	m.statusText = ""
+	return m, scheduleUITick()
+}
+
+func (m model) timerStartDeadline() time.Time {
+	if !m.cachedEndsAt.IsZero() {
+		return m.cachedEndsAt
+	}
+	if m.cachedStartedAt.IsZero() {
+		return time.Time{}
+	}
+	minutes := m.cachedTimeLimitMinutes
+	if minutes <= 0 {
+		return time.Time{}
+	}
+	return m.cachedStartedAt.Add(time.Duration(minutes) * time.Minute)
+}
+
+func runActionCmd(runner *backend.Runner, kind, labID, track string, args ...string) tea.Cmd {
 	return func() tea.Msg {
 		output, err := runner.Run(args...)
-		lowered := strings.ToLower(output)
-		passed := err == nil && (strings.Contains(output, "All checks passed") || strings.Contains(lowered, "result: complete"))
 		return actionResultMsg{
 			kind:   kind,
 			labID:  labID,
+			track:  track,
 			output: output,
 			err:    err,
-			passed: passed,
+			passed: actionOutputPassed(output, err),
 		}
 	}
+}
+
+func actionOutputPassed(output string, err error) bool {
+	if err != nil {
+		return false
+	}
+	plainOutput := StripAnsi(output)
+	lowered := strings.ToLower(plainOutput)
+	return strings.Contains(plainOutput, "All checks passed") ||
+		strings.Contains(lowered, "result: complete") ||
+		strings.Contains(plainOutput, "Score: 100/100")
 }

@@ -31,6 +31,7 @@
         "Write one path per line."
       ],
       "checks": [
+        "test -x /usr/local/bin/listlogs31",
         "diff -u <(find /opt/lab31 -maxdepth 1 -type f -name '*.log' | sort) <(sort /root/listlogs31.out)"
       ],
       "solution_outline": [

@@ -22,16 +22,8 @@ Create a small shell script that processes arguments and returns the correct exi
 ## Task 01 - Create the executable script (client) - 10 pts
 
 ```bash
-vim /usr/local/bin/usercheck40
-#!/bin/bash
-user_name="$1"
-if id "$user_name" >/dev/null 2>&1; then
-  echo "EXISTS: $user_name"
-  exit 0
-else
-  echo "MISSING: $user_name"
-  exit 1
-fi
+/usr/bin/install -m 644 /dev/null /usr/local/bin/usercheck40
+test -f /usr/local/bin/usercheck40
 ```
 
 ---
@@ -39,7 +31,7 @@ fi
 ## Task 02 - The script must accept one username argument (client) - 10 pts
 
 ```bash
-# The script reads the first positional parameter as user_name.
+chmod 755 /usr/local/bin/usercheck40
 ```
 
 ---
@@ -47,7 +39,7 @@ fi
 ## Task 03 - If the user exists, print EXISTS: username to (client) - 10 pts
 
 ```bash
-# The script uses id to print EXISTS and exit 0 when the user exists.
+/usr/bin/printf '%s\n' '#!/bin/bash' 'user_name="$1"' 'if id "$user_name" >/dev/null 2>&1; then' '  echo "EXISTS: $user_name"' '  exit 0' 'fi' 'exit 1' > /usr/local/bin/usercheck40
 ```
 
 ---
@@ -55,5 +47,5 @@ fi
 ## Task 04 - If the user does not exist, print MISSING: username (client) - 10 pts
 
 ```bash
-chmod 755 /usr/local/bin/usercheck40
+/usr/bin/printf '%s\n' '#!/bin/bash' 'user_name="$1"' 'if id "$user_name" >/dev/null 2>&1; then' '  echo "EXISTS: $user_name"' '  exit 0' 'else' '  echo "MISSING: $user_name"' '  exit 1' 'fi' > /usr/local/bin/usercheck40
 ```

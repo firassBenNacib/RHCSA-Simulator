@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-25-tuned-profile` |
+| Scenario ID | `lab-25-tuned-profile` |
 | Mode | Lab |
 | Time limit | 15 minutes |
 | Objectives | processes-logs-tuning |
@@ -25,12 +25,6 @@ Ensure tuned is enabled and running.
 
 ---
 
-## Task 02 - Activate the throughput-performance tuned profile (client) - 10 pts
+## Task 02 - Activate the throughput-performance tuned profile (client) - 20 pts
 
 Activate the throughput-performance tuned profile.
-
----
-
-## Task 03 - Verify the active profile (client) - 10 pts
-
-Verify the active profile.

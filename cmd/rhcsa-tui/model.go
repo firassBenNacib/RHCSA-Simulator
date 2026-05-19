@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/firassBenNacib/rhcsa_exam_vms/internal/backend"
 	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
@@ -36,40 +37,55 @@ const (
 )
 
 type actionResultMsg struct {
-	kind     string
-	labID    string
-	output   string
-	err      error
-	passed   bool
+	kind   string
+	labID  string
+	track  string
+	output string
+	err    error
+	passed bool
 }
 
-type model struct {
-	root          string
-	labs          []catalog.Lab
-	exams         []catalog.Exam
-	runner        *backend.Runner
-	progress      *progress.State
-	progressPath  string
-	track         string
-	theme         Theme
+type uiTickMsg time.Time
 
-	activeTab      tabName
-	detail         detailMode
-	focus          paneFocus
-	selectedLab    int
-	selectedExam   int
-	listOffset     int
-	detailOffsets  [4]int
-	width          int
-	height         int
-	statusText     string
-	showHelp       bool
-	busy           bool
-	confirmKind    string
-	confirmText    string
-	filterMode     bool
-	filterQuery    string
-	cachedActiveID string
+type model struct {
+	root         string
+	labs         []catalog.Lab
+	exams        []catalog.Exam
+	runner       *backend.Runner
+	progress     *progress.State
+	progressPath string
+	track        string
+	theme        Theme
+
+	activeTab              tabName
+	detail                 detailMode
+	focus                  paneFocus
+	selectedLab            int
+	selectedExam           int
+	listOffset             int
+	detailOffsets          [4]int
+	width                  int
+	height                 int
+	statusText             string
+	showHelp               bool
+	busy                   bool
+	actionStarted          time.Time
+	confirmKind            string
+	confirmText            string
+	filterMode             bool
+	filterQuery            string
+	cachedActiveID         string
+	cachedActiveMode       string
+	cachedStartedAt        time.Time
+	cachedEndsAt           time.Time
+	cachedTimeLimitMinutes int
+	timerDefaultEnabled    bool
+	timerEnabled           bool
+	timerEndsAt            time.Time
+	now                    time.Time
+	lastListClickTab       tabName
+	lastListClickIndex     int
+	lastListClickAt        time.Time
 }
 
 func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *backend.Runner, progressState *progress.State, progressPath string, track string) model {
@@ -85,49 +101,159 @@ func newModel(root string, labs []catalog.Lab, exams []catalog.Exam, runner *bac
 		activeTab:    labsTab,
 		detail:       detailPrompt,
 		focus:        focusList,
+		now:          time.Now(),
 	}
+	m.timerDefaultEnabled = loadProjectTimerDefault(root)
 	m.refreshActiveScenarioID()
+	if m.timerDefaultEnabled && m.activeScenarioID() != "" {
+		m.timerEnabled = true
+		m.timerEndsAt = m.timerStartDeadline()
+	}
 	m.touchViewed()
 	return m
 }
 
 func (m *model) refreshActiveScenarioID() {
 	type activeScenario struct {
-		Scenario struct {
-			ID string `json:"id"`
+		StartedAt string `json:"started_at"`
+		EndsAt    string `json:"ends_at"`
+		Mode      string `json:"mode"`
+		Scenario  struct {
+			ID               string `json:"id"`
+			TimeLimitMinutes int    `json:"time_limit_minutes"`
 		} `json:"scenario"`
 	}
 
 	raw, err := os.ReadFile(filepath.Join(m.root, ".lab-state", "active-run.json"))
 	if err != nil {
 		m.cachedActiveID = ""
+		m.cachedActiveMode = ""
+		m.cachedStartedAt = time.Time{}
+		m.cachedEndsAt = time.Time{}
+		m.cachedTimeLimitMinutes = 0
 		return
 	}
 
 	var state activeScenario
 	if err := json.Unmarshal(raw, &state); err != nil {
 		m.cachedActiveID = ""
+		m.cachedActiveMode = ""
+		m.cachedStartedAt = time.Time{}
+		m.cachedEndsAt = time.Time{}
+		m.cachedTimeLimitMinutes = 0
 		return
 	}
 	m.cachedActiveID = state.Scenario.ID
+	m.cachedActiveMode = strings.ToLower(strings.TrimSpace(state.Mode))
+	m.cachedTimeLimitMinutes = state.Scenario.TimeLimitMinutes
+	if startedAt, err := time.Parse(time.RFC3339Nano, state.StartedAt); err == nil {
+		m.cachedStartedAt = startedAt
+	} else {
+		m.cachedStartedAt = time.Time{}
+	}
+	if endsAt, err := time.Parse(time.RFC3339Nano, state.EndsAt); err == nil {
+		m.cachedEndsAt = endsAt
+	} else {
+		m.cachedEndsAt = time.Time{}
+	}
+}
+
+func (m model) activeRunPath() string {
+	return filepath.Join(m.root, ".lab-state", "active-run.json")
+}
+
+func (m *model) restartActiveRunTimer(now time.Time) (time.Time, error) {
+	raw, err := os.ReadFile(m.activeRunPath())
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	var state map[string]interface{}
+	if err := json.Unmarshal(raw, &state); err != nil {
+		return time.Time{}, err
+	}
+
+	minutes := activeRunTimeLimitMinutes(state)
+	if minutes <= 0 {
+		return time.Time{}, fmt.Errorf("active run has no time limit")
+	}
+
+	startedAt := now
+	endsAt := startedAt.Add(time.Duration(minutes) * time.Minute)
+	state["started_at"] = startedAt.Format(time.RFC3339Nano)
+	state["ends_at"] = endsAt.Format(time.RFC3339Nano)
+
+	content, err := json.MarshalIndent(state, "", "  ")
+	if err != nil {
+		return time.Time{}, err
+	}
+	content = append(content, '\n')
+	if err := os.WriteFile(m.activeRunPath(), content, 0o600); err != nil {
+		return time.Time{}, err
+	}
+
+	m.refreshActiveScenarioID()
+	return endsAt, nil
+}
+
+func activeRunTimeLimitMinutes(state map[string]interface{}) int {
+	scenario, ok := state["scenario"].(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	switch value := scenario["time_limit_minutes"].(type) {
+	case float64:
+		return int(value)
+	case int:
+		return value
+	case json.Number:
+		parsed, err := value.Int64()
+		if err != nil {
+			return 0
+		}
+		return int(parsed)
+	default:
+		return 0
+	}
 }
 
 func (m model) activeScenarioID() string {
 	return m.cachedActiveID
 }
 
-func (m model) progressMarker(id string) string {
-	if m.progress == nil {
-		return " "
-	}
-	return m.progress.Marker(progress.CompositeKey(m.track, id))
+func (m model) activeScenarioMode() string {
+	return m.cachedActiveMode
 }
 
-func (m model) examProgressMarker(id string) string {
+func preferredTrack(active string, tracks []string) string {
+	if active != "" && active != "all" {
+		return active
+	}
+	for _, track := range tracks {
+		if track != "" && track != "all" {
+			return track
+		}
+	}
+	return "rhcsa9"
+}
+
+func (m model) progressKey(id string, tracks []string) string {
+	return progress.CompositeKey(preferredTrack(m.track, tracks), id)
+}
+
+func (m model) progressMarker(id string, tracks []string) string {
 	if m.progress == nil {
 		return " "
 	}
-	return m.progress.ExamMarker(progress.CompositeKey(m.track, id))
+	return m.progress.Marker(m.progressKey(id, tracks))
+}
+
+func (m model) examProgressMarker(id string, tracks []string) string {
+	if m.progress == nil {
+		return " "
+	}
+	return m.progress.ExamMarker(m.progressKey(id, tracks))
 }
 
 func (m model) simulatorBuilt() bool {
@@ -141,11 +267,11 @@ func (m *model) touchViewed() {
 	}
 	if m.activeTab == labsTab {
 		if lab := m.currentLab(); lab.ID != "" {
-			m.progress.TouchViewed(progress.CompositeKey(m.track, lab.ID))
+			m.progress.TouchViewed(m.progressKey(lab.ID, lab.Tracks))
 		}
 	} else {
 		if exam := m.currentExam(); exam.ID != "" {
-			m.progress.TouchExamViewed(progress.CompositeKey(m.track, exam.ID))
+			m.progress.TouchExamViewed(m.progressKey(exam.ID, exam.Tracks))
 		}
 	}
 }
@@ -171,6 +297,34 @@ func (m model) currentScenarioID() string {
 		return m.currentLab().ID
 	}
 	return m.currentExam().ID
+}
+
+func (m model) scenarioTracksByID(id string) []string {
+	for _, lab := range m.labs {
+		if lab.ID == id {
+			return append([]string{}, lab.Tracks...)
+		}
+	}
+	for _, exam := range m.exams {
+		if exam.ID == id {
+			return append([]string{}, exam.Tracks...)
+		}
+	}
+	return nil
+}
+
+func (m model) scenarioModeByID(id string) string {
+	for _, lab := range m.labs {
+		if lab.ID == id {
+			return "lab"
+		}
+	}
+	for _, exam := range m.exams {
+		if exam.ID == id {
+			return "exam"
+		}
+	}
+	return ""
 }
 
 func (m model) filteredLabs() []catalog.Lab {
@@ -243,13 +397,13 @@ func (m *model) normalizeSelection() {
 }
 
 func (m *model) ensureValidDetailMode() {
-	if m.activeTab == examsTab && (m.detail == detailHint || m.detail == detailCheck) {
+	if m.activeTab == examsTab && m.detail == detailHint {
 		m.detail = detailPrompt
 	}
 }
 
 func (m *model) setDetailMode(mode detailMode) {
-	if m.activeTab == examsTab && (mode == detailHint || mode == detailCheck) {
+	if m.activeTab == examsTab && mode == detailHint {
 		mode = detailPrompt
 	}
 	m.detail = mode
@@ -286,7 +440,7 @@ func (m *model) switchCatalogTab(delta int) {
 
 func (m model) availableDetailModes() []detailMode {
 	if m.activeTab == examsTab {
-		return []detailMode{detailPrompt, detailSolution}
+		return []detailMode{detailPrompt, detailCheck, detailSolution}
 	}
 	return []detailMode{detailPrompt, detailHint, detailCheck, detailSolution}
 }
@@ -341,16 +495,24 @@ func (m model) selectionProgressLabel() string {
 
 func (m model) startConfirmText() string {
 	if m.activeTab == labsTab {
-		return fmt.Sprintf("Start %s? Click Start or press y/Enter to confirm.", m.currentLab().ID)
+		return fmt.Sprintf("Start %s? Press y/Enter or click Start.", m.currentLab().ID)
 	}
-	return fmt.Sprintf("Start %s? Click Start or press y/Enter to confirm.", m.currentExam().ID)
+	return fmt.Sprintf("Start %s? Press y/Enter or click Start.", m.currentExam().ID)
 }
 
 func (m model) startStatusText() string {
 	if m.activeTab == labsTab {
-		return fmt.Sprintf("Starting %s…", m.currentLab().ID)
+		lab := m.currentLab()
+		if lab.Title != "" {
+			return fmt.Sprintf("Starting %s", lab.Title)
+		}
+		return fmt.Sprintf("Starting %s", lab.ID)
 	}
-	return fmt.Sprintf("Starting %s…", m.currentExam().ID)
+	exam := m.currentExam()
+	if exam.Title != "" {
+		return fmt.Sprintf("Starting %s", exam.Title)
+	}
+	return fmt.Sprintf("Starting %s", exam.ID)
 }
 
 const helpCloseBtn = "X"
@@ -377,8 +539,10 @@ func (m model) helpBody() string {
 		"Actions",
 		"",
 		" Enter            Start selected item",
-		" c                Check active lab",
+		" c                Check active run",
 		" r                Reset active run",
+		" e                Exit active run",
+		" t                Toggle timer",
 		" z / x            SSH client / server",
 		" /                Find",
 		" Esc              Close overlay or clear output",

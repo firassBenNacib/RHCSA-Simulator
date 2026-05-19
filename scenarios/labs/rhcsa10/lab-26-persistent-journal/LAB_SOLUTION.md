@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-26-persistent-journal` |
+| Scenario ID | `lab-26-persistent-journal` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | processes-logs-tuning |
@@ -23,6 +23,7 @@ Preserve systemd journal logs.
 
 ```bash
 mkdir -p /var/log/journal
+install -D -m 0644 /dev/null /etc/systemd/journald.conf
 ```
 
 ---
@@ -30,14 +31,7 @@ mkdir -p /var/log/journal
 ## Task 02 - Restart systemd-journald (client) - 10 pts
 
 ```bash
-sed -i 's/^#\?Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
-```
-
----
-
-## Task 03 - Verify that /var/log/journal exists (client) - 10 pts
-
-```bash
+grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf
 systemctl restart systemd-journald
 journalctl --disk-usage
 ```

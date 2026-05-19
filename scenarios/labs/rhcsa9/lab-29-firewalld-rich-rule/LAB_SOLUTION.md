@@ -23,7 +23,6 @@ Use a persistent rich rule to restrict access to a custom port by source network
 
 ```bash
 firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
-firewall-cmd --reload
 ```
 
 ---
@@ -31,5 +30,5 @@ firewall-cmd --reload
 ## Task 02 - Reload firewalld and verify that the rule is active (client) - 10 pts
 
 ```bash
-firewall-cmd --list-rich-rules
+firewall-cmd --reload
 ```

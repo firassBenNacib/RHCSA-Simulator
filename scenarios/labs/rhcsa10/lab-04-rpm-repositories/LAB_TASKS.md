@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-04-rpm-repositories` |
+| Scenario ID | `lab-04-rpm-repositories` |
 | Mode | Lab |
 | Time limit | 35 minutes |
 | Objectives | software-management |
@@ -12,25 +12,25 @@
 Configure BaseOS and AppStream repositories.
 
 ### Systems
-- server
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure a persistent BaseOS repository using http://server/repo/BaseOS (server) - 10 pts
+## Task 01 - configure a persistent BaseOS repository using http://server/repo/BaseOS (client) - 10 pts
 
-Configure a persistent BaseOS repository using http://server/repo/BaseOS/.
-
----
-
-## Task 02 - Configure a persistent AppStream repository using http://server/repo/App (server) - 10 pts
-
-Configure a persistent AppStream repository using http://server/repo/AppStream/.
+On client, configure a persistent BaseOS repository using http://server/repo/BaseOS/.
 
 ---
 
-## Task 03 - Disable GPG checks and verify both repositories are enabled (server) - 10 pts
+## Task 02 - configure a persistent AppStream repository using http://server/repo/App (client) - 10 pts
 
-Disable GPG checks and verify both repositories are enabled.
+On client, configure a persistent AppStream repository using http://server/repo/AppStream/.
+
+---
+
+## Task 03 - disable GPG checks for both RHCSA10 repositories and verify both reposit (client) - 10 pts
+
+On client, disable GPG checks for both RHCSA10 repositories and verify both repositories are enabled.

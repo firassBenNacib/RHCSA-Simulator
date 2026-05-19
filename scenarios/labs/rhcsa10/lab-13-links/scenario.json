@@ -30,7 +30,7 @@
       ],
       "checks": [
         "test \"$(cat /root/rhcsa10-original)\" = 'link source'",
-        "test \"$(stat -c %i /root/rhcsa10-original)\" = \"$(stat -c %i /root/rhcsa10-hard)\"",
+        "test -f /root/rhcsa10-original && test -f /root/rhcsa10-hard && test \"$(stat -c %i /root/rhcsa10-original)\" = \"$(stat -c %i /root/rhcsa10-hard)\"",
         "test -L /root/rhcsa10-soft && test \"$(readlink /root/rhcsa10-soft)\" = '/root/rhcsa10-original'"
       ],
       "solution_outline": [
@@ -58,5 +58,6 @@
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

@@ -1,15 +1,74 @@
 require "json"
 require "rbconfig"
 
-RHCSA_PROFILE = ENV.fetch("RHCSA_PROFILE", "rhel9").downcase
+PROJECT_PROFILE_PATH = File.join(__dir__, ".rhcsa-profile.json")
+
+def normalize_project_profile(value)
+  normalized = value.to_s.strip.downcase.gsub(/[-_]/, "")
+  case normalized
+  when "", "9", "rhel9", "rhcsa9", "ex2009"
+    "rhel9"
+  when "10", "rhel10", "rhcsa10", "ex20010"
+    "rhel10"
+  else
+    raise "Unsupported project profile '#{value}'. Use RHCSA9 or RHCSA10."
+  end
+end
+
+def load_project_profile(path)
+  return nil unless File.file?(path)
+
+  raw_json = File.read(path, encoding: "bom|utf-8")
+  data = JSON.parse(raw_json.sub(/\A\uFEFF/, ""))
+  value = data["profile"].to_s
+  value = data["track"].to_s if value.strip.empty?
+  normalize_project_profile(value)
+rescue JSON::ParserError => e
+  raise "Invalid project profile file in #{path}: #{e.message}"
+end
+
+PROJECT_PROFILE = load_project_profile(PROJECT_PROFILE_PATH)
+RHCSA_PROFILE = (PROJECT_PROFILE || ENV.fetch("RHCSA_PROFILE", "rhel9")).downcase
 DEFAULT_ISO_BY_PROFILE = {
   "rhel9" => "rhel-9.7-x86_64-dvd.iso",
   "rhel10" => "rhel-10.1-x86_64-dvd.iso"
 }
 DEFAULT_BOX_BY_PROFILE = {
   "rhel9" => "generic/rocky9",
-  "rhel10" => "rockylinux/10"
+  "rhel10" => "boxomatic/almalinux-10"
 }
+DEFAULT_BOX_URL_BY_PROFILE = {}
+DVD_CONTROLLER_BY_PROFILE = {
+  "rhel9" => "IDE Controller",
+  "rhel10" => "IDE Controller"
+}
+DVD_PORT_BY_PROFILE = {
+  "rhel9" => "1",
+  "rhel10" => "1"
+}
+
+def tune_virtualbox_guest(vb)
+  vb.gui = false
+  vb.memory = 2048
+  vb.cpus = 2
+  vb.check_guest_additions = false
+  vb.functional_vboxsf = false
+
+  return unless RHCSA_PROFILE == "rhel10"
+
+  # RHCSA10 guests need IOAPIC for the modern kernel IRQ routing. Let
+  # VirtualBox select the paravirt provider on Windows hosts; forcing KVM
+  # can hang Alma/RHEL 10 guests during early boot.
+  vb.customize [
+    "modifyvm", :id,
+    "--paravirtprovider", "default",
+    "--ioapic", "on",
+    "--boot1", "disk",
+    "--boot2", "none",
+    "--boot3", "none",
+    "--boot4", "none"
+  ]
+end
 
 unless DEFAULT_ISO_BY_PROFILE.key?(RHCSA_PROFILE)
   raise "Unsupported RHCSA_PROFILE '#{RHCSA_PROFILE}'. Use rhel9 or rhel10."
@@ -32,7 +91,11 @@ end
 
 ISO_NAME = ENV.fetch("RHCSA_ISO", DEFAULT_ISO_BY_PROFILE.fetch(RHCSA_PROFILE))
 BOX_NAME = ENV.fetch("RHCSA_BOX", DEFAULT_BOX_BY_PROFILE.fetch(RHCSA_PROFILE))
+BOX_URL = ENV.fetch("RHCSA_BOX_URL", DEFAULT_BOX_URL_BY_PROFILE.fetch(RHCSA_PROFILE, ""))
+BOX_VERSION = ENV.fetch("RHCSA_BOX_VERSION", "")
 ISO_PATH = File.expand_path(ISO_NAME, __dir__)
+DVD_CONTROLLER = DVD_CONTROLLER_BY_PROFILE.fetch(RHCSA_PROFILE)
+DVD_PORT = DVD_PORT_BY_PROFILE.fetch(RHCSA_PROFILE)
 raise "Missing ISO: #{ISO_PATH}" unless File.exist?(ISO_PATH)
 
 SSH_COMMAND_CANDIDATES = [
@@ -106,14 +169,22 @@ CLIENT_SCENARIO_SCRIPT = ensure_script_exists(resolve_scenario_script(ACTIVE_RUN
 
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_NAME
+  config.vm.box_version = BOX_VERSION unless BOX_VERSION.empty?
+  config.vm.box_url = BOX_URL unless BOX_URL.empty?
   config.vm.box_check_update = false
   config.ssh.insert_key = false
+  vagrant_home = File.join(ENV.fetch("USERPROFILE", File.expand_path("~")).tr("\\", "/"), ".vagrant.d")
+  config.ssh.private_key_path = [
+    File.join(vagrant_home, "insecure_private_keys", "vagrant.key.ed25519"),
+    File.join(vagrant_home, "insecure_private_key"),
+    File.join(vagrant_home, "insecure_private_keys", "vagrant.key.rsa")
+  ]
   config.ssh.keys_only = true
   config.ssh.connect_timeout = 30
   config.ssh.connect_retries = 15
   config.ssh.connect_retry_delay = 2
-  config.ssh.ssh_command = SSH_COMMAND_PATH if SSH_COMMAND_PATH
-  config.vm.boot_timeout = 900
+  config.ssh.extra_args = ["-o", "BatchMode=yes", "-o", "NumberOfPasswordPrompts=0"]
+  config.vm.boot_timeout = RHCSA_PROFILE == "rhel10" ? 90 : 900
   config.vm.graceful_halt_timeout = 60
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
@@ -121,23 +192,49 @@ Vagrant.configure("2") do |config|
     server.vm.hostname = "server"
     server.vm.network "private_network", ip: "192.168.122.3"
 
-    server.vm.provider "virtualbox" do |vb|
-      vb.gui = false
-      vb.memory = 2048
-      vb.cpus = 2
+  server.vm.provider "virtualbox" do |vb|
+    tune_virtualbox_guest(vb)
+
+    if RHCSA_PROFILE == "rhel10"
+      vb.customize [
+        "storagectl", :id,
+        "--name", DVD_CONTROLLER,
+        "--bootable", "off"
+      ]
 
       vb.customize [
         "storageattach", :id,
-        "--storagectl", "IDE Controller",
-        "--port", "1",
+        "--storagectl", DVD_CONTROLLER,
+        "--port", DVD_PORT,
+        "--device", "0",
+        "--type", "dvddrive",
+        "--medium", "emptydrive"
+      ]
+    else
+      vb.customize [
+        "storageattach", :id,
+        "--storagectl", DVD_CONTROLLER,
+        "--port", DVD_PORT,
         "--device", "0",
         "--type", "dvddrive",
         "--medium", ISO_PATH
       ]
     end
 
-    server.vm.provision "shell", path: "guest/common_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
-    server.vm.provision "shell", path: "guest/server_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
+    if RHCSA_PROFILE == "rhel10"
+      vb.customize [
+        "modifyvm", :id,
+        "--boot1", "disk",
+        "--boot2", "none",
+        "--boot3", "none",
+        "--boot4", "none"
+      ]
+    end
+
+  end
+
+    server.vm.provision "shell", path: "guest/common_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE, "RHCSA_NODE_NAME" => "server" }
+    server.vm.provision "shell", path: "guest/server_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE, "RHCSA_NODE_NAME" => "server" }
     if SERVER_SCENARIO_SCRIPT
       server.vm.provision "shell",
         path: SERVER_SCENARIO_SCRIPT,
@@ -157,10 +254,8 @@ Vagrant.configure("2") do |config|
     client.vm.hostname = "client"
     client.vm.network "private_network", ip: "192.168.122.2"
 
-    client.vm.provider "virtualbox" do |vb|
-      vb.gui = false
-      vb.memory = 2048
-      vb.cpus = 2
+  client.vm.provider "virtualbox" do |vb|
+    tune_virtualbox_guest(vb)
 
       vb.customize [
         "storageattach", :id,
@@ -181,8 +276,8 @@ Vagrant.configure("2") do |config|
       ]
     end
 
-    client.vm.provision "shell", path: "guest/common_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
-    client.vm.provision "shell", path: "guest/client_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE }
+    client.vm.provision "shell", path: "guest/common_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE, "RHCSA_NODE_NAME" => "client" }
+    client.vm.provision "shell", path: "guest/client_setup.sh", env: { "RHCSA_PROFILE" => RHCSA_PROFILE, "RHCSA_NODE_NAME" => "client" }
     if CLIENT_SCENARIO_SCRIPT
       client.vm.provision "shell",
         path: CLIENT_SCENARIO_SCRIPT,

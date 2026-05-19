@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from functools import lru_cache
 
+from rhcsa_scenarios.lab_normalization import normalize_lab_block
 from rhcsa_scenarios.tracks import normalize_track
 
 
@@ -36,6 +37,8 @@ from smoke_test_scenarios import ( # noqa: E402
     run_ps,
     scenario_ids,
 )
+
+SSH_WORKING_IDENTITY: dict[str, str] = {}
 
 
 CONTROL_TOKENS = {"EOF", ":wq", ":x", "exit"}
@@ -261,6 +264,11 @@ def script_requires_ssh_recovery(script: str) -> bool:
     )
 
 
+def is_console_password_recovery_task(task_text: str) -> bool:
+    lowered = task_text.lower()
+    return "recover root access" in lowered and "console" in lowered
+
+
 def render_background_network_bounce(commands: list[str]) -> str:
     payload = base64.b64encode(("set -euo pipefail\n" + "\n".join(commands)).encode("utf-8")).decode("ascii")
     return "\n".join(
@@ -275,10 +283,18 @@ def render_background_network_bounce(commands: list[str]) -> str:
     )
 
 
-def load_manifest(kind: str, scenario_id: str) -> dict:
+def load_manifest(kind: str, scenario_id: str, track: str) -> dict:
     base = LABS_DIR if kind == "lab" else EXAMS_DIR
-    track = discover_track(kind, scenario_id)
-    return json.loads((base / track / scenario_id / "scenario.json").read_text(encoding="utf-8"))
+    normalized_track = normalize_track(track)
+    if normalized_track == "all":
+        resolved_track = discover_track(kind, scenario_id)
+    else:
+        resolved_track = normalized_track
+    manifest = json.loads((base / resolved_track / scenario_id / "scenario.json").read_text(encoding="utf-8"))
+    if kind == "lab":
+        manifest.setdefault("content", {})
+        manifest["content"]["lab"] = normalize_lab_block(manifest["content"].get("lab", {}))
+    return manifest
 
 
 @lru_cache(maxsize=1)
@@ -305,16 +321,30 @@ def get_ssh_executable() -> str:
     raise RuntimeError("Could not find ssh.exe. Install the OpenSSH Client or add ssh.exe to PATH.")
 
 
+@lru_cache(maxsize=1)
+def get_vboxmanage_executable() -> str:
+    candidate = shutil.which("VBoxManage")
+    if candidate:
+        return candidate
+    if os.name == "nt":
+        fallback = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Oracle" / "VirtualBox" / "VBoxManage.exe"
+        if fallback.exists():
+            return str(fallback)
+    raise RuntimeError("Could not find VBoxManage. Install VirtualBox or add VBoxManage to PATH.")
+
+
 def shell_quote(value: str) -> str:
     return shlex.quote(value)
 
 
-def default_vm_for_task(manifest: dict, task_text: str) -> str:
+def default_vm_for_task(manifest: dict, task_text: str, kind: str = "lab") -> str:
     lowered = task_text.lower()
     description_lower = str(manifest.get("description", "")).lower()
     if lowered.startswith("on server"):
         return "server"
     if lowered.startswith("on client"):
+        return "client"
+    if kind == "exam" and ("server:/" in lowered or "server export" in lowered):
         return "client"
     if re.search(r"\bon client\b", lowered):
         return "client"
@@ -326,11 +356,13 @@ def default_vm_for_task(manifest: dict, task_text: str) -> str:
         return "client"
     if "server" in lowered and "client" in lowered:
         return "client"
+    if kind == "exam":
+        return "client"
     if "server" in description_lower and "client" not in description_lower:
         return "server"
     if "client" in description_lower and "server" not in description_lower:
         return "client"
-    vm_scripts = manifest.get("vm_scripts", {})
+    vm_scripts = manifest.get("vm_scripts") or {}
     if len(vm_scripts) == 1:
         return next(iter(vm_scripts))
     if manifest.get("flags", {}).get("requires_server", False) and "client" not in description_lower:
@@ -703,7 +735,7 @@ def translate_task(
     normalized_lines = normalize_command_list(content["solution_commands"][task_index])
     password = extract_password(task_text, normalized_lines)
 
-    current_vm = default_vm_for_task(manifest, task_text)
+    current_vm = default_vm_for_task(manifest, task_text, kind)
     current_user = "root"
     units: list[ExecutionUnit] = []
     buffer: list[str] = []
@@ -730,6 +762,10 @@ def translate_task(
             continue
 
         if line.startswith("#"):
+            if line.startswith("#!"):
+                buffer.append(line)
+                i += 1
+                continue
             lowered = line.lower()
             if "run on server" in lowered or lowered.startswith("# on server"):
                 flush(f"task {task_index + 1}")
@@ -808,22 +844,14 @@ def translate_task(
             return TaskPlan(False, units, current_vm, current_user, f"Interactive partitioning is not auto-replayable in task {task_index + 1}")
 
         if is_network_bounce_command(line):
-            flush(f"task {task_index + 1}")
-            bounce_commands = [line]
             next_index = i + 1
             if next_index < len(normalized_lines) and is_network_restore_command(normalized_lines[next_index].rstrip()):
-                bounce_commands.append(normalized_lines[next_index].rstrip())
                 next_index += 1
-            units.append(
-                ExecutionUnit(
-                    vm=current_vm,
-                    user=current_user,
-                    script="set -euo pipefail\n" + render_background_network_bounce(bounce_commands),
-                    description=f"task {task_index + 1}",
-                    requires_ssh_recovery=True,
-                )
-            )
             i = next_index
+            continue
+
+        if is_network_restore_command(line):
+            i += 1
             continue
 
         buffer.append(line)
@@ -857,6 +885,12 @@ def run_remote_script(vm: str, user: str, script: str, timeout: int) -> subproce
         payload_prefix += (
             'export XDG_RUNTIME_DIR="/tmp/podman-run-$(id -u)"\n'
             'install -d -m 700 "$XDG_RUNTIME_DIR"\n'
+            'if ! podman_probe_output="$(podman info 2>&1)"; then\n'
+            '  if printf "%s\\n" "$podman_probe_output" | grep -Fq "current system boot ID differs from cached boot ID"; then\n'
+            '    rm -rf "$XDG_RUNTIME_DIR/containers" "$XDG_RUNTIME_DIR/libpod/tmp"\n'
+            "  fi\n"
+            "fi\n"
+            "unset podman_probe_output\n"
         )
     payload_script = payload_prefix + script
     encoded = base64.b64encode(payload_script.encode("utf-8")).decode("ascii")
@@ -883,14 +917,7 @@ def run_remote_script(vm: str, user: str, script: str, timeout: int) -> subproce
         "exit $status",
     ]
     remote_command = "\n".join(remote_lines)
-    return subprocess.run(
-        build_ssh_command(vm, remote_command),
-        cwd=ROOT,
-        text=True,
-        errors="replace",
-        capture_output=True,
-        timeout=timeout,
-    )
+    return run_ssh_command(vm, remote_command, timeout)
 
 
 def execution_timeout_for_unit(unit: ExecutionUnit, default_timeout: int) -> int:
@@ -901,9 +928,13 @@ def execution_timeout_for_unit(unit: ExecutionUnit, default_timeout: int) -> int
 
 
 @lru_cache(maxsize=8)
-def get_ssh_config(vm: str) -> dict[str, str]:
+def get_ssh_config(vm: str) -> dict[str, str | list[str]]:
     if os.name != "nt":
         raise RuntimeError("Run verify_scenario_solutions.py with Windows Python from PowerShell.")
+    fast_config = get_ssh_config_from_virtualbox(vm)
+    if fast_config:
+        return fast_config
+
     proc = subprocess.run(
         [get_vagrant_executable(), "ssh-config", vm],
         cwd=ROOT,
@@ -913,7 +944,7 @@ def get_ssh_config(vm: str) -> dict[str, str]:
         timeout=60,
         check=True,
     )
-    config: dict[str, str] = {}
+    config_values: dict[str, list[str]] = {}
     for raw_line in proc.stdout.splitlines():
         line = raw_line.strip()
         if not line or line.lower().startswith("host "):
@@ -921,12 +952,70 @@ def get_ssh_config(vm: str) -> dict[str, str]:
         if " " not in line:
             continue
         key, value = line.split(None, 1)
-        config[key] = value.strip().strip('"')
+        config_values.setdefault(key, []).append(value.strip().strip('"'))
+    config: dict[str, str | list[str]] = {key: values[0] for key, values in config_values.items()}
+    if "IdentityFile" in config_values:
+        config["IdentityFiles"] = config_values["IdentityFile"]
     required = {"HostName", "User", "Port", "IdentityFile"}
     missing = required - config.keys()
     if missing:
         raise RuntimeError(f"Missing SSH config keys for {vm}: {', '.join(sorted(missing))}")
     return config
+
+
+def get_ssh_config_from_virtualbox(vm: str) -> dict[str, str | list[str]] | None:
+    machine_id_path = ROOT / ".vagrant" / "machines" / vm / "virtualbox" / "id"
+    if not machine_id_path.exists():
+        return None
+
+    vm_id = machine_id_path.read_text(encoding="utf-8").strip()
+    if not vm_id:
+        return None
+
+    try:
+        proc = subprocess.run(
+            [get_vboxmanage_executable(), "showvminfo", vm_id, "--machinereadable"],
+            cwd=ROOT,
+            text=True,
+            errors="replace",
+            capture_output=True,
+            timeout=20,
+            check=True,
+        )
+    except (subprocess.SubprocessError, OSError, RuntimeError):
+        return None
+
+    forwarding_match = None
+    for line in proc.stdout.splitlines():
+        match = re.match(r'Forwarding\(\d+\)="([^"]+)"', line.strip())
+        if not match:
+            continue
+        fields = match.group(1).split(",")
+        if len(fields) >= 6 and fields[1].lower() == "tcp" and fields[5] == "22":
+            forwarding_match = fields
+            if fields[0] == "ssh":
+                break
+
+    if not forwarding_match:
+        return None
+
+    identity_candidates = [
+        ROOT / ".vagrant" / "machines" / vm / "virtualbox" / "private_key",
+        Path(os.environ.get("USERPROFILE", "")) / ".vagrant.d" / "insecure_private_keys" / "vagrant.key.ed25519",
+        Path(os.environ.get("USERPROFILE", "")) / ".vagrant.d" / "insecure_private_key",
+        Path(os.environ.get("USERPROFILE", "")) / ".vagrant.d" / "insecure_private_keys" / "vagrant.key.rsa",
+    ]
+    identity_files = [path for path in identity_candidates if path.exists()]
+    if not identity_files:
+        return None
+
+    return {
+        "HostName": forwarding_match[2] or "127.0.0.1",
+        "User": "vagrant",
+        "Port": forwarding_match[3],
+        "IdentityFile": str(identity_files[0]),
+        "IdentityFiles": [str(path) for path in identity_files],
+    }
 
 
 @lru_cache(maxsize=8)
@@ -956,10 +1045,30 @@ def get_secured_identity_file(identity_path: str) -> str:
     return str(target)
 
 
-def build_ssh_command(vm: str, remote_command: str) -> list[str]:
+def get_ssh_identity_files(vm: str) -> list[str]:
+    ssh_config = get_ssh_config(vm)
+    identity_values = ssh_config.get("IdentityFiles")
+    if not identity_values:
+        identity_values = [ssh_config["IdentityFile"]]
+    if isinstance(identity_values, str):
+        identity_values = [identity_values]
+
+    ordered = [str(identity_file) for identity_file in identity_values]
+    cached_identity = SSH_WORKING_IDENTITY.get(vm)
+    if cached_identity and cached_identity in ordered:
+        ordered = [cached_identity] + [identity_file for identity_file in ordered if identity_file != cached_identity]
+    return ordered
+
+
+def build_ssh_command(vm: str, remote_command: str, identity_file: str | None = None) -> list[str]:
     ssh_config = get_ssh_config(vm)
     null_known_hosts = "NUL" if os.name == "nt" else "/dev/null"
-    identity_file = get_secured_identity_file(ssh_config["IdentityFile"])
+    identity_values = [identity_file] if identity_file else get_ssh_identity_files(vm)
+
+    identity_args: list[str] = []
+    for identity_file in identity_values:
+        identity_args.extend(["-i", get_secured_identity_file(str(identity_file))])
+
     return [
         get_ssh_executable(),
         "-o",
@@ -973,6 +1082,8 @@ def build_ssh_command(vm: str, remote_command: str) -> list[str]:
         "-o",
         "KbdInteractiveAuthentication=no",
         "-o",
+        "NumberOfPasswordPrompts=0",
+        "-o",
         "StrictHostKeyChecking=no",
         "-o",
         "IdentitiesOnly=yes",
@@ -981,18 +1092,87 @@ def build_ssh_command(vm: str, remote_command: str) -> list[str]:
         "-o",
         "ConnectTimeout=5",
         "-o",
+        "ConnectionAttempts=1",
+        "-o",
         "ServerAliveInterval=15",
         "-o",
         "ServerAliveCountMax=8",
         "-o",
         "TCPKeepAlive=yes",
-        "-i",
-        identity_file,
+        "-o",
+        "LogLevel=ERROR",
+        "-o",
+        "RequestTTY=no",
+        *identity_args,
         "-p",
-        ssh_config["Port"],
+        str(ssh_config["Port"]),
         f"{ssh_config['User']}@{ssh_config['HostName']}",
         remote_command,
     ]
+
+
+def run_ssh_process(args: list[str], timeout: int) -> subprocess.CompletedProcess[str]:
+    proc = subprocess.Popen(
+        args,
+        cwd=ROOT,
+        text=True,
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(args, proc.returncode, stdout, stderr)
+    except subprocess.TimeoutExpired:
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                cwd=ROOT,
+                text=True,
+                errors="replace",
+                capture_output=True,
+                timeout=15,
+            )
+        else:
+            proc.kill()
+
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            stdout, stderr = "", ""
+        timeout_message = f"\nCommand timed out after {timeout} seconds."
+        return subprocess.CompletedProcess(args, 124, stdout, (stderr or "") + timeout_message)
+
+
+def is_retryable_ssh_transport_failure(result: subprocess.CompletedProcess[str]) -> bool:
+    if result.returncode != 255:
+        return False
+    combined = f"{result.stdout}\n{result.stderr}"
+    return re.search(
+        r"Permission denied|Too many authentication failures|Connection closed|Connection reset|Connection timed out|No route to host|kex_exchange_identification",
+        combined,
+        re.IGNORECASE,
+    ) is not None
+
+
+def run_ssh_command(vm: str, remote_command: str, timeout: int) -> subprocess.CompletedProcess[str]:
+    last_result: subprocess.CompletedProcess[str] | None = None
+    for identity_file in get_ssh_identity_files(vm):
+        args = build_ssh_command(vm, remote_command, identity_file=identity_file)
+        result = run_ssh_process(args, timeout)
+        if result.returncode == 0:
+            SSH_WORKING_IDENTITY[vm] = identity_file
+            return result
+
+        last_result = result
+        if not is_retryable_ssh_transport_failure(result):
+            return result
+
+    if last_result is not None:
+        return last_result
+
+    return run_ssh_process(build_ssh_command(vm, remote_command), timeout)
 
 
 def wait_for_vm_ssh(vm: str, timeout: int = 120) -> None:
@@ -1001,14 +1181,7 @@ def wait_for_vm_ssh(vm: str, timeout: int = 120) -> None:
     last_error: str | None = None
     while time.time() < deadline:
         try:
-            probe = subprocess.run(
-                build_ssh_command(vm, "true"),
-                cwd=ROOT,
-                text=True,
-                errors="replace",
-                capture_output=True,
-                timeout=15,
-            )
+            probe = run_ssh_command(vm, "true", 15)
             if probe.returncode == 0:
                 return
             last_error = (probe.stdout + probe.stderr).strip() or f"ssh probe exited {probe.returncode}"
@@ -1053,17 +1226,58 @@ def run_exam_checks(manifest: dict, timeout: int) -> tuple[int, int, list[str]]:
     checks = manifest["content"]["exam"].get("checks", [])
     passed = 0
     failures: list[str] = []
+    requires_server = bool(manifest.get("flags", {}).get("requires_server", False))
     for index, command in enumerate(checks, start=1):
         print(f"  exam check {index}/{len(checks)}", flush=True)
+        proc = run_remote_script("client", "root", f"set -euo pipefail\n{command}", timeout)
+        if proc.returncode == 0:
+            passed += 1
+            continue
+
+        # Fast path failed. Most exam checks are client-side and should run as
+        # one shell so variable assignments such as rec="$(...)" remain in
+        # scope. Only use the older per-clause server fallback for mixed
+        # client/server checks without shell-local state.
+        has_shell_assignment = re.search(r"(^|;\s*|&&\s*|\|\|\s*)[A-Za-z_][A-Za-z0-9_]*=", command) is not None
+        if (not requires_server) or has_shell_assignment:
+            failures.append(
+                (
+                    f"check {index}: {command}\n"
+                    f"[client] exit {proc.returncode}\n"
+                    f"{proc.stdout}{proc.stderr}"
+                ).strip()
+            )
+            continue
+
         check_ok = True
         for clause_index, clause in enumerate(split_top_level_and_clauses(command), start=1):
             target_vm, effective_command = resolve_exam_check_clause(clause)
-            proc = run_remote_script(target_vm, "root", f"set -euo pipefail\n{effective_command}", timeout)
-            if proc.returncode != 0:
+            candidate_targets = [target_vm]
+            if requires_server and target_vm == "client" and not clause.strip().startswith("ssh "):
+                candidate_targets.append("server")
+
+            attempts: list[tuple[str, subprocess.CompletedProcess[str]]] = []
+            clause_passed = False
+            for candidate_target in candidate_targets:
+                proc = run_remote_script(candidate_target, "root", f"set -euo pipefail\n{effective_command}", timeout)
+                attempts.append((candidate_target, proc))
+                if proc.returncode == 0:
+                    clause_passed = True
+                    break
+
+            if not clause_passed:
+                details = []
+                for attempted_target, attempted_proc in attempts:
+                    details.append(
+                        (
+                            f"[{attempted_target}] exit {attempted_proc.returncode}\n"
+                            f"{attempted_proc.stdout}{attempted_proc.stderr}"
+                        ).strip()
+                    )
                 failures.append(
                     (
-                        f"check {index} clause {clause_index} [{target_vm}]: {clause}\n"
-                        f"{proc.stdout}{proc.stderr}"
+                        f"check {index} clause {clause_index}: {clause}\n"
+                        + "\n---\n".join(details)
                     ).strip()
                 )
                 check_ok = False
@@ -1077,7 +1291,13 @@ def start_or_reset_scenario(scenario_id: str, mode: str, track: str, start_timeo
     attempts = 0
     output = ""
     transient_markers = (
+        "Connection timed out during banner exchange",
+        "Connection reset by peer",
+        "Connection refused",
+        "Failed to confirm SSH readiness",
         "Failed to confirm SSH banner readiness",
+        "Failed to validate SSH connectivity",
+        "kex_exchange_identification",
         "timeout during server version negotiating",
         "transient SSH/provider failure",
     )
@@ -1118,6 +1338,14 @@ def start_or_reset_scenario(scenario_id: str, mode: str, track: str, start_timeo
         if start_proc.returncode == 0:
             if "Already active:" not in output:
                 return True, output
+            try:
+                reset_proc = run_ps("reset", timeout_seconds=start_timeout)
+                output += reset_proc.stdout + reset_proc.stderr
+                if reset_proc.returncode == 0:
+                    return True, output
+            except subprocess.TimeoutExpired:
+                output += f"Timed out resetting active {scenario_id}; rebuilding baseline.\n"
+
             try:
                 destroy_proc = run_ps("destroy", timeout_seconds=start_timeout)
                 output += destroy_proc.stdout + destroy_proc.stderr
@@ -1174,6 +1402,41 @@ def wait_for_started_scenario(manifest: dict) -> None:
 
     if delay > 0:
         time.sleep(delay)
+
+
+def start_and_wait_scenario(
+    scenario_id: str,
+    mode: str,
+    track: str,
+    start_timeout: int,
+    manifest: dict,
+) -> tuple[bool, str]:
+    started, start_output = start_or_reset_scenario(scenario_id, mode, track, start_timeout)
+    if not started:
+        return False, start_output
+
+    try:
+        wait_for_started_scenario(manifest)
+        return True, start_output
+    except Exception as exc:  # noqa: BLE001
+        output = f"{start_output}{exc}\n"
+
+    # Snapshot restore can occasionally report success before the provider has
+    # fully reopened SSH. Retry once so long scenario sweeps do not fail on a
+    # transient readiness race.
+    restarted, restart_output = start_or_reset_scenario(scenario_id, mode, track, start_timeout)
+    output += restart_output
+    if not restarted:
+        return False, output
+    try:
+        wait_for_started_scenario(manifest)
+    except Exception as exc:  # noqa: BLE001
+        return False, f"{output}{exc}\n"
+    return True, output
+
+
+def output_reports_no_active_run(output: str) -> bool:
+    return "No active lab run found." in output or "No active run found." in output
 
 
 def apply_task_sequence(
@@ -1237,13 +1500,34 @@ def verify_lab(scenario_id: str, manifest: dict, track: str, exec_timeout: int, 
     messages: list[str] = []
     if manifest.get("flags", {}).get("password_recovery", False):
         return True, ["console-only password recovery workflow is skipped in SSH replay mode"]
-    started, start_output = start_or_reset_scenario(scenario_id, "Lab", track, start_timeout)
+    started, start_output = start_and_wait_scenario(scenario_id, "Lab", track, start_timeout, manifest)
     if not started:
         return False, [start_output]
-    try:
-        wait_for_started_scenario(manifest)
-    except Exception as exc:  # noqa: BLE001
-        return False, [str(exc)]
+
+    initial_check_proc = run_ps("check", timeout_seconds=exec_timeout)
+    initial_check_output = initial_check_proc.stdout + initial_check_proc.stderr
+    if output_reports_no_active_run(initial_check_output):
+        time.sleep(3)
+        initial_check_proc = run_ps("check", timeout_seconds=exec_timeout)
+        initial_check_output = initial_check_proc.stdout + initial_check_proc.stderr
+    if output_reports_no_active_run(initial_check_output):
+        restarted, restart_output = start_or_reset_scenario(scenario_id, "Lab", track, start_timeout)
+        if not restarted:
+            return False, [start_output, restart_output, initial_check_output]
+        try:
+            wait_for_started_scenario(manifest)
+        except Exception as exc:  # noqa: BLE001
+            return False, [restart_output, str(exc)]
+        initial_check_proc = run_ps("check", timeout_seconds=exec_timeout)
+        initial_check_output = restart_output + initial_check_proc.stdout + initial_check_proc.stderr
+    if output_reports_no_active_run(initial_check_output):
+        return False, [start_output, initial_check_output]
+    if initial_check_proc.returncode not in (0, 1):
+        return False, [initial_check_output]
+    initial_status, initial_passed, initial_total = parse_check_output(initial_check_output)
+    if initial_passed != 0:
+        return False, [f"Lab starts with pre-passed checks ({initial_passed}/{initial_total})", initial_check_output]
+    messages.append(f"initial: {initial_passed}/{initial_total} ({initial_status})")
 
     previous_passed = 0
     task_count = len(manifest["content"]["lab"]["tasks"])
@@ -1267,7 +1551,7 @@ def verify_lab(scenario_id: str, manifest: dict, track: str, exec_timeout: int, 
 
         check_proc = run_ps("check", timeout_seconds=exec_timeout)
         check_output = check_proc.stdout + check_proc.stderr
-        if "No active lab run found." in check_output:
+        if output_reports_no_active_run(check_output):
             restarted, restart_output = start_or_reset_scenario(scenario_id, "Lab", track, start_timeout)
             if not restarted:
                 return False, [restart_output, check_output]
@@ -1294,8 +1578,8 @@ def verify_lab(scenario_id: str, manifest: dict, track: str, exec_timeout: int, 
         messages.append(f"task {index + 1}: {passed}/{total}")
         if passed < previous_passed:
             return False, [f"Task {index + 1} regressed the score: {passed} < {previous_passed}", check_output]
-        if task_count == check_count and passed < index + 1:
-            return False, [f"Task {index + 1} did not unlock the expected next check ({passed}/{total})", check_output]
+        if task_count == check_count and passed != index + 1:
+            return False, [f"Task {index + 1} should unlock exactly one new check ({passed}/{total})", check_output]
         previous_passed = passed
         if index == task_count - 1 and status != "complete":
             return False, [f"Final lab state is {status} ({passed}/{total})", check_output]
@@ -1305,19 +1589,21 @@ def verify_lab(scenario_id: str, manifest: dict, track: str, exec_timeout: int, 
 
 def verify_exam(scenario_id: str, manifest: dict, track: str, exec_timeout: int, start_timeout: int) -> tuple[bool, list[str]]:
     messages: list[str] = []
-    started, start_output = start_or_reset_scenario(scenario_id, "Exam", track, start_timeout)
+    started, start_output = start_and_wait_scenario(scenario_id, "Exam", track, start_timeout, manifest)
     if not started:
         return False, [start_output]
-    try:
-        wait_for_started_scenario(manifest)
-    except Exception as exc:  # noqa: BLE001
-        return False, [str(exc)]
 
     task_count = len(manifest["content"]["exam"]["tasks"])
     current_vm: str | None = None
     current_user = "root"
     for index in range(task_count):
         print(f"  exam task {index + 1}/{task_count}", flush=True)
+        task_text = manifest["content"]["exam"]["tasks"][index]
+        if is_console_password_recovery_task(task_text):
+            current_vm = None
+            current_user = "root"
+            continue
+
         applied, error_message, current_vm, current_user = apply_task_sequence(
             manifest,
             "exam",
@@ -1350,20 +1636,17 @@ def audit_scenario(kind: str, scenario_id: str, manifest: dict) -> tuple[bool, l
 def select_ids_for_kind(kind: str, args: argparse.Namespace) -> list[str]:
     ids = scenario_ids(kind, args.track)
 
-    only = args.only
+    only_by_kind = getattr(args, "only_by_kind", None)
+    if only_by_kind is not None:
+        only = only_by_kind.get(kind, [])
+        if not only:
+            return []
+    else:
+        only = args.only
     start_from = args.start_from
     end_at = args.end_at
 
     if args.kind == "all":
-        if only:
-            resolved_only: list[str] = []
-            for token in only:
-                try:
-                    resolved_only.append(resolve_scenario_token(ids, token))
-                except SystemExit:
-                    continue
-            only = resolved_only or None
-
         if start_from:
             try:
                 start_from = resolve_scenario_token(ids, start_from)
@@ -1379,21 +1662,84 @@ def select_ids_for_kind(kind: str, args: argparse.Namespace) -> list[str]:
     return filter_ids(ids, start_from, end_at, only)
 
 
+def resolve_only_by_kind(args: argparse.Namespace) -> dict[str, list[str]] | None:
+    if args.kind != "all" or not args.only:
+        return None
+
+    resolved: dict[str, list[str]] = {"lab": [], "exam": []}
+    for token in args.only:
+        matches: list[tuple[str, str]] = []
+        errors: list[str] = []
+        for kind in ("lab", "exam"):
+            try:
+                scenario_id = resolve_scenario_token(scenario_ids(kind, args.track), token)
+            except SystemExit as exc:
+                errors.append(str(exc))
+                continue
+            matches.append((kind, scenario_id))
+
+        if len(matches) > 1:
+            formatted = ", ".join(f"[{kind}] {scenario_id}" for kind, scenario_id in matches)
+            raise SystemExit(f"Ambiguous scenario id '{token}'. Matches: {formatted}")
+        if not matches:
+            ambiguous = next((message for message in errors if message.startswith("Ambiguous scenario id")), None)
+            raise SystemExit(ambiguous or f"Unknown scenario id: {token}")
+
+        kind, scenario_id = matches[0]
+        if scenario_id not in resolved[kind]:
+            resolved[kind].append(scenario_id)
+
+    return resolved
+
+
+def normalize_kind(value: str) -> str:
+    aliases = {
+        "l": "lab",
+        "lab": "lab",
+        "labs": "lab",
+        "e": "exam",
+        "exam": "exam",
+        "exams": "exam",
+        "all": "all",
+        "both": "all",
+    }
+    normalized = aliases.get(value.lower())
+    if normalized:
+        return normalized
+    raise SystemExit(f"Unknown kind '{value}'. Use lab, exam, or all.")
+
+
+def normalize_only_kind_shortcut(args: argparse.Namespace) -> None:
+    if args.kind != "all" or not args.only or len(args.only) != 1:
+        return
+
+    lowered = args.only[0].lower()
+    if lowered in {"l", "lab", "labs", "e", "exam", "exams", "all", "both"}:
+        args.kind = normalize_kind(lowered)
+        args.only = None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Replay authored scenario solutions and verify progressive lab checks or final exam checks."
     )
-    parser.add_argument("--kind", choices=("lab", "exam", "all"), default="lab")
+    parser.add_argument("--kind", default="all", help="Scenario kind: lab/labs, exam/exams, or all.")
     parser.add_argument("--from", dest="start_from")
     parser.add_argument("--to", dest="end_at")
     parser.add_argument("--only", nargs="+")
+    parser.add_argument("--lab", dest="lab_only", nargs="+", help=argparse.SUPPRESS)
     parser.add_argument("--ensure-up", action="store_true")
     parser.add_argument("--start-timeout", type=int, default=1200)
     parser.add_argument("--exec-timeout", type=int, default=1200)
     parser.add_argument("--track", default="rhcsa9", help="Scenario track to verify: rhcsa9, rhcsa10, or all.")
     parser.add_argument("--audit-only", action="store_true", help="Only audit whether tasks are auto-replayable; do not start scenarios.")
     args = parser.parse_args()
+    if args.lab_only:
+        args.only = [*(args.only or []), *args.lab_only]
+    args.kind = normalize_kind(args.kind)
+    normalize_only_kind_shortcut(args)
     args.track = normalize_track(args.track)
+    args.only_by_kind = resolve_only_by_kind(args)
 
     if args.ensure_up:
         baseline_status = get_baseline_status()
@@ -1408,16 +1754,18 @@ def main() -> int:
         return 1
 
     failures: list[str] = []
+    selected_any = False
 
     kinds = ("lab", "exam") if args.kind == "all" else (args.kind,)
     for kind in kinds:
         ids = select_ids_for_kind(kind, args)
         if not ids:
             continue
+        selected_any = True
         print(f"\n== verify {kind}s ==")
         for index, scenario_id in enumerate(ids, start=1):
             print(f"[{index}/{len(ids)}] {scenario_id}")
-            manifest = load_manifest(kind, resolve_scenario_token(scenario_ids(kind, args.track), scenario_id))
+            manifest = load_manifest(kind, scenario_id, args.track)
             if args.audit_only:
                 ok, messages = audit_scenario(kind, scenario_id, manifest)
             elif kind == "lab":
@@ -1434,6 +1782,10 @@ def main() -> int:
                 for message in messages:
                     if message.strip():
                         print(f"    {message}")
+
+    if not selected_any:
+        print("No matching scenarios selected. Use --kind lab|exam|all and --only <scenario-id>.", file=sys.stderr)
+        return 1
 
     if failures:
         print("\nFailures:")

@@ -7,7 +7,15 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'Help and command routing support module for the RHCSA CLI.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'ConvertTo-VmName'
+    'Format-ErrorOutput'
+    'Format-HelpEntryList'
+    'Format-HelpUsageLine'
+    'Get-HelpOutput'
+    'Get-RecommendedHelpCommand'
+    'Test-HelpToken'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

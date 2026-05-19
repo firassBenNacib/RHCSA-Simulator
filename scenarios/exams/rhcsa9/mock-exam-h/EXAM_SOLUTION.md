@@ -88,12 +88,15 @@ dnf clean all
 
 ```bash
 dnf install -y httpd
-vim /etc/httpd/conf/httpd.conf
-Listen 8181
+grep -Rqs '^Listen 8181$' /etc/httpd/conf /etc/httpd/conf.d || echo 'Listen 8181' > /etc/httpd/conf.d/silverpeak-listen.conf
 firewall-cmd --permanent --add-port=8181/tcp
 firewall-cmd --reload
-semanage port -a -t http_port_t -p tcp 8181
-systemctl enable --now httpd
+semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181
+mkdir -p /var/www/html
+test -s /var/www/html/index.html || echo 'exam-h portal' > /var/www/html/index.html
+restorecon -Rv /var/www/html >/dev/null 2>&1 || true
+systemctl enable httpd
+systemctl restart httpd
 ```
 
 ---
@@ -113,7 +116,9 @@ EOF
 ## Question 07 - No-Home User (client) - 5 pts
 
 ```bash
-useradd -M -s /sbin/nologin agingh
+id agingh >/dev/null 2>&1 || useradd -M -s /sbin/nologin agingh
+usermod -s /sbin/nologin agingh
+rm -rf /home/agingh
 echo cinder9 | passwd --stdin agingh
 ```
 
@@ -214,7 +219,12 @@ tar -czf /root/usr-local-h.tar.gz /usr/local
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 673MiB
-partprobe /dev/sdb
+blockdev --rereadpt /dev/sdb || true
+partprobe /dev/sdb || true
+partx -u /dev/sdb || partx -a /dev/sdb || true
+udevadm settle
+for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done
+test -b /dev/sdb1
 mkswap /dev/sdb1
 swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
@@ -237,7 +247,7 @@ resize2fs /dev/reviewvgh/reviewh
 ```bash
 systemctl set-default multi-user.target
 systemctl enable --now rsyslog
-systemctl disable --now postfix
+if systemctl list-unit-files postfix.service 2>/dev/null | grep -q '^postfix.service'; then systemctl disable --now postfix; fi
 ```
 
 ---
@@ -267,5 +277,7 @@ exit
 ## Question 22 - Recommended Tuned Profile (client) - 4 pts
 
 ```bash
-tuned-adm profile "$(tuned-adm recommend)"
+rec="$(tuned-adm recommend | awk 'NF{print $1; exit}')"
+test -n "$rec"
+tuned-adm profile "$rec"
 ```

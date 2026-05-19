@@ -7,7 +7,13 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'PowerShell tab completion module for the RHCSA CLI.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'Complete-RhcsaValues'
+    'Get-PowerShellCompletionScript'
+    'Get-RhcsaScenarioIds'
+    'Install-PowerShellCompletion'
+    'New-RhcsaCompletionResult'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

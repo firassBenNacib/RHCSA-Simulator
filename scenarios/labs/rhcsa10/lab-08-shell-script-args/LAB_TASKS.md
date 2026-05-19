@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-08-shell-script-args` |
+| Scenario ID | `lab-08-shell-script-args` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | shell-scripting |
@@ -19,18 +19,12 @@ Create a shell script that processes command-line arguments.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /usr/local/bin/rhcsa10-user-report (client) - 10 pts
+## Task 01 - Create /usr/local/bin/rhcsa10-user-report with the required argument han (client) - 10 pts
 
-Create /usr/local/bin/rhcsa10-user-report.
-
----
-
-## Task 02 - The script must print usage: rhcsa10-user-report USER when no argument i (client) - 10 pts
-
-The script must print usage: rhcsa10-user-report USER when no argument is supplied.
+Create /usr/local/bin/rhcsa10-user-report with the required argument handling.
 
 ---
 
-## Task 03 - When a user name is supplied, print that user's primary group name (client) - 10 pts
+## Task 02 - Make the script executable and confirm it prints a supplied user's prima (client) - 10 pts
 
-When a user name is supplied, print that user's primary group name.
+Make the script executable and confirm it prints a supplied user's primary group.
