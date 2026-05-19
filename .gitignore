@@ -2,6 +2,7 @@
 .vagrant/
 .lab-state/
 .lab-disks/
+.rhcsa-profile.json
 *.box
 output/
 builds/
@@ -10,6 +11,8 @@ packer_cache/
 # Logs and temp files
 *.log
 *.tmp
+*.zip
+NUL
 .tmp-parse.ps1
 *.test
 *.coverprofile
@@ -21,6 +24,8 @@ Thumbs.db
 # Python cache
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 
 # Local images and release output
 *.iso

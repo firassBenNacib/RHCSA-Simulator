@@ -2841,7 +2841,7 @@ fi
     }
 
     if ($needsReboot) {
-        Write-WorkflowStatus -Area 'baseline' -Message 'Rebooting RHCSA10 guests to enable SELinux' -Index 7
+        Write-WorkflowStatus -Area 'baseline' -Message 'Preparing system policy' -Index 7
         foreach ($machine in @('server', 'client')) {
             Invoke-VagrantVmShellCommandCapture `
                 -MachineName $machine `
@@ -3773,16 +3773,16 @@ function Start-BaselineSession {
     Set-WorkflowProgress -Area 'baseline' -Index 0 -Total $workflowProgressTotal
 
     try {
-        Write-WorkflowStatus -Area 'baseline' -Message 'Preparing lab environment' -Index 1
+        Write-WorkflowStatus -Area 'baseline' -Message 'Preparing environment' -Index 1
         Assert-ProjectVagrantBoxReady -ProjectRoot $ProjectRoot
 
         try {
             Push-Location $ProjectRoot
             try {
                 if ($NoProvision) {
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting server' -Index 2
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning server' -Index 2
                     Invoke-VagrantMachineStep -MachineName 'server' -ProjectRoot $ProjectRoot
-                    Write-WorkflowStatus -Area 'baseline' -Message 'Starting client' -Index 4
+                    Write-WorkflowStatus -Area 'baseline' -Message 'Provisioning client' -Index 4
                     Invoke-VagrantMachineStep -MachineName 'client' -ProjectRoot $ProjectRoot
                 }
                 else {
@@ -3850,10 +3850,10 @@ function Start-BaselineSession {
             Assert-GuestBaselineMarker -MachineName 'server' -ProjectRoot $ProjectRoot
             Assert-GuestBaselineMarker -MachineName 'client' -ProjectRoot $ProjectRoot
 
-            Write-WorkflowStatus -Area 'baseline' -Message 'Preparing SELinux baseline' -Index 7
+            Write-WorkflowStatus -Area 'baseline' -Message 'Preparing system policy' -Index 7
             Enable-Rhel10SelinuxBeforeBaselineSnapshot -ProjectRoot $ProjectRoot
 
-            Write-WorkflowStatus -Area 'baseline' -Message 'Validating offline package repository' -Index 8
+            Write-WorkflowStatus -Area 'baseline' -Message 'Validating offline repository' -Index 8
             $repoRetryCount = if ((Get-ProjectProfile -ProjectRoot $ProjectRoot) -eq 'rhel10') { 36 } else { 12 }
             $repoHealth = Test-BaselineOfflineRepoHealth -ProjectRoot $ProjectRoot -RetryCount $repoRetryCount
             if (-not $repoHealth.Passed) {

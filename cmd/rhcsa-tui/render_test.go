@@ -255,6 +255,29 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	}
 }
 
+func TestNarrowFooterKeepsCriticalShortcuts(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 38
+	m.height = 18
+
+	footer := StripAnsi(m.renderFooter(m.width))
+	for _, want := range []string{"Enter Start", "? Help", "q Quit"} {
+		if !strings.Contains(footer, want) {
+			t.Fatalf("expected narrow footer to contain %q, got %q", want, footer)
+		}
+	}
+
+	ids := map[footerActionID]bool{}
+	for _, bound := range m.footerActionBounds(m.width) {
+		ids[bound.id] = true
+	}
+	for _, id := range []footerActionID{footerActionStart, footerActionHelp, footerActionQuit} {
+		if !ids[id] {
+			t.Fatalf("expected footer action %v to have click bounds in %q", id, footer)
+		}
+	}
+}
+
 func TestExamChecksRenderInDetailPane(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.activeTab = examsTab
