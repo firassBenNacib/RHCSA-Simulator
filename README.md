@@ -312,7 +312,7 @@ The saved project profile controls:
 
 Advanced users can still override ISO or box selection with `RHCSA_ISO`, `RHCSA_BOX`, and `RHCSA_BOX_URL`, but normal usage should go through `.\RHCSA.ps1 profile RHCSA9|RHCSA10`.
 
-The RHCSA 10 content track contains 48 labs and 8 mock exams. It is audit-validated in CI; full VM replay requires a local RHEL 10-compatible baseline with the required ISO and VirtualBox provider.
+Both bundled tracks contain 48 labs and 8 mock exams. RHCSA 9 is the default validated baseline. RHCSA 10 uses a separate RHEL 10-compatible baseline and catalog so newer objectives do not leak into RHCSA 9 practice.
 
 The default RHCSA 10 box name is `boxomatic/almalinux-10`, which boots reliably on the supported Windows + VirtualBox workflow. You can still use another AlmaLinux, Rocky Linux, RHEL 10, or locally maintained RHEL-compatible box with `RHCSA_BOX` and, when needed, `RHCSA_BOX_URL`:
 
@@ -320,7 +320,7 @@ The default RHCSA 10 box name is `boxomatic/almalinux-10`, which boots reliably 
 $env:RHCSA_BOX = 'boxomatic/almalinux-10'
 ```
 
-The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for the track plan.
+The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track-specific notes.
 
 ### Scenario replay verification
 
@@ -429,7 +429,7 @@ Commands
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure, AustinNicely comparison notes, and refactor direction. See [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage and [docs/release.md](docs/release.md) for release automation.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure, comparison notes, and refactor direction. See [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage, [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track notes, and [docs/release.md](docs/release.md) for release automation.
 
 Fast local checks:
 
