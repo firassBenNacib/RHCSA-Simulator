@@ -299,13 +299,6 @@ func (m model) currentScenarioID() string {
 	return m.currentExam().ID
 }
 
-func (m model) currentScenarioTracks() []string {
-	if m.activeTab == labsTab {
-		return append([]string{}, m.currentLab().Tracks...)
-	}
-	return append([]string{}, m.currentExam().Tracks...)
-}
-
 func (m model) scenarioTracksByID(id string) []string {
 	for _, lab := range m.labs {
 		if lab.ID == id {
