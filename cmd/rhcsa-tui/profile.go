@@ -40,6 +40,7 @@ func resolveTrackPreference(requested, root string) (string, error) {
 
 func loadProjectTrack(root string) (string, error) {
 	path := filepath.Join(root, ".rhcsa-profile.json")
+	// #nosec G304 -- the profile filename is fixed under the selected project root.
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -70,6 +71,7 @@ func loadProjectTrack(root string) (string, error) {
 
 func loadProjectTimerDefault(root string) bool {
 	path := filepath.Join(root, ".rhcsa-profile.json")
+	// #nosec G304 -- the profile filename is fixed under the selected project root.
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return false
