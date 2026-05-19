@@ -188,7 +188,7 @@ func (m *model) restartActiveRunTimer(now time.Time) (time.Time, error) {
 		return time.Time{}, err
 	}
 	content = append(content, '\n')
-	if err := os.WriteFile(m.activeRunPath(), content, 0o644); err != nil {
+	if err := os.WriteFile(m.activeRunPath(), content, 0o600); err != nil {
 		return time.Time{}, err
 	}
 

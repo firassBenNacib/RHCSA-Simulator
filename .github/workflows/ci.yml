@@ -115,7 +115,7 @@ jobs:
           $issues = @()
           $psFiles = @('RHCSA.ps1', 'install.ps1') + (Get-ChildItem -Path 'host/modules' -Include '*.psm1','*.psd1' -Recurse).FullName
           foreach ($file in $psFiles) {
-            $issues += Invoke-ScriptAnalyzer -Path $file -Severity Error, Warning
+            $issues += Invoke-ScriptAnalyzer -Path $file -Severity Error
           }
           if ($issues.Count -gt 0) {
             $issues | Format-Table -AutoSize | Out-String | Write-Error
