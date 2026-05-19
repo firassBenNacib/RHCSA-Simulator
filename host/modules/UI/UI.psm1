@@ -152,6 +152,26 @@ return $false
 }
 }
 
+function Clear-WorkflowProgressLineAt {
+param(
+[Parameter(Mandatory = $true)]
+[int]$Row
+)
+
+try {
+$bufferHeight = [Math]::Max([Console]::BufferHeight, 1)
+if ($Row -lt 0 -or $Row -ge $bufferHeight) {
+return
+}
+
+$bufferWidth = [Math]::Max([Console]::BufferWidth, 1)
+[Console]::SetCursorPosition(0, $Row)
+[Console]::Out.Write(' ' * ($bufferWidth - 1))
+}
+catch {
+}
+}
+
 function Write-WorkflowProgressBlock {
 param(
 [Parameter(Mandatory = $true)]
@@ -189,6 +209,13 @@ if ($text.Length -lt ($bufferWidth - 1)) {
 }
 Set-WorkflowProgressCursorHidden
 if (Set-WorkflowProgressCursorToRow) {
+$row = [int]$script:WorkflowProgressRow
+if ([bool]$script:WorkflowProgressLineActive) {
+    # Enter can scroll an active bottom-row progress line up by one row.
+    Clear-WorkflowProgressLineAt -Row ($row - 1)
+}
+Clear-WorkflowProgressLineAt -Row $row
+[Console]::SetCursorPosition(0, $row)
 [Console]::Out.Write($text)
 }
 else {
