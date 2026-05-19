@@ -24,7 +24,7 @@ scenarios/
     rhcsa10/    # 8 RHCSA 10 mock exams
 ```
 
-Each scenario directory contains `scenario.json`, `LAB_TASKS.md`/`EXAM_TASKS.md`, `LAB_SOLUTION.md`/`EXAM_SOLUTION.md`, and any guest provisioning scripts. Scenario IDs are unique within a track (e.g., both `rhcsa9/` and `rhcsa10/` can have `mock-exam-a`), so progress tracking uses composite `track/id` keys.
+Each scenario directory contains `scenario.json`, `LAB_TASKS.md`/`EXAM_TASKS.md`, `LAB_SOLUTION.md`/`EXAM_SOLUTION.md`, and any guest provisioning scripts. Scenario IDs are globally unique so all-track tooling can resolve one target unambiguously. Progress tracking still uses composite `track/id` keys so future same-name track variants can be handled deliberately.
 
 ## PowerShell Modules
 
@@ -38,7 +38,7 @@ The PowerShell host code is split into focused `.psm1` modules under `host/modul
 | Scenarios | Catalog loading, manifest parsing |
 | Toolchain | Vagrant/VirtualBox path resolution |
 | VMControl | VM lifecycle, SSH, interactive commands |
-| Checks | Lab check execution and scoring |
+| Checks | Lab and exam check execution and scoring |
 
 ## Recommended Direction
 
@@ -60,10 +60,12 @@ AustinNicely's `rhcsa-simulator` is a Python-first, single-host simulator with g
 
 Those ideas map here to `tools/scenarios`, `Makefile`, Python unit tests in CI, GoReleaser release packaging, and PowerShell orchestration under `host/`.
 
-## RHCSA 10 Track
+## Track Notes
 
-RHCSA 10 support stays separate from RHCSA 9. The RHCSA 10 catalog now contains 48 labs and 8 mock exams generated from original scenario definitions, with Flatpak, systemd timers, RHEL 10 software management, NetworkManager, storage, SELinux, users, logging, and scheduling coverage.
+RHCSA 9 remains the default stable track. RHCSA 10 stays separate so Flatpak, systemd timer, and RHEL 10 package assumptions do not leak into RHCSA 9 labs and exams.
 
-The content is audit-validated. Full runtime validation still depends on a local RHEL 10-compatible baseline because GitHub-hosted runners cannot run the VirtualBox/RHEL ISO environment used by the simulator.
+Both tracks contain 48 labs and 8 mock exams. Full live replay for RHCSA 9 and RHCSA 10 is verified locally against the Windows + VirtualBox + ISO workflow. CI keeps audit/static validation because GitHub-hosted runners cannot run the VirtualBox/RHEL ISO environment used by the simulator.
+
+Track-specific notes live in `docs/rhcsa9-track.md` and `docs/rhcsa10-track.md`.
 
 Do not copy tasks from exam dumps or proprietary PDFs. Use those materials only as a coverage-gap signal.
