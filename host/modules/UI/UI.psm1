@@ -9,6 +9,8 @@ $script:WorkflowProgressMessage = ''
 $script:ShowWorkflowStatus = $false
 $script:WorkflowProgressLastHeartbeat = $null
 $script:WorkflowProgressLineActive = $false
+$script:WorkflowProgressRow = $null
+$script:WorkflowProgressCursorVisible = $null
 
 function Test-WorkflowVerboseOutput {
 return ($env:RHCSA_VERBOSE -match '^(1|true|yes|on)$')
@@ -35,6 +37,7 @@ $quietPattern = @(
 '^Falling back to Vagrant .+$',
 '^Restoring the clean baseline snapshots$',
 '^Applying the .+ overlay for .+$',
+'^Resetting .+ after RHCSA10 boot readiness stalled$',
 '^Starting (server|client)$',
 '^Starting .+ from the clean baseline$'
 ) -join '|'
@@ -69,6 +72,8 @@ if ($resetProgress) {
     $script:WorkflowProgressMessage = ''
     $script:WorkflowProgressLastHeartbeat = $null
     $script:WorkflowProgressLineActive = $false
+    $script:WorkflowProgressRow = $null
+    $script:WorkflowProgressCursorVisible = $null
 }
 }
 
@@ -100,6 +105,51 @@ return $false
 }
 
 return $true
+}
+
+function Set-WorkflowProgressCursorHidden {
+try {
+if (-not [Console]::IsOutputRedirected) {
+if ($null -eq $script:WorkflowProgressCursorVisible) {
+$script:WorkflowProgressCursorVisible = [Console]::CursorVisible
+}
+[Console]::CursorVisible = $false
+}
+}
+catch {
+}
+}
+
+function Restore-WorkflowProgressCursor {
+try {
+if (-not [Console]::IsOutputRedirected -and $null -ne $script:WorkflowProgressCursorVisible) {
+[Console]::CursorVisible = [bool]$script:WorkflowProgressCursorVisible
+}
+}
+catch {
+}
+$script:WorkflowProgressCursorVisible = $null
+}
+
+function Set-WorkflowProgressCursorToRow {
+try {
+if ($null -eq $script:WorkflowProgressRow) {
+$script:WorkflowProgressRow = [Console]::CursorTop
+}
+
+$row = [int]$script:WorkflowProgressRow
+$bufferHeight = [Math]::Max([Console]::BufferHeight, 1)
+if ($row -ge $bufferHeight) {
+$row = $bufferHeight - 1
+$script:WorkflowProgressRow = $row
+}
+
+[Console]::SetCursorPosition(0, $row)
+return $true
+}
+catch {
+return $false
+}
 }
 
 function Write-WorkflowProgressBlock {
@@ -137,7 +187,13 @@ if ($text.Length -gt ($bufferWidth - 1)) {
 if ($text.Length -lt ($bufferWidth - 1)) {
     $text = $text + (' ' * (($bufferWidth - 1) - $text.Length))
 }
+Set-WorkflowProgressCursorHidden
+if (Set-WorkflowProgressCursorToRow) {
+[Console]::Out.Write($text)
+}
+else {
 [Console]::Out.Write("`r$text")
+}
 $script:WorkflowProgressLineActive = $true
 }
 catch {
@@ -303,6 +359,7 @@ $line = Get-WorkflowProgressLine -Status $Message -Current $total -Total $total
 Write-WorkflowProgressBlock -Lines @($line)
 try {
     if (-not [Console]::IsOutputRedirected) {
+        [void](Set-WorkflowProgressCursorToRow)
         [Console]::Out.WriteLine()
     }
 }
@@ -310,6 +367,8 @@ catch {
     [Console]::Out.WriteLine()
 }
 $script:WorkflowProgressLineActive = $false
+$script:WorkflowProgressRow = $null
+Restore-WorkflowProgressCursor
 }
 
 function Stop-WorkflowProgress {
@@ -331,6 +390,7 @@ $lineWasActive = [bool]$script:WorkflowProgressLineActive
 if ($lineWasActive) {
 try {
 if (-not [Console]::IsOutputRedirected) {
+[void](Set-WorkflowProgressCursorToRow)
 [Console]::Out.WriteLine()
 }
 }
@@ -346,6 +406,8 @@ $script:WorkflowProgressStartedAt = $null
 $script:WorkflowProgressMessage = ''
 $script:WorkflowProgressLastHeartbeat = $null
 $script:WorkflowProgressLineActive = $false
+$script:WorkflowProgressRow = $null
+Restore-WorkflowProgressCursor
 }
 
 function Test-ProgressOnlyOutputLine {
@@ -371,6 +433,7 @@ $lineWasActive = [bool]$script:WorkflowProgressLineActive
 if ($lineWasActive) {
 try {
 if (-not [Console]::IsOutputRedirected) {
+[void](Set-WorkflowProgressCursorToRow)
 [Console]::Out.WriteLine()
 }
 }
@@ -378,6 +441,8 @@ catch {
 [Console]::Out.WriteLine()
 }
 $script:WorkflowProgressLineActive = $false
+$script:WorkflowProgressRow = $null
+Restore-WorkflowProgressCursor
 }
 
 $emitted = $false

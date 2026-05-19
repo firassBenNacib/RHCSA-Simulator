@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -93,22 +94,91 @@ func (m model) footerActions() []footerAction {
 
 func (m model) visibleFooterActions(width int) []footerAction {
 	actions := m.footerActions()
-	parts := make([]string, 0, len(actions))
-	usedWidth := 0
 	usableWidth := max(width-2, 1)
+
+	if m.filterMode {
+		return fitFooterActions(actions, usableWidth, m.footerActionWidth)
+	}
+
+	byID := make(map[footerActionID]footerAction, len(actions))
+	order := make(map[footerActionID]int, len(actions))
 	for i, action := range actions {
-		part := m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label)
-		partWidth := lipgloss.Width(part)
-		if i > 0 {
+		byID[action.id] = action
+		order[action.id] = i
+	}
+
+	priority := []footerActionID{
+		footerActionStart,
+		footerActionHelp,
+		footerActionQuit,
+		footerActionCheck,
+		footerActionReset,
+		footerActionExitRun,
+		footerActionPane,
+		footerActionSwitch,
+		footerActionTasks,
+		footerActionHints,
+		footerActionChecks,
+		footerActionSolutions,
+		footerActionSSHClient,
+		footerActionSSHServer,
+		footerActionFind,
+		footerActionTimer,
+	}
+
+	selected := make([]footerAction, 0, len(actions))
+	seen := make(map[footerActionID]bool, len(actions))
+	for _, id := range priority {
+		action, ok := byID[id]
+		if !ok || seen[id] {
+			continue
+		}
+		candidate := append(append([]footerAction{}, selected...), action)
+		sort.SliceStable(candidate, func(i, j int) bool {
+			return order[candidate[i].id] < order[candidate[j].id]
+		})
+		if m.footerActionsWidth(candidate) <= usableWidth {
+			selected = candidate
+			seen[id] = true
+		}
+	}
+
+	return selected
+}
+
+func fitFooterActions(actions []footerAction, width int, itemWidth func(footerAction) int) []footerAction {
+	selected := make([]footerAction, 0, len(actions))
+	usedWidth := 0
+	for _, action := range actions {
+		partWidth := itemWidth(action)
+		if len(selected) > 0 {
 			partWidth += 2
 		}
-		if usedWidth+partWidth > usableWidth {
+		if usedWidth+partWidth > width {
 			break
 		}
-		parts = append(parts, part)
+		selected = append(selected, action)
 		usedWidth += partWidth
 	}
-	return actions[:len(parts)]
+	return selected
+}
+
+func (m model) footerActionWidth(action footerAction) int {
+	return lipgloss.Width(m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label))
+}
+
+func (m model) footerActionsWidth(actions []footerAction) int {
+	if len(actions) == 0 {
+		return 0
+	}
+	width := 0
+	for i, action := range actions {
+		if i > 0 {
+			width += 2
+		}
+		width += m.footerActionWidth(action)
+	}
+	return width
 }
 
 func (m model) renderFooter(width int) string {

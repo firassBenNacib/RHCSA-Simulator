@@ -71,18 +71,29 @@ Generated runtime cache is written locally under `.lab-state/generated/`, is cre
 .\RHCSA.ps1 up
 ```
 
+Switch the project to RHCSA 10 when you want the RHEL 10/Rocky 10 baseline and RHCSA 10 catalog:
+
+```powershell
+.\RHCSA.ps1 profile RHCSA10
+.\RHCSA.ps1 up
+```
+
+Switch back to the default RHCSA 9 profile:
+
+```powershell
+.\RHCSA.ps1 profile RHCSA9
+```
+
 **2) List labs and exams**
 
 ```powershell
 .\RHCSA.ps1 list
-.\RHCSA.ps1 list -Track RHCSA10
 ```
 
 **3) Start a lab**
 
 ```powershell
 .\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab
-.\RHCSA.ps1 start -Id <rhcsa10-lab-id> -Mode Lab -Track RHCSA10
 ```
 
 **4) Check your progress**
@@ -91,13 +102,27 @@ Generated runtime cache is written locally under `.lab-state/generated/`, is cre
 .\RHCSA.ps1 check
 ```
 
-**5) Open SSH**
+`check` works for the active lab or exam. Exam checks report a check count and a check-weighted score.
+
+**5) Pause, resume, or exit a run**
+
+```powershell
+.\RHCSA.ps1 pause
+.\RHCSA.ps1 resume
+.\RHCSA.ps1 exit-run
+```
+
+`pause` saves VM state for fast resume. `down` powers VMs off. `exit-run` leaves the active lab or exam context without resetting VMs or undoing learner changes.
+
+**6) Open SSH**
 
 ```powershell
 .\RHCSA.ps1 ssh
 ```
 
-**6) Open the TUI**
+SSH is available only while a lab or exam is active.
+
+**7) Open the TUI**
 
 ```powershell
 .\RHCSA.ps1 tui
@@ -135,7 +160,7 @@ The TUI finds `RHCSA.ps1` from:
 * the current working directory
 * the directory that contains the TUI binary
 
-The TUI defaults to RHCSA 9 scenarios. Use `.\RHCSA.ps1 tui -Track RHCSA10` or set `RHCSA_TRACK=rhcsa10` for the RHCSA 10 catalog. RHCSA 9 and RHCSA 10 catalogs are filtered separately, so RHCSA 9 Podman/container labs are not shown in RHCSA 10 mode and RHCSA 10 Flatpak/systemd timer labs are not shown in RHCSA 9 mode.
+The TUI follows the project profile automatically. RHCSA 9 is the default when no profile file exists. Run `.\RHCSA.ps1 profile RHCSA10` to switch the project to RHCSA 10, then open `.\RHCSA.ps1 tui` normally. RHCSA 9 Podman/container labs are hidden in RHCSA 10 mode and RHCSA 10 Flatpak/systemd timer labs are hidden in RHCSA 9 mode. `-Track` still exists as a temporary override when you explicitly want a different catalog for one command.
 
 **Release binaries**
 
@@ -148,15 +173,18 @@ GitHub Releases publish prebuilt Windows, Linux, and macOS TUI binaries with che
 * `←` / `→` switch between Labs and Exams from the catalog, or switch documents from the detail pane
 * `F1` or `1` open Tasks
 * `F2` or `2` open Hints for labs
-* `F3` or `3` or `"` open Checks for labs
+* `F3` or `3` or `"` open Checks
 * `F4` or `4` or `'` open Solutions
 * click `[COPY]` in Checks or Solutions to copy that visible check or solution section
-* `c` run checks for the active lab
+* `c` run checks for the active lab or exam
 * `r` reset the active run
+* `e` exit the active lab or exam context without changing VM state
 * `/` open search
+* `t` toggle the per-run timer display
 * `z` open SSH to `client`
 * `x` open SSH to `server`
 * `?` open help, then `Esc` or the top-right `X` closes it
+* `q` quit the TUI
 
 Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
 
@@ -175,6 +203,22 @@ go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 .\RHCSA.ps1 destroy
 ```
 
+**Power off or save VM state**
+
+```powershell
+.\RHCSA.ps1 pause
+.\RHCSA.ps1 down
+.\RHCSA.ps1 resume
+```
+
+**Refresh the clean baseline explicitly**
+
+```powershell
+.\RHCSA.ps1 up -Refresh
+```
+
+Plain `up` is non-interactive and automation-safe. If the baseline is already ready and VMs are running, it reports the current VM state instead of rebuilding. Use `up -Refresh` when you intentionally want to restore the clean baseline.
+
 **Start without provisioning**
 
 ```powershell
@@ -192,6 +236,22 @@ go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 ```powershell
 .\RHCSA.ps1 reset
 ```
+
+**Exit the active run without resetting VMs**
+
+```powershell
+.\RHCSA.ps1 exit-run
+```
+
+**Set the default TUI timer mode**
+
+```powershell
+.\RHCSA.ps1 timer status
+.\RHCSA.ps1 timer on
+.\RHCSA.ps1 timer off
+```
+
+The timer is off by default. When enabled, the TUI shows the active run timer after a lab or exam starts. Pressing `t` in the TUI remains a per-run override.
 
 **Show status**
 
@@ -228,26 +288,56 @@ The repository includes:
 
 ### Platform profiles
 
-The default profile is `rhel9`, which uses:
+The project stores the active RHCSA version locally in `.rhcsa-profile.json`.
+
+RHCSA 9 is the default if that file does not exist:
 
 ```powershell
-$env:RHCSA_PROFILE = 'rhel9'
-$env:RHCSA_ISO = 'rhel-9.7-x86_64-dvd.iso'
-$env:RHCSA_BOX = 'generic/rocky9'
+.\RHCSA.ps1 profile
+.\RHCSA.ps1 profile RHCSA9
 ```
 
-The RHEL 10 profile uses RHEL 10.1 ISO naming and the official Rocky Linux 10 Vagrant box by default:
+Switch to RHCSA 10 inside the project:
 
 ```powershell
-$env:RHCSA_PROFILE = 'rhel10'
-$env:RHCSA_ISO = 'rhel-10.1-x86_64-dvd.iso'
-$env:RHCSA_BOX = 'rockylinux/10'
+.\RHCSA.ps1 profile RHCSA10
 .\RHCSA.ps1 up
 ```
 
+The saved project profile controls:
+
+* which Vagrant baseline is used
+* which labs and exams the CLI lists by default
+* which catalog the TUI opens by default
+
+Advanced users can still override ISO or box selection with `RHCSA_ISO`, `RHCSA_BOX`, and `RHCSA_BOX_URL`, but normal usage should go through `.\RHCSA.ps1 profile RHCSA9|RHCSA10`.
+
 The RHCSA 10 content track contains 48 labs and 8 mock exams. It is audit-validated in CI; full VM replay requires a local RHEL 10-compatible baseline with the required ISO and VirtualBox provider.
 
+The default RHCSA 10 box name is `boxomatic/almalinux-10`, which boots reliably on the supported Windows + VirtualBox workflow. You can still use another AlmaLinux, Rocky Linux, RHEL 10, or locally maintained RHEL-compatible box with `RHCSA_BOX` and, when needed, `RHCSA_BOX_URL`:
+
+```powershell
+$env:RHCSA_BOX = 'boxomatic/almalinux-10'
+```
+
 The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for the track plan.
+
+### Scenario replay verification
+
+Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment:
+
+```powershell
+python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
+python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
+python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
+python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
+```
+
+For static manifest checks without replaying VMs:
+
+```powershell
+python3.13.exe .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+```
 
 ### Host cleanup
 
@@ -266,18 +356,24 @@ You can also set `RHCSA_FORCE_HOST_CLEANUP=1` for one terminal session.
 Usage: .\RHCSA.ps1 <command> [options]
 
 Commands
-  up          Start or refresh the clean baseline
+  up          Start or verify the clean baseline
+  resume      Resume paused or powered-off VMs
+  pause       Save VM state for fast resume
+  down        Power off the simulator VMs
   destroy     Destroy VMs and local simulator state
   list        List labs and mock exams
   start       Start a lab or exam run
-  check       Run checks for the active lab
+  exit-run    Exit the active lab or exam context
+  check       Run checks for the active lab or exam
   reset       Reset the active run
   status      Show baseline, VMs, and the active scenario
   vms         Show VM state
   repo        Run the offline repository self-test
-  ssh         Open an SSH session
+  ssh         Open SSH for the active run
   ssh-config  Print SSH config for external clients
   tui         Open the interactive TUI
+  profile     Show or change the project RHCSA version
+  timer       Show or change the default timer mode
   completion  Generate or install PowerShell completion
   help        Show help
 ```
@@ -286,6 +382,8 @@ Commands
 
 **up**
 
+* -Profile <RHCSA9|RHCSA10>
+* -Refresh
 * -NoProvision
 * -NormalStart
 * -HeadlessClient
@@ -300,15 +398,26 @@ Commands
 
 **list**
 
-* -Track <RHCSA9|RHCSA10|All>
+* -Track <Auto|RHCSA9|RHCSA10|All>
 
 **tui**
 
-* -Track <RHCSA9|RHCSA10|All>
+* -Track <Auto|RHCSA9|RHCSA10|All>
+
+**profile**
+
+* profile
+* profile <RHCSA9|RHCSA10>
 
 **check**
 
-* -Id <lab-id> optional, but it must match the active lab
+* -Id <scenario-id> optional, but it must match the active lab or exam
+
+**timer**
+
+* timer status
+* timer on
+* timer off
 
 **ssh**
 
@@ -335,14 +444,14 @@ go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
 python -m unittest discover tools/scenarios/tests
-python tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
+python host/verify_scenario_solutions.py --kind all --track all --audit-only
 ```
 
 Keep these user entrypoints working:
 
 ```powershell
 .\RHCSA.ps1 tui
-python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
+python host/verify_scenario_solutions.py --kind all --audit-only
 ```
 
 The Go TUI source under `cmd/rhcsa-tui` and shared packages under `internal` must be committed. Built binaries stay ignored and are published through GitHub Releases.
