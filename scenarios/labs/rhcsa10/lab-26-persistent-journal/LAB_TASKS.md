@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-26-persistent-journal` |
+| Scenario ID | `lab-26-persistent-journal` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | processes-logs-tuning |
@@ -28,9 +28,3 @@ Configure persistent systemd journals.
 ## Task 02 - Restart systemd-journald (client) - 10 pts
 
 Restart systemd-journald.
-
----
-
-## Task 03 - Verify that /var/log/journal exists (client) - 10 pts
-
-Verify that /var/log/journal exists.

@@ -7,7 +7,11 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'Exercise check module for the RHCSA Simulator.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'Invoke-LabExerciseCheck'
+    'Invoke-ScenarioExerciseCheck'
+    'Test-IsAssertiveExerciseCheck'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

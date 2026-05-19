@@ -37,9 +37,3 @@ Add a persistent hosts entry with the following value:
 
 - **Hostname:** repo.netlab.local
 - **Address:** 192.168.122.3
-
----
-
-## Task 03 - Reconnect Verification (client) - 10 pts
-
-Verify that the active connection comes back with the same values after reconnecting it.

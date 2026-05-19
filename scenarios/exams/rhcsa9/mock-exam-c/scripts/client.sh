@@ -15,8 +15,6 @@ fi
 
     grubby --update-kernel=ALL --remove-args="audit_backlog_limit=8192" >/dev/null 2>&1 || true
 
-    rhcsa_configure_password_recovery disable
-    rhcsa_configure_password_recovery enable
     mkdir -p /root/.repo-backup-client-exam-c
     rhcsa_reset_repo_directory /root/.repo-backup-client-exam-c
     hostnamectl set-hostname client
@@ -74,14 +72,15 @@ for line in p.read_text().splitlines():
 p.write_text('\n'.join(lines) + '\n')
 EOF
     wipefs -a /dev/sdb >/dev/null 2>&1 || true
-    sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+    dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+    partprobe /dev/sdb >/dev/null 2>&1 || true
 umount /mnt/reviewc >/dev/null 2>&1 || true
         sed -i '\#/mnt/reviewc#d' /etc/fstab
         lvremove -fy /dev/reviewvgc/reviewc >/dev/null 2>&1 || true
         vgremove -fy reviewvgc >/dev/null 2>&1 || true
         pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
         wipefs -a /dev/sdc >/dev/null 2>&1 || true
-        sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+        dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
         printf 'label: gpt
 ,700M,L
 ' | sfdisk /dev/sdc >/dev/null 2>&1
@@ -100,14 +99,15 @@ umount /mnt/reviewc >/dev/null 2>&1 || true
     podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
     id eirac >/dev/null 2>&1 || useradd -m eirac
     eirac_uid="$(id -u eirac)"
-    runuser -l eirac -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$eirac_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
+    runuser -l eirac -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$eirac_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null"
     mkdir -p /opt/inc /opt/outc /opt/rhcsa/workspaces/exam-c/site-content
     cat > /opt/rhcsa/workspaces/exam-c/site-content/index.html <<'EOF'
 exam c container
 EOF
-    cat > /opt/rhcsa/workspaces/exam-c/Containerfile <<'EOF'
+cat > /opt/rhcsa/workspaces/exam-c/Containerfile <<'EOF'
 FROM localhost/rhcsa-httpd-base:latest
 COPY site-content/ /var/www/html/
+CMD ["/usr/bin/bash", "-lc", "while true; do sleep 300; done"]
 EOF
     chown -R eirac:eirac /opt/rhcsa/workspaces/exam-c /opt/inc /opt/outc
     runuser -l eirac -c 'podman rm -f pdfc >/dev/null 2>&1 || true'

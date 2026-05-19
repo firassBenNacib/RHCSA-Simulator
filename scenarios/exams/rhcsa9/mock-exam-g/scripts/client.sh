@@ -13,8 +13,6 @@ else
 fi
 mkdir -p /root/.repo-backup-client-exam-g
 rhcsa_reset_repo_directory /root/.repo-backup-client-exam-g
-rhcsa_configure_password_recovery disable
-rhcsa_configure_password_recovery enable
 hostnamectl set-hostname client
 rhcsa_remove_matching_lines 'vault.deltaforge.lab' /etc/hosts
 connection_name="$(rhcsa_get_lab_connection_name || true)"
@@ -33,7 +31,7 @@ restorecon -Rv /srv/delta-web >/dev/null 2>&1 || true
 for u in gwen pavel sable auditg trackerg workerg copyg solg; do userdel -r "$u" >/dev/null 2>&1 || true; done
 groupdel deltaops >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/deltaops /etc/sudoers.d/gwen-passwd /root/ember-lines /root/etc-g.tar.bz2
-rm -rf /projects/delta /projects/delta-drop /opt/exam-g /root/trackerg-files /mnt/delta-home /mnt/deltalv /opt/ing /opt/outg /opt/rhcsa/workspaces/exam-g
+rm -rf /projects/delta /projects/delta-drop /opt/exam-g /root/trackerg-files /mnt/delta-home /mnt/deltalv /opt/inc /opt/outg /opt/rhcsa/workspaces/exam-g
 python - <<'EOF'
 from pathlib import Path
 p = Path('/home/pavel/.bashrc')
@@ -83,33 +81,36 @@ EOF
 systemctl restart systemd-journald >/dev/null 2>&1 || true
 id workerg >/dev/null 2>&1 || useradd -m workerg
 pkill -u workerg -f 'while :; do :; done' >/dev/null 2>&1 || true
+pkill -u workerg -f 'while :; do :; sleep 0.05; done' >/dev/null 2>&1 || true
 pkill -u workerg -f 'sleep 7200' >/dev/null 2>&1 || true
-runuser -l workerg -c 'nohup bash -c "while :; do :; done" >/dev/null 2>&1 & echo $! > ~/cpu.pid'
+runuser -l workerg -c 'nohup bash -c "while :; do :; sleep 0.05; done" >/dev/null 2>&1 & echo $! > ~/cpu.pid'
 runuser -l workerg -c 'nohup sleep 7200 >/dev/null 2>&1 & echo $! > ~/sleep.pid'
 swapoff /dev/sdb1 >/dev/null 2>&1 || true
 sed -i '\#swap#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
 umount /mnt/deltalv >/dev/null 2>&1 || true
 sed -i '\#/mnt/deltalv#d' /etc/fstab
 lvremove -fy /dev/deltavg/deltalv >/dev/null 2>&1 || true
 vgremove -fy deltavg >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
 wipefs -a /dev/sdc >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+partprobe /dev/sdc >/dev/null 2>&1 || true
 id solg >/dev/null 2>&1 || useradd -m solg
 solg_uid="$(id -u solg)"
-runuser -l solg -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$solg_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman image exists localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1"
-mkdir -p /opt/ing /opt/outg /opt/rhcsa/workspaces/exam-g/site-content
+rm -rf "/tmp/podman-run-$solg_uid" "/run/user/$solg_uid/containers" "/run/user/$solg_uid/libpod" "/home/solg/.local/share/containers"
+mkdir -p /opt/inc /opt/outg /opt/rhcsa/workspaces/exam-g/site-content
 cat > /opt/rhcsa/workspaces/exam-g/site-content/index.html <<'EOF'
 exam g container
 EOF
 cat > /opt/rhcsa/workspaces/exam-g/Containerfile <<'EOF'
 FROM localhost/rhcsa-httpd-base:latest
 COPY site-content/ /var/www/html/
+CMD ["/usr/bin/bash", "-lc", "while true; do sleep 300; done"]
 EOF
-chown -R solg:solg /opt/rhcsa/workspaces/exam-g /opt/ing /opt/outg
-runuser -l solg -c 'podman rm -f pdfg >/dev/null 2>&1 || true'
-runuser -l solg -c 'podman rmi -f localhost/delta-web:latest >/dev/null 2>&1 || true'
+chown -R solg:solg /opt/rhcsa/workspaces/exam-g /opt/inc /opt/outg
+rm -rf "/tmp/podman-run-$solg_uid" "/run/user/$solg_uid/containers" "/run/user/$solg_uid/libpod" "/home/solg/.local/share/containers" /home/solg/.config/containers
 rm -rf /home/solg/.config/systemd/user
 loginctl disable-linger solg >/dev/null 2>&1 || true

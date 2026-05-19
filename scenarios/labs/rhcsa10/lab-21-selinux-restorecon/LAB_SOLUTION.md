@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-21-selinux-restorecon` |
+| Scenario ID | `lab-21-selinux-restorecon` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |
@@ -19,24 +19,9 @@ Restore default SELinux file contexts.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /var/www/html/rhcsa10.html containing RHCSA10 (client) - 10 pts
-
-```bash
-echo RHCSA10 > /var/www/html/rhcsa10.html
-```
-
----
-
-## Task 02 - Set an incorrect context on the file (client) - 10 pts
-
-```bash
-chcon -t user_tmp_t /var/www/html/rhcsa10.html
-```
-
----
-
-## Task 03 - Restore the default context with restorecon (client) - 10 pts
+## Task 01 - Restore the default SELinux context on /var/www/html/rhcsa10.html (client) - 10 pts
 
 ```bash
 restorecon -v /var/www/html/rhcsa10.html
+ls -Z /var/www/html/rhcsa10.html
 ```

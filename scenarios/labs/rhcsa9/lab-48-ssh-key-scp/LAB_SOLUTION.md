@@ -37,7 +37,14 @@ echo 'bridge48:cinder9' | chpasswd
 
 ```bash
 su - bridge48
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+mkdir -p /home/bridge48/.ssh
+chmod 700 /home/bridge48/.ssh
+rm -f /home/bridge48/.ssh/id_ed25519 /home/bridge48/.ssh/id_ed25519.pub
+ssh-keygen -q -t ed25519 -N "" -f /home/bridge48/.ssh/id_ed25519
+chmod 600 /home/bridge48/.ssh/id_ed25519
+chmod 644 /home/bridge48/.ssh/id_ed25519.pub
+test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub
+exit
 ```
 
 ---
@@ -54,6 +61,7 @@ ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@server
 ## Task 04 - Copy the payload with scp (server) - 10 pts
 
 ```bash
+# On client
 su - bridge48
 scp /home/bridge48/payload.txt bridge48@server:/home/bridge48/inbox/
 ```

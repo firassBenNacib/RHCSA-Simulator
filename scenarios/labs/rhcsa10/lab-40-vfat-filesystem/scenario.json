@@ -29,9 +29,9 @@
         "Use vfat in /etc/fstab."
       ],
       "checks": [
-        "blkid /dev/sdb1 | grep -q 'TYPE=\"vfat\"'",
-        "blkid /dev/sdb1 | grep -q 'LABEL_FATBOOT=\"RHCSA10VFAT\"\\|LABEL=\"RHCSA10VFAT\"'",
-        "findmnt -no TARGET /mnt/vfat10 | grep -qx /mnt/vfat10"
+        "test -b /dev/sdb1",
+        "blkid /dev/sdb1 | grep -q 'TYPE=\"vfat\"' && blkid /dev/sdb1 | grep -q 'LABEL_FATBOOT=\"RHCSA10VFAT\"\\|LABEL=\"RHCSA10VFAT\"'",
+        "findmnt -no TARGET /mnt/vfat10 | grep -qx /mnt/vfat10 && grep -Eq '^LABEL=RHCSA10VFAT[[:space:]]+/mnt/vfat10[[:space:]]+vfat' /etc/fstab"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -60,5 +60,8 @@
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

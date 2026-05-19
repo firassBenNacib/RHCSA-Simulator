@@ -173,6 +173,14 @@ func (s *State) TouchChecked(id string, passed bool) {
 	}
 }
 
+func (s *State) TouchExamChecked(id string, passed bool) {
+	item := s.ensureExam(id)
+	item.CheckedAt = now()
+	if passed {
+		item.PassedAt = item.CheckedAt
+	}
+}
+
 func (s *State) ensure(id string) *LabProgress {
 	if s.Labs == nil {
 		s.Labs = map[string]*LabProgress{}
@@ -211,9 +219,32 @@ func migrateMapKeys[T any](m map[string]*T) map[string]*T {
 	for key, value := range m {
 		if strings.Contains(key, "/") {
 			updated[key] = value
+		}
+	}
+	for key, value := range m {
+		if strings.Contains(key, "/") {
 			continue
 		}
-		updated[CompositeKey("rhcsa9", key)] = value
+		track, id := legacyFlatKeyTarget(key)
+		composite := CompositeKey(track, id)
+		if _, exists := updated[composite]; exists {
+			continue
+		}
+		updated[composite] = value
 	}
 	return updated
+}
+
+func legacyFlatKeyTarget(key string) (track, id string) {
+	if strings.HasPrefix(key, "rhcsa10-lab-") {
+		return "rhcsa10", strings.TrimPrefix(key, "rhcsa10-")
+	}
+	if strings.HasPrefix(key, "rhcsa10-mock-exam-") {
+		return "rhcsa10", key
+	}
+	if strings.HasPrefix(key, "rhcsa10-") {
+		return "rhcsa10", strings.TrimPrefix(key, "rhcsa10-")
+	}
+
+	return "rhcsa9", key
 }

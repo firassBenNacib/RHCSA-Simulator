@@ -15,14 +15,13 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
         "Ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/flatpak/repo.",
-        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation.",
-        "Remove org.rhcsa.Tools and verify that it is no longer installed."
+        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation."
       ],
       "hints": [
         "Flatpak installs can be scoped with --system.",
@@ -30,19 +29,16 @@
       ],
       "checks": [
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools || test -f /root/org.rhcsa.Tools.removed",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
+        "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Ensure the system Flatpak remote rhcsa10 exists and points to file:///op",
-        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system ",
-        "Remove org.rhcsa.Tools and verify that it is no longer installed"
+        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system "
       ],
       "task_points": [
-        10,
         10,
         10
       ],
@@ -52,12 +48,11 @@
         ],
         [
           "flatpak install --system -y rhcsa10 org.rhcsa.Tools"
-        ],
-        [
-          "flatpak uninstall --system -y org.rhcsa.Tools",
-          "touch /root/org.rhcsa.Tools.removed"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

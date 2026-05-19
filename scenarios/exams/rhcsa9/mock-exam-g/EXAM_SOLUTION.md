@@ -78,8 +78,9 @@ mount -a
 ## Question 06 - Ops User And Group (client) - 5 pts
 
 ```bash
-groupadd deltaops
-useradd -G deltaops pavel
+getent group deltaops >/dev/null || groupadd deltaops
+id pavel >/dev/null 2>&1 || useradd -m pavel
+usermod -aG deltaops pavel
 echo cinder9 | passwd --stdin pavel
 ```
 
@@ -98,7 +99,9 @@ chmod 3770 /projects/delta-drop
 ## Question 08 - No-Home Audit User (client) - 5 pts
 
 ```bash
-useradd -M -s /sbin/nologin auditg
+id auditg >/dev/null 2>&1 || useradd -M -s /sbin/nologin auditg
+usermod -s /sbin/nologin auditg
+rm -rf /home/auditg
 ```
 
 ---
@@ -115,10 +118,10 @@ echo 'umask 027' >> /home/pavel/.bash_profile
 ## Question 10 - Copy User On Both Systems (client) - 5 pts
 
 ```bash
-useradd copyg
+id copyg >/dev/null 2>&1 || useradd -m copyg
 echo cinder9 | passwd --stdin copyg
 # Run on server
-useradd copyg
+id copyg >/dev/null 2>&1 || useradd -m copyg
 echo cinder9 | passwd --stdin copyg
 mkdir -p /home/copyg/inbox
 chown copyg:copyg /home/copyg/inbox
@@ -141,9 +144,8 @@ scp /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
 ## Question 12 - At Job (client) - 5 pts
 
 ```bash
-su - pavel
-echo "echo exam-g tick >> /root/exam-g-at.log" | at now + 2 minutes
 systemctl enable --now atd
+runuser -l pavel -c 'echo "echo exam-g tick >> /root/exam-g-at.log" | at now + 2 minutes'
 ```
 
 ---
@@ -198,8 +200,11 @@ systemctl restart systemd-journald
 ## Question 18 - Process Renice And Kill (client) - 4 pts
 
 ```bash
-kill "$(cat /home/workerg/cpu.pid)"
-renice 10 -p "$(cat /home/workerg/sleep.pid)"
+cpu_pid=$(cat /home/workerg/cpu.pid 2>/dev/null || true)
+if [ -n "$cpu_pid" ]; then kill "$cpu_pid" 2>/dev/null || true; fi
+sleep_pid=$(cat /home/workerg/sleep.pid 2>/dev/null || true)
+if [ -z "$sleep_pid" ] || ! ps -p "$sleep_pid" >/dev/null 2>&1; then runuser -l workerg -c 'nohup sleep 7200 >/dev/null 2>&1 & echo $! > ~/sleep.pid'; sleep_pid=$(cat /home/workerg/sleep.pid); fi
+renice 10 -p "$sleep_pid"
 ```
 
 ---
@@ -207,8 +212,17 @@ renice 10 -p "$(cat /home/workerg/sleep.pid)"
 ## Question 19 - Swap Space (client) - 4 pts
 
 ```bash
+swapoff /dev/sdb1 >/dev/null 2>&1 || true
+sed -i -E '\#^[^[:space:]]+[[:space:]]+swap[[:space:]]+swap[[:space:]]#d' /etc/fstab
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 737MiB
-partprobe /dev/sdb
+blockdev --rereadpt /dev/sdb || true
+partprobe /dev/sdb || true
+partx -u /dev/sdb || partx -a /dev/sdb || true
+udevadm settle
+for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done
+test -b /dev/sdb1
 mkswap /dev/sdb1
 swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
@@ -220,11 +234,23 @@ echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ## Question 20 - Create And Mount LV (client) - 4 pts
 
 ```bash
+umount /mnt/reviewa /mnt/reviewb /mnt/reviewc /mnt/summitlv /mnt/auroralv /mnt/deltalv /mnt/reviewh >/dev/null 2>&1 || true
+swapoff /dev/sdc1 >/dev/null 2>&1 || true
+for vg in reviewvga reviewvgb reviewvgc summitvg auroravg deltavg reviewvgh; do vgchange -an "$vg" >/dev/null 2>&1 || true; vgremove -ff "$vg" >/dev/null 2>&1 || true; done
+pvremove -ff -y /dev/sdc1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdc1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdc >/dev/null 2>&1 || true
+sed -i -E '\# /mnt/(reviewa|reviewb|reviewc|summitlv|auroralv|deltalv|reviewh) #d' /etc/fstab
 parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 701MiB set 1 lvm on
-partprobe /dev/sdc
+blockdev --rereadpt /dev/sdc || true
+partprobe /dev/sdc || true
+partx -u /dev/sdc || partx -a /dev/sdc || true
+udevadm settle
+for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdc1 && break; blockdev --rereadpt /dev/sdc || true; partprobe /dev/sdc || true; partx -u /dev/sdc || partx -a /dev/sdc || true; udevadm settle; sleep 1; done
+test -b /dev/sdc1
 pvcreate /dev/sdc1
 vgcreate -s 16M deltavg /dev/sdc1
-lvcreate -n deltalv -l 40 deltavg
+lvcreate -y -W y -n deltalv -l 40 deltavg
 mkfs.ext4 /dev/deltavg/deltalv
 mkdir -p /mnt/deltalv
 uuid=$(blkid -s UUID -o value /dev/deltavg/deltalv)
@@ -237,8 +263,18 @@ mount -a
 ## Question 21 - Rootless Container (client) - 4 pts
 
 ```bash
+mkdir -p /opt/inc /opt/outg /opt/rhcsa/workspaces/exam-g/site-content
+echo 'exam g container' > /opt/rhcsa/workspaces/exam-g/site-content/index.html
+cat > /opt/rhcsa/workspaces/exam-g/Containerfile <<'EOF'
+FROM localhost/rhcsa-httpd-base:latest
+COPY site-content/ /var/www/html/
+CMD ["/usr/bin/bash", "-lc", "while true; do sleep 300; done"]
+EOF
+chown -R solg:solg /opt/rhcsa/workspaces/exam-g /opt/inc /opt/outg
 su - solg
 cd /opt/rhcsa/workspaces/exam-g
+podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
 podman build -t localhost/deltaforge-web:latest .
 podman run -d --name pdfg -v /opt/inc:/data/input:Z -v /opt/outg:/data/output:Z localhost/deltaforge-web:latest
 exit
@@ -249,12 +285,14 @@ exit
 ## Question 22 - Container Autostart (client) - 4 pts
 
 ```bash
-su - solg
-mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user
-podman generate systemd --name pdfg --files --new
-systemctl --user daemon-reload
-systemctl --user enable --now container-pdfg.service
-exit
 loginctl enable-linger solg
+uid=$(id -u solg)
+systemctl start "user@$uid.service" || true
+for i in $(seq 1 20); do test -S "/run/user/$uid/bus" && break; sleep 1; done
+test -S "/run/user/$uid/bus"
+runuser -l solg -c 'mkdir -p ~/.config/systemd/user'
+runuser -l solg -c 'cd ~/.config/systemd/user && podman generate systemd --name pdfg --files'
+runuser -l solg -c 'podman kill pdfg >/dev/null 2>&1 || true'
+runuser -l solg -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user daemon-reload'
+runuser -l solg -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user enable --now container-pdfg.service'
 ```

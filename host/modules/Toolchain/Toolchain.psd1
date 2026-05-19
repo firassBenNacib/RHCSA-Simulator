@@ -7,7 +7,24 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'External tool discovery (Vagrant, VBoxManage, Go) and TUI launch for the RHCSA Simulator.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'Get-GoExecutablePath'
+    'Get-OptionalVBoxManagePath'
+    'Get-OptionalVagrantPath'
+    'Assert-ProjectVagrantBoxReady'
+    'Get-VagrantCommandSpec'
+    'Get-ProjectVagrantBoxName'
+    'Get-ProjectVagrantBoxUrl'
+    'Get-RhcsaTuiBinaryPath'
+    'Get-RhcsaTuiSourceFile'
+    'Get-VBoxManagePath'
+    'Get-VagrantPath'
+    'Open-RhcsaTui'
+    'Test-CurlExecutableAvailable'
+    'Test-RhcsaTuiBinaryIsStale'
+    'Test-VagrantArchiveExtractorAvailable'
+    'Test-VagrantBoxInstalled'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

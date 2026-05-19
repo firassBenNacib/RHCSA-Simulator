@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-15-users-groups-sudo` |
+| Scenario ID | `lab-15-users-groups-sudo` |
 | Mode | Lab |
 | Time limit | 30 minutes |
 | Objectives | users-sudo-ssh |
@@ -22,7 +22,8 @@ Create local identities and delegate limited administrative access.
 ## Task 01 - Create local group ops10 (client) - 10 pts
 
 ```bash
-groupadd ops10
+getent group ops10 >/dev/null || groupadd ops10
+getent group ops10
 ```
 
 ---
@@ -30,9 +31,9 @@ groupadd ops10
 ## Task 02 - Create user relay10, set the password to cinder9, and make ops10 the use (client) - 10 pts
 
 ```bash
-useradd -G ops10 relay10
-passwd relay10
-# enter: cinder9
+id relay10 >/dev/null 2>&1 || useradd -G ops10 relay10
+usermod -aG ops10 relay10
+echo 'relay10:cinder9' | chpasswd
 ```
 
 ---

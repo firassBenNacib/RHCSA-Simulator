@@ -40,8 +40,8 @@ type scenarioView struct {
 }
 
 type detailRenderedLine struct {
-	text         string
-	copySection  int
+	text        string
+	copySection int
 }
 
 type copySection struct {
@@ -69,15 +69,18 @@ func (m model) currentScenarioView() scenarioView {
 			minutes:     lab.TimeLimitMinute,
 			tags:        append([]string{}, lab.ObjectiveTags...),
 			active:      lab.ID != "" && lab.ID == activeID,
-			progress:    m.progressMarker(lab.ID),
+			progress:    m.progressMarker(lab.ID, lab.Tracks),
 			body:        body,
 		}
 	}
 
 	exam := m.currentExam()
 	body := catalog.ReadRelative(m.root, exam.TasksPath)
-	if m.detail == detailSolution {
+	switch m.detail {
+	case detailSolution:
 		body = catalog.ReadRelative(m.root, exam.SolutionPath)
+	case detailCheck:
+		body = exam.CheckContent
 	}
 	return scenarioView{
 		id:          exam.ID,
@@ -86,7 +89,7 @@ func (m model) currentScenarioView() scenarioView {
 		minutes:     exam.TimeLimitMinute,
 		tags:        append([]string{}, exam.ObjectiveTags...),
 		active:      exam.ID != "" && exam.ID == activeID,
-		progress:    m.examProgressMarker(exam.ID),
+		progress:    m.examProgressMarker(exam.ID, exam.Tracks),
 		body:        body,
 	}
 }
@@ -94,7 +97,7 @@ func (m model) currentScenarioView() scenarioView {
 func (m model) renderDetailHeaderLines(width int) []string {
 	view := m.currentScenarioView()
 	if view.id == "" {
-		return []string{m.theme.Muted.Render("No scenario selected")}
+		return []string{}
 	}
 
 	tabs := m.theme.RenderViewModes(m.detail, m.activeTab == examsTab)
@@ -135,15 +138,25 @@ func (m model) renderDetailBody() string {
 func (m model) renderDetailBodyLines(width int) []detailRenderedLine {
 	view := m.currentScenarioView()
 	if view.id == "" {
-		return []detailRenderedLine{{text: m.theme.Muted.Render("No scenario selected"), copySection: -1}}
+		return []detailRenderedLine{{text: m.theme.Muted.Render(m.emptyScenarioMessage()), copySection: -1}}
 	}
 	body := trimDocumentHeading(view.title, m.detail, sanitizeScenarioDocument(view.description, view.body))
 	body = trimActionSectionBoilerplate(body)
 	return m.processMarkdownLines(body, width, m.detail)
 }
 
+func (m model) emptyScenarioMessage() string {
+	if strings.TrimSpace(m.filterQuery) != "" {
+		if m.activeTab == labsTab {
+			return "No matching lab"
+		}
+		return "No matching exam"
+	}
+	return "No scenario selected"
+}
+
 func (m model) canCopyDetail() bool {
-	return m.detail == detailCheck || m.detail == detailSolution
+	return m.detail == detailSolution
 }
 
 func cleanCopyText(text string) string {

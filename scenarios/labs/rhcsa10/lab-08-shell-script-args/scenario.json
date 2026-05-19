@@ -20,50 +20,38 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /usr/local/bin/rhcsa10-user-report.",
-        "The script must print usage: rhcsa10-user-report USER when no argument is supplied.",
-        "When a user name is supplied, print that user's primary group name."
+        "Create /usr/local/bin/rhcsa10-user-report with the required argument handling.",
+        "Make the script executable and confirm it prints a supplied user's primary group."
       ],
       "hints": [
         "Use id -gn USER.",
         "Test for an empty first positional parameter."
       ],
       "checks": [
-        "test -x /usr/local/bin/rhcsa10-user-report",
-        "/usr/local/bin/rhcsa10-user-report 2>&1 | grep -qx 'usage: rhcsa10-user-report USER'",
-        "/usr/local/bin/rhcsa10-user-report root | grep -qx root"
+        "test -f /usr/local/bin/rhcsa10-user-report",
+        "test -x /usr/local/bin/rhcsa10-user-report && /usr/local/bin/rhcsa10-user-report 2>&1 | grep -qx 'usage: rhcsa10-user-report USER' && /usr/local/bin/rhcsa10-user-report root | grep -qx root"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/bin/rhcsa10-user-report",
-        "The script must print usage: rhcsa10-user-report USER when no argument i",
-        "When a user name is supplied, print that user's primary group name"
+        "Create /usr/local/bin/rhcsa10-user-report with the required argument han",
+        "Make the script executable and confirm it prints a supplied user's prima"
       ],
       "task_points": [
-        10,
         10,
         10
       ],
       "solution_commands": [
         [
-          "cat > /usr/local/bin/rhcsa10-user-report <<'EOF'",
-          "#!/bin/bash",
-          "if [ -z \"${1:-}\" ]; then",
-          "  echo 'usage: rhcsa10-user-report USER' >&2",
-          "  exit 2",
-          "fi",
-          "id -gn \"$1\"",
-          "EOF"
+          "cat > /usr/local/bin/rhcsa10-user-report <<'EOF'\n#!/bin/bash\nif [ -z \"${1:-}\" ]; then\n  echo 'usage: rhcsa10-user-report USER' >&2\n  exit 2\nfi\nid -gn \"$1\"\nEOF"
         ],
         [
-          "chmod +x /usr/local/bin/rhcsa10-user-report"
-        ],
-        [
+          "chmod +x /usr/local/bin/rhcsa10-user-report",
           "/usr/local/bin/rhcsa10-user-report root"
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-06-flatpak-remote` |
+| Scenario ID | `lab-06-flatpak-remote` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | software-management |
@@ -25,12 +25,6 @@ Install the flatpak package if it is not already installed.
 
 ---
 
-## Task 02 - Configure a system Flatpak remote named rhcsa10 that points to file:///o (client) - 10 pts
+## Task 02 - Configure a system Flatpak remote named rhcsa10 that points to file:///o (client) - 20 pts
 
 Configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
-
----
-
-## Task 03 - Verify that the system remote is available (client) - 10 pts
-
-Verify that the system remote is available.

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-19-firewalld-service` |
+| Scenario ID | `lab-19-firewalld-service` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | networking-and-firewall, selinux-and-default-perms |

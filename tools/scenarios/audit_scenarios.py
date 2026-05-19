@@ -107,6 +107,20 @@ def task_lengths_ok(path: Path, scenario: dict[str, Any], findings: list[Finding
             findings.append(Finding(path, "exam task points must sum to 100"))
 
 
+def audit_identity(path: Path, scenario: dict[str, Any], seen_ids: dict[str, Path], findings: list[Finding]) -> None:
+    scenario_id = str(scenario.get("id", "")).strip()
+    if not scenario_id:
+        findings.append(Finding(path, "scenario id must be present"))
+        return
+    if path.parent.name != scenario_id:
+        findings.append(Finding(path, f"scenario id '{scenario_id}' must match directory '{path.parent.name}'"))
+    previous = seen_ids.get(scenario_id)
+    if previous is not None:
+        findings.append(Finding(path, f"duplicate scenario id '{scenario_id}' also used by {previous.relative_to(ROOT)}"))
+    else:
+        seen_ids[scenario_id] = path
+
+
 def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     content = scenario["content"]["lab" if "lab" in scenario["content"] else "exam"]
     tasks_text = "\n".join(content["tasks"])
@@ -186,16 +200,19 @@ def main() -> int:
     findings: list[Finding] = []
     labs: list[tuple[Path, dict[str, Any]]] = []
     exams: list[tuple[Path, dict[str, Any]]] = []
+    seen_ids: dict[str, Path] = {}
 
     for path in sorted(SCENARIOS_DIR.glob("labs/*/*/scenario.json")):
         scenario = load_json(path)
         labs.append((path, scenario))
+        audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
 
     for path in sorted(SCENARIOS_DIR.glob("exams/*/*/scenario.json")):
         scenario = load_json(path)
         exams.append((path, scenario))
+        audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
 

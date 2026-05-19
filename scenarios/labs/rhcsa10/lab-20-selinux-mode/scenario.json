@@ -21,8 +21,7 @@
     "lab": {
       "tasks": [
         "Set SELinux to enforcing mode immediately.",
-        "Configure SELinux to boot in enforcing mode.",
-        "Verify current and persistent SELinux mode."
+        "Configure SELinux to boot in enforcing mode."
       ],
       "hints": [
         "Use setenforce for runtime state.",
@@ -30,34 +29,32 @@
       ],
       "checks": [
         "getenforce | grep -qx Enforcing",
-        "grep -Eq '^SELINUX=enforcing$' /etc/selinux/config",
-        "sestatus | grep -q 'Current mode'"
+        "(grep -Eq '^SELINUX=enforcing$' /etc/selinux/config) && (sestatus | grep -q 'Current mode')"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Set SELinux to enforcing mode immediately",
-        "Configure SELinux to boot in enforcing mode",
-        "Verify current and persistent SELinux mode"
+        "Configure SELinux to boot in enforcing mode"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
           "setenforce 1"
         ],
         [
-          "sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config"
-        ],
-        [
+          "sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config",
           "getenforce",
           "grep '^SELINUX=' /etc/selinux/config"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

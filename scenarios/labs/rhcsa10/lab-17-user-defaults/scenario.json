@@ -21,8 +21,7 @@
     "lab": {
       "tasks": [
         "Set default inactive password period for new users to 14 days.",
-        "Set default account expiration date to 2030-12-31.",
-        "Verify the new useradd defaults."
+        "Set default account expiration date to 2030-12-31."
       ],
       "hints": [
         "Use useradd -D.",
@@ -30,33 +29,29 @@
       ],
       "checks": [
         "useradd -D | grep -qx 'INACTIVE=14'",
-        "useradd -D | grep -qx 'EXPIRE=2030-12-31'",
-        "grep -Eq '^INACTIVE=14$' /etc/default/useradd && grep -Eq '^EXPIRE=2030-12-31$' /etc/default/useradd"
+        "(useradd -D | grep -qx 'EXPIRE=2030-12-31') && (grep -Eq '^INACTIVE=14$' /etc/default/useradd && grep -Eq '^EXPIRE=2030-12-31$' /etc/default/useradd)"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Set default inactive password period for new users to 14 days",
-        "Set default account expiration date to 2030-12-31",
-        "Verify the new useradd defaults"
+        "Set default account expiration date to 2030-12-31"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
           "useradd -D -f 14"
         ],
         [
-          "useradd -D -e 2030-12-31"
-        ],
-        [
+          "useradd -D -e 2030-12-31",
           "useradd -D"
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

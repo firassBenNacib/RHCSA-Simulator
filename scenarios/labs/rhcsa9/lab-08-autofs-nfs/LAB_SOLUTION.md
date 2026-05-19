@@ -35,7 +35,7 @@ passwd vault8
 
 ---
 
-## Task 02 - Configure Autofs Map (client) - 10 pts
+## Task 02 - Configure Persistent Autofs Map (client) - 20 pts
 
 ```bash
 vim /etc/auto.lab8
@@ -45,13 +45,5 @@ vim /etc/auto.master.d/lab8.autofs
 systemctl enable --now autofs
 for attempt in 1 2 3 4 5; do ls /netdir/vault8 >/dev/null 2>&1 && mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs' && break; sleep 2; done
 mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'
-```
-
----
-
-## Task 03 - Verify Access (client) - 10 pts
-
-```bash
-ls -l /netdir/vault8
 cat /netdir/vault8/welcome.txt
 ```

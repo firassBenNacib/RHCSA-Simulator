@@ -56,13 +56,3 @@ enabled=1
 gpgcheck=0
 dnf clean all
 ```
-
----
-
-## Task 03 - Verify Repositories (client) - 10 pts
-
-```bash
-dnf repolist
-# Run on server
-dnf repolist
-```

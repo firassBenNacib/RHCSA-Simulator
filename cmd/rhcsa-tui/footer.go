@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -11,6 +13,7 @@ type footerActionID int
 const (
 	footerActionStart footerActionID = iota
 	footerActionReset
+	footerActionExitRun
 	footerActionPane
 	footerActionSwitch
 	footerActionCheck
@@ -18,6 +21,7 @@ const (
 	footerActionHints
 	footerActionChecks
 	footerActionSolutions
+	footerActionTimer
 	footerActionFind
 	footerActionHelp
 	footerActionQuit
@@ -52,6 +56,7 @@ func (m model) footerActions() []footerAction {
 	actions = []footerAction{
 		{"Enter", "Start", footerActionStart},
 		{"r", "Reset", footerActionReset},
+		{"e", "Exit", footerActionExitRun},
 		{"Tab", "Pane", footerActionPane},
 	}
 	arrowLabel := "L/E"
@@ -68,8 +73,10 @@ func (m model) footerActions() []footerAction {
 			footerAction{"F4", "Solutions", footerActionSolutions},
 		)
 	} else {
+		actions = append(actions, footerAction{"c", "Check", footerActionCheck})
 		actions = append(actions,
 			footerAction{"F1", "Tasks", footerActionTasks},
+			footerAction{"F3", "Checks", footerActionChecks},
 			footerAction{"F4", "Solutions", footerActionSolutions},
 		)
 	}
@@ -77,6 +84,7 @@ func (m model) footerActions() []footerAction {
 		footerAction{"z", "Client", footerActionSSHClient},
 		footerAction{"x", "Server", footerActionSSHServer},
 		footerAction{"/", "Find", footerActionFind},
+		footerAction{"t", "Timer", footerActionTimer},
 		footerAction{"?", "Help", footerActionHelp},
 		footerAction{"q", "Quit", footerActionQuit},
 	)
@@ -87,13 +95,14 @@ func (m model) visibleFooterActions(width int) []footerAction {
 	actions := m.footerActions()
 	parts := make([]string, 0, len(actions))
 	usedWidth := 0
+	usableWidth := max(width-2, 1)
 	for i, action := range actions {
 		part := m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label)
 		partWidth := lipgloss.Width(part)
 		if i > 0 {
 			partWidth += 2
 		}
-		if usedWidth+partWidth > width-2 {
+		if usedWidth+partWidth > usableWidth {
 			break
 		}
 		parts = append(parts, part)
@@ -109,7 +118,21 @@ func (m model) renderFooter(width int) string {
 		parts = append(parts, m.theme.FooterKey.Render(action.key)+m.theme.FooterValue.Render(" "+action.label))
 	}
 
-	return m.theme.FooterBar.Width(width).Render(strings.Join(parts, "  "))
+	innerWidth := max(width-2, 1)
+	footerText := strings.Join(parts, "  ")
+	footerText = truncateOrPadRenderedLine(footerText, innerWidth)
+	return m.theme.FooterBar.Width(width).Render(footerText)
+}
+
+func formatDurationClock(d time.Duration) string {
+	if d < 0 {
+		d = 0
+	}
+	totalSeconds := int(d.Round(time.Second).Seconds())
+	hours := totalSeconds / 3600
+	minutes := (totalSeconds % 3600) / 60
+	seconds := totalSeconds % 60
+	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
 func (m model) footerActionBounds(width int) []footerActionBound {

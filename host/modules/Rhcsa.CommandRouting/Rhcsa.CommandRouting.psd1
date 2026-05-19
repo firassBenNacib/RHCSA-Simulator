@@ -7,7 +7,10 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'Command routing module for the RHCSA CLI.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'Get-NonEmptyTokenList'
+    'Resolve-CommandRoute'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

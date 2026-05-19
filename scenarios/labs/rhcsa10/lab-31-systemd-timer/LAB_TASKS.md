@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-31-systemd-timer` |
+| Scenario ID | `lab-31-systemd-timer` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | software-scheduling-time |

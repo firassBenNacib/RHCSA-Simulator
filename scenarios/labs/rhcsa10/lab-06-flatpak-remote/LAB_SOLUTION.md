@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-06-flatpak-remote` |
+| Scenario ID | `lab-06-flatpak-remote` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | software-management |
@@ -27,16 +27,9 @@ dnf install -y flatpak
 
 ---
 
-## Task 02 - Configure a system Flatpak remote named rhcsa10 that points to file:///o (client) - 10 pts
+## Task 02 - Configure a system Flatpak remote named rhcsa10 that points to file:///o (client) - 20 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo
-```
-
----
-
-## Task 03 - Verify that the system remote is available (client) - 10 pts
-
-```bash
 flatpak remotes --system --columns=name,url
 ```

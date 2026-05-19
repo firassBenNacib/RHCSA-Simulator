@@ -1,0 +1,276 @@
+{
+  "id": "rhcsa10-mock-exam-e",
+  "title": "RHCSA 10 Mock Exam E",
+  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "objective_tags": [
+    "boot-and-recovery",
+    "essential-tools",
+    "filesystems-and-autofs",
+    "networking-and-firewall",
+    "processes-logs-tuning",
+    "selinux-and-default-perms",
+    "shell-scripting",
+    "software-management",
+    "software-scheduling-time",
+    "storage-lvm",
+    "users-sudo-ssh"
+  ],
+  "supported_modes": [
+    "exam"
+  ],
+  "time_limit_minutes": 180,
+  "tracks": [
+    "rhcsa10"
+  ],
+  "rhel_major": 10,
+  "flags": {
+    "password_recovery": false,
+    "requires_server": true
+  },
+  "content": {
+    "exam": {
+      "tasks": [
+        "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
+        "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
+        "Install org.rhcsa.Tools from exameflatpak, then remove it after verification.",
+        "Create group teame10, create user usere10, set password cinder9, and add the user to teame10.",
+        "Allow %teame10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
+        "Set maximum password age for usere10 to 49 days and warning period to 7 days.",
+        "Create /usr/local/bin/e-who that prints the primary group for the supplied user argument.",
+        "Write users whose shell ends with sh to /root/e-shell-users.txt.",
+        "Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fstab.",
+        "Create /root/e-original, hard link /root/e-hard, and symlink /root/e-soft.",
+        "Create and enable exametimer.timer that runs every 10 minutes.",
+        "Create VG vge10 and LV datae mounted at /mnt/datae10.",
+        "Allow TCP port 8104 permanently in firewalld and reload.",
+        "Create /var/www/html/e.html and restore its default SELinux context.",
+        "Activate the throughput-performance tuned profile.",
+        "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10.log every 15 minutes.",
+        "Mount server:/exports/direct at /mnt/edirect persistently.",
+        "Set the default target to multi-user.target without rebooting.",
+        "Install lsof and ensure tcpdump is removed.",
+        "Configure persistent systemd journal storage."
+      ],
+      "hints": [
+        "Make changes persistent unless a question says otherwise.",
+        "Use local repositories and local documentation; do not depend on internet access.",
+        "Flatpak and systemd timer tasks belong to the RHCSA 10 track."
+      ],
+      "checks": [
+        "hostnamectl --static | grep -qx cliente.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servere\\.exam10\\.lab$' /etc/hosts",
+        "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.64/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"exameflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
+        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "getent group teame10 >/dev/null && id -nG usere10 | tr ' ' '\\n' | grep -qx teame10",
+        "grep -ERq '^%teame10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
+        "chage -l usere10 | grep -Eq 'Maximum.*49'",
+        "test -x /usr/local/bin/e-who && /usr/local/bin/e-who root | grep -qx root",
+        "test -s /root/e-shell-users.txt && grep -q '^root$' /root/e-shell-users.txt",
+        "test -f /root/e-etc.tar.gz && tar -tzf /root/e-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
+        "test \"$(stat -c %i /root/e-original)\" = \"$(stat -c %i /root/e-hard)\" && test -L /root/e-soft",
+        "systemctl cat exametimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled exametimer.timer | grep -qx enabled",
+        "lvs /dev/vge10/datae >/dev/null && findmnt -no TARGET /mnt/datae10 | grep -qx /mnt/datae10",
+        "firewall-cmd --permanent --query-port=8104/tcp && firewall-cmd --query-port=8104/tcp",
+        "ls -Z /var/www/html/e.html | grep -q httpd_sys_content_t",
+        "tuned-adm active | grep -q throughput-performance",
+        "crontab -l -u usere10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/usere10/exam10.log'",
+        "findmnt -no SOURCE,TARGET /mnt/edirect | grep -qx 'server:/exports/direct /mnt/edirect'",
+        "systemctl get-default | grep -qx multi-user.target",
+        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
+        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf"
+      ],
+      "solution_outline": [
+        "Work through each question independently and verify before moving on."
+      ],
+      "task_titles": [
+        "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168",
+        "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.1",
+        "Create enabled BaseOS and AppStream repository definitions using http://",
+        "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/",
+        "Install org.rhcsa.Tools from exameflatpak, then remove it after verifica",
+        "Create group teame10, create user usere10, set password cinder9, and add",
+        "Allow %teame10 to run /usr/bin/systemctl without a password by using a s",
+        "Set maximum password age for usere10 to 49 days and warning period to 7 ",
+        "Create /usr/local/bin/e-who that prints the primary group for the suppli",
+        "Write users whose shell ends with sh to /root/e-shell-users.txt",
+        "Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs",
+        "Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof",
+        "Create and enable exametimer.timer that runs every 10 minutes",
+        "Create VG vge10 and LV datae mounted at /mnt/datae10",
+        "Allow TCP port 8104 permanently in firewalld and reload",
+        "Create /var/www/html/e.html and restore its default SELinux context",
+        "Activate the throughput-performance tuned profile",
+        "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10",
+        "Mount server:/exports/direct at /mnt/edirect persistently",
+        "Set the default target to multi-user.target without rebooting",
+        "Install lsof and ensure tcpdump is removed",
+        "Configure persistent systemd journal storage"
+      ],
+      "task_points": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "solution_commands": [
+        [
+          "hostnamectl set-hostname cliente.exam10.lab",
+          "echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts"
+        ],
+        [
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.64/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection up \"System eth1\""
+        ],
+        [
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
+          "[rhcsa10-exam-baseos]",
+          "name=RHCSA10 Exam BaseOS",
+          "baseurl=http://server/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[rhcsa10-exam-appstream]",
+          "name=RHCSA10 Exam AppStream",
+          "baseurl=http://server/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "EOF"
+        ],
+        [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify exameflatpak file:///opt/rhcsa/flatpak/repo"
+        ],
+        [
+          "flatpak install --system -y exameflatpak org.rhcsa.Tools",
+          "flatpak list --system --app",
+          "flatpak uninstall --system -y org.rhcsa.Tools"
+        ],
+        [
+          "groupadd teame10",
+          "useradd -G teame10 usere10",
+          "passwd usere10",
+          "# enter: cinder9"
+        ],
+        [
+          "echo '%teame10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teame10",
+          "chmod 440 /etc/sudoers.d/teame10"
+        ],
+        [
+          "chage -M 49 -W 7 usere10"
+        ],
+        [
+          "cat > /usr/local/bin/e-who <<'EOF'",
+          "#!/bin/bash",
+          "test -n \"${1:-}\" || exit 2",
+          "id -gn \"$1\"",
+          "EOF",
+          "chmod +x /usr/local/bin/e-who"
+        ],
+        [
+          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/e-shell-users.txt"
+        ],
+        [
+          "tar -czf /root/e-etc.tar.gz /etc/hosts /etc/fstab",
+          "tar -tzf /root/e-etc.tar.gz"
+        ],
+        [
+          "echo link > /root/e-original",
+          "ln /root/e-original /root/e-hard",
+          "ln -s /root/e-original /root/e-soft"
+        ],
+        [
+          "cat > /usr/local/sbin/exametimer.sh <<'EOF'",
+          "#!/bin/bash",
+          "echo exametimer >> /var/log/exametimer.log",
+          "EOF",
+          "chmod +x /usr/local/sbin/exametimer.sh",
+          "cat > /etc/systemd/system/exametimer.service <<'EOF'",
+          "[Service]",
+          "Type=oneshot",
+          "ExecStart=/usr/local/sbin/exametimer.sh",
+          "EOF",
+          "cat > /etc/systemd/system/exametimer.timer <<'EOF'",
+          "[Timer]",
+          "OnCalendar=*:0/10",
+          "Persistent=true",
+          "[Install]",
+          "WantedBy=timers.target",
+          "EOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now exametimer.timer"
+        ],
+        [
+          "pvcreate /dev/sdb",
+          "vgcreate vge10 /dev/sdb",
+          "lvcreate -L 384M -n datae vge10",
+          "mkfs.xfs -f /dev/vge10/datae",
+          "mkdir -p /mnt/datae10",
+          "echo '/dev/vge10/datae /mnt/datae10 xfs defaults 0 0' >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8104/tcp",
+          "firewall-cmd --reload"
+        ],
+        [
+          "echo e > /var/www/html/e.html",
+          "chcon -t user_tmp_t /var/www/html/e.html",
+          "restorecon -v /var/www/html/e.html"
+        ],
+        [
+          "systemctl enable --now tuned",
+          "tuned-adm profile throughput-performance"
+        ],
+        [
+          "echo '*/15 * * * * echo EXAM10 >> /home/usere10/exam10.log' | crontab -u usere10 -"
+        ],
+        [
+          "mkdir -p /mnt/edirect",
+          "echo 'server:/exports/direct /mnt/edirect nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "systemctl set-default multi-user.target",
+          "systemctl get-default"
+        ],
+        [
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "dnf install -y lsof",
+          "dnf remove -y tcpdump"
+        ],
+        [
+          "mkdir -p /var/log/journal",
+          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
+          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
+          "systemctl restart systemd-journald"
+        ]
+      ]
+    }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
+  }
+}

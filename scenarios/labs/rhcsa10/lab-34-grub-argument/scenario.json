@@ -20,43 +20,33 @@
   "content": {
     "lab": {
       "tasks": [
-        "Add kernel argument audit_backlog_limit=8192 persistently.",
-        "Regenerate the GRUB configuration.",
-        "Verify the argument is present in /etc/default/grub or grubby output."
+        "Add kernel argument audit_backlog_limit=8192 persistently and regenerate the GRUB configuration."
       ],
       "hints": [
         "Use grubby --update-kernel=ALL.",
         "Do not rely on a one-time GRUB edit."
       ],
       "checks": [
-        "grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
-        "grep -q 'audit_backlog_limit=8192' /etc/default/grub || grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
-        "grubby --default-kernel >/dev/null"
+        "grubby --info=ALL | grep -q 'audit_backlog_limit=8192' && grubby --default-kernel >/dev/null"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Add kernel argument audit_backlog_limit=8192 persistently",
-        "Regenerate the GRUB configuration",
-        "Verify the argument is present in /etc/default/grub or grubby output"
+        "Add kernel argument audit_backlog_limit=8192 persistently and regenerate"
       ],
       "task_points": [
-        10,
-        10,
         10
       ],
       "solution_commands": [
         [
-          "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'"
-        ],
-        [
+          "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'",
           "grub2-mkconfig -o /boot/grub2/grub.cfg"
-        ],
-        [
-          "grubby --info=ALL | grep audit_backlog_limit"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

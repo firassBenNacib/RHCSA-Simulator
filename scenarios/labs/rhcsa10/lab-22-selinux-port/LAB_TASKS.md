@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-22-selinux-port` |
+| Scenario ID | `lab-22-selinux-port` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms, networking-and-firewall |
@@ -25,12 +25,6 @@ Add TCP port 8010 as an http_port_t SELinux port.
 
 ---
 
-## Task 02 - Configure firewalld to allow TCP port 8010 permanently (client) - 10 pts
+## Task 02 - Configure firewalld to allow TCP port 8010 permanently (client) - 20 pts
 
 Configure firewalld to allow TCP port 8010 permanently.
-
----
-
-## Task 03 - Verify SELinux and firewall configuration (client) - 10 pts
-
-Verify SELinux and firewall configuration.

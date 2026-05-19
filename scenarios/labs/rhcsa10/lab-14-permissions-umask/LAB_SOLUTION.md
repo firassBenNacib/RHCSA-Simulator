@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-14-permissions-umask` |
+| Scenario ID | `lab-14-permissions-umask` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |

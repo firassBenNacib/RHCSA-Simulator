@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-27-rsyslog-logger` |
+| Scenario ID | `lab-27-rsyslog-logger` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | processes-logs-tuning |
@@ -19,9 +19,9 @@ Create and route log messages.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Ensure rsyslog is installed and running (client) - 10 pts
+## Task 01 - Ensure rsyslog is running (client) - 10 pts
 
-Ensure rsyslog is installed and running.
+Ensure rsyslog is running.
 
 ---
 

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-30-systemd-service` |
+| Scenario ID | `lab-30-systemd-service` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | software-scheduling-time |
