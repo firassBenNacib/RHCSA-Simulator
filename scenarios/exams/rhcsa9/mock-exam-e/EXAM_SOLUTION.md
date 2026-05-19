@@ -114,10 +114,8 @@ systemctl restart httpd
 
 ```bash
 getent group harborops >/dev/null || groupadd harborops
-id lena >/dev/null 2>&1 || useradd -m lena
-id ivor >/dev/null 2>&1 || useradd -m ivor
-usermod -aG harborops lena
-usermod -aG harborops ivor
+id lena >/dev/null 2>&1 || useradd -m -G harborops lena
+id ivor >/dev/null 2>&1 || useradd -m -G harborops ivor
 echo cinder9 | passwd --stdin lena
 echo cinder9 | passwd --stdin ivor
 ```

@@ -79,8 +79,7 @@ mount -a
 
 ```bash
 getent group deltaops >/dev/null || groupadd deltaops
-id pavel >/dev/null 2>&1 || useradd -m pavel
-usermod -aG deltaops pavel
+id pavel >/dev/null 2>&1 || useradd -m -G deltaops pavel
 echo cinder9 | passwd --stdin pavel
 ```
 

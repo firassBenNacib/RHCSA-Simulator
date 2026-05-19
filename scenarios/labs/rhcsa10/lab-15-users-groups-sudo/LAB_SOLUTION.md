@@ -32,7 +32,6 @@ getent group ops10
 
 ```bash
 id relay10 >/dev/null 2>&1 || useradd -G ops10 relay10
-usermod -aG ops10 relay10
 echo 'relay10:cinder9' | chpasswd
 ```
 
