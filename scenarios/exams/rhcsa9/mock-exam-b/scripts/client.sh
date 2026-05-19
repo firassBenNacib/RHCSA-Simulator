@@ -73,21 +73,22 @@ for line in p.read_text().splitlines():
 p.write_text('\n'.join(lines) + '\n')
 EOF
     wipefs -a /dev/sdb >/dev/null 2>&1 || true
-    sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+    dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+    partprobe /dev/sdb >/dev/null 2>&1 || true
 umount /mnt/reviewb >/dev/null 2>&1 || true
         sed -i '\#/mnt/reviewb#d' /etc/fstab
         lvremove -fy /dev/reviewvgb/reviewb >/dev/null 2>&1 || true
         vgremove -fy reviewvgb >/dev/null 2>&1 || true
         pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
         wipefs -a /dev/sdc >/dev/null 2>&1 || true
-        sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+        dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
         printf 'label: gpt
 ,700M,L
 ' | sfdisk /dev/sdc >/dev/null 2>&1
         partprobe /dev/sdc >/dev/null 2>&1 || true
         pvcreate -ff -y /dev/sdc1 >/dev/null 2>&1
         vgcreate reviewvgb /dev/sdc1 >/dev/null 2>&1
-        lvcreate -n reviewb -L 160M reviewvgb >/dev/null 2>&1
+        lvcreate -y -W y -n reviewb -L 160M reviewvgb >/dev/null 2>&1
         mkfs.ext4 -F /dev/reviewvgb/reviewb >/dev/null 2>&1
         mkdir -p /mnt/reviewb
         mount /dev/reviewvgb/reviewb /mnt/reviewb

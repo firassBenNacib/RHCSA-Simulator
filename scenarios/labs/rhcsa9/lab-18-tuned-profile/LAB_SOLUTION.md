@@ -22,8 +22,10 @@ Apply the system recommended tuned profile.
 ## Task 01 - Apply the recommended tuned profile and leave it (client) - 10 pts
 
 ```bash
+systemctl enable --now tuned
 tuned-adm recommend
-rec="$(tuned-adm recommend | awk '{print $1}')"
+rec="$(tuned-adm recommend | awk 'NF{print $1; exit}')"
+test -n "$rec"
 tuned-adm profile "$rec"
 tuned-adm active
 ```

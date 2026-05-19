@@ -25,12 +25,6 @@ Persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /
 
 ---
 
-## Task 02 - Use the mount options ro,sync (client) - 10 pts
+## Task 02 - Mount the NFS export and read the file (client) - 20 pts
 
-Use the mount options ro,sync.
-
----
-
-## Task 03 - Ensure the mount is available after a reboot and (client) - 10 pts
-
-Ensure the mount is available after a reboot and that the file nfs36.txt can be read from the mount point.
+On client, use the mount options ro,sync, mount it now, and ensure the file nfs36.txt can be read from the mount point.

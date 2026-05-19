@@ -29,8 +29,8 @@
         "Use UUID or device path in /etc/fstab."
       ],
       "checks": [
+        "blkid /dev/sdb1 | grep -q 'TYPE=\"swap\"'",
         "swapon --show=NAME --noheadings | grep -qx /dev/sdb1",
-        "blkid /dev/sdb1 | grep -q TYPE=\\\"swap\\\"",
         "grep -Eq '^/dev/sdb1[[:space:]]+swap[[:space:]]+swap[[:space:]]+defaults' /etc/fstab"
       ],
       "solution_outline": [
@@ -59,5 +59,8 @@
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

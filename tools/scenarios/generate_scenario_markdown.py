@@ -6,6 +6,7 @@ import re
 import textwrap
 from pathlib import Path
 
+from rhcsa_scenarios.lab_normalization import normalize_lab_block
 from rhcsa_scenarios.text import normalize_task_text
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -154,7 +155,7 @@ def infer_system(task_text: str, requires_server: bool, default_system: str = "c
     return default_system
 
 
-def infer_default_system(description: str, tasks, requires_server: bool) -> str:
+def infer_default_system(description: str, tasks: list[str], requires_server: bool) -> str:
     combined = "\n".join([description, *tasks]).lower()
     has_client = bool(re.search(r"\bclient\b", combined))
     has_server = bool(re.search(r"\bserver\b", combined))
@@ -176,8 +177,8 @@ def infer_title_from_task(task_text: str) -> str:
     line = normalize_task_text(task_text).splitlines()[0].strip()
     line = re.sub(r"(?i)^on\s+(client|server),\s*", "", line)
     line = re.sub(r"(?i)^as\s+user\s+[^,]+,\s*", "", line)
-    line = line.rstrip('.')
-    return textwrap.shorten(line, width=72, placeholder='…')
+    line = line.rstrip(".")
+    return textwrap.shorten(line, width=72, placeholder="…")
 
 
 def render_task_heading(index: int, title: str, system: str, points: int | None, label: str) -> str:
@@ -189,7 +190,7 @@ def render_task_heading(index: int, title: str, system: str, points: int | None,
 
 def get_task_title(task_titles: list[str], index: int, task_text: str) -> str:
     if index < len(task_titles):
-        candidate = clean_text(task_titles[index]).rstrip('.')
+        candidate = clean_text(task_titles[index]).rstrip(".")
         if candidate and not _generic_title(candidate) and not candidate.endswith(("...", "…")):
             return candidate
     return infer_title_from_task(task_text)
@@ -199,7 +200,14 @@ def get_task_points(task_points: list[int], index: int) -> int | None:
     return task_points[index] if index < len(task_points) else None
 
 
-def render_tasks(tasks, task_titles, task_points, requires_server, label, default_system):
+def render_tasks(
+    tasks: list[str],
+    task_titles: list[str],
+    task_points: list[int],
+    requires_server: bool,
+    label: str,
+    default_system: str,
+) -> str:
     sections = []
     for index, task in enumerate(tasks, start=1):
         system = infer_system(task, requires_server, default_system)
@@ -216,7 +224,16 @@ def render_tasks(tasks, task_titles, task_points, requires_server, label, defaul
     return "\n".join(sections).rstrip()
 
 
-def render_solution(tasks, task_titles, task_points, solution_commands, checks, requires_server, label, default_system):
+def render_solution(
+    tasks: list[str],
+    task_titles: list[str],
+    task_points: list[int],
+    solution_commands: list[list[str]],
+    checks: list[str],
+    requires_server: bool,
+    label: str,
+    default_system: str,
+) -> str:
     sections = []
     for index, task in enumerate(tasks, start=1):
         system = infer_system(task, requires_server, default_system)
@@ -234,7 +251,7 @@ def render_solution(tasks, task_titles, task_points, solution_commands, checks, 
     return "\n".join(sections).rstrip()
 
 
-def summary_table(data, mode):
+def summary_table(data: dict, mode: str) -> str:
     objectives = ", ".join(data.get("objective_tags", [])) or "n/a"
     return "\n".join([
         "| Field | Value |",
@@ -246,7 +263,7 @@ def summary_table(data, mode):
     ])
 
 
-def collect_systems(tasks, requires_server: bool, default_system: str) -> list[str]:
+def collect_systems(tasks: list[str], requires_server: bool, default_system: str) -> list[str]:
     systems: list[str] = []
     for task in tasks:
         inferred = infer_system(task, requires_server, default_system)
@@ -260,7 +277,7 @@ def collect_systems(tasks, requires_server: bool, default_system: str) -> list[s
     return ["client"]
 
 
-def systems_table(tasks, requires_server: bool, default_system: str):
+def systems_table(tasks: list[str], requires_server: bool, default_system: str) -> str:
     systems = collect_systems(tasks, requires_server, default_system)
     if systems == ["client"]:
         return "\n".join([
@@ -277,7 +294,7 @@ def systems_table(tasks, requires_server: bool, default_system: str):
     return "\n".join(["### Systems", *[f"- {system}" for system in systems], ""])
 
 
-def metadata_lines(data, mode, tasks, default_system):
+def metadata_lines(data: dict, mode: str, tasks: list[str], default_system: str) -> list[str]:
     lines = [
         "## Overview",
         summary_table(data, mode),
@@ -305,59 +322,59 @@ def remove_if_exists(path: Path) -> None:
 
 
 def main() -> int:
-    for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/scenario.json")):
+    for manifest_path in sorted(SCENARIOS_ROOT.glob("*/*/*/scenario.json")):
         scenario_root = manifest_path.parent
-    data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    supported_modes = [m.lower() for m in data.get("supported_modes", [])]
-    requires_server = bool(data.get("flags", {}).get("requires_server", False))
-    lab = data.get("content", {}).get("lab", {})
-    exam = data.get("content", {}).get("exam", {})
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        supported_modes = [m.lower() for m in data.get("supported_modes", [])]
+        requires_server = bool(data.get("flags", {}).get("requires_server", False))
+        lab = normalize_lab_block(data.get("content", {}).get("lab", {}))
+        exam = data.get("content", {}).get("exam", {})
 
-    if "lab" in supported_modes:
-        lab_tasks = lab.get("tasks", [])
-        lab_default_system = infer_default_system(data["description"], lab_tasks, requires_server)
-        lab_tasks_md = "\n".join([
-            f"# {data['title']}",
-            "",
-            "## Lab Tasks",
-            *metadata_lines(data, "Lab", lab_tasks, lab_default_system),
-            render_tasks(lab_tasks, lab.get("task_titles", []), lab.get("task_points", []), requires_server, "Task", lab_default_system),
-        ])
-        lab_solution_md = "\n".join([
-            f"# {data['title']}",
-            "",
-            "## Lab Solution",
-            *metadata_lines(data, "Lab", lab_tasks, lab_default_system),
-            render_solution(lab_tasks, lab.get("task_titles", []), lab.get("task_points", []), lab.get("solution_commands", []), lab.get("checks", []), requires_server, "Task", lab_default_system),
-        ])
-        write_text(scenario_root / "LAB_TASKS.md", lab_tasks_md)
-        write_text(scenario_root / "LAB_SOLUTION.md", lab_solution_md)
-    else:
-        remove_if_exists(scenario_root / "LAB_TASKS.md")
-        remove_if_exists(scenario_root / "LAB_SOLUTION.md")
+        if "lab" in supported_modes:
+            lab_tasks = lab.get("tasks", [])
+            lab_default_system = infer_default_system(data["description"], lab_tasks, requires_server)
+            lab_tasks_md = "\n".join([
+                f"# {data['title']}",
+                "",
+                "## Lab Tasks",
+                *metadata_lines(data, "Lab", lab_tasks, lab_default_system),
+                render_tasks(lab_tasks, lab.get("task_titles", []), lab.get("task_points", []), requires_server, "Task", lab_default_system),
+            ])
+            lab_solution_md = "\n".join([
+                f"# {data['title']}",
+                "",
+                "## Lab Solution",
+                *metadata_lines(data, "Lab", lab_tasks, lab_default_system),
+                render_solution(lab_tasks, lab.get("task_titles", []), lab.get("task_points", []), lab.get("solution_commands", []), lab.get("checks", []), requires_server, "Task", lab_default_system),
+            ])
+            write_text(scenario_root / "LAB_TASKS.md", lab_tasks_md)
+            write_text(scenario_root / "LAB_SOLUTION.md", lab_solution_md)
+        else:
+            remove_if_exists(scenario_root / "LAB_TASKS.md")
+            remove_if_exists(scenario_root / "LAB_SOLUTION.md")
 
-    if "exam" in supported_modes:
-        exam_tasks = exam.get("tasks", [])
-        exam_default_system = infer_default_system(data["description"], exam_tasks, requires_server)
-        exam_tasks_md = "\n".join([
-            f"# {data['title']}",
-            "",
-            "## Exam Tasks",
-            *metadata_lines(data, "Exam", exam_tasks, exam_default_system),
-            render_tasks(exam_tasks, exam.get("task_titles", []), exam.get("task_points", []), requires_server, "Question", exam_default_system),
-        ])
-        exam_solution_md = "\n".join([
-            f"# {data['title']}",
-            "",
-            "## Exam Solution",
-            *metadata_lines(data, "Exam", exam_tasks, exam_default_system),
-            render_solution(exam_tasks, exam.get("task_titles", []), exam.get("task_points", []), exam.get("solution_commands", []), exam.get("checks", []), requires_server, "Question", exam_default_system),
-        ])
-        write_text(scenario_root / "EXAM_TASKS.md", exam_tasks_md)
-        write_text(scenario_root / "EXAM_SOLUTION.md", exam_solution_md)
-    else:
-        remove_if_exists(scenario_root / "EXAM_TASKS.md")
-        remove_if_exists(scenario_root / "EXAM_SOLUTION.md")
+        if "exam" in supported_modes:
+            exam_tasks = exam.get("tasks", [])
+            exam_default_system = infer_default_system(data["description"], exam_tasks, requires_server)
+            exam_tasks_md = "\n".join([
+                f"# {data['title']}",
+                "",
+                "## Exam Tasks",
+                *metadata_lines(data, "Exam", exam_tasks, exam_default_system),
+                render_tasks(exam_tasks, exam.get("task_titles", []), exam.get("task_points", []), requires_server, "Question", exam_default_system),
+            ])
+            exam_solution_md = "\n".join([
+                f"# {data['title']}",
+                "",
+                "## Exam Solution",
+                *metadata_lines(data, "Exam", exam_tasks, exam_default_system),
+                render_solution(exam_tasks, exam.get("task_titles", []), exam.get("task_points", []), exam.get("solution_commands", []), exam.get("checks", []), requires_server, "Question", exam_default_system),
+            ])
+            write_text(scenario_root / "EXAM_TASKS.md", exam_tasks_md)
+            write_text(scenario_root / "EXAM_SOLUTION.md", exam_solution_md)
+        else:
+            remove_if_exists(scenario_root / "EXAM_TASKS.md")
+            remove_if_exists(scenario_root / "EXAM_SOLUTION.md")
     return 0
 
 

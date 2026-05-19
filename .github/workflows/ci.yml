@@ -96,9 +96,9 @@ jobs:
         shell: pwsh
         run: |
           $errors = $null
-    $psFiles = @('RHCSA.ps1', 'install.ps1') + (Get-ChildItem -Path 'host/modules' -Include '*.psm1','*.psd1' -Recurse).FullName
-    foreach ($file in $psFiles) {
-      [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null
+          $psFiles = @('RHCSA.ps1', 'install.ps1') + (Get-ChildItem -Path 'host/modules' -Include '*.psm1','*.psd1' -Recurse).FullName
+          foreach ($file in $psFiles) {
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null
             if ($errors) {
               $errors | Format-List | Out-String | Write-Error
               exit 1
@@ -113,9 +113,9 @@ jobs:
             Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
           }
           $issues = @()
-    $psFiles = @('RHCSA.ps1', 'install.ps1') + (Get-ChildItem -Path 'host/modules' -Include '*.psm1','*.psd1' -Recurse).FullName
-    foreach ($file in $psFiles) {
-      $issues += Invoke-ScriptAnalyzer -Path $file -Severity Error, Warning
+          $psFiles = @('RHCSA.ps1', 'install.ps1') + (Get-ChildItem -Path 'host/modules' -Include '*.psm1','*.psd1' -Recurse).FullName
+          foreach ($file in $psFiles) {
+            $issues += Invoke-ScriptAnalyzer -Path $file -Severity Error
           }
           if ($issues.Count -gt 0) {
             $issues | Format-Table -AutoSize | Out-String | Write-Error

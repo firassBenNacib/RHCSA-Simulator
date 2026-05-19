@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 var (
-	failLinePattern    = regexp.MustCompile(`(?i)^\[fail\]\s*\[([^\]]*)\]\s*(.*)$`)
-	failDetailPattern  = regexp.MustCompile(`(?i)^fail\s+(\d+):\s*\[([^\]]*)\]\s*(.*)$`)
+	failLinePattern   = regexp.MustCompile(`(?i)^\[fail\]\s*\[([^\]]*)\]\s*(.*)$`)
+	failDetailPattern = regexp.MustCompile(`(?i)^fail\s+(\d+):\s*\[([^\]]*)\]\s*(.*)$`)
 )
 
 func (m model) View() string {
@@ -18,7 +19,7 @@ func (m model) View() string {
 		return "Loading RHCSA Simulator…"
 	}
 
-	tabBar := m.theme.RenderTabs(m.activeTab, m.width)
+	tabBar := m.renderTopBar(m.width)
 	footer := m.renderFooter(m.width)
 
 	var content string
@@ -261,6 +262,10 @@ func (m model) renderSearchBar(width int) string {
 }
 
 func (m model) renderOutput(width, height int) string {
+	if m.busy {
+		return m.renderBusyProgress(width, height)
+	}
+
 	body := m.statusBody()
 	if strings.TrimSpace(body) == "" {
 		return ""
@@ -282,6 +287,158 @@ func (m model) renderOutput(width, height int) string {
 	return strings.Join(rendered, "\n")
 }
 
+func (m model) renderTopBar(width int) string {
+	labsStr := m.theme.TabInactive.Render("LABS")
+	examsStr := m.theme.TabInactive.Render("EXAMS")
+
+	if m.activeTab == labsTab {
+		labsStr = m.theme.TabActive.Render("LABS")
+	} else {
+		examsStr = m.theme.TabActive.Render("EXAMS")
+	}
+
+	tabs := lipgloss.JoinHorizontal(lipgloss.Left, labsStr, "   ", examsStr)
+	button := m.timerButtonLabel()
+	content := tabs
+	if width >= 48 && strings.TrimSpace(StripAnsi(button)) != "" {
+		content = m.fillLine(tabs, button, max(width-4, 1))
+	}
+	bar := m.theme.TabBar.Width(width).Render(content)
+	rule := m.theme.TabBorder.Render(strings.Repeat("─", width))
+	return bar + "\n" + rule
+}
+
+func (m model) timerButtonLabel() string {
+	plain := m.timerButtonPlainLabel()
+	if plain == "" {
+		return ""
+	}
+	if m.timerEnabled {
+		return m.theme.TimerActive.Render(plain)
+	}
+	return m.theme.TimerInactive.Render(plain)
+}
+
+func (m model) timerButtonPlainLabel() string {
+	if m.activeScenarioID() == "" {
+		return ""
+	}
+	if !m.timerEnabled {
+		return "TIMER"
+	}
+	if m.timerEndsAt.IsZero() {
+		return "00:00:00"
+	}
+	remaining := m.timerEndsAt.Sub(m.now)
+	if remaining <= 0 {
+		return "00:00:00"
+	}
+	return formatDurationClock(remaining)
+}
+
+func (m model) timerButtonBounds() (startX, endX, y int, ok bool) {
+	if m.width < 48 {
+		return 0, 0, 0, false
+	}
+	target := m.timerButtonPlainLabel()
+	if target == "" {
+		return 0, 0, 0, false
+	}
+	lines := strings.Split(StripAnsi(m.renderTopBar(m.width)), "\n")
+	if len(lines) == 0 {
+		return 0, 0, 0, false
+	}
+	idx := strings.LastIndex(lines[0], target)
+	if idx < 0 {
+		return 0, 0, 0, false
+	}
+	startX = lipgloss.Width(lines[0][:idx])
+	endX = startX + lipgloss.Width(target) - 1
+	return startX, endX, 0, true
+}
+
+func (m model) renderBusyProgress(width, height int) string {
+	panelWidth := max(width, 24)
+	started := m.actionStarted
+	if started.IsZero() {
+		started = m.now
+	}
+	elapsed := m.now.Sub(started)
+	if elapsed < 0 {
+		elapsed = 0
+	}
+
+	status := strings.TrimSpace(strings.Split(m.statusText, "\n")[0])
+	if status == "" {
+		status = "Working"
+	}
+	status = strings.TrimSuffix(status, "...")
+	status = strings.TrimSuffix(status, "…")
+	contentWidth := max(panelWidth-4, 20)
+	barWidth := clampInt((contentWidth*44)/100, 22, 56)
+	bar := m.progressBar(elapsed, barWidth)
+	title := m.busyProgressTitle(status)
+	topDashWidth := max(panelWidth-lipgloss.Width("┌─ ")-lipgloss.Width(title)-lipgloss.Width(" ┐"), 0)
+	topLine := m.theme.PaneBorder.Render("┌─ ") +
+		m.theme.ProgressTitle.Render(title) +
+		m.theme.PaneBorder.Render(" "+strings.Repeat("─", topDashWidth)+"┐")
+	statusLine := centerRenderedLine(m.theme.DetailPlain.Render(status), contentWidth)
+	elapsedLine := centerRenderedLine(m.theme.Muted.Render("Elapsed "+formatDurationClock(elapsed)), contentWidth)
+	progressLine := centerRenderedLine("["+bar+"]", contentWidth)
+
+	lines := []string{
+		topLine,
+		m.theme.PaneBorder.Render("│ ") + statusLine + m.theme.PaneBorder.Render(" │"),
+		m.theme.PaneBorder.Render("│ ") + elapsedLine + m.theme.PaneBorder.Render(" │"),
+		m.theme.PaneBorder.Render("│ ") + progressLine + m.theme.PaneBorder.Render(" │"),
+		m.theme.PaneBorder.Render("└" + strings.Repeat("─", max(panelWidth-2, 0)) + "┘"),
+	}
+	for len(lines) < height {
+		lines = append(lines, strings.Repeat(" ", panelWidth))
+	}
+	if len(lines) > height {
+		lines = lines[:height]
+	}
+	return strings.Join(lines, "\n")
+}
+
+func (m model) busyProgressTitle(status string) string {
+	lower := strings.ToLower(status)
+	switch {
+	case strings.Contains(lower, "starting") && m.activeTab == labsTab:
+		return "RHCSA LAB START"
+	case strings.Contains(lower, "starting") && m.activeTab == examsTab:
+		return "RHCSA EXAM START"
+	case strings.Contains(lower, "reset"):
+		return "RHCSA RESET"
+	case strings.Contains(lower, "check"):
+		return "RHCSA CHECK"
+	case strings.Contains(lower, "ssh"):
+		return "RHCSA SSH"
+	default:
+		return "RHCSA TASK"
+	}
+}
+
+func (m model) progressBar(elapsed time.Duration, width int) string {
+	width = max(width, 1)
+	segment := clampInt(width/4, 4, max(width, 4))
+	if segment >= width {
+		return m.theme.ProgressBar.Render(strings.Repeat("█", width))
+	}
+
+	offset := (int(elapsed.Milliseconds()/180) % (width + segment)) - segment
+	var b strings.Builder
+	for i := 0; i < width; i++ {
+		if i >= offset && i < offset+segment {
+			b.WriteRune('█')
+		} else {
+			b.WriteRune('░')
+		}
+	}
+	return m.theme.ProgressBar.Render(b.String())
+}
+
 func truncateOrPadRenderedLine(line string, width int) string {
 	if lipgloss.Width(line) > width {
 		line = lipgloss.NewStyle().MaxWidth(width).Render(line)
@@ -291,6 +448,19 @@ func truncateOrPadRenderedLine(line string, width int) string {
 		line += strings.Repeat(" ", width-visible)
 	}
 	return line
+}
+
+func centerRenderedLine(line string, width int) string {
+	if lipgloss.Width(line) > width {
+		line = lipgloss.NewStyle().MaxWidth(width).Render(line)
+	}
+	visible := lipgloss.Width(line)
+	if visible >= width {
+		return line
+	}
+	left := (width - visible) / 2
+	right := width - visible - left
+	return strings.Repeat(" ", left) + line + strings.Repeat(" ", right)
 }
 
 func (m model) catalogTabBounds() (labsStart, labsEnd, examsStart, examsEnd, y int) {

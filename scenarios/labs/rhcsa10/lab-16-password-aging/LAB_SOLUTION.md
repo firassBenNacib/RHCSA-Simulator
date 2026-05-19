@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-16-password-aging` |
+| Scenario ID | `lab-16-password-aging` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |

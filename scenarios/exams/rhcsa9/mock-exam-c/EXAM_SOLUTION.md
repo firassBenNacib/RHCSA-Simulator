@@ -78,9 +78,9 @@ mount -a
 ## Question 06 - Users And Group (client) - 5 pts
 
 ```bash
-groupadd infrac
-useradd -G infrac talia
-useradd -G infrac ren
+getent group infrac >/dev/null || groupadd infrac
+id talia >/dev/null 2>&1 || useradd -m -G infrac talia
+id ren >/dev/null 2>&1 || useradd -m -G infrac ren
 echo cinder9 | passwd --stdin talia
 echo cinder9 | passwd --stdin ren
 ```
@@ -101,7 +101,9 @@ setfacl -d -m g:infrac:rwx /srv/infrac
 ## Question 08 - No-Home User (client) - 5 pts
 
 ```bash
-useradd -M -s /sbin/nologin remote63
+id remote63 >/dev/null 2>&1 || useradd -M -s /sbin/nologin remote63
+usermod -s /sbin/nologin remote63
+rm -rf /home/remote63
 ```
 
 ---
@@ -157,7 +159,8 @@ echo 'echo exam-c access' >> /home/ren/.bash_profile
 ## Question 14 - Fixed UID User (client) - 4 pts
 
 ```bash
-useradd -u 4431 kian431
+id kian431 >/dev/null 2>&1 || useradd -u 4431 kian431
+usermod -u 4431 kian431
 echo cinder9 | passwd --stdin kian431
 ```
 
@@ -194,7 +197,7 @@ tar -cjf /root/etc-c.tar.bz2 /etc
 cat > /usr/local/bin/northcheck <<'SCRIPT'
 #!/usr/bin/env bash
 while read -r svc; do
-  systemctl is-active "$svc" >> /root/north-services.txt
+  systemctl is-active "$svc" >> /root/north-services.txt || true
 done < /usr/local/share/exam-c/check.lst
 SCRIPT
 chmod 755 /usr/local/bin/northcheck
@@ -206,8 +209,17 @@ chmod 755 /usr/local/bin/northcheck
 ## Question 19 - Swap Space (client) - 4 pts
 
 ```bash
+swapoff /dev/sdb1 >/dev/null 2>&1 || true
+sed -i -E '\#^[^[:space:]]+[[:space:]]+swap[[:space:]]+swap[[:space:]]#d' /etc/fstab
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB
-partprobe /dev/sdb
+blockdev --rereadpt /dev/sdb || true
+partprobe /dev/sdb || true
+partx -u /dev/sdb || partx -a /dev/sdb || true
+udevadm settle
+for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done
+test -b /dev/sdb1
 mkswap /dev/sdb1
 swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
@@ -228,8 +240,18 @@ resize2fs /dev/reviewvgc/reviewc
 ## Question 21 - Rootless Container (client) - 4 pts
 
 ```bash
+mkdir -p /opt/inc /opt/outc /opt/rhcsa/workspaces/exam-c/site-content
+echo 'exam c container' > /opt/rhcsa/workspaces/exam-c/site-content/index.html
+cat > /opt/rhcsa/workspaces/exam-c/Containerfile <<'EOF'
+FROM localhost/rhcsa-httpd-base:latest
+COPY site-content/ /var/www/html/
+CMD ["/usr/bin/bash", "-lc", "while true; do sleep 300; done"]
+EOF
+chown -R eirac:eirac /opt/rhcsa/workspaces/exam-c /opt/inc /opt/outc
 su - eirac
 cd /opt/rhcsa/workspaces/exam-c
+podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
 podman build -t localhost/northstar-web:latest .
 podman run -d --name pdfc -v /opt/inc:/data/input:Z -v /opt/outc:/data/output:Z localhost/northstar-web:latest
 exit
@@ -240,12 +262,14 @@ exit
 ## Question 22 - Container Autostart (client) - 4 pts
 
 ```bash
-su - eirac
-mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user
-podman generate systemd --name pdfc --files --new
-systemctl --user daemon-reload
-systemctl --user enable --now container-pdfc.service
-exit
 loginctl enable-linger eirac
+uid=$(id -u eirac)
+systemctl start "user@$uid.service" || true
+for i in $(seq 1 20); do test -S "/run/user/$uid/bus" && break; sleep 1; done
+test -S "/run/user/$uid/bus"
+runuser -l eirac -c 'mkdir -p ~/.config/systemd/user'
+runuser -l eirac -c 'cd ~/.config/systemd/user && podman generate systemd --name pdfc --files'
+runuser -l eirac -c 'podman kill pdfc >/dev/null 2>&1 || true'
+runuser -l eirac -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user daemon-reload'
+runuser -l eirac -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user enable --now container-pdfc.service'
 ```

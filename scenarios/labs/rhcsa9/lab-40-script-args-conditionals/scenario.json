@@ -24,8 +24,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the executable script /usr/local/bin/usercheck40 on client.",
-        "The script must accept one username argument.",
+        "Create the script file /usr/local/bin/usercheck40 on client.",
+        "Make /usr/local/bin/usercheck40 executable.",
         "If the user exists, print EXISTS: username to standard output and exit with status 0.",
         "If the user does not exist, print MISSING: username to standard output and exit with status 1."
       ],
@@ -34,6 +34,7 @@
         "Make the script executable."
       ],
       "checks": [
+        "test -f /usr/local/bin/usercheck40",
         "test -x /usr/local/bin/usercheck40",
         "/usr/local/bin/usercheck40 script40 | grep -qx 'EXISTS: script40'",
         "output=\"$(/usr/local/bin/usercheck40 nosuch40 2>/dev/null || true)\"; test \"$output\" = 'MISSING: nosuch40'"
@@ -55,25 +56,17 @@
       ],
       "solution_commands": [
         [
-          "vim /usr/local/bin/usercheck40",
-          "#!/bin/bash",
-          "user_name=\"$1\"",
-          "if id \"$user_name\" >/dev/null 2>&1; then",
-          "  echo \"EXISTS: $user_name\"",
-          "  exit 0",
-          "else",
-          "  echo \"MISSING: $user_name\"",
-          "  exit 1",
-          "fi"
-        ],
-        [
-          "# The script reads the first positional parameter as user_name."
-        ],
-        [
-          "# The script uses id to print EXISTS and exit 0 when the user exists."
+          "/usr/bin/install -m 644 /dev/null /usr/local/bin/usercheck40",
+          "test -f /usr/local/bin/usercheck40"
         ],
         [
           "chmod 755 /usr/local/bin/usercheck40"
+        ],
+        [
+          "/usr/bin/printf '%s\\n' '#!/bin/bash' 'user_name=\"$1\"' 'if id \"$user_name\" >/dev/null 2>&1; then' '  echo \"EXISTS: $user_name\"' '  exit 0' 'fi' 'exit 1' > /usr/local/bin/usercheck40"
+        ],
+        [
+          "/usr/bin/printf '%s\\n' '#!/bin/bash' 'user_name=\"$1\"' 'if id \"$user_name\" >/dev/null 2>&1; then' '  echo \"EXISTS: $user_name\"' '  exit 0' 'else' '  echo \"MISSING: $user_name\"' '  exit 1' 'fi' > /usr/local/bin/usercheck40"
         ]
       ]
     }

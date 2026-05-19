@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -11,6 +14,7 @@ type footerActionID int
 const (
 	footerActionStart footerActionID = iota
 	footerActionReset
+	footerActionExitRun
 	footerActionPane
 	footerActionSwitch
 	footerActionCheck
@@ -18,6 +22,7 @@ const (
 	footerActionHints
 	footerActionChecks
 	footerActionSolutions
+	footerActionTimer
 	footerActionFind
 	footerActionHelp
 	footerActionQuit
@@ -52,6 +57,7 @@ func (m model) footerActions() []footerAction {
 	actions = []footerAction{
 		{"Enter", "Start", footerActionStart},
 		{"r", "Reset", footerActionReset},
+		{"e", "Exit", footerActionExitRun},
 		{"Tab", "Pane", footerActionPane},
 	}
 	arrowLabel := "L/E"
@@ -68,8 +74,10 @@ func (m model) footerActions() []footerAction {
 			footerAction{"F4", "Solutions", footerActionSolutions},
 		)
 	} else {
+		actions = append(actions, footerAction{"c", "Check", footerActionCheck})
 		actions = append(actions,
 			footerAction{"F1", "Tasks", footerActionTasks},
+			footerAction{"F3", "Checks", footerActionChecks},
 			footerAction{"F4", "Solutions", footerActionSolutions},
 		)
 	}
@@ -77,6 +85,7 @@ func (m model) footerActions() []footerAction {
 		footerAction{"z", "Client", footerActionSSHClient},
 		footerAction{"x", "Server", footerActionSSHServer},
 		footerAction{"/", "Find", footerActionFind},
+		footerAction{"t", "Timer", footerActionTimer},
 		footerAction{"?", "Help", footerActionHelp},
 		footerAction{"q", "Quit", footerActionQuit},
 	)
@@ -85,21 +94,91 @@ func (m model) footerActions() []footerAction {
 
 func (m model) visibleFooterActions(width int) []footerAction {
 	actions := m.footerActions()
-	parts := make([]string, 0, len(actions))
-	usedWidth := 0
+	usableWidth := max(width-2, 1)
+
+	if m.filterMode {
+		return fitFooterActions(actions, usableWidth, m.footerActionWidth)
+	}
+
+	byID := make(map[footerActionID]footerAction, len(actions))
+	order := make(map[footerActionID]int, len(actions))
 	for i, action := range actions {
-		part := m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label)
-		partWidth := lipgloss.Width(part)
-		if i > 0 {
+		byID[action.id] = action
+		order[action.id] = i
+	}
+
+	priority := []footerActionID{
+		footerActionStart,
+		footerActionHelp,
+		footerActionQuit,
+		footerActionCheck,
+		footerActionReset,
+		footerActionExitRun,
+		footerActionPane,
+		footerActionSwitch,
+		footerActionTasks,
+		footerActionHints,
+		footerActionChecks,
+		footerActionSolutions,
+		footerActionSSHClient,
+		footerActionSSHServer,
+		footerActionFind,
+		footerActionTimer,
+	}
+
+	selected := make([]footerAction, 0, len(actions))
+	seen := make(map[footerActionID]bool, len(actions))
+	for _, id := range priority {
+		action, ok := byID[id]
+		if !ok || seen[id] {
+			continue
+		}
+		candidate := append(append([]footerAction{}, selected...), action)
+		sort.SliceStable(candidate, func(i, j int) bool {
+			return order[candidate[i].id] < order[candidate[j].id]
+		})
+		if m.footerActionsWidth(candidate) <= usableWidth {
+			selected = candidate
+			seen[id] = true
+		}
+	}
+
+	return selected
+}
+
+func fitFooterActions(actions []footerAction, width int, itemWidth func(footerAction) int) []footerAction {
+	selected := make([]footerAction, 0, len(actions))
+	usedWidth := 0
+	for _, action := range actions {
+		partWidth := itemWidth(action)
+		if len(selected) > 0 {
 			partWidth += 2
 		}
-		if usedWidth+partWidth > width-2 {
+		if usedWidth+partWidth > width {
 			break
 		}
-		parts = append(parts, part)
+		selected = append(selected, action)
 		usedWidth += partWidth
 	}
-	return actions[:len(parts)]
+	return selected
+}
+
+func (m model) footerActionWidth(action footerAction) int {
+	return lipgloss.Width(m.theme.FooterKey.Render(action.key) + m.theme.FooterValue.Render(" "+action.label))
+}
+
+func (m model) footerActionsWidth(actions []footerAction) int {
+	if len(actions) == 0 {
+		return 0
+	}
+	width := 0
+	for i, action := range actions {
+		if i > 0 {
+			width += 2
+		}
+		width += m.footerActionWidth(action)
+	}
+	return width
 }
 
 func (m model) renderFooter(width int) string {
@@ -109,7 +188,21 @@ func (m model) renderFooter(width int) string {
 		parts = append(parts, m.theme.FooterKey.Render(action.key)+m.theme.FooterValue.Render(" "+action.label))
 	}
 
-	return m.theme.FooterBar.Width(width).Render(strings.Join(parts, "  "))
+	innerWidth := max(width-2, 1)
+	footerText := strings.Join(parts, "  ")
+	footerText = truncateOrPadRenderedLine(footerText, innerWidth)
+	return m.theme.FooterBar.Width(width).Render(footerText)
+}
+
+func formatDurationClock(d time.Duration) string {
+	if d < 0 {
+		d = 0
+	}
+	totalSeconds := int(d.Round(time.Second).Seconds())
+	hours := totalSeconds / 3600
+	minutes := (totalSeconds % 3600) / 60
+	seconds := totalSeconds % 60
+	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
 func (m model) footerActionBounds(width int) []footerActionBound {

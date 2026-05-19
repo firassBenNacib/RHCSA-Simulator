@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-43-sticky-directory` |
+| Scenario ID | `lab-43-sticky-directory` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |

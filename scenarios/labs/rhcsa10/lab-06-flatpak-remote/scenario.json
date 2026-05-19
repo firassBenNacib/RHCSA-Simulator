@@ -13,16 +13,18 @@
     "rhcsa10"
   ],
   "rhel_major": 10,
+  "vm_scripts": {
+    "client": "scripts/client.sh"
+  },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
         "Install the flatpak package if it is not already installed.",
-        "Configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Verify that the system remote is available."
+        "Configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled."
       ],
       "hints": [
         "Use flatpak remote-add --system.",
@@ -30,30 +32,25 @@
       ],
       "checks": [
         "rpm -q flatpak >/dev/null",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "flatpak remotes --system --columns=name 2>/dev/null | grep -qx rhcsa10"
+        "(flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}') && (flatpak remotes --system --columns=name 2>/dev/null | grep -qx rhcsa10)"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Install the flatpak package if it is not already installed",
-        "Configure a system Flatpak remote named rhcsa10 that points to file:///o",
-        "Verify that the system remote is available"
+        "Configure a system Flatpak remote named rhcsa10 that points to file:///o"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
           "dnf install -y flatpak"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo"
-        ],
-        [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo",
           "flatpak remotes --system --columns=name,url"
         ]
       ]

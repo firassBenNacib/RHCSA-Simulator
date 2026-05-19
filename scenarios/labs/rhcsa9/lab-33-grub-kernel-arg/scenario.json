@@ -23,8 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the bootloader on client so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.",
-        "The change must persist across reboots and must not require manual GRUB editing during startup."
+        "Configure the bootloader on client so that every installed kernel boots persistently with the kernel argument audit_backlog_limit=8192 without manual GRUB editing during startup."
       ],
       "hints": [
         "Use a persistent bootloader tool rather than a one-time edit at the GRUB menu.",
@@ -37,19 +36,14 @@
         "Use grubby to update all installed kernels."
       ],
       "task_titles": [
-        "Configure the bootloader on client so that every...",
-        "The change must persist across reboots and must not..."
+        "Configure the persistent kernel argument"
       ],
       "task_points": [
-        10,
         10
       ],
       "solution_commands": [
         [
           "grubby --update-kernel=ALL --args=\"audit_backlog_limit=8192\""
-        ],
-        [
-          "grubby --info=ALL | grep -E \"^kernel|^args\""
         ]
       ]
     }

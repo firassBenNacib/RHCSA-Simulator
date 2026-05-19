@@ -28,9 +28,3 @@ Create the group analystsx and the directory /shared/analysts with owner root, g
 ## Task 02 - Enable setgid and sticky behavior on the directory (client) - 10 pts
 
 Configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it.
-
----
-
-## Task 03 - Verify the final permission string (client) - 10 pts
-
-Verify the final directory permissions.

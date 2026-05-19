@@ -15,5 +15,5 @@ enabled=1
 gpgcheck=0
 EOF
 dnf clean all >/dev/null 2>&1 || true
-dnf remove -y tree >/dev/null 2>&1 || true
+rpm -e --nodeps tree >/dev/null 2>&1 || true
 dnf install -y dos2unix >/dev/null 2>&1 || true

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-37-swap` |
+| Scenario ID | `lab-37-swap` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |

@@ -6,8 +6,8 @@ This project uses original scenario wording. Public Red Hat objectives and priva
 
 | Track | Scenarios | Runtime status |
 |---|---:|---|
-| RHCSA 9 | 56 | validated with audit-only checks |
-| RHCSA 10 | 56 | audit-validated, runtime replay pending on a RHEL 10-compatible baseline |
+| RHCSA 9 | 56 | full local live replay verified |
+| RHCSA 10 | 56 | full local live replay verified |
 
 RHCSA 9 scenarios live under `scenarios/labs/rhcsa9/` and `scenarios/exams/rhcsa9/` with `tracks: ["rhcsa9"]`. RHCSA 10-specific scenarios live under `scenarios/labs/rhcsa10/` and `scenarios/exams/rhcsa10/` with `tracks: ["rhcsa10"]` and `rhel_major: 10`.
 
@@ -33,6 +33,8 @@ The RHCSA 10 track is separate and covers the RHEL 10-specific additions without
 - Add runtime scripts only when the baseline needs prepared files, users, repositories, or local services.
 - Regenerate scenario Markdown after editing `scenario.json`.
 
-## Current Gaps To Validate At Runtime
+## Runtime Validation Notes
 
-Audit-only validation proves the scenario metadata, generated Markdown, and replay commands are structurally sound. It does not prove that a Rocky/RHEL 10 VM baseline has all required packages, Flatpak remotes, storage devices, and SELinux state for full replay. Do not advertise RHCSA 10 as runtime-complete until the self-hosted `runtime-replay` workflow passes with a RHEL 10-compatible ISO and x86-64-v3-capable host.
+Audit-only validation proves the scenario metadata, generated Markdown, and replay commands are structurally sound. Live replay is still the source of truth for VM behavior because it proves packages, repositories, storage devices, SELinux state, and SSH execution against the real baseline.
+
+Both RHCSA 9 and RHCSA 10 have been verified with full local replay on the supported Windows + VirtualBox + ISO workflow. Re-run live replay after shared runtime, provisioning, or scenario generator changes.

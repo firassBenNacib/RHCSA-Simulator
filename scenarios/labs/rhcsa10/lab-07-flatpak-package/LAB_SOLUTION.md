@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-07-flatpak-package` |
+| Scenario ID | `lab-07-flatpak-package` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | software-management |
@@ -31,13 +31,4 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/
 
 ```bash
 flatpak install --system -y rhcsa10 org.rhcsa.Tools
-```
-
----
-
-## Task 03 - Remove org.rhcsa.Tools and verify that it is no longer installed (client) - 10 pts
-
-```bash
-flatpak uninstall --system -y org.rhcsa.Tools
-touch /root/org.rhcsa.Tools.removed
 ```

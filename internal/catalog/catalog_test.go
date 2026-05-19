@@ -34,7 +34,7 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
   "supported_modes": ["exam"],
   "time_limit_minutes": 150,
   "flags": { "password_recovery": true, "requires_server": true },
-  "content": { "lab": { "hints": [], "checks": [] } }
+  "content": { "exam": { "checks": ["hostnamectl --static | grep -qx client.exam.local"] } }
 }`)
 	writeScenarioFile(t, filepath.Join(labRoot, "LAB_TASKS.md"), "# Lab Tasks")
 	writeScenarioFile(t, filepath.Join(labRoot, "LAB_SOLUTION.md"), "# Lab Solution")
@@ -64,6 +64,9 @@ func TestLoadBuildsCatalogFromScenarioManifests(t *testing.T) {
 	}
 	if !exams[0].PasswordRecover || !exams[0].RequiresServer {
 		t.Fatalf("expected exam flags to load from scenario manifest")
+	}
+	if exams[0].CheckContent == "" {
+		t.Fatal("expected exam check content to be populated")
 	}
 }
 

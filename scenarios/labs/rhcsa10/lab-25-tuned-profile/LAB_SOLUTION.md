@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-25-tuned-profile` |
+| Scenario ID | `lab-25-tuned-profile` |
 | Mode | Lab |
 | Time limit | 15 minutes |
 | Objectives | processes-logs-tuning |
@@ -27,16 +27,9 @@ systemctl enable --now tuned
 
 ---
 
-## Task 02 - Activate the throughput-performance tuned profile (client) - 10 pts
+## Task 02 - Activate the throughput-performance tuned profile (client) - 20 pts
 
 ```bash
 tuned-adm profile throughput-performance
-```
-
----
-
-## Task 03 - Verify the active profile (client) - 10 pts
-
-```bash
 tuned-adm active
 ```

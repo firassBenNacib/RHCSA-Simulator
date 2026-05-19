@@ -23,8 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "As user builder20, build an image named localhost/text2pdf20:latest from /opt/rhcsa/workspaces/text2pdf20/Containerfile.",
-        "Verify that the image exists locally for that user."
+        "As user builder20, build an image named localhost/text2pdf20:latest from /opt/rhcsa/workspaces/text2pdf20/Containerfile."
       ],
       "hints": [
         "The Containerfile is already present in the workspace.",
@@ -37,11 +36,9 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Build the text2pdf20 image as builder20",
-        "Confirm the image exists in builder20's store"
+        "Build the text2pdf20 image as builder20"
       ],
       "task_points": [
-        10,
         10
       ],
       "solution_commands": [
@@ -51,10 +48,6 @@
           "podman build -t localhost/text2pdf20:latest .",
           "podman images",
           "exit"
-        ],
-        [
-          "su - builder20",
-          "podman images"
         ]
       ]
     }

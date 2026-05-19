@@ -5,6 +5,7 @@ BOOTSTRAP_REPO_FILE="/etc/yum.repos.d/rhcsa-bootstrap.repo"
 BOOTSTRAP_ISO_MOUNT="/mnt/rhcsa-bootstrap-iso"
 RHCSA_PROFILE="${RHCSA_PROFILE:-rhel9}"
 DNF_ARGS=()
+DNF_INSTALL_ARGS=(--setopt=keepcache=0 --setopt=install_weak_deps=False)
 BASE_PACKAGES=(
   openssh-server
   openssh-clients
@@ -36,15 +37,85 @@ BASE_PACKAGES=(
   dosfstools
 )
 
-if [[ "$RHCSA_PROFILE" == "rhel10" ]]; then
-  PROFILE_PACKAGES=(flatpak)
-else
-  PROFILE_PACKAGES=(podman skopeo buildah)
-fi
-
 get_node_name() {
   hostnamectl --static 2>/dev/null || hostname -s
 }
+
+NODE_NAME="${RHCSA_NODE_NAME:-$(get_node_name)}"
+hostnamectl set-hostname "$NODE_NAME" >/dev/null 2>&1 || true
+
+run_quiet() {
+  local log_file
+  local rc
+
+  log_file="$(mktemp /tmp/rhcsa-quiet.XXXXXX.log)"
+  if "$@" >"$log_file" 2>&1; then
+    rm -f "$log_file"
+    return 0
+  fi
+
+  rc=$?
+  printf 'Command failed:' >&2
+  printf ' %q' "$@" >&2
+  printf '\n' >&2
+  if [[ -s "$log_file" ]]; then
+    tail -n "${RHCSA_ERROR_TAIL_LINES:-40}" "$log_file" >&2 || true
+  fi
+  rm -f "$log_file"
+  return "$rc"
+}
+
+stop_background_package_managers() {
+  systemctl stop packagekit.service packagekit dnf-makecache.service dnf-makecache.timer >/dev/null 2>&1 || true
+  systemctl kill --kill-who=all packagekit.service dnf-makecache.service >/dev/null 2>&1 || true
+}
+
+wait_for_package_manager() {
+  local deadline
+  deadline=$((SECONDS + 90))
+
+  while pgrep -x packagekitd >/dev/null 2>&1 || pgrep -x dnf >/dev/null 2>&1 || pgrep -x rpm >/dev/null 2>&1; do
+    if (( SECONDS >= deadline )); then
+      echo "Timed out waiting for another package manager process to finish." >&2
+      return 1
+    fi
+    sleep 2
+  done
+}
+
+run_dnf_quiet() {
+  stop_background_package_managers
+  wait_for_package_manager
+  run_quiet dnf "${DNF_ARGS[@]}" "$@"
+}
+
+missing_packages() {
+  local package
+  for package in "$@"; do
+    rpm -q "$package" >/dev/null 2>&1 || printf '%s\n' "$package"
+  done
+}
+
+install_missing_packages() {
+  local packages=("$@")
+  local missing=()
+  mapfile -t missing < <(missing_packages "${packages[@]}")
+  if [[ "${#missing[@]}" -eq 0 ]]; then
+    return 0
+  fi
+
+  run_dnf_quiet "${DNF_INSTALL_ARGS[@]}" install -y "${missing[@]}"
+}
+
+if [[ "$RHCSA_PROFILE" == "rhel10" ]]; then
+  if [[ "$NODE_NAME" == "client" ]]; then
+    PROFILE_PACKAGES=(flatpak)
+  else
+    PROFILE_PACKAGES=()
+  fi
+else
+  PROFILE_PACKAGES=(podman skopeo buildah)
+fi
 
 configure_hosts() {
   grep -q '192.168.122.3 server' /etc/hosts || cat >> /etc/hosts <<'EOF'
@@ -122,16 +193,77 @@ configure_bootstrap_repo() {
 
 cleanup_bootstrap_repo() {
   rm -f "$BOOTSTRAP_REPO_FILE"
+  if mountpoint -q "$BOOTSTRAP_ISO_MOUNT"; then
+    umount "$BOOTSTRAP_ISO_MOUNT" >/dev/null 2>&1 || true
+  fi
+}
+
+authorize_vagrant_ssh_keys() {
+  id vagrant >/dev/null 2>&1 || return 0
+
+  install -d -m 700 -o vagrant -g vagrant /home/vagrant/.ssh
+  touch /home/vagrant/.ssh/authorized_keys
+  chown vagrant:vagrant /home/vagrant/.ssh/authorized_keys
+  chmod 600 /home/vagrant/.ssh/authorized_keys
+
+  local key
+  while IFS= read -r key; do
+    [[ -n "$key" ]] || continue
+    grep -qxF "$key" /home/vagrant/.ssh/authorized_keys || echo "$key" >> /home/vagrant/.ssh/authorized_keys
+  done <<'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y spox@vagrant-dev
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zRdK8jlqm8tehUc9c9WhQ==
+EOF
+
+  install -d -m 700 /root/.ssh
+  touch /root/.ssh/authorized_keys
+  chmod 600 /root/.ssh/authorized_keys
+  while IFS= read -r key; do
+    [[ -n "$key" ]] || continue
+    grep -qxF "$key" /root/.ssh/authorized_keys || echo "$key" >> /root/.ssh/authorized_keys
+  done <<'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y spox@vagrant-dev
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zRdK8jlqm8tehUc9c9WhQ==
+EOF
+
+  # Lab replay uses this public Vagrant test key only inside disposable VMs.
+  cat > /root/.ssh/rhcsa_vagrant_ed25519 <<'EOF'
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACDdWHcQaTZc8Q6nycsP0CqMNRfsLxvYVxqKosrHyTp+WAAAAJj2TBMT9kwT
+EwAAAAtzc2gtZWQyNTUxOQAAACDdWHcQaTZc8Q6nycsP0CqMNRfsLxvYVxqKosrHyTp+WA
+AAAEAveRHRHSCjIxbNKHDRzezD0U3R3UEEmS7R33fzvPQAD91YdxBpNlzxDqfJyw/QKow1
+F+wvG9hXGoqiysfJOn5YAAAAEHNwb3hAdmFncmFudC1kZXYBAgMEBQ==
+-----END OPENSSH PRIVATE KEY-----
+EOF
+  chmod 600 /root/.ssh/rhcsa_vagrant_ed25519
+}
+
+configure_selinux_boot_policy() {
+  [[ "$RHCSA_PROFILE" == "rhel10" ]] || return 0
+
+  if [[ -f /etc/selinux/config ]]; then
+    # RHCSA10 boxes that ship with SELinux disabled must relabel once before
+    # enforcing mode is safe. The host workflow flips to enforcing after reboot.
+    sed -ri 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+    grep -q '^SELINUXTYPE=' /etc/selinux/config || echo 'SELINUXTYPE=targeted' >> /etc/selinux/config
+  fi
+
+  if command -v grubby >/dev/null 2>&1; then
+    grubby --update-kernel=ALL --remove-args="selinux=0 enforcing=0 enforcing=1" >/dev/null 2>&1 || true
+    grubby --update-kernel=ALL --args="selinux=1 enforcing=0" >/dev/null 2>&1 || true
+  fi
 }
 
 prepare_flatpak_repo() {
   [[ "$RHCSA_PROFILE" == "rhel10" ]] || return 0
+  [[ "$NODE_NAME" == "client" ]] || return 0
   command -v flatpak >/dev/null 2>&1 || return 0
 
   local repo="/opt/rhcsa/flatpak/repo"
   local work="/opt/rhcsa/flatpak/build"
   rm -rf "$work"
-  install -d -m 755 "$repo" "$work/runtime/files" "$work/app/files/bin"
+  install -d -m 755 "$repo" "$work/runtime/files" "$work/runtime/usr" "$work/app/files/bin"
 
   cat > "$work/runtime/metadata" <<'EOF'
 [Runtime]
@@ -153,12 +285,14 @@ EOF
 printf 'RHCSA10 tools\n'
 EOF
   chmod +x "$work/app/files/bin/rhcsa-tools"
+  flatpak build-finish --command=rhcsa-tools "$work/app" >/dev/null
 
-  flatpak build-export --arch=x86_64 "$repo" "$work/runtime" stable >/dev/null
+  flatpak build-export --runtime --arch=x86_64 "$repo" "$work/runtime" stable >/dev/null
   flatpak build-export --arch=x86_64 "$repo" "$work/app" stable >/dev/null
   flatpak build-update-repo "$repo" >/dev/null
 }
 
+authorize_vagrant_ssh_keys
 configure_hosts
 if ! configure_bootstrap_repo; then
   node_name="$(get_node_name)"
@@ -170,9 +304,15 @@ if ! configure_bootstrap_repo; then
   exit 1
 fi
 
-dnf "${DNF_ARGS[@]}" makecache
-dnf "${DNF_ARGS[@]}" install -y "${BASE_PACKAGES[@]}" "${PROFILE_PACKAGES[@]}"
+run_dnf_quiet makecache
+install_missing_packages "${BASE_PACKAGES[@]}" "${PROFILE_PACKAGES[@]}"
+for optional_package in gdisk man-pages; do
+  stop_background_package_managers
+  wait_for_package_manager || true
+  dnf "${DNF_ARGS[@]}" "${DNF_INSTALL_ARGS[@]}" install -y "$optional_package" >/dev/null 2>&1 || true
+done
 
+configure_selinux_boot_policy
 prepare_flatpak_repo
 
 cleanup_bootstrap_repo
@@ -186,6 +326,7 @@ fi
 echo 'admin:redhat' | chpasswd
 echo 'root:redhat' | chpasswd
 echo 'vagrant:redhat' | chpasswd
+authorize_vagrant_ssh_keys
 
 usermod -aG wheel admin || true
 
@@ -199,6 +340,8 @@ else
 fi
 
 systemctl restart sshd
+firewall-cmd --add-service=ssh >/dev/null 2>&1 || true
+firewall-cmd --permanent --add-service=ssh >/dev/null 2>&1 || true
 
 install -d -m 755 /usr/local/lib
 install -d -m 755 /opt/rhcsa/workspaces
@@ -279,6 +422,24 @@ rhcsa_get_lab_connection_name() {
   return 1
 }
 
+rhcsa_prune_duplicate_connections() {
+  local connection_name="$1"
+  local active_uuid=""
+
+  [[ -n "${connection_name:-}" ]] || return 0
+
+  active_uuid="$(
+    nmcli -t -f UUID,NAME connection show --active 2>/dev/null |
+      awk -F: -v name="$connection_name" '$2 == name {print $1; exit}'
+  )"
+
+  while IFS=: read -r connection_uuid existing_name; do
+    [[ "$existing_name" == "$connection_name" ]] || continue
+    [[ -n "$active_uuid" && "$connection_uuid" == "$active_uuid" ]] && continue
+    nmcli connection delete uuid "$connection_uuid" >/dev/null 2>&1 || true
+  done < <(nmcli -t -f UUID,NAME connection show 2>/dev/null)
+}
+
 rhcsa_reset_lab_ipv4_profile() {
   local connection_name="${1:-}"
   local address="${2:-192.168.122.2/24}"
@@ -290,6 +451,8 @@ rhcsa_reset_lab_ipv4_profile() {
   fi
 
   [[ -n "${connection_name:-}" ]] || return 0
+
+  rhcsa_prune_duplicate_connections "$connection_name"
 
   nmcli connection modify "$connection_name" \
     ipv4.addresses "$address" \
@@ -308,6 +471,8 @@ rhcsa_reset_lab_ipv6_profile() {
 
   [[ -n "${connection_name:-}" ]] || return 0
 
+  rhcsa_prune_duplicate_connections "$connection_name"
+
   nmcli connection modify "$connection_name" \
     ipv6.method ignore \
     ipv6.addresses "" \
@@ -317,7 +482,7 @@ rhcsa_reset_lab_ipv6_profile() {
 }
 
 rhcsa_ensure_packages() {
-  dnf install -y "$@"
+  dnf -q install -y "$@" >/dev/null 2>&1 || dnf install -y "$@"
 }
 
 rhcsa_enable_services() {

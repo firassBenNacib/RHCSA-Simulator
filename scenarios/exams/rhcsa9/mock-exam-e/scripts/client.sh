@@ -15,7 +15,7 @@ if text:
     text = text.replace('Listen 8181', 'Listen 80')
     p.write_text(text)
 EOF
-rm -f /etc/httpd/conf.d/harborgrid.conf
+rm -f /etc/httpd/conf.d/harborgrid.conf /etc/httpd/conf.d/harborgrid-listen.conf
 rm -rf /srv/harbor-web /srv/harbor-drop
 systemctl disable --now httpd >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-port=8181/tcp >/dev/null 2>&1 || true
@@ -64,14 +64,15 @@ firewalld
 chronyd
 EOF
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
 umount /mnt/reviewe >/dev/null 2>&1 || true
 sed -i '\#/mnt/reviewe#d' /etc/fstab
 lvremove -fy /dev/reviewvge/reviewe >/dev/null 2>&1 || true
 vgremove -fy reviewvge >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
 wipefs -a /dev/sdc >/dev/null 2>&1 || true
-sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
 printf 'label: gpt
 ,900M,L
 ' | sfdisk /dev/sdc >/dev/null 2>&1

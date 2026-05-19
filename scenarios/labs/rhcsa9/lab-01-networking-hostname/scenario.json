@@ -24,16 +24,14 @@
     "lab": {
       "tasks": [
         "Configure the active client connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS Server: 192.168.122.3\nHostname: client.netlab.local",
-        "Add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3",
-        "Verify that the active connection comes back with the same values after reconnecting it."
+        "Add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3"
       ],
       "hints": [
         "Use nmcli or nmtui for the network profile.",
         "Use hostnamectl for the persistent hostname."
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'client.netlab.local'",
-        "test \"$(nmcli -g connection.interface-name connection show \"System eth1\")\" = 'eth1' && test \"$(nmcli -g ipv4.addresses connection show \"System eth1\")\" = '192.168.122.25/24' && test \"$(nmcli -g ipv4.gateway connection show \"System eth1\")\" = '192.168.122.1' && test \"$(nmcli -g ipv4.dns connection show \"System eth1\")\" = '192.168.122.3' && test \"$(nmcli -g ipv4.method connection show \"System eth1\")\" = 'manual' && test \"$(nmcli -g connection.autoconnect connection show \"System eth1\")\" = 'yes'",
+        "hostnamectl --static | grep -qx 'client.netlab.local' && nmcli connection show \"System eth1\" >/dev/null && test \"$(nmcli -g ipv4.addresses connection show \"System eth1\")\" = '192.168.122.25/24' && test \"$(nmcli -g ipv4.gateway connection show \"System eth1\")\" = '192.168.122.1' && test \"$(nmcli -g ipv4.dns connection show \"System eth1\")\" = '192.168.122.3' && test \"$(nmcli -g ipv4.method connection show \"System eth1\")\" = 'manual' && test \"$(nmcli -g connection.autoconnect connection show \"System eth1\")\" = 'yes'",
         "grep -Eq '^192\\.168\\.122\\.3[[:space:]]+repo\\.netlab\\.local([[:space:]]|$)' /etc/hosts && getent hosts repo.netlab.local | grep -Eq '^192\\.168\\.122\\.3[[:space:]]+repo\\.netlab\\.local([[:space:]]|$)'"
       ],
       "solution_outline": [
@@ -41,11 +39,9 @@
       ],
       "task_titles": [
         "Client Network Configuration",
-        "Static Host Entry",
-        "Reconnect Verification"
+        "Static Host Entry"
       ],
       "task_points": [
-        10,
         10,
         10
       ],
@@ -61,12 +57,6 @@
         [
           "vim /etc/hosts",
           "192.168.122.3 repo.netlab.local"
-        ],
-        [
-          "nmcli device status",
-          "nmcli connection show \"System eth1\"",
-          "hostnamectl status",
-          "getent hosts repo.netlab.local"
         ]
       ]
     }

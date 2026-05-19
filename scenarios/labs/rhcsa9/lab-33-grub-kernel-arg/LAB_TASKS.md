@@ -19,12 +19,6 @@ Modify the system bootloader so every installed kernel boots with the required p
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure the bootloader on client so that every (client) - 10 pts
+## Task 01 - Configure the persistent kernel argument (client) - 10 pts
 
-Configure the bootloader on client so that every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
----
-
-## Task 02 - The change must persist across reboots and must not (client) - 10 pts
-
-The change must persist across reboots and must not require manual GRUB editing during startup.
+Configure the bootloader on client so that every installed kernel boots persistently with the kernel argument audit_backlog_limit=8192 without manual GRUB editing during startup.

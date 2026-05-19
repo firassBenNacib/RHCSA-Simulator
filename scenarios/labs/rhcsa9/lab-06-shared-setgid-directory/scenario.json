@@ -25,8 +25,7 @@
     "lab": {
       "tasks": [
         "Create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.",
-        "Configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it.",
-        "Verify the final directory permissions."
+        "Configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it."
       ],
       "hints": [
         "A collaborative drop directory often needs both setgid and sticky semantics.",
@@ -34,21 +33,17 @@
       ],
       "checks": [
         "getent group analystsx >/dev/null && stat -c '%F %U:%G' /shared/analysts | grep -qx 'directory root:analystsx'",
-        "stat -c %a /shared/analysts | grep -qx '3770'",
-        "stat -c %A /shared/analysts | grep -qx 'drwxrws--T'"
+        "stat -c %a /shared/analysts | grep -qx '3770' && stat -c %A /shared/analysts | grep -qx 'drwxrws--T'"
       ],
       "solution_outline": [
         "Create the group and directory tree.",
-        "Apply the base mode, then add setgid and sticky semantics.",
-        "Verify the directory mode with stat or ls -ld."
+        "Apply the base mode, then add setgid and sticky semantics."
       ],
       "task_titles": [
         "Create the shared analysts directory",
-        "Enable setgid and sticky behavior on the directory",
-        "Verify the final permission string"
+        "Enable setgid and sticky behavior on the directory"
       ],
       "task_points": [
-        10,
         10,
         10
       ],
@@ -62,9 +57,6 @@
           "chmod 770 /shared/analysts",
           "chmod g+s /shared/analysts",
           "chmod +t /shared/analysts"
-        ],
-        [
-          "stat -c %A /shared/analysts"
         ]
       ]
     }

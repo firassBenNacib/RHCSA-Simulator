@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure a persistent BaseOS repository using http://server/repo/BaseOS/.",
-        "Configure a persistent AppStream repository using http://server/repo/AppStream/.",
-        "Disable GPG checks and verify both repositories are enabled."
+        "On client, configure a persistent BaseOS repository using http://server/repo/BaseOS/.",
+        "On client, configure a persistent AppStream repository using http://server/repo/AppStream/.",
+        "On client, disable GPG checks for both RHCSA10 repositories and verify both repositories are enabled."
       ],
       "hints": [
         "Use one file under /etc/yum.repos.d.",
@@ -31,15 +31,15 @@
       "checks": [
         "grep -ERq '^\\[rhcsa10-baseos\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d",
         "grep -ERq '^\\[rhcsa10-appstream\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "grep -ERq '^gpgcheck=0$' /etc/yum.repos.d && dnf repolist --enabled | grep -Eq 'rhcsa10-baseos|rhcsa10-appstream'"
+        "awk 'BEGIN{s=0} /^\\[rhcsa10-(baseos|appstream)\\]$/{repo=$0} /^gpgcheck=0$/{if (repo != \"\") s++} END{exit !(s >= 2)}' /etc/yum.repos.d/*.repo && dnf repolist --enabled | grep -Eq 'rhcsa10-baseos|rhcsa10-appstream'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure a persistent BaseOS repository using http://server/repo/BaseOS",
-        "Configure a persistent AppStream repository using http://server/repo/App",
-        "Disable GPG checks and verify both repositories are enabled"
+        "configure a persistent BaseOS repository using http://server/repo/BaseOS",
+        "configure a persistent AppStream repository using http://server/repo/App",
+        "disable GPG checks for both RHCSA10 repositories and verify both reposit"
       ],
       "task_points": [
         10,
@@ -48,27 +48,21 @@
       ],
       "solution_commands": [
         [
-          "cat > /etc/yum.repos.d/rhcsa10.repo <<'EOF'",
-          "[rhcsa10-baseos]",
-          "name=RHCSA10 BaseOS",
-          "baseurl=http://server/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[rhcsa10-appstream]",
-          "name=RHCSA10 AppStream",
-          "baseurl=http://server/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          "EOF"
+          "cat > /etc/yum.repos.d/rhcsa10.repo <<'EOF'\n[rhcsa10-baseos]\nname=RHCSA10 BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=1\nEOF"
         ],
         [
-          "dnf clean all"
+          "cat >> /etc/yum.repos.d/rhcsa10.repo <<'EOF'\n\n[rhcsa10-appstream]\nname=RHCSA10 AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=1\nEOF"
         ],
         [
+          "sed -i 's/^gpgcheck=.*/gpgcheck=0/' /etc/yum.repos.d/rhcsa10.repo",
+          "dnf clean all",
           "dnf repolist --enabled"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   }
 }

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-40-vfat-filesystem` |
+| Scenario ID | `lab-40-vfat-filesystem` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |

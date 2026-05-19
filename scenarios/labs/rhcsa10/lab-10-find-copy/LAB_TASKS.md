@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-10-find-copy` |
+| Scenario ID | `lab-10-find-copy` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | essential-tools |
@@ -28,9 +28,3 @@ Create /root/rhcsa10-found.
 ## Task 02 - Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found (client) - 10 pts
 
 Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps.
-
----
-
-## Task 03 - Verify that at least one copied file exists (client) - 10 pts
-
-Verify that at least one copied file exists.

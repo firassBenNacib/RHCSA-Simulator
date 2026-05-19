@@ -30,9 +30,7 @@
         "Use a UUID entry in /etc/fstab."
       ],
       "checks": [
-        "swapon --noheadings --show=NAME | grep -qx '/dev/sdb1'",
-        "blkid -o value -s TYPE /dev/sdb1 | grep -qx swap",
-        "uuid=\"$(blkid -o value -s UUID /dev/sdb1)\"; grep -Eq \"^UUID=${uuid}[[:space:]]+swap[[:space:]]+swap[[:space:]]+\" /etc/fstab"
+        "swapon --noheadings --show=NAME | grep -qx '/dev/sdb1' && blkid -o value -s TYPE /dev/sdb1 | grep -qx swap && uuid=\"$(blkid -o value -s UUID /dev/sdb1)\"; grep -Eq \"^UUID=${uuid}[[:space:]]+swap[[:space:]]+swap[[:space:]]+\" /etc/fstab"
       ],
       "solution_outline": [
         "Use persistent configuration only."

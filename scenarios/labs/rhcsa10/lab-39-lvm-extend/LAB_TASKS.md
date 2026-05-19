@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-39-lvm-extend` |
+| Scenario ID | `lab-39-lvm-extend` |
 | Mode | Lab |
 | Time limit | 30 minutes |
 | Objectives | storage-lvm |
@@ -25,12 +25,12 @@ Create volume group grow10 on /dev/sdb.
 
 ---
 
-## Task 02 - Create logical volume growlv with size 256 MiB and XFS filesystem mounte (client) - 10 pts
+## Task 02 - Create logical volume growlv with size 384 MiB and XFS filesystem mounte (client) - 10 pts
 
-Create logical volume growlv with size 256 MiB and XFS filesystem mounted at /mnt/grow10.
+Create logical volume growlv with size 384 MiB and XFS filesystem mounted at /mnt/grow10.
 
 ---
 
-## Task 03 - Extend the logical volume and filesystem to at least 384 MiB (client) - 10 pts
+## Task 03 - Extend the logical volume and filesystem to at least 512 MiB (client) - 10 pts
 
-Extend the logical volume and filesystem to at least 384 MiB.
+Extend the logical volume and filesystem to at least 512 MiB.

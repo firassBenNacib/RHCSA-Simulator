@@ -36,11 +36,3 @@ chmod 770 /shared/analysts
 chmod g+s /shared/analysts
 chmod +t /shared/analysts
 ```
-
----
-
-## Task 03 - Verify the final permission string (client) - 10 pts
-
-```bash
-stat -c %A /shared/analysts
-```

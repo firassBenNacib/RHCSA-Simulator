@@ -26,12 +26,6 @@ On server, export /exports/vault8. On client, create user vault8 with password c
 
 ---
 
-## Task 02 - Configure Autofs Map (client) - 10 pts
+## Task 02 - Configure Persistent Autofs Map (client) - 20 pts
 
-Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8.
-
----
-
-## Task 03 - Verify Access (client) - 10 pts
-
-Leave the configuration persistent across reboot.
+Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8 and persists across reboot.

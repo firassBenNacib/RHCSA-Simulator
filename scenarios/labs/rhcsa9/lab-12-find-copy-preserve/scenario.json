@@ -23,8 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Find all regular files owned by natfind and modified in the last 24 hours under /opt/lab12/source.",
-        "Copy the matching files to /root/natfind-files and preserve the original directory structure."
+        "Find all regular files owned by natfind and modified in the last 24 hours under /opt/lab12/source, then copy them to /root/natfind-files while preserving the original directory structure."
       ],
       "hints": [
         "Use find with a time test and --parents or an equivalent method.",
@@ -37,17 +36,12 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Find the recent natfind-owned files",
-        "Copy the matching files with structure preserved"
+        "Copy matching natfind files with structure preserved"
       ],
       "task_points": [
-        10,
         10
       ],
       "solution_commands": [
-        [
-          "find /opt/lab12/source -type f -user natfind -mtime -1"
-        ],
         [
           "mkdir -p /root/natfind-files",
           "cd /opt/lab12/source",
