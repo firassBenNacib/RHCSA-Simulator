@@ -36,7 +36,14 @@ echo 'mesh39:cinder9' | chpasswd
 
 ```bash
 su - mesh39
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+mkdir -p /home/mesh39/.ssh
+chmod 700 /home/mesh39/.ssh
+rm -f /home/mesh39/.ssh/id_ed25519 /home/mesh39/.ssh/id_ed25519.pub
+ssh-keygen -q -t ed25519 -N "" -f /home/mesh39/.ssh/id_ed25519
+chmod 600 /home/mesh39/.ssh/id_ed25519
+chmod 644 /home/mesh39/.ssh/id_ed25519.pub
+test -f /home/mesh39/.ssh/id_ed25519 && test -f /home/mesh39/.ssh/id_ed25519.pub
+exit
 ```
 
 ---
@@ -53,6 +60,7 @@ ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3
 ## Task 04 - Using rsync over SSH, copy the directory (server) - 10 pts
 
 ```bash
+# On client
 su - mesh39
 rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/
 ```

@@ -90,18 +90,22 @@ dnf clean all
 dnf install -y httpd
 mkdir -p /srv/harbor-web
 echo 'exam-e portal' > /srv/harbor-web/index.html
-vim /etc/httpd/conf/httpd.conf
-Listen 8181
+grep -Rqs '^Listen 8181$' /etc/httpd/conf /etc/httpd/conf.d || echo 'Listen 8181' > /etc/httpd/conf.d/harborgrid-listen.conf
 cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'
 <VirtualHost *:8181>
     DocumentRoot "/srv/harbor-web"
 </VirtualHost>
+<Directory "/srv/harbor-web">
+    Require all granted
+</Directory>
 EOF
-semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?'
+semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?' || semanage fcontext -m -t httpd_sys_content_t '/srv/harbor-web(/.*)?'
 restorecon -Rv /srv/harbor-web
+semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181
 firewall-cmd --permanent --add-port=8181/tcp
 firewall-cmd --reload
-systemctl enable --now httpd
+systemctl enable httpd
+systemctl restart httpd
 ```
 
 ---
@@ -109,9 +113,11 @@ systemctl enable --now httpd
 ## Question 06 - Harbor Users (client) - 5 pts
 
 ```bash
-groupadd harborops
-useradd -G harborops lena
-useradd -G harborops ivor
+getent group harborops >/dev/null || groupadd harborops
+id lena >/dev/null 2>&1 || useradd -m lena
+id ivor >/dev/null 2>&1 || useradd -m ivor
+usermod -aG harborops lena
+usermod -aG harborops ivor
 echo cinder9 | passwd --stdin lena
 echo cinder9 | passwd --stdin ivor
 ```
@@ -140,7 +146,9 @@ setfacl -d -m g:harborops:rwx /srv/harbor-drop
 ## Question 09 - No-Home Remote User (client) - 5 pts
 
 ```bash
-useradd -M -s /sbin/nologin harborremote
+id harborremote >/dev/null 2>&1 || useradd -M -s /sbin/nologin harborremote
+usermod -s /sbin/nologin harborremote
+rm -rf /home/harborremote
 echo cinder9 | passwd --stdin harborremote
 ```
 
@@ -161,9 +169,8 @@ EOF
 ## Question 11 - At Job (client) - 5 pts
 
 ```bash
-su - ivor
-echo "echo exam-e tick >> /root/exam-e-at.log" | at now + 2 minutes
 systemctl enable --now atd
+runuser -l ivor -c 'echo "echo exam-e tick >> /root/exam-e-at.log" | at now + 2 minutes'
 ```
 
 ---
@@ -205,7 +212,9 @@ echo 'echo exam-e access' >> /home/ivor/.bash_profile
 ## Question 15 - Fixed UID User (client) - 4 pts
 
 ```bash
-useradd -M -u 4551 -s /sbin/nologin maple551
+id maple551 >/dev/null 2>&1 || useradd -M -u 4551 -s /sbin/nologin maple551
+usermod -u 4551 -s /sbin/nologin maple551
+rm -rf /home/maple551
 echo cinder9 | passwd --stdin maple551
 ```
 
@@ -243,7 +252,7 @@ cat > /usr/local/bin/harbor-check <<'SCRIPT'
 #!/bin/bash
 > /root/harbor-services.txt
 for svc in $(cat /usr/local/share/exam-e/services.lst); do
-  systemctl is-active "$svc" >> /root/harbor-services.txt
+  systemctl is-active "$svc" >> /root/harbor-services.txt || true
 done
 SCRIPT
 chmod +x /usr/local/bin/harbor-check
@@ -256,7 +265,12 @@ chmod +x /usr/local/bin/harbor-check
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB
-partprobe /dev/sdb
+blockdev --rereadpt /dev/sdb || true
+partprobe /dev/sdb || true
+partx -u /dev/sdb || partx -a /dev/sdb || true
+udevadm settle
+for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done
+test -b /dev/sdb1
 mkswap /dev/sdb1
 swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
@@ -277,5 +291,7 @@ resize2fs /dev/reviewvge/reviewe
 ## Question 22 - Recommended Tuned Profile (client) - 4 pts
 
 ```bash
-tuned-adm profile "$(tuned-adm recommend)"
+rec="$(tuned-adm recommend | awk 'NF{print $1; exit}')"
+test -n "$rec"
+tuned-adm profile "$rec"
 ```

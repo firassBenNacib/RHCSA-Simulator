@@ -25,8 +25,7 @@
     "lab": {
       "tasks": [
         "On server, export /exports/vault8. On client, create user vault8 with password cinder9.",
-        "Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8.",
-        "Leave the configuration persistent across reboot."
+        "Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8 and persists across reboot."
       ],
       "hints": [
         "Use an indirect map.",
@@ -34,21 +33,18 @@
       ],
       "checks": [
         "showmount -e server | grep -Eq '(^|[[:space:]])/exports/vault8([[:space:]]|$)' && getent passwd vault8 >/dev/null && getent shadow vault8 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'",
-        "test -f /netdir/vault8/welcome.txt && grep -Fqx 'autofs lab 08' /netdir/vault8/welcome.txt"
+        "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs' && test -f /netdir/vault8/welcome.txt && grep -Fqx 'autofs lab 08' /netdir/vault8/welcome.txt && grep -Fqx '/netdir /etc/auto.lab8' /etc/auto.master.d/lab8.autofs"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
         "Seed Export And User",
-        "Configure Autofs Map",
-        "Verify Access"
+        "Configure Persistent Autofs Map"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
@@ -68,10 +64,7 @@
           "/netdir /etc/auto.lab8",
           "systemctl enable --now autofs",
           "for attempt in 1 2 3 4 5; do ls /netdir/vault8 >/dev/null 2>&1 && mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs' && break; sleep 2; done",
-          "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'"
-        ],
-        [
-          "ls -l /netdir/vault8",
+          "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'",
           "cat /netdir/vault8/welcome.txt"
         ]
       ]

@@ -7,7 +7,16 @@ CompanyName = 'RHCSA Simulator'
 Copyright = '(c) Firas Ben Nacib. All rights reserved.'
 Description = 'Workflow status and transcript output for the RHCSA Simulator.'
 PowerShellVersion = '5.1'
-FunctionsToExport = '*'
+FunctionsToExport = @(
+    'Complete-WorkflowProgress'
+    'Set-ShowWorkflowStatus'
+    'Set-WorkflowProgress'
+    'Stop-WorkflowProgress'
+    'Test-ProgressOnlyOutputLine'
+    'Write-FailureTranscript'
+    'Write-WorkflowProgressHeartbeat'
+    'Write-WorkflowStatus'
+)
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()

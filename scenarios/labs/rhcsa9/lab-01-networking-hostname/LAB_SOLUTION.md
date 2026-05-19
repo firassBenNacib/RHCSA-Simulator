@@ -38,14 +38,3 @@ hostnamectl set-hostname client.netlab.local
 vim /etc/hosts
 192.168.122.3 repo.netlab.local
 ```
-
----
-
-## Task 03 - Reconnect Verification (client) - 10 pts
-
-```bash
-nmcli device status
-nmcli connection show "System eth1"
-hostnamectl status
-getent hosts repo.netlab.local
-```

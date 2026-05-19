@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -57,6 +59,278 @@ func TestSummarizeActionOutputPlainText(t *testing.T) {
 	if !strings.Contains(got, "Started lab-01-demo") {
 		t.Errorf("expected significant lines preserved, got %q", got)
 	}
+}
+
+func TestActionOutputPassedRecognizesExamScore(t *testing.T) {
+	output := "\x1b[1mExam checks:\x1b[0m 6/6\n\x1b[1mScore:\x1b[0m 100/100"
+	if !actionOutputPassed(output, nil) {
+		t.Fatal("expected full exam score output to mark action passed")
+	}
+	if actionOutputPassed("Score: 80/100", nil) {
+		t.Fatal("expected partial exam score output to stay incomplete")
+	}
+}
+
+func TestToggleTimerRequiresActiveRun(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.cachedActiveID = ""
+	m.cachedStartedAt = time.Time{}
+	m.cachedEndsAt = time.Time{}
+	m.cachedTimeLimitMinutes = m.currentLab().TimeLimitMinute
+
+	next, cmd := m.toggleTimer()
+	updated := next.(model)
+	if cmd != nil {
+		t.Fatal("expected no tick command when no run is active")
+	}
+	if updated.timerEnabled {
+		t.Fatal("expected timer to stay disabled without an active run")
+	}
+	if !updated.timerEndsAt.IsZero() {
+		t.Fatalf("expected empty timer deadline, got %s", updated.timerEndsAt)
+	}
+}
+
+func TestStartConfirmTextOmitsDoubleClickInstruction(t *testing.T) {
+	m := buildRenderTestModel(t)
+	text := m.startConfirmText()
+	if strings.Contains(text, "Double-click again") {
+		t.Fatalf("expected concise confirmation text, got %q", text)
+	}
+	if !strings.Contains(text, "Press y/Enter or click Start") {
+		t.Fatalf("expected keyboard and click confirmation hints, got %q", text)
+	}
+}
+
+func TestExitRunActiveRunClearsStateAndTimer(t *testing.T) {
+	m := buildRenderTestModel(t)
+	started := time.Now().Add(-2 * time.Minute).Round(0)
+	deadline := started.Add(15 * time.Minute)
+	writeActiveRunTestState(t, m, started, deadline, 15)
+	m.timerEnabled = true
+	m.timerEndsAt = deadline
+
+	next, cmd := m.handleExitRunAction()
+	updated := next.(model)
+	if cmd != nil {
+		t.Fatal("expected exit run to be local and synchronous")
+	}
+	if updated.activeScenarioID() != "" {
+		t.Fatalf("expected active scenario cache to be cleared, got %q", updated.activeScenarioID())
+	}
+	if updated.timerEnabled || !updated.timerEndsAt.IsZero() {
+		t.Fatalf("expected timer state to be cleared, enabled=%v deadline=%s", updated.timerEnabled, updated.timerEndsAt)
+	}
+	if _, err := os.Stat(updated.activeRunPath()); !os.IsNotExist(err) {
+		t.Fatalf("expected active-run.json to be removed, stat err=%v", err)
+	}
+	if !strings.Contains(updated.statusText, "Exited "+m.currentLab().ID) {
+		t.Fatalf("expected exit run status, got %q", updated.statusText)
+	}
+}
+
+func TestExitRunWithoutActiveRunIsCleanNoop(t *testing.T) {
+	m := buildRenderTestModel(t)
+	next, cmd := m.handleExitRunAction()
+	updated := next.(model)
+	if cmd != nil {
+		t.Fatal("expected no command for exit-run without active run")
+	}
+	if updated.statusText != "No active lab or exam" {
+		t.Fatalf("expected no-active status, got %q", updated.statusText)
+	}
+}
+
+func TestSSHRequiresActiveRun(t *testing.T) {
+	m := buildRenderTestModel(t)
+	if err := os.MkdirAll(filepath.Join(m.root, ".vagrant", "machines"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	next, cmd := m.handleSSHAction("client")
+	updated := next.(model)
+	if cmd != nil || updated.busy {
+		t.Fatal("expected SSH to be blocked without an active run")
+	}
+	if !strings.Contains(updated.statusText, "No active lab or exam") {
+		t.Fatalf("expected active-run error, got %q", updated.statusText)
+	}
+
+	writeActiveRunTestState(t, updated, time.Now(), time.Now().Add(15*time.Minute), 15)
+	next, cmd = updated.handleSSHAction("client")
+	updated = next.(model)
+	if cmd == nil || !updated.busy {
+		t.Fatal("expected SSH command to start when active run exists")
+	}
+}
+
+func TestDoubleRightClickExitsSelectedActiveRun(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	writeActiveRunTestState(t, m, time.Now(), time.Now().Add(15*time.Minute), 15)
+
+	next, _ := m.handleMouse(rightPress(6, renderedMouseY(4)))
+	updated := next.(model)
+	next, _ = updated.handleMouse(rightPress(6, renderedMouseY(4)))
+	updated = next.(model)
+
+	if updated.confirmKind != "exit-run" {
+		t.Fatalf("expected double right-click to ask for exit-run confirmation, got %q", updated.confirmKind)
+	}
+	if !strings.Contains(updated.statusText, "Press y/Enter or click Exit") {
+		t.Fatalf("expected exit confirmation status, got %q", updated.statusText)
+	}
+
+	next, _ = updated.confirmCmd()
+	updated = next.(model)
+
+	if updated.activeScenarioID() != "" {
+		t.Fatalf("expected active scenario cache to be cleared, got %q", updated.activeScenarioID())
+	}
+	if _, err := os.Stat(updated.activeRunPath()); !os.IsNotExist(err) {
+		t.Fatalf("expected active-run.json to be removed, stat err=%v", err)
+	}
+}
+
+func TestExitRunKeyAsksForConfirmation(t *testing.T) {
+	m := buildRenderTestModel(t)
+	writeActiveRunTestState(t, m, time.Now(), time.Now().Add(15*time.Minute), 15)
+
+	next, cmd := m.handleNormalKey(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("e")})
+	updated := next.(model)
+	if cmd != nil {
+		t.Fatal("expected local confirmation with no command")
+	}
+	if updated.confirmKind != "exit-run" {
+		t.Fatalf("expected exit-run confirmation, got %q", updated.confirmKind)
+	}
+	if !strings.Contains(updated.statusText, "Exit "+m.currentLab().ID+"?") {
+		t.Fatalf("expected exit confirmation status, got %q", updated.statusText)
+	}
+}
+
+func TestToggleTimerRestartsActiveRunDeadline(t *testing.T) {
+	m := buildRenderTestModel(t)
+	oldStarted := time.Now().Add(-5 * time.Minute).Round(0)
+	oldDeadline := oldStarted.Add(10 * time.Minute)
+	writeActiveRunTestState(t, m, oldStarted, oldDeadline, 15)
+
+	next, cmd := m.toggleTimer()
+	updated := next.(model)
+	if cmd == nil {
+		t.Fatal("expected timer tick command for active run")
+	}
+	if !updated.timerEnabled {
+		t.Fatal("expected timer to enable for active run")
+	}
+	if !updated.timerEndsAt.After(oldDeadline) {
+		t.Fatalf("expected restarted deadline after %s, got %s", oldDeadline, updated.timerEndsAt)
+	}
+	startedAt, endsAt := readActiveRunTestTimes(t, m)
+	if !startedAt.After(oldStarted) {
+		t.Fatalf("expected active run started_at to restart after %s, got %s", oldStarted, startedAt)
+	}
+	if !endsAt.Equal(updated.timerEndsAt) {
+		t.Fatalf("expected active run ends_at %s, got %s", updated.timerEndsAt, endsAt)
+	}
+}
+
+func TestToggleTimerOffDoesNotMutateActiveRun(t *testing.T) {
+	m := buildRenderTestModel(t)
+	started := time.Now().Add(-2 * time.Minute).Round(0)
+	deadline := started.Add(15 * time.Minute)
+	writeActiveRunTestState(t, m, started, deadline, 15)
+
+	next, _ := m.toggleTimer()
+	enabled := next.(model)
+	next, cmd := enabled.toggleTimer()
+	disabled := next.(model)
+	if cmd != nil {
+		t.Fatal("expected no tick command when disabling timer")
+	}
+	if disabled.timerEnabled {
+		t.Fatal("expected timer to be disabled")
+	}
+	startedAfter, deadlineAfter := readActiveRunTestTimes(t, disabled)
+	if !startedAfter.Equal(enabled.cachedStartedAt) {
+		t.Fatalf("expected started_at unchanged, got %s want %s", startedAfter, enabled.cachedStartedAt)
+	}
+	if !deadlineAfter.Equal(enabled.cachedEndsAt) {
+		t.Fatalf("expected ends_at unchanged, got %s want %s", deadlineAfter, enabled.cachedEndsAt)
+	}
+}
+
+func TestToggleTimerOnAgainRestartsDeadline(t *testing.T) {
+	m := buildRenderTestModel(t)
+	started := time.Now().Add(-2 * time.Minute).Round(0)
+	deadline := started.Add(15 * time.Minute)
+	writeActiveRunTestState(t, m, started, deadline, 15)
+
+	first, _ := m.toggleTimer()
+	enabled := first.(model)
+	firstDeadline := enabled.timerEndsAt
+	off, _ := enabled.toggleTimer()
+	disabled := off.(model)
+	time.Sleep(2 * time.Millisecond)
+	second, cmd := disabled.toggleTimer()
+	restarted := second.(model)
+	if cmd == nil {
+		t.Fatal("expected timer tick command after re-enabling timer")
+	}
+	if !restarted.timerEndsAt.After(firstDeadline) {
+		t.Fatalf("expected second timer deadline after %s, got %s", firstDeadline, restarted.timerEndsAt)
+	}
+}
+
+func writeActiveRunTestState(t *testing.T, m model, startedAt, endsAt time.Time, minutes int) {
+	t.Helper()
+	writeActiveRunTestScenarioState(t, m, m.currentLab().ID, "lab", startedAt, endsAt, minutes)
+}
+
+func writeActiveRunTestScenarioState(t *testing.T, m model, scenarioID, mode string, startedAt, endsAt time.Time, minutes int) {
+	t.Helper()
+
+	stateDir := filepath.Join(m.root, ".lab-state")
+	if err := os.MkdirAll(stateDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	activeRun := fmt.Sprintf(`{
+		"run_id": "test-run",
+		"status": "active",
+		"mode": %q,
+		"started_at": %q,
+		"ends_at": %q,
+		"scenario": {"id": %q, "time_limit_minutes": %d}
+	}`, mode, startedAt.Format(time.RFC3339Nano), endsAt.Format(time.RFC3339Nano), scenarioID, minutes)
+	if err := os.WriteFile(filepath.Join(stateDir, "active-run.json"), []byte(activeRun), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func readActiveRunTestTimes(t *testing.T, m model) (time.Time, time.Time) {
+	t.Helper()
+
+	raw, err := os.ReadFile(filepath.Join(m.root, ".lab-state", "active-run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var state struct {
+		StartedAt string `json:"started_at"`
+		EndsAt    string `json:"ends_at"`
+	}
+	if err := json.Unmarshal(raw, &state); err != nil {
+		t.Fatal(err)
+	}
+	startedAt, err := time.Parse(time.RFC3339Nano, state.StartedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	endsAt, err := time.Parse(time.RFC3339Nano, state.EndsAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return startedAt, endsAt
 }
 
 func TestSummarizeActionOutputMaxLines(t *testing.T) {
@@ -583,17 +857,80 @@ func TestMouseClickFooterFindAndQuit(t *testing.T) {
 	}
 }
 
+func TestSearchNoMatchRendersSingleContextualMessage(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 24
+	m.filterMode = true
+	m.filterQuery = "sxq"
+	m.normalizeSelection()
+
+	stripped := StripAnsi(m.View())
+	if count := strings.Count(stripped, "No matching lab"); count != 1 {
+		t.Fatalf("expected one no-match line, got %d:\n%s", count, stripped)
+	}
+	if strings.Contains(stripped, "No scenario selected") {
+		t.Fatalf("expected no stale no-selection message, got:\n%s", stripped)
+	}
+}
+
+func TestSearchModeAllowsNavigationTabAndDoubleClickStart(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 120
+	m.height = 35
+	m.filterMode = true
+	m.filterQuery = "mock"
+	m.activeTab = labsTab
+	m.normalizeSelection()
+
+	got, _ := m.handleFilterKey(tea.KeyMsg{Type: tea.KeyTab})
+	updated := got.(model)
+	if updated.activeTab != examsTab {
+		t.Fatalf("expected Tab in search mode to switch to exams, got %v", updated.activeTab)
+	}
+
+	got, _ = updated.handleMouse(leftPress(4, renderedMouseY(4)))
+	updated = got.(model)
+	got, _ = updated.handleMouse(leftPress(4, renderedMouseY(4)))
+	updated = got.(model)
+	if updated.confirmKind != "start" {
+		t.Fatalf("expected double-click in filtered results to open start confirmation, got %q", updated.confirmKind)
+	}
+	if updated.filterMode {
+		t.Fatal("expected double-click start to leave search mode")
+	}
+}
+
 func TestUppercaseActionKeysWork(t *testing.T) {
 	m := buildRenderTestModel(t)
 	if err := os.MkdirAll(filepath.Join(m.root, ".vagrant", "machines"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	m.cachedActiveID = m.currentLab().ID
+	writeActiveRunTestState(t, m, time.Now(), time.Now().Add(15*time.Minute), 15)
 
 	got, _ := m.handleNormalKey(fakeKeyMsg("C"))
 	updated := got.(model)
 	if !updated.busy {
 		t.Fatalf("expected uppercase C to trigger checks")
+	}
+}
+
+func TestExamCheckActionStartsForActiveExam(t *testing.T) {
+	m := buildRenderTestModel(t)
+	if err := os.MkdirAll(filepath.Join(m.root, ".vagrant", "machines"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m.activeTab = examsTab
+	exam := m.currentExam()
+	writeActiveRunTestScenarioState(t, m, exam.ID, "exam", time.Now(), time.Now().Add(150*time.Minute), 150)
+
+	got, cmd := m.handleCheckAction()
+	updated := got.(model)
+	if cmd == nil || !updated.busy {
+		t.Fatal("expected exam check command to start for active exam")
+	}
+	if updated.statusText != "Running checks" {
+		t.Fatalf("expected running-checks status, got %q", updated.statusText)
 	}
 }
 
@@ -671,7 +1008,7 @@ func TestExamQuestionsProduceSectionOffsets(t *testing.T) {
 
 func TestCopyDetailSectionOmitsHeadingTitle(t *testing.T) {
 	m := buildRenderTestModel(t)
-	m.detail = detailCheck
+	m.detail = detailSolution
 	sections := m.copyableSections()
 	if len(sections) == 0 {
 		t.Fatal("expected at least one copyable section")
@@ -747,27 +1084,15 @@ func mouseRelease(x, y int) tea.MouseMsg {
 	return tea.MouseMsg{Action: tea.MouseActionRelease, X: x, Y: y}
 }
 
-func TestCheckCopyClickCopiesCommandBodyOnly(t *testing.T) {
+func TestCheckCopyBoundsAreHidden(t *testing.T) {
 	m := buildRenderTestModel(t)
 	m.width = 120
 	m.height = 35
 	m.detail = detailCheck
-	copied := captureClipboardCopy(t)
 
 	bounds := m.detailSectionCopyBounds()
-	if len(bounds) == 0 {
-		t.Fatal("expected check copy bounds")
-	}
-
-	updated := clickCopyBound(m, bounds[0])
-	if !strings.Contains(updated.statusText, "Copied") {
-		t.Fatalf("expected copied status, got %q", updated.statusText)
-	}
-	if *copied == "" {
-		t.Fatal("expected clipboard content")
-	}
-	if strings.Contains(*copied, "Check 01") || strings.Contains(*copied, "Copy Section") {
-		t.Fatalf("expected copied check body only, got %q", *copied)
+	if len(bounds) != 0 {
+		t.Fatalf("expected check copy bounds to be hidden, got %d", len(bounds))
 	}
 }
 

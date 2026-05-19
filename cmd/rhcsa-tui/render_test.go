@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
 	"github.com/firassBenNacib/rhcsa_exam_vms/internal/progress"
@@ -39,7 +40,7 @@ func buildRenderTestModel(t *testing.T) model {
 		"description": "Full mock exam", "objective_tags": ["containers", "storage"],
 		"supported_modes": ["exam"], "time_limit_minutes": 150,
 		"flags": {"password_recovery": true, "requires_server": true},
-		"content": {"lab": {"hints": [], "checks": []}}
+		"content": {"exam": {"checks": ["hostnamectl --static | grep -qx client.exam.local"]}}
 	}`)
 
 	writeRenderTestFile(t, filepath.Join(labRoot, "LAB_TASKS.md"), longTasks)
@@ -47,7 +48,7 @@ func buildRenderTestModel(t *testing.T) model {
 	writeRenderTestFile(t, filepath.Join(examRoot, "EXAM_TASKS.md"), "# Exam Tasks\n\n- Complete all tasks within time\n")
 	writeRenderTestFile(t, filepath.Join(examRoot, "EXAM_SOLUTION.md"), "# Solution\n\nSee lab solutions.\n")
 
-	labs, exams, err := catalog.Load(root)
+	labs, exams, err := catalog.LoadTrack(root, "rhcsa9")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,6 +65,7 @@ func buildRenderTestModel(t *testing.T) model {
 		progress:     progressState,
 		progressPath: filepath.Join(root, "progress.json"),
 		theme:        NewTheme(),
+		track:        "rhcsa9",
 		activeTab:    labsTab,
 		detail:       detailPrompt,
 		focus:        focusList,
@@ -88,7 +90,7 @@ func buildRepoTestModel(t *testing.T) model {
 		t.Fatal(err)
 	}
 	root := filepath.Clean(filepath.Join(wd, "..", ".."))
-	labs, exams, err := catalog.Load(root)
+	labs, exams, err := catalog.LoadTrack(root, "rhcsa9")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,6 +108,7 @@ func buildRepoTestModel(t *testing.T) model {
 		progress:     progressState,
 		progressPath: filepath.Join(t.TempDir(), "progress.json"),
 		theme:        NewTheme(),
+		track:        "rhcsa9",
 		activeTab:    labsTab,
 		detail:       detailPrompt,
 		focus:        focusList,
@@ -177,6 +180,28 @@ func TestRenderFullView(t *testing.T) {
 		t.Error("expected status text to appear in output panel")
 	}
 }
+
+func TestRenderBusyProgressUsesScenarioContext(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.width = 160
+	m.height = 35
+	m.busy = true
+	m.actionStarted = time.Now().Add(-30 * time.Second)
+	m.statusText = m.startStatusText()
+
+	stripped := StripAnsi(m.View())
+	for _, want := range []string{"RHCSA LAB START", "Starting Lab 01", "Elapsed"} {
+		if !strings.Contains(stripped, want) {
+			t.Fatalf("expected busy panel to contain %q, got:\n%s", want, stripped)
+		}
+	}
+	for _, unwanted := range []string{"SYSTEM EXECUTION", "Uptime", "Working in background", "92%"} {
+		if strings.Contains(stripped, unwanted) {
+			t.Fatalf("expected busy panel to omit %q, got:\n%s", unwanted, stripped)
+		}
+	}
+}
+
 func TestRenderZeroSize(t *testing.T) {
 	m := model{
 		theme: NewTheme(),
@@ -204,7 +229,7 @@ func TestRenderRemovesLegacyScrollHintsAndTimePrefixes(t *testing.T) {
 func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	m := buildRenderTestModel(t)
 	stripped := StripAnsi(m.View())
-	for _, snippet := range []string{"c", "Check", "F1", "Tasks", "F2", "Hints", "F3", "Checks", "F4", "Solutions", "z", "Client", "x", "Server", "q", "Quit"} {
+	for _, snippet := range []string{"e", "Exit", "c", "Check", "F1", "Tasks", "F2", "Hints", "F3", "Checks", "F4", "Solutions", "z", "Client", "x", "Server", "t", "Timer", "q", "Quit"} {
 		if !strings.Contains(stripped, snippet) {
 			t.Fatalf("expected footer to contain %q, got:\n%s", snippet, stripped)
 		}
@@ -223,9 +248,26 @@ func TestRenderFooterIncludesFunctionShortcutsForLabs(t *testing.T) {
 	}
 	if strings.Index(stripped, "z Client") >= strings.Index(stripped, "x Server") ||
 		strings.Index(stripped, "x Server") >= strings.Index(stripped, "/ Find") ||
-		strings.Index(stripped, "/ Find") >= strings.Index(stripped, "? Help") ||
+		strings.Index(stripped, "/ Find") >= strings.Index(stripped, "t Timer") ||
+		strings.Index(stripped, "t Timer") >= strings.Index(stripped, "? Help") ||
 		strings.Index(stripped, "? Help") >= strings.Index(stripped, "q Quit") {
-		t.Fatalf("expected footer order z Client, x Server, / Find, ? Help, q Quit, got:\n%s", stripped)
+		t.Fatalf("expected footer order z Client, x Server, / Find, t Timer, ? Help, q Quit, got:\n%s", stripped)
+	}
+}
+
+func TestExamChecksRenderInDetailPane(t *testing.T) {
+	m := buildRenderTestModel(t)
+	m.activeTab = examsTab
+	m.detail = detailCheck
+
+	stripped := StripAnsi(m.View())
+	for _, want := range []string{"CHECKS", "static hostname is correct", "active exam"} {
+		if !strings.Contains(stripped, want) {
+			t.Fatalf("expected exam checks view to contain %q, got:\n%s", want, stripped)
+		}
+	}
+	if strings.Contains(stripped, "No automated checks are defined for this active lab") {
+		t.Fatalf("expected exam-specific check wording, got:\n%s", stripped)
 	}
 }
 
@@ -429,7 +471,7 @@ func TestWideLayoutKeepsDetailFlushWithSeparator(t *testing.T) {
 	if !strings.Contains(lines[2], "1 / 1│  TASKS") {
 		t.Fatalf("expected detail tabs to start at the separator, got:\n%s", lines[2])
 	}
-	if !strings.Contains(lines[4], "│  Lab 01: Networking and Hostname") {
+	if !strings.Contains(lines[4], "│ Lab 01: Networking and Hostname") {
 		t.Fatalf("expected detail title to sit just after the separator, got:\n%s", lines[4])
 	}
 }

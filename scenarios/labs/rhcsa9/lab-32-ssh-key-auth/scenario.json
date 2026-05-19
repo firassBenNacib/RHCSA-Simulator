@@ -24,26 +24,26 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user relay32 on client and user vault32 on server. Set the password of both users to cinder9.",
-        "Configure key-based SSH authentication so that user relay32 on client can log in to vault32@server without a password prompt.",
-        "Do not disable PasswordAuthentication globally for this task."
+        "On client, create user relay32 and set the password to cinder9.",
+        "On server, create user vault32 and set the password to cinder9.",
+        "Configure key-based SSH authentication so that user relay32 on client can log in to vault32@server without a password prompt."
       ],
       "hints": [
         "Generate the key as the source user.",
         "Populate authorized_keys for the target user."
       ],
       "checks": [
-        "getent passwd relay32 >/dev/null && getent shadow relay32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@server true'",
-        "sshd -T | grep -Eq '^passwordauthentication yes$'"
+        "getent passwd relay32 >/dev/null && getent shadow relay32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
+        "# server getent passwd vault32 >/dev/null && getent shadow vault32 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
+        "runuser -l relay32 -c 'ssh -o StrictHostKeyChecking=no -o BatchMode=yes vault32@server true'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Create user relay32 on client and user vault32 on...",
-        "Configure key-based SSH authentication so that user...",
-        "Do not disable PasswordAuthentication globally for..."
+        "Create relay32 on client",
+        "Create vault32 on server",
+        "Configure key-based SSH authentication"
       ],
       "task_points": [
         10,
@@ -54,8 +54,10 @@
         [
           "id relay32 >/dev/null 2>&1 || useradd -m relay32",
           "passwd relay32",
-          "# enter: cinder9",
-          "# on server",
+          "# enter: cinder9"
+        ],
+        [
+          "# On server",
           "id vault32 >/dev/null 2>&1 || useradd -m vault32",
           "passwd vault32",
           "# enter: cinder9"
@@ -64,10 +66,6 @@
           "su - relay32",
           "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519",
           "ssh-copy-id -o StrictHostKeyChecking=no vault32@server"
-        ],
-        [
-          "su - relay32",
-          "ssh -o StrictHostKeyChecking=no vault32@server true"
         ]
       ]
     }

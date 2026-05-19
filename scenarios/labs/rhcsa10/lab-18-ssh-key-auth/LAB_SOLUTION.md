@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-18-ssh-key-auth` |
+| Scenario ID | `lab-18-ssh-key-auth` |
 | Mode | Lab |
 | Time limit | 30 minutes |
 | Objectives | users-sudo-ssh |

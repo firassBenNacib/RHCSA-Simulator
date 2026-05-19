@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from rhcsa_scenarios.tracks import manifest_tracks, normalize_track
+from rhcsa_scenarios.tracks import normalize_track
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -92,6 +92,27 @@ def normalize_scenario_token(value: str) -> str:
 def resolve_scenario_token(ids: list[str], token: str) -> str:
     if token in ids:
         return token
+
+    aliases: list[str] = []
+    lowered = token.lower()
+    lab_number_match = re.fullmatch(r"(?:lab-?)?(\d{1,2})", lowered)
+    if lab_number_match:
+        aliases.append(f"lab-{int(lab_number_match.group(1)):02d}-")
+    exam_number_match = re.fullmatch(r"(?:mock-)?(?:exam-?)?([1-8])", lowered)
+    if exam_number_match:
+        aliases.append(f"mock-exam-{chr(ord('a') + int(exam_number_match.group(1)) - 1)}")
+    if lowered.startswith("exam-"):
+        aliases.append(f"mock-{lowered}")
+    if re.fullmatch(r"[a-h]", lowered):
+        aliases.append(f"mock-exam-{lowered}")
+    for alias in aliases:
+        if alias in ids:
+            return alias
+        alias_matches = [scenario_id for scenario_id in ids if scenario_id.startswith(alias)]
+        if not alias_matches:
+            alias_matches = [scenario_id for scenario_id in ids if scenario_id.endswith(alias)]
+        if len(alias_matches) == 1:
+            return alias_matches[0]
 
     prefix_matches = [scenario_id for scenario_id in ids if scenario_id.startswith(token)]
     if len(prefix_matches) == 1:

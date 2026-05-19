@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-11-grep-regex` |
+| Scenario ID | `lab-11-grep-regex` |
 | Mode | Lab |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
@@ -25,12 +25,6 @@ Create /root/rhcsa10-shell-users.txt.
 
 ---
 
-## Task 02 - Populate it with account names from /etc/passwd whose shell ends in sh (client) - 10 pts
+## Task 02 - Populate it with account names from /etc/passwd whose shell ends in sh, (client) - 10 pts
 
-Populate it with account names from /etc/passwd whose shell ends in sh.
-
----
-
-## Task 03 - Sort the output alphabetically (client) - 10 pts
-
-Sort the output alphabetically.
+Populate it with account names from /etc/passwd whose shell ends in sh, sorted alphabetically.

@@ -23,22 +23,23 @@
   "content": {
     "lab": {
       "tasks": [
-        "As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest.",
-        "Bind mount /opt/file21 to /data/input and /opt/processed21 to /data/output."
+        "Create user runner21 if it does not already exist and set its password to cinder9.",
+        "As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest with /opt/file21 bind mounted to /data/input and /opt/processed21 bind mounted to /data/output."
       ],
       "hints": [
         "The local image for this lab is prebuilt.",
         "Use podman run with two bind mounts."
       ],
       "checks": [
-        "runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21"
+        "getent passwd runner21 >/dev/null && getent shadow runner21 | awk -F: '{ok=(length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/)} END{exit !ok}'",
+        "runuser -l runner21 -c 'podman ps --format {{.Names}}' | grep -qx mycontainer21 && runuser -l runner21 -c 'podman inspect mycontainer21 --format \"{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}\"' | grep -Fq '/opt/file21:/data/input' && runuser -l runner21 -c 'podman inspect mycontainer21 --format \"{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}\"' | grep -Fq '/opt/processed21:/data/output'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Run mycontainer21 as runner21",
-        "Bind mount the input and output directories"
+        "Create runner21 and set its password",
+        "Run mycontainer21 with bind mounts"
       ],
       "task_points": [
         10,
@@ -47,7 +48,8 @@
       "solution_commands": [
         [
           "id runner21 >/dev/null 2>&1 || useradd -m runner21",
-          "su - runner21"
+          "passwd runner21",
+          "# enter: cinder9"
         ],
         [
           "su - runner21",

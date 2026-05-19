@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-05-rpm-packages` |
+| Scenario ID | `lab-05-rpm-packages` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | software-management |
@@ -27,17 +27,10 @@ dnf install -y lsof
 
 ---
 
-## Task 02 - Remove the tcpdump package if it is installed (client) - 10 pts
+## Task 02 - Remove the tcpdump package if it is installed (client) - 20 pts
 
 ```bash
 dnf remove -y tcpdump
-```
-
----
-
-## Task 03 - Verify package state with rpm (client) - 10 pts
-
-```bash
 rpm -q lsof
 rpm -q tcpdump || true
 ```

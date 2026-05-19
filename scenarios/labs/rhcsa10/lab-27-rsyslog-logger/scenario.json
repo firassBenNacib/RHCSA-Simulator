@@ -20,7 +20,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Ensure rsyslog is installed and running.",
+        "Ensure rsyslog is running.",
         "Configure local7.* messages to log to /var/log/rhcsa10-local7.log.",
         "Send a logger test message with facility local7 and verify it is written."
       ],
@@ -37,7 +37,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Ensure rsyslog is installed and running",
+        "Ensure rsyslog is running",
         "Configure local7.* messages to log to /var/log/rhcsa10-local7.log",
         "Send a logger test message with facility local7 and verify it is written"
       ],
@@ -48,7 +48,6 @@
       ],
       "solution_commands": [
         [
-          "dnf install -y rsyslog",
           "systemctl enable --now rsyslog"
         ],
         [
@@ -62,5 +61,8 @@
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

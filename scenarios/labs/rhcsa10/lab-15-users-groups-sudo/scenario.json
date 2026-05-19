@@ -29,7 +29,7 @@
         "Validate sudoers syntax with visudo -cf."
       ],
       "checks": [
-        "getent group ops10 >/dev/null",
+        "getent group ops10 | grep -q '^ops10:'",
         "id -nG relay10 | tr ' ' '\\n' | grep -qx ops10 && getent shadow relay10 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
         "grep -ERq '^%ops10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d && visudo -cf /etc/sudoers >/dev/null"
       ],
@@ -48,12 +48,13 @@
       ],
       "solution_commands": [
         [
-          "groupadd ops10"
+          "getent group ops10 >/dev/null || groupadd ops10",
+          "getent group ops10"
         ],
         [
-          "useradd -G ops10 relay10",
-          "passwd relay10",
-          "# enter: cinder9"
+          "id relay10 >/dev/null 2>&1 || useradd -G ops10 relay10",
+          "usermod -aG ops10 relay10",
+          "echo 'relay10:cinder9' | chpasswd"
         ],
         [
           "echo '%ops10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/ops10",
@@ -61,5 +62,6 @@
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

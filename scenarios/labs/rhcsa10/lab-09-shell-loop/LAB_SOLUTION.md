@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-09-shell-loop` |
+| Scenario ID | `lab-09-shell-loop` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | shell-scripting |
@@ -35,17 +35,10 @@ EOF
 
 ---
 
-## Task 02 - The script must read /etc/passwd and write every account name that start (client) - 10 pts
+## Task 02 - Make the script executable, read /etc/passwd, and overwrite /root/rhcsa1 (client) - 10 pts
 
 ```bash
 chmod +x /usr/local/bin/rhcsa10-lines
-```
-
----
-
-## Task 03 - The script must overwrite the output file each time it runs (client) - 10 pts
-
-```bash
 /usr/local/bin/rhcsa10-lines
 cat /root/rhcsa10-lines.txt
 ```

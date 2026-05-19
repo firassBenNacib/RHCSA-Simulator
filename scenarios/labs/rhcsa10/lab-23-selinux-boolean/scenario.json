@@ -20,9 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Enable the httpd_can_network_connect SELinux boolean.",
-        "Make the boolean persistent.",
-        "Verify the boolean state."
+        "Enable the httpd_can_network_connect SELinux boolean immediately.",
+        "Make the httpd_can_network_connect SELinux boolean persistent."
       ],
       "hints": [
         "Use setsebool -P.",
@@ -30,33 +29,31 @@
       ],
       "checks": [
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "semanage boolean -l | grep -E '^httpd_can_network_connect\\s' | grep -q on",
-        "getsebool httpd_can_network_connect >/dev/null"
+        "semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Enable the httpd_can_network_connect SELinux boolean",
-        "Make the boolean persistent",
-        "Verify the boolean state"
+        "Enable the httpd_can_network_connect SELinux boolean immediately",
+        "Make the httpd_can_network_connect SELinux boolean persistent"
       ],
       "task_points": [
-        10,
         10,
         10
       ],
       "solution_commands": [
         [
-          "setsebool -P httpd_can_network_connect on"
+          "setsebool httpd_can_network_connect on"
         ],
         [
-          "getsebool httpd_can_network_connect"
-        ],
-        [
+          "setsebool -P httpd_can_network_connect on",
           "semanage boolean -l | grep httpd_can_network_connect"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

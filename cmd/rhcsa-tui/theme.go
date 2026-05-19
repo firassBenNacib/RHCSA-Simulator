@@ -11,6 +11,11 @@ type Theme struct {
 	TabActive           lipgloss.Style
 	TabInactive         lipgloss.Style
 	TabBorder           lipgloss.Style
+	TimerActive         lipgloss.Style
+	TimerInactive       lipgloss.Style
+	ProgressPanel       lipgloss.Style
+	ProgressTitle       lipgloss.Style
+	ProgressBar         lipgloss.Style
 	ViewMode            lipgloss.Style
 	ViewModeActive      lipgloss.Style
 	CopyButton          lipgloss.Style
@@ -98,6 +103,27 @@ func NewTheme() Theme {
 			Foreground(textMuted),
 		TabBorder: lipgloss.NewStyle().
 			Foreground(borderSoft),
+		TimerActive: lipgloss.NewStyle().
+			Padding(0, 2).
+			Bold(true).
+			Foreground(bgDark).
+			Background(green),
+		TimerInactive: lipgloss.NewStyle().
+			Padding(0, 2).
+			Bold(true).
+			Foreground(textNormal).
+			Background(bgCard),
+		ProgressPanel: lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(border).
+			Padding(0, 1).
+			Foreground(textNormal).
+			Background(bgDark),
+		ProgressTitle: lipgloss.NewStyle().
+			Foreground(redLight).
+			Bold(true),
+		ProgressBar: lipgloss.NewStyle().
+			Foreground(redLight),
 		ViewMode: lipgloss.NewStyle().
 			Padding(0, 2).
 			Foreground(textMuted),
@@ -259,6 +285,7 @@ func (t Theme) RenderViewModes(active detailMode, isExam bool) string {
 	if isExam {
 		modes = []modeEntry{
 			{detailPrompt, "TASKS"},
+			{detailCheck, "CHECKS"},
 			{detailSolution, "SOLUTIONS"},
 		}
 	} else {

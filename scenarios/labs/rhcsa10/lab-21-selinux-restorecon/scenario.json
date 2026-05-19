@@ -20,43 +20,33 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /var/www/html/rhcsa10.html containing RHCSA10.",
-        "Set an incorrect context on the file.",
-        "Restore the default context with restorecon."
+        "Restore the default SELinux context on /var/www/html/rhcsa10.html."
       ],
       "hints": [
         "Use chcon to simulate a bad label.",
         "Use restorecon to repair the default label."
       ],
       "checks": [
-        "test \"$(cat /var/www/html/rhcsa10.html)\" = RHCSA10",
-        "matchpathcon /var/www/html/rhcsa10.html | grep -q httpd_sys_content_t",
-        "ls -Z /var/www/html/rhcsa10.html | grep -q httpd_sys_content_t"
+        "test \"$(cat /var/www/html/rhcsa10.html)\" = RHCSA10 && ls -Z /var/www/html/rhcsa10.html | grep -q httpd_sys_content_t"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /var/www/html/rhcsa10.html containing RHCSA10",
-        "Set an incorrect context on the file",
-        "Restore the default context with restorecon"
+        "Restore the default SELinux context on /var/www/html/rhcsa10.html"
       ],
       "task_points": [
-        10,
-        10,
         10
       ],
       "solution_commands": [
         [
-          "echo RHCSA10 > /var/www/html/rhcsa10.html"
-        ],
-        [
-          "chcon -t user_tmp_t /var/www/html/rhcsa10.html"
-        ],
-        [
-          "restorecon -v /var/www/html/rhcsa10.html"
+          "restorecon -v /var/www/html/rhcsa10.html",
+          "ls -Z /var/www/html/rhcsa10.html"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

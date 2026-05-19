@@ -22,9 +22,16 @@ Create an ext4 filesystem by label and mount it persistently.
 ## Task 01 - Create the 600 MiB partition on /dev/sdb (client) - 10 pts
 
 ```bash
-parted /dev/sdb --script mklabel gpt
-parted /dev/sdb --script mkpart primary ext4 1MiB 600MiB
-partprobe /dev/sdb
+umount /data44 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+printf 'label: gpt\n,600MiB,L\n' | sfdisk --wipe always /dev/sdb
+partprobe /dev/sdb || true
+partx -u /dev/sdb || partx -a /dev/sdb || true
+udevadm settle
+for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; partprobe /dev/sdb || true; partx -u /dev/sdb || true; udevadm settle; sleep 1; done
+test -b /dev/sdb1
 ```
 
 ---

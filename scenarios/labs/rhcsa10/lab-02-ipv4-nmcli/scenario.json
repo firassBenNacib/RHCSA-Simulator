@@ -20,26 +20,26 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the active client connection with IPv4 address 192.168.122.45/24.",
-        "Set gateway 192.168.122.1 and DNS server 192.168.122.3.",
-        "Ensure the connection uses manual IPv4 configuration and autoconnects."
+        "On client, configure the active lab connection with IPv4 address 192.168.122.45/24.",
+        "On client, set gateway 192.168.122.1 and DNS server 192.168.122.3.",
+        "On client, ensure the connection uses manual IPv4 configuration and autoconnects."
       ],
       "hints": [
         "Use nmcli connection show --active to find the connection.",
         "Modify the connection profile, then bring it up."
       ],
       "checks": [
-        "nmcli -g ipv4.addresses connection show 'System eth1' | grep -qx '192.168.122.45/24'",
-        "nmcli -g ipv4.gateway connection show 'System eth1' | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show 'System eth1' | grep -qx '192.168.122.3'",
-        "nmcli -g ipv4.method,connection.autoconnect connection show 'System eth1' | grep -qx manual && nmcli -g connection.autoconnect connection show 'System eth1' | grep -qx yes"
+        "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.45/24'",
+        "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3'",
+        "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual && nmcli -g connection.autoconnect connection show \"$connection_name\" | grep -qx yes"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure the active client connection with IPv4 address 192.168.122.45/",
-        "Set gateway 192.168.122.1 and DNS server 192.168.122.3",
-        "Ensure the connection uses manual IPv4 configuration and autoconnects"
+        "configure the active lab connection with IPv4 address 192.168.122.45/24",
+        "set gateway 192.168.122.1 and DNS server 192.168.122.3",
+        "ensure the connection uses manual IPv4 configuration and autoconnects"
       ],
       "task_points": [
         10,
@@ -48,16 +48,22 @@
       ],
       "solution_commands": [
         [
-          "nmcli connection modify 'System eth1' ipv4.addresses 192.168.122.45/24"
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.45/24"
         ],
         [
-          "nmcli connection modify 'System eth1' ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3"
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3"
         ],
         [
-          "nmcli connection modify 'System eth1' ipv4.method manual connection.autoconnect yes",
-          "nmcli connection up 'System eth1'"
+          "nmcli connection show \"System eth1\"",
+          "nmcli connection modify \"System eth1\" ipv4.method manual connection.autoconnect yes",
+          "nmcli connection up \"System eth1\""
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

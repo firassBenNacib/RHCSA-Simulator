@@ -30,8 +30,8 @@
       ],
       "checks": [
         "blkid /dev/sdb1 | grep -q 'LABEL=\"RHCSA10DATA\"'",
-        "findmnt -no TARGET /mnt/rhcsa10data | grep -qx /mnt/rhcsa10data",
-        "grep -Eq '^LABEL=RHCSA10DATA[[:space:]]+/mnt/rhcsa10data[[:space:]]+xfs[[:space:]]+defaults' /etc/fstab"
+        "test -d /mnt/rhcsa10data",
+        "findmnt -no TARGET /mnt/rhcsa10data | grep -qx /mnt/rhcsa10data && grep -Eq '^LABEL=RHCSA10DATA[[:space:]]+/mnt/rhcsa10data[[:space:]]+xfs[[:space:]]+defaults' /etc/fstab"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -49,6 +49,8 @@
       "solution_commands": [
         [
           "parted -s /dev/sdb mklabel gpt mkpart primary xfs 1MiB 512MiB",
+          "partprobe /dev/sdb || true",
+          "udevadm settle",
           "mkfs.xfs -f -L RHCSA10DATA /dev/sdb1"
         ],
         [
@@ -60,5 +62,8 @@
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-07-flatpak-package` |
+| Scenario ID | `lab-07-flatpak-package` |
 | Mode | Lab |
 | Time limit | 25 minutes |
 | Objectives | software-management |
@@ -28,9 +28,3 @@ Ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/
 ## Task 02 - Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system (client) - 10 pts
 
 Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation.
-
----
-
-## Task 03 - Remove org.rhcsa.Tools and verify that it is no longer installed (client) - 10 pts
-
-Remove org.rhcsa.Tools and verify that it is no longer installed.

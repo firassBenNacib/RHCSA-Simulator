@@ -34,9 +34,3 @@ On client, configure a persistent repository file with the following settings:
 ## Task 02 - Server Repositories (server) - 10 pts
 
 On server, configure the same repository file with the same settings.
-
----
-
-## Task 03 - Verify Repositories (client) - 10 pts
-
-Verify that both repositories are available on both systems.

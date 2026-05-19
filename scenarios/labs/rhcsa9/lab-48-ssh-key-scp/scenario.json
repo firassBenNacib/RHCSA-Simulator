@@ -34,7 +34,7 @@
         "ssh-copy-id is the quickest way to seed authorized_keys."
       ],
       "checks": [
-        "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
         "test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub",
         "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server true'",
         "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server test -f /home/bridge48/inbox/payload.txt'"
@@ -68,13 +68,21 @@
         ],
         [
           "su - bridge48",
-          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
+          "mkdir -p /home/bridge48/.ssh",
+          "chmod 700 /home/bridge48/.ssh",
+          "rm -f /home/bridge48/.ssh/id_ed25519 /home/bridge48/.ssh/id_ed25519.pub",
+          "ssh-keygen -q -t ed25519 -N \"\" -f /home/bridge48/.ssh/id_ed25519",
+          "chmod 600 /home/bridge48/.ssh/id_ed25519",
+          "chmod 644 /home/bridge48/.ssh/id_ed25519.pub",
+          "test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub",
+          "exit"
         ],
         [
           "su - bridge48",
           "ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@server"
         ],
         [
+          "# On client",
           "su - bridge48",
           "scp /home/bridge48/payload.txt bridge48@server:/home/bridge48/inbox/"
         ]

@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-32-cron` |
+| Scenario ID | `lab-32-cron` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |

@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create mount point /mnt/serverdirect10.",
-        "Mount server:/exports/direct at /mnt/serverdirect10.",
-        "Make the mount persistent across reboots."
+        "On client, create mount point /mnt/serverdirect10.",
+        "On client, mount server:/exports/direct at /mnt/serverdirect10.",
+        "On client, make the mount persistent across reboots."
       ],
       "hints": [
         "Use nfs as the filesystem type.",
@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create mount point /mnt/serverdirect10",
-        "Mount server:/exports/direct at /mnt/serverdirect10",
-        "Make the mount persistent across reboots"
+        "create mount point /mnt/serverdirect10",
+        "mount server:/exports/direct at /mnt/serverdirect10",
+        "make the mount persistent across reboots"
       ],
       "task_points": [
         10,
@@ -54,9 +54,12 @@
           "mount -t nfs server:/exports/direct /mnt/serverdirect10"
         ],
         [
-          "echo 'server:/exports/direct /mnt/serverdirect10 nfs defaults,_netdev 0 0' >> /etc/fstab"
+          "grep -Eq '^server:/exports/direct[[:space:]]+/mnt/serverdirect10[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/direct /mnt/serverdirect10 nfs defaults,_netdev 0 0' >> /etc/fstab"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "server": "scripts/server.sh"
   }
 }

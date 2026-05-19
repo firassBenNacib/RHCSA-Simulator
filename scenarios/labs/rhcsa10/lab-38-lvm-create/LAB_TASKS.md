@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-38-lvm-create` |
+| Scenario ID | `lab-38-lvm-create` |
 | Mode | Lab |
 | Time limit | 40 minutes |
 | Objectives | storage-lvm |
@@ -31,6 +31,6 @@ Create volume group vg10.
 
 ---
 
-## Task 03 - Create a 256 MiB logical volume lvdata formatted with XFS and mounted at (client) - 10 pts
+## Task 03 - Create a 384 MiB logical volume lvdata formatted with XFS and mounted at (client) - 10 pts
 
-Create a 256 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently.
+Create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently.

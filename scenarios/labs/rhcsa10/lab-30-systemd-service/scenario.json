@@ -30,8 +30,8 @@
       ],
       "checks": [
         "test -x /usr/local/sbin/rhcsa10-service.sh",
-        "systemctl is-enabled rhcsa10-service.service | grep -qx enabled",
-        "grep -qx SERVICE10 /var/tmp/rhcsa10-service.out"
+        "test -f /etc/systemd/system/rhcsa10-service.service && grep -Fqx 'ExecStart=/usr/local/sbin/rhcsa10-service.sh' /etc/systemd/system/rhcsa10-service.service",
+        "systemctl is-enabled rhcsa10-service.service | grep -qx enabled && grep -qx SERVICE10 /var/tmp/rhcsa10-service.out"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -68,10 +68,12 @@
           "EOF"
         ],
         [
+          "restorecon -v /usr/local/sbin/rhcsa10-service.sh /etc/systemd/system/rhcsa10-service.service || true",
           "systemctl daemon-reload",
           "systemctl enable --now rhcsa10-service.service"
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

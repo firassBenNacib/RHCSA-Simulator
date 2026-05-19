@@ -1,8 +1,8 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1')
+Import-Module (Join-Path $PSScriptRoot '../LabState/LabState.psd1')
 
 $script:ValidObjectiveTags = @(
 'essential-tools',
@@ -124,6 +124,124 @@ $fullPath = (Resolve-Path $candidate).Path
 return [PSCustomObject]@{
 FullPath = $fullPath
 RelativePath = (Get-ProjectRelativePath -Path $fullPath -ProjectRoot $ProjectRoot)
+}
+}
+
+function Test-StandaloneLabVerificationTask {
+param(
+[AllowEmptyString()]
+[string]$TaskText
+)
+
+$firstLine = ([string]$TaskText).Split("`n")[0].Trim().TrimEnd('.').ToLowerInvariant()
+if ([string]::IsNullOrWhiteSpace($firstLine)) {
+return $false
+}
+
+if ($firstLine.StartsWith('verify ') -or $firstLine.StartsWith('check ') -or $firstLine.StartsWith('confirm ')) {
+return $true
+}
+
+return ($firstLine.StartsWith('use ') -and $firstLine.Contains(' verify '))
+}
+
+function Merge-LabCheckCommand {
+param(
+[AllowEmptyString()]
+[string]$Previous,
+[AllowEmptyString()]
+[string]$Current
+)
+
+$previousValue = [string]$Previous
+$currentValue = [string]$Current
+if (-not [string]::IsNullOrWhiteSpace($previousValue) -and -not [string]::IsNullOrWhiteSpace($currentValue)) {
+return ('({0}) && ({1})' -f $previousValue.Trim(), $currentValue.Trim())
+}
+
+if (-not [string]::IsNullOrWhiteSpace($previousValue)) {
+return $previousValue
+}
+
+return $currentValue
+}
+
+function Normalize-LabContent {
+param(
+[AllowNull()]
+[object]$LabContent
+)
+
+if ($null -eq $LabContent) {
+return $null
+}
+
+$tasks = @([string[]]@($LabContent.Tasks))
+$taskTitles = @([string[]]@($LabContent.TaskTitles))
+$taskPoints = @([int[]]@($LabContent.TaskPoints))
+$solutionCommands = @($LabContent.SolutionCommands | ForEach-Object { @([string[]]@($_)) })
+$hints = @([string[]]@($LabContent.Hints))
+$checks = @([string[]]@($LabContent.Checks))
+$solutionOutline = @([string[]]@($LabContent.SolutionOutline))
+
+$normalizedTasks = New-Object System.Collections.Generic.List[string]
+$normalizedTaskTitles = New-Object System.Collections.Generic.List[string]
+$normalizedTaskPoints = New-Object System.Collections.Generic.List[int]
+$normalizedSolutionCommands = New-Object System.Collections.Generic.List[object]
+$normalizedHints = New-Object System.Collections.Generic.List[string]
+$normalizedChecks = New-Object System.Collections.Generic.List[string]
+$normalizedSolutionOutline = New-Object System.Collections.Generic.List[string]
+
+for ($index = 0; $index -lt $tasks.Count; $index++) {
+    $shouldMerge = $index -gt 0 -and $normalizedTasks.Count -gt 0 -and (Test-StandaloneLabVerificationTask -TaskText $tasks[$index])
+    if ($shouldMerge) {
+        if ($index -lt $solutionCommands.Count) {
+            $mergedCommands = @($normalizedSolutionCommands[$normalizedSolutionCommands.Count - 1]) + @($solutionCommands[$index])
+            $normalizedSolutionCommands[$normalizedSolutionCommands.Count - 1] = @($mergedCommands)
+        }
+
+        if ($index -lt $checks.Count) {
+            $normalizedChecks[$normalizedChecks.Count - 1] = Merge-LabCheckCommand `
+                -Previous $normalizedChecks[$normalizedChecks.Count - 1] `
+                -Current $checks[$index]
+        }
+
+        if ($index -lt $taskPoints.Count) {
+            $normalizedTaskPoints[$normalizedTaskPoints.Count - 1] = [int]$normalizedTaskPoints[$normalizedTaskPoints.Count - 1] + [int]$taskPoints[$index]
+        }
+
+        continue
+    }
+
+    $normalizedTasks.Add($tasks[$index])
+    if ($index -lt $taskTitles.Count) {
+        $normalizedTaskTitles.Add($taskTitles[$index])
+    }
+    if ($index -lt $taskPoints.Count) {
+        $normalizedTaskPoints.Add([int]$taskPoints[$index])
+    }
+    if ($index -lt $solutionCommands.Count) {
+        $normalizedSolutionCommands.Add(@($solutionCommands[$index]))
+    }
+    if ($index -lt $checks.Count) {
+        $normalizedChecks.Add([string]$checks[$index])
+    }
+    if ($index -lt $hints.Count) {
+        $normalizedHints.Add($hints[$index])
+    }
+    if ($index -lt $solutionOutline.Count) {
+        $normalizedSolutionOutline.Add($solutionOutline[$index])
+    }
+}
+
+return [PSCustomObject]@{
+Tasks = $normalizedTasks.ToArray()
+TaskTitles = $normalizedTaskTitles.ToArray()
+TaskPoints = $normalizedTaskPoints.ToArray()
+SolutionCommands = $normalizedSolutionCommands.ToArray()
+Hints = $normalizedHints.ToArray()
+Checks = $normalizedChecks.ToArray()
+SolutionOutline = $normalizedSolutionOutline.ToArray()
 }
 }
 
@@ -269,17 +387,36 @@ throw "Scenario '$id' content.lab.task_points must match the task count."
 if ($labSolutionCommands.Count -ne $labTasks.Count) {
 throw "Scenario '$id' content.lab.solution_commands must match the task count."
 }
+
+$normalizedLabContent = Normalize-LabContent -LabContent ([PSCustomObject]@{
+Tasks = $labTasks
+TaskTitles = $labTaskTitles
+TaskPoints = $labTaskPoints
+SolutionCommands = $labSolutionCommands
+Hints = $labHints
+Checks = $labChecks
+SolutionOutline = $labSolutionOutline
+})
+$labTasks = @($normalizedLabContent.Tasks)
+$labTaskTitles = @($normalizedLabContent.TaskTitles)
+$labTaskPoints = @($normalizedLabContent.TaskPoints)
+$labSolutionCommands = @($normalizedLabContent.SolutionCommands)
+$labHints = @($normalizedLabContent.Hints)
+$labChecks = @($normalizedLabContent.Checks)
+$labSolutionOutline = @($normalizedLabContent.SolutionOutline)
 }
 
 $examTasks = @()
 $examTaskTitles = @()
 $examTaskPoints = @()
 $examSolutionCommands = @()
+$examChecks = @()
 if ($null -ne $examContent) {
 $examTasks = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'tasks') -Label "Scenario '$id' content.exam.tasks"
 $examTaskTitles = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'task_titles') -Label "Scenario '$id' content.exam.task_titles"
 $examTaskPoints = Get-IntegerArray -Value (Get-RequiredProperty -Object $examContent -Name 'task_points') -Label "Scenario '$id' content.exam.task_points"
 $examSolutionCommands = Get-StringMatrix -Value (Get-RequiredProperty -Object $examContent -Name 'solution_commands') -Label "Scenario '$id' content.exam.solution_commands"
+$examChecks = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'checks' -AllowZero) -Label "Scenario '$id' content.exam.checks" -AllowEmpty
 
 if ($examTaskTitles.Count -ne $examTasks.Count) {
 throw "Scenario '$id' content.exam.task_titles must match the task count."
@@ -348,6 +485,7 @@ Tasks = $examTasks
 TaskTitles = $examTaskTitles
 TaskPoints = $examTaskPoints
 SolutionCommands = $examSolutionCommands
+Checks = $examChecks
 }
 }
 }
@@ -616,10 +754,11 @@ function Get-LabExerciseDefinition {
 param(
 [Parameter(Mandatory = $true)]
 [string]$ScenarioId,
-[string]$ProjectRoot = (Get-ProjectRoot)
+[string]$ProjectRoot = (Get-ProjectRoot),
+[string]$Track = 'rhcsa9'
 )
 
-$manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot
+$manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot -Track $Track
 if ($manifest.Category -ne 'labs') {
 throw "Scenario '$ScenarioId' is not a lab exercise."
 }

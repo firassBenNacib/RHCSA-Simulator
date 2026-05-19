@@ -35,8 +35,8 @@
         "Verify the transfer by checking the copied file on server through SSH."
       ],
       "checks": [
-        "# server getent passwd mesh39 >/dev/null && getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "test -f /home/mesh39/.ssh/id_ed25519 && test -f /home/mesh39/.ssh/id_ed25519.pub",
+        "# server getent passwd mesh39 >/dev/null && getent shadow mesh39 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
+        "test -d /home/mesh39/.ssh && test -f /home/mesh39/.ssh/id_ed25519 && test -f /home/mesh39/.ssh/id_ed25519.pub",
         "runuser -l mesh39 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 true'",
         "runuser -l mesh39 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no mesh39@192.168.122.3 \"test -f /home/mesh39/server-data/file1.txt\"'"
       ],
@@ -65,13 +65,21 @@
         ],
         [
           "su - mesh39",
-          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
+          "mkdir -p /home/mesh39/.ssh",
+          "chmod 700 /home/mesh39/.ssh",
+          "rm -f /home/mesh39/.ssh/id_ed25519 /home/mesh39/.ssh/id_ed25519.pub",
+          "ssh-keygen -q -t ed25519 -N \"\" -f /home/mesh39/.ssh/id_ed25519",
+          "chmod 600 /home/mesh39/.ssh/id_ed25519",
+          "chmod 644 /home/mesh39/.ssh/id_ed25519.pub",
+          "test -f /home/mesh39/.ssh/id_ed25519 && test -f /home/mesh39/.ssh/id_ed25519.pub",
+          "exit"
         ],
         [
           "su - mesh39",
           "ssh-copy-id -o StrictHostKeyChecking=no mesh39@192.168.122.3"
         ],
         [
+          "# On client",
           "su - mesh39",
           "rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/"
         ]

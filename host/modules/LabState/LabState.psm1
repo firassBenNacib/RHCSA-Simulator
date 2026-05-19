@@ -1,8 +1,8 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1') -Force
-Import-Module (Join-Path $PSScriptRoot '../UI/UI.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../FileHelpers/FileHelpers.psd1')
+Import-Module (Join-Path $PSScriptRoot '../UI/UI.psd1')
 
 function Get-ProjectRelativePath {
 param(
@@ -362,11 +362,14 @@ function Export-BaseSnapshotState {
 param(
 [Parameter(Mandatory = $true)]
 [hashtable]$MachineIdMap,
+[ValidateSet('poweroff', 'saved')]
+[string]$SnapshotMode = 'poweroff',
 [string]$ProjectRoot = (Get-ProjectRoot)
 )
 
 $state = [ordered]@{
 snapshot_name = 'base-clean'
+snapshot_mode = $SnapshotMode
 created_at = (Get-Date).ToString('o')
 machines = [ordered]@{}
 }
@@ -429,30 +432,226 @@ $rawState = $rawState.Substring(1)
 return $rawState | ConvertFrom-Json
 }
 
+function Stop-ExternalProcessTree {
+[CmdletBinding(SupportsShouldProcess)]
+param(
+[Parameter(Mandatory = $true)]
+[int]$ProcessId
+)
+
+if (-not $PSCmdlet.ShouldProcess($ProcessId, 'Terminate process tree')) {
+return
+}
+
+Stop-ExternalProcessDescendants -RootProcessId $ProcessId
+Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
+}
+
+function Get-ExternalProcessDescendants {
+param(
+[Parameter(Mandatory = $true)]
+[int]$RootProcessId
+)
+
+$processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
+if ($processes.Count -eq 0) {
+return @()
+}
+
+$seen = New-Object 'System.Collections.Generic.HashSet[int]'
+$pending = New-Object 'System.Collections.Generic.Queue[int]'
+$descendants = @()
+
+[void]$seen.Add($RootProcessId)
+$pending.Enqueue($RootProcessId)
+
+while ($pending.Count -gt 0) {
+$parentId = $pending.Dequeue()
+foreach ($process in $processes) {
+if ([int]$process.ParentProcessId -ne $parentId) {
+continue
+}
+
+$processId = [int]$process.ProcessId
+if (-not $seen.Add($processId)) {
+continue
+}
+
+$descendants += $process
+$pending.Enqueue($processId)
+}
+}
+
+return @($descendants)
+}
+
+function Stop-ExternalProcessDescendants {
+[CmdletBinding(SupportsShouldProcess)]
+param(
+[Parameter(Mandatory = $true)]
+[int]$RootProcessId
+)
+
+if (-not $PSCmdlet.ShouldProcess($RootProcessId, 'Terminate descendant process tree')) {
+return
+}
+
+$descendants = @(Get-ExternalProcessDescendants -RootProcessId $RootProcessId | Where-Object { Test-ExternalProcessTreeWaitTarget -Process $_ } | Sort-Object ProcessId -Descending)
+foreach ($process in $descendants) {
+Stop-Process -Id ([int]$process.ProcessId) -Force -ErrorAction SilentlyContinue
+}
+}
+
+function Test-ExternalProcessTreeWaitTarget {
+param(
+[Parameter(Mandatory = $true)]
+[object]$Process
+)
+
+$name = [string]$Process.Name
+return $name -notin @('VBoxHeadless.exe', 'VirtualBoxVM.exe', 'VBoxSVC.exe')
+}
+
+function Wait-ExternalProcessTreeExit {
+param(
+[Parameter(Mandatory = $true)]
+[int]$RootProcessId,
+[int]$TimeoutSeconds = 0
+)
+
+$deadline = if ($TimeoutSeconds -gt 0) { (Get-Date).AddSeconds($TimeoutSeconds) } else { $null }
+do {
+$descendants = @(Get-ExternalProcessDescendants -RootProcessId $RootProcessId | Where-Object { Test-ExternalProcessTreeWaitTarget -Process $_ })
+if ($descendants.Count -eq 0) {
+return $true
+}
+
+Start-Sleep -Milliseconds 500
+} while ($null -eq $deadline -or (Get-Date) -lt $deadline)
+
+return $false
+}
+
+function ConvertTo-NativeProcessArgument {
+param(
+[AllowNull()]
+[string]$Value
+)
+
+if ($null -eq $Value) {
+return '""'
+}
+
+$text = [string]$Value
+if ($text.Length -eq 0) {
+return '""'
+}
+
+if ($text -notmatch '[\s"]') {
+return $text
+}
+
+$escaped = $text -replace '(\\*)"', '$1$1\"'
+$escaped = $escaped -replace '(\\+)$', '$1$1'
+return '"' + $escaped + '"'
+}
+
+function ConvertTo-NativeProcessArgumentLine {
+param(
+[string[]]$ArgumentList = @()
+)
+
+return (@($ArgumentList | ForEach-Object { ConvertTo-NativeProcessArgument -Value $_ }) -join ' ')
+}
+
+function Wait-NativeProcessExit {
+param(
+[Parameter(Mandatory = $true)]
+[System.Diagnostics.Process]$Process,
+[int]$TimeoutSeconds = 0
+)
+
+$deadline = if ($TimeoutSeconds -gt 0) { (Get-Date).AddSeconds($TimeoutSeconds) } else { $null }
+$heartbeat = Get-Command -Name 'Write-WorkflowProgressHeartbeat' -ErrorAction SilentlyContinue
+do {
+try {
+$Process.Refresh()
+if ($Process.HasExited) {
+return $true
+}
+}
+catch {
+return $true
+}
+
+if ($heartbeat) {
+    & $heartbeat | Out-Null
+}
+
+Start-Sleep -Milliseconds 250
+} while ($null -eq $deadline -or (Get-Date) -lt $deadline)
+
+return $false
+}
+
 function Invoke-ExternalCapture {
 param(
 [Parameter(Mandatory = $true)]
 [string]$FilePath,
-[string[]]$ArgumentList = @()
+[string[]]$ArgumentList = @(),
+[int]$TimeoutSeconds = 0,
+[switch]$WaitForProcessTree
 )
 
 $stdoutPath = [System.IO.Path]::GetTempFileName()
 $stderrPath = [System.IO.Path]::GetTempFileName()
+$startedAt = Get-Date
 
 try {
 $process = Start-Process `
 -FilePath $FilePath `
--ArgumentList $ArgumentList `
+-ArgumentList (ConvertTo-NativeProcessArgumentLine -ArgumentList $ArgumentList) `
 -NoNewWindow `
--Wait `
 -PassThru `
 -RedirectStandardOutput $stdoutPath `
 -RedirectStandardError $stderrPath
 
+$timedOut = $false
+if (-not (Wait-NativeProcessExit -Process $process -TimeoutSeconds $TimeoutSeconds)) {
+$timedOut = $true
+Stop-ExternalProcessTree -ProcessId $process.Id
+}
+
+$treeTimedOut = $false
+if (-not $timedOut -and $WaitForProcessTree) {
+    $remainingSeconds = if ($TimeoutSeconds -gt 0) {
+        [Math]::Max([int]($TimeoutSeconds - ((Get-Date) - $startedAt).TotalSeconds), 1)
+    }
+    else {
+        0
+    }
+
+    $treeExited = Wait-ExternalProcessTreeExit -RootProcessId $process.Id -TimeoutSeconds $remainingSeconds
+    if (-not $treeExited) {
+        $treeTimedOut = $true
+        Stop-ExternalProcessDescendants -RootProcessId $process.Id
+    }
+}
+
+$process.Refresh()
+$stdOut = @(Get-Content $stdoutPath -ErrorAction SilentlyContinue)
+$stdErr = @(Get-Content $stderrPath -ErrorAction SilentlyContinue)
+if ($timedOut) {
+$stdErr += "Command timed out after $TimeoutSeconds seconds."
+}
+elseif ($treeTimedOut) {
+$stdErr += "Command timed out waiting for spawned child processes after $TimeoutSeconds seconds."
+}
+
 return [PSCustomObject]@{
-ExitCode = $process.ExitCode
-StdOut = @(Get-Content $stdoutPath -ErrorAction SilentlyContinue)
-StdErr = @(Get-Content $stderrPath -ErrorAction SilentlyContinue)
+ExitCode = if ($timedOut -or $treeTimedOut) { 124 } else { if ($null -eq $process.ExitCode) { 0 } else { $process.ExitCode } }
+StdOut = $stdOut
+StdErr = $stdErr
 }
 }
 finally {
@@ -468,11 +667,14 @@ param(
 [string]$FailureMessage = 'Command failed.',
 [switch]$IgnoreExitCode,
 [switch]$PassThruExitCode,
-[switch]$SuppressOutput
+[switch]$SuppressOutput,
+[int]$TimeoutSeconds = 0,
+[switch]$WaitForProcessTree
 )
 
 $stdoutPath = [System.IO.Path]::GetTempFileName()
 $stderrPath = [System.IO.Path]::GetTempFileName()
+$startedAt = Get-Date
 
 $stdOut = @()
 $stdErr = @()
@@ -480,17 +682,45 @@ $stdErr = @()
 try {
 $process = Start-Process `
 -FilePath $FilePath `
--ArgumentList $ArgumentList `
+-ArgumentList (ConvertTo-NativeProcessArgumentLine -ArgumentList $ArgumentList) `
 -NoNewWindow `
--Wait `
 -PassThru `
 -RedirectStandardOutput $stdoutPath `
 -RedirectStandardError $stderrPath
 
-$exitCode = $process.ExitCode
+$timedOut = $false
+if (-not (Wait-NativeProcessExit -Process $process -TimeoutSeconds $TimeoutSeconds)) {
+$timedOut = $true
+Stop-ExternalProcessTree -ProcessId $process.Id
+}
+
+$treeTimedOut = $false
+if (-not $timedOut -and $WaitForProcessTree) {
+    $remainingSeconds = if ($TimeoutSeconds -gt 0) {
+        [Math]::Max([int]($TimeoutSeconds - ((Get-Date) - $startedAt).TotalSeconds), 1)
+    }
+    else {
+        0
+    }
+
+    $treeExited = Wait-ExternalProcessTreeExit -RootProcessId $process.Id -TimeoutSeconds $remainingSeconds
+    if (-not $treeExited) {
+        $treeTimedOut = $true
+        Stop-ExternalProcessDescendants -RootProcessId $process.Id
+    }
+}
+
+$process.Refresh()
+$exitCode = if ($timedOut -or $treeTimedOut) { 124 } else { if ($null -eq $process.ExitCode) { 0 } else { $process.ExitCode } }
 
 $stdOut = @(Get-Content $stdoutPath -ErrorAction SilentlyContinue)
 $stdErr = @(Get-Content $stderrPath -ErrorAction SilentlyContinue)
+if ($timedOut) {
+$stdErr += "Command timed out after $TimeoutSeconds seconds."
+}
+elseif ($treeTimedOut) {
+$stdErr += "Command timed out waiting for spawned child processes after $TimeoutSeconds seconds."
+}
 }
 finally {
 Remove-Item -Path $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue

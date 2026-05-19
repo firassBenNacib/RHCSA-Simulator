@@ -13,6 +13,10 @@
     "rhcsa10"
   ],
   "rhel_major": 10,
+  "vm_scripts": {
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
+  },
   "flags": {
     "password_recovery": false,
     "requires_server": true
@@ -20,16 +24,16 @@
   "content": {
     "lab": {
       "tasks": [
-        "Install autofs if needed.",
-        "Configure /remote10/projects to automount server:/exports/autofs/projects.",
-        "Enable and start autofs."
+        "On client, create the autofs parent mount point /remote10.",
+        "On client, configure /remote10/projects to automount server:/exports/autofs/projects.",
+        "On client, enable and start autofs."
       ],
       "hints": [
         "Use a direct map or an indirect map.",
         "Access the path once to trigger mounting."
       ],
       "checks": [
-        "rpm -q autofs >/dev/null",
+        "test -d /remote10",
         "grep -Eq '^/remote10[[:space:]]+/etc/auto.remote10' /etc/auto.master.d/rhcsa10.autofs",
         "systemctl is-enabled autofs | grep -qx enabled && systemctl is-active autofs | grep -qx active"
       ],
@@ -37,9 +41,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Install autofs if needed",
-        "Configure /remote10/projects to automount server:/exports/autofs/project",
-        "Enable and start autofs"
+        "create the autofs parent mount point /remote10",
+        "configure /remote10/projects to automount server:/exports/autofs/project",
+        "enable and start autofs"
       ],
       "task_points": [
         10,
@@ -48,10 +52,9 @@
       ],
       "solution_commands": [
         [
-          "dnf install -y autofs"
+          "mkdir -p /remote10"
         ],
         [
-          "mkdir -p /remote10",
           "echo '/remote10 /etc/auto.remote10' > /etc/auto.master.d/rhcsa10.autofs",
           "echo 'projects -ro server:/exports/autofs/projects' > /etc/auto.remote10"
         ],

@@ -38,6 +38,7 @@ type Exam struct {
 	SourceManifest  string
 	TasksPath       string
 	SolutionPath    string
+	CheckContent    string
 }
 
 type scenarioManifest struct {
@@ -59,6 +60,9 @@ type scenarioManifest struct {
 			Hints  []string `json:"hints"`
 			Checks []string `json:"checks"`
 		} `json:"lab"`
+		Exam struct {
+			Checks []string `json:"checks"`
+		} `json:"exam"`
 	} `json:"content"`
 }
 
@@ -205,7 +209,7 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 			TasksPath:       relativeTasks("LAB_TASKS.md"),
 			SolutionPath:    relativeTasks("LAB_SOLUTION.md"),
 			HintContent:     renderHints(manifest.Title, manifest.Content.Lab.Hints),
-			CheckContent:    renderChecks(manifest.Content.Lab.Checks),
+			CheckContent:    renderChecks("lab", manifest.Content.Lab.Checks),
 		}
 	}
 
@@ -223,6 +227,7 @@ func loadScenario(root, manifestPath string) (scenarioLoadResult, error) {
 			SourceManifest:  relativeManifest,
 			TasksPath:       relativeTasks("EXAM_TASKS.md"),
 			SolutionPath:    relativeTasks("EXAM_SOLUTION.md"),
+			CheckContent:    renderChecks("exam", manifest.Content.Exam.Checks),
 		}
 	}
 
@@ -292,10 +297,14 @@ func renderHints(title string, hints []string) string {
 	return strings.Join(lines, "\n")
 }
 
-func renderChecks(checks []string) string {
-	lines := []string{}
+func renderChecks(kind string, checks []string) string {
+	noun := "lab"
+	if kind == "exam" {
+		noun = "exam"
+	}
+	lines := []string{"# Automated Checks", "", fmt.Sprintf("Use `c Check` to test the active %s against these requirements.", noun), ""}
 	if len(checks) == 0 {
-		lines = append(lines, "# No automated checks are defined for this lab.", `echo "No automated checks are defined for this lab."`)
+		lines = append(lines, fmt.Sprintf("- No automated checks are defined for this %s.", noun))
 		return strings.Join(lines, "\n")
 	}
 	for index, command := range checks {
@@ -306,9 +315,58 @@ func renderChecks(checks []string) string {
 			target = "server"
 			effective = strings.TrimPrefix(trimmed, "# server ")
 		}
-		lines = append(lines, fmt.Sprintf("# Check %02d [%s]", index+1, target), effective, "")
+		lines = append(lines,
+			fmt.Sprintf("## Check %02d [%s]", index+1, target),
+			"- Expected: "+summarizeCheckExpectation(effective)+".",
+			"- Target VM: "+target+".",
+			"",
+		)
 	}
 	return strings.TrimRight(strings.Join(lines, "\n"), "\n")
+}
+
+func summarizeCheckExpectation(command string) string {
+	lowered := strings.ToLower(command)
+	switch {
+	case strings.Contains(lowered, "repomd.xml") || strings.Contains(lowered, "/etc/yum.repos.d") || strings.Contains(lowered, "dnf") || strings.Contains(lowered, "baseos") || strings.Contains(lowered, "appstream"):
+		return "the package repository configuration is correct"
+	case strings.Contains(lowered, "flatpak"):
+		return "the Flatpak remote or application state is correct"
+	case strings.Contains(lowered, "hostnamectl") || strings.Contains(lowered, "--static"):
+		return "the static hostname is correct"
+	case strings.Contains(lowered, "/etc/hosts") || strings.Contains(lowered, "getent hosts"):
+		return "the required host name resolution entry is present"
+	case strings.Contains(lowered, "nmcli") || strings.Contains(lowered, "ipv4.") || strings.Contains(lowered, "ipv6.") || strings.Contains(lowered, "connection.autoconnect"):
+		return "the network profile is configured correctly"
+	case strings.Contains(lowered, "passwordauthentication") || strings.Contains(lowered, "permitrootlogin") || strings.Contains(lowered, "/etc/ssh/sshd_config") || strings.Contains(lowered, "sshd -t") || strings.Contains(lowered, "authorized_keys") || strings.Contains(lowered, "ssh "):
+		return "SSH access is configured as required"
+	case strings.Contains(lowered, "restorecon") || strings.Contains(lowered, "ls -z") || strings.Contains(lowered, "httpd_sys_content_t") || strings.Contains(lowered, "admin_home_t"):
+		return "the SELinux file context is correct"
+	case strings.Contains(lowered, "setenforce") || strings.Contains(lowered, "getenforce") || strings.Contains(lowered, "semanage") || strings.Contains(lowered, "getsebool") || strings.Contains(lowered, "firewall-cmd"):
+		return "the security policy or firewall state is correct"
+	case strings.Contains(lowered, "systemctl") || strings.Contains(lowered, ".service") || strings.Contains(lowered, ".timer"):
+		return "the service or timer state is correct"
+	case strings.Contains(lowered, "chronyc") || strings.Contains(lowered, "chrony"):
+		return "time synchronization is configured correctly"
+	case strings.Contains(lowered, "podman") || strings.Contains(lowered, "container"):
+		return "the container state is correct"
+	case strings.Contains(lowered, "findmnt") || strings.Contains(lowered, "/etc/fstab") || strings.Contains(lowered, "blkid") || strings.Contains(lowered, "swapon") || strings.Contains(lowered, "lvs ") || strings.Contains(lowered, "vgs ") || strings.Contains(lowered, "xfs") || strings.Contains(lowered, "vfat"):
+		return "the storage, filesystem, or mount state is correct"
+	case strings.Contains(lowered, "useradd") || strings.Contains(lowered, "groupadd") || strings.Contains(lowered, "chage") || strings.Contains(lowered, "getent passwd") || strings.Contains(lowered, "getent group") || strings.Contains(lowered, "/etc/login.defs") || strings.Contains(lowered, "pwquality"):
+		return "the user, group, or password policy state is correct"
+	case strings.Contains(lowered, "crontab") || strings.Contains(lowered, " atq") || strings.Contains(lowered, "/var/spool/cron"):
+		return "the scheduled job is configured correctly"
+	case strings.Contains(lowered, "grubby") || strings.Contains(lowered, "grub2"):
+		return "the boot loader configuration is correct"
+	case strings.Contains(lowered, "rsyslog") || strings.Contains(lowered, "journald") || strings.Contains(lowered, "journal"):
+		return "the logging configuration is correct"
+	case strings.Contains(lowered, "tar ") || strings.Contains(lowered, ".tar") || strings.Contains(lowered, "gzip"):
+		return "the archive exists with the required content"
+	case strings.Contains(lowered, "test -f") || strings.Contains(lowered, "test -s") || strings.Contains(lowered, "grep") || strings.Contains(lowered, "diff") || strings.Contains(lowered, "stat"):
+		return "the required file, content, or permission state is present"
+	default:
+		return "the required lab state is present"
+	}
 }
 
 func normalizeTaskText(value string) string {

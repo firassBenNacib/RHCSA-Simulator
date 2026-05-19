@@ -55,6 +55,29 @@ func TestMigrateFlatKeys(t *testing.T) {
 	}
 }
 
+func TestMigratePreservesLegacyRHCSA10FlatKeys(t *testing.T) {
+	state := &State{
+		Labs: map[string]*LabProgress{
+			"rhcsa10-lab-01-hostname-resolution": {StartedAt: "2026-01-01T00:00:00Z"},
+		},
+		Exams: map[string]*ExamProgress{
+			"rhcsa10-mock-exam-a": {ViewedAt: "2026-01-01T00:00:00Z"},
+		},
+	}
+
+	state.migrateFlatKeys()
+
+	if _, ok := state.Labs["rhcsa10/lab-01-hostname-resolution"]; !ok {
+		t.Fatal("legacy RHCSA10 lab key should migrate to rhcsa10/lab-01-hostname-resolution")
+	}
+	if _, ok := state.Exams["rhcsa10/rhcsa10-mock-exam-a"]; !ok {
+		t.Fatal("legacy RHCSA10 exam key should migrate to rhcsa10/rhcsa10-mock-exam-a")
+	}
+	if _, ok := state.Labs["rhcsa9/rhcsa10-lab-01-hostname-resolution"]; ok {
+		t.Fatal("legacy RHCSA10 lab key must not be migrated into rhcsa9")
+	}
+}
+
 func TestMigratePreservesCompositeKeys(t *testing.T) {
 	state := &State{
 		Labs: map[string]*LabProgress{
@@ -71,5 +94,20 @@ func TestMigratePreservesCompositeKeys(t *testing.T) {
 	}
 	if state.Labs["rhcsa10/lab-01"].StartedAt != "2026-06-01T00:00:00Z" {
 		t.Fatal("rhcsa10/lab-01 should be preserved unchanged")
+	}
+}
+
+func TestMigrateFlatKeysDoesNotOverwriteCompositeKeys(t *testing.T) {
+	state := &State{
+		Labs: map[string]*LabProgress{
+			"rhcsa10-lab-01-hostname-resolution": {StartedAt: "2026-01-01T00:00:00Z"},
+			"rhcsa10/lab-01-hostname-resolution": {StartedAt: "2026-02-01T00:00:00Z"},
+		},
+	}
+
+	state.migrateFlatKeys()
+
+	if got := state.Labs["rhcsa10/lab-01-hostname-resolution"].StartedAt; got != "2026-02-01T00:00:00Z" {
+		t.Fatalf("composite key should win over legacy flat key, got %q", got)
 	}
 }

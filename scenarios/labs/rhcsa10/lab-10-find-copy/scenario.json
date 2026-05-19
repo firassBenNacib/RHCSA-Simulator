@@ -21,8 +21,7 @@
     "lab": {
       "tasks": [
         "Create /root/rhcsa10-found.",
-        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps.",
-        "Verify that at least one copied file exists."
+        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps."
       ],
       "hints": [
         "Use find -size -1k.",
@@ -30,19 +29,16 @@
       ],
       "checks": [
         "test -d /root/rhcsa10-found",
-        "find /root/rhcsa10-found -type f | grep -q .",
-        "find /etc/skel -type f -size -1k | wc -l | awk '{exit !($1 >= 1)}'"
+        "test -f /root/rhcsa10-found/rhcsa10-small.conf && test \"$(stat -c %a /etc/skel/rhcsa10-small.conf)\" = \"$(stat -c %a /root/rhcsa10-found/rhcsa10-small.conf)\" && test \"$(stat -c %Y /etc/skel/rhcsa10-small.conf)\" = \"$(stat -c %Y /root/rhcsa10-found/rhcsa10-small.conf)\""
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Create /root/rhcsa10-found",
-        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found",
-        "Verify that at least one copied file exists"
+        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found"
       ],
       "task_points": [
-        10,
         10,
         10
       ],
@@ -51,12 +47,13 @@
           "mkdir -p /root/rhcsa10-found"
         ],
         [
-          "find /etc/skel -type f -size -1k -exec cp -a {} /root/rhcsa10-found/ \\;"
-        ],
-        [
+          "find /etc/skel -type f -size -1k -exec cp -a {} /root/rhcsa10-found/ \\;",
           "find /root/rhcsa10-found -type f -ls"
         ]
       ]
     }
+  },
+  "vm_scripts": {
+    "client": "scripts/client.sh"
   }
 }

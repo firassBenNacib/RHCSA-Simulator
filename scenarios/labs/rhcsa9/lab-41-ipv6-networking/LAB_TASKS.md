@@ -36,9 +36,3 @@ Set the following persistent identity and resolution settings on client:
 - **Hostname:** client.ipv6lab.local
 - **Static host entry:** server.ipv6lab.local
 - **Address:** fd00:122:41::3
-
----
-
-## Task 03 - Preserve Existing IPv4 Settings (client) - 10 pts
-
-Leave the existing IPv4 configuration unchanged.

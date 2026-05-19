@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-36-xfs-label-mount` |
+| Scenario ID | `lab-36-xfs-label-mount` |
 | Mode | Lab |
 | Time limit | 35 minutes |
 | Objectives | storage-lvm |
@@ -23,6 +23,8 @@ Create a labeled filesystem and mount persistently.
 
 ```bash
 parted -s /dev/sdb mklabel gpt mkpart primary xfs 1MiB 512MiB
+partprobe /dev/sdb || true
+udevadm settle
 mkfs.xfs -f -L RHCSA10DATA /dev/sdb1
 ```
 

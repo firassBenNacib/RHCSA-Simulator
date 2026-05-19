@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-15-users-groups-sudo` |
+| Scenario ID | `lab-15-users-groups-sudo` |
 | Mode | Lab |
 | Time limit | 30 minutes |
 | Objectives | users-sudo-ssh |

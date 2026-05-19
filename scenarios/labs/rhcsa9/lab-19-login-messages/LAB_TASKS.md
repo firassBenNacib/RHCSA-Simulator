@@ -20,12 +20,18 @@ Configure both a user-specific and a global login greeting with clearer host dis
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create the per-user greeting on server (server) - 15 pts
+## Task 01 - Create the per-user greeting on server (server) - 10 pts
 
 On server, configure a login message for user orien19 that says: Welcome to you, user Orien, you are amazing!
 
 ---
 
-## Task 02 - Create the global login greeting on both systems (client) - 15 pts
+## Task 02 - Create the global login greeting on client (client) - 10 pts
 
-Configure a global login message on both client and server so any user receives: Welcome [username], you are logged in! with the actual login name.
+On client, configure a global login message so any user receives: Welcome [username], you are logged in! with the actual login name.
+
+---
+
+## Task 03 - Create the global login greeting on server (server) - 10 pts
+
+On server, configure the same global login message so any user receives: Welcome [username], you are logged in! with the actual login name.

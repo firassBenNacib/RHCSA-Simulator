@@ -1,7 +1,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1') -Force
+Import-Module (Join-Path $PSScriptRoot '../Scenarios/Scenarios.psd1')
 
 function Test-UiColorSupport {
 if ($env:NO_COLOR) {
@@ -300,7 +300,6 @@ $lines = @()
 foreach ($line in $face) {
 $lines += (Format-StyledText -Text $line -StyleName 'Brand')
 }
-$lines += (Format-StyledText -Text 'Made by Firas Ben Nacib' -StyleName 'Accent')
 return $lines
 }
 
@@ -309,7 +308,9 @@ param(
 [Parameter(Mandatory = $true)]
 [object]$BaselineStatus,
 [AllowNull()]
-[object]$ScenarioStatus = $null
+[object]$ScenarioStatus = $null,
+[string]$ProjectProfile = 'rhel9',
+[string]$ScenarioTrack = 'rhcsa9'
 )
 
 $vmSummary = @($BaselineStatus.MachineStatus | ForEach-Object { '{0} {1}' -f $_.Name, $_.StateHuman }) -join ' | '
@@ -329,6 +330,8 @@ default { 'Muted' }
 
 return @(
 (Get-UiHeading -Text 'RHCSA'),
+(Format-UiLabelValue -Label 'Profile' -Value $ProjectProfile.ToUpperInvariant()),
+(Format-UiLabelValue -Label 'Track' -Value $ScenarioTrack.ToUpperInvariant()),
 (Format-UiLabelValue -Label 'Baseline' -Value (Format-StyledText -Text $BaselineStatus.StateText -StyleName $stateStyle)),
 (Format-UiLabelValue -Label 'VMs' -Value $vmSummary),
 (Format-UiLabelValue -Label 'Scenario' -Value $scenarioSummary)
@@ -365,14 +368,74 @@ $lines += (Get-UiHeading -Text 'Baseline start skipped' -StyleName 'Warning')
 return $lines
 }
 
-$scenarioText = if ($BaselineResult.ClearedActiveRun) { 'No active scenario' } else { 'No active scenario' }
-
-$lines += @(
-(Get-UiHeading -Text 'Baseline ready' -StyleName 'Success'),
-(Format-UiLabelValue -Label 'VMs' -Value (@($BaselineStatus.MachineStatus | ForEach-Object { '{0} {1}' -f $_.Name, $_.StateHuman }) -join ' | ')),
-(Format-UiLabelValue -Label 'Scenario' -Value $scenarioText)
-)
 return $lines
+}
+
+function Format-BaselineAlreadyRunningOutput {
+param(
+[object[]]$MachineStatus = @(),
+[object]$ScenarioStatus = $null
+)
+
+$lines = @(
+(Get-UiHeading -Text 'Simulator already running' -StyleName 'Info')
+) + @(Format-VmStatusOutput -MachineStatus $MachineStatus)
+
+if ($null -ne $ScenarioStatus) {
+$lines += (Format-UiLabelValue -Label 'Scenario' -Value ([string]$ScenarioStatus.ScenarioId))
+}
+
+return $lines
+}
+
+function Format-ResumeOutput {
+param(
+[object]$ResumeResult
+)
+
+if ($null -eq $ResumeResult) {
+return @((Get-UiHeading -Text 'Resume skipped' -StyleName 'Warning'))
+}
+
+$status = ''
+if ($ResumeResult.PSObject.Properties.Match('Status').Count -gt 0) {
+$status = [string]$ResumeResult.Status
+}
+
+$heading = switch ($status) {
+'already-running' { Get-UiHeading -Text 'VMs already running' -StyleName 'Info' }
+'resumed' { Get-UiHeading -Text 'VMs resumed' -StyleName 'Success' }
+'not-built' { Get-UiHeading -Text 'Simulator not built' -StyleName 'Warning' }
+'skipped' { Get-UiHeading -Text 'Resume skipped' -StyleName 'Warning' }
+default { Get-UiHeading -Text 'VM status' -StyleName 'Info' }
+}
+
+$lines = @($heading)
+if ($status -eq 'not-built') {
+$lines += (Format-StyledText -Text 'Run .\RHCSA.ps1 up to build the clean baseline first.' -StyleName 'Muted')
+}
+
+if ($ResumeResult.PSObject.Properties.Match('MachineStatus').Count -gt 0) {
+$lines += @(Format-VmStatusOutput -MachineStatus @($ResumeResult.MachineStatus))
+}
+
+return $lines
+}
+
+function Format-LeaveOutput {
+param(
+[object]$LeaveResult
+)
+
+if ($null -eq $LeaveResult -or $LeaveResult.PSObject.Properties.Match('Status').Count -eq 0) {
+return @((Get-UiHeading -Text 'No active lab or exam' -StyleName 'Info'))
+}
+
+if ([string]$LeaveResult.Status -in @('left', 'exited')) {
+return @((Get-UiHeading -Text ("Exited {0}" -f $LeaveResult.ScenarioId) -StyleName 'Success'))
+}
+
+return @((Get-UiHeading -Text 'No active lab or exam' -StyleName 'Info'))
 }
 
 function Format-ScenarioStartOutput {
@@ -471,10 +534,16 @@ if ($null -eq $CheckResult) {
 return @((Get-UiHeading -Text 'Check skipped' -StyleName 'Warning'))
 }
 
+$mode = 'lab'
+if ($CheckResult.PSObject.Properties.Match('Mode').Count -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$CheckResult.Mode)) {
+$mode = [string]$CheckResult.Mode
+}
+
 if ($CheckResult.NoChecks) {
+$noun = if ($mode -eq 'exam') { 'exam' } else { 'lab' }
 return @(
 (Get-UiHeading -Text 'No automated checks' -StyleName 'Warning'),
-(Format-StyledText -Text 'This lab does not define automated checks yet' -StyleName 'Muted')
+(Format-StyledText -Text "This $noun does not define automated checks yet" -StyleName 'Muted')
 )
 }
 
@@ -502,10 +571,20 @@ Format-StyledText -Text ("complete ({0}/{1})" -f $CheckResult.PassedCount, $Chec
 else {
 Format-StyledText -Text ("incomplete ({0}/{1})" -f $CheckResult.PassedCount, $CheckResult.TotalCount) -StyleName 'Warning'
 }
+$label = if ($mode -eq 'exam') { 'Exam' } else { 'Lab' }
 $lines = @(
-(Format-UiLabelValue -Label 'Lab' -Value $CheckResult.ScenarioId),
+(Format-UiLabelValue -Label $label -Value $CheckResult.ScenarioId),
 (Format-UiLabelValue -Label 'Result' -Value $resultText)
 )
+
+if ($mode -eq 'exam') {
+$score = 0
+if ($CheckResult.PSObject.Properties.Match('Score').Count -gt 0) {
+$score = [int]$CheckResult.Score
+}
+$lines += (Format-UiLabelValue -Label 'Exam checks' -Value ("{0}/{1}" -f $CheckResult.PassedCount, $CheckResult.TotalCount))
+$lines += (Format-UiLabelValue -Label 'Score' -Value ("{0}/100" -f $score))
+}
 
 foreach ($result in @($CheckResult.Results)) {
 $statusText = if ($result.Passed) { '[ok]' } else { '[fail]' }

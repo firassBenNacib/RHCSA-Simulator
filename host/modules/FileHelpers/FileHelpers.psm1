@@ -6,16 +6,25 @@ param(
 [string]$Start = $PSScriptRoot
 )
 
-if (Test-Path (Join-Path $Start 'Vagrantfile')) {
-return (Resolve-Path $Start).Path
+try {
+$current = (Resolve-Path $Start).Path
+}
+catch {
+$current = $Start
 }
 
-$parent = Split-Path -Parent $Start
-if ($parent -and (Test-Path (Join-Path $parent 'Vagrantfile'))) {
-return (Resolve-Path $parent).Path
+while (-not [string]::IsNullOrWhiteSpace($current)) {
+if (Test-Path (Join-Path $current 'Vagrantfile')) {
+return (Resolve-Path $current).Path
+}
+$parent = Split-Path -Parent $current
+if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $current) {
+break
+}
+$current = $parent
 }
 
-throw "Vagrantfile not found in '$Start' or its parent."
+throw "Vagrantfile not found from '$Start' upward."
 }
 
 function Get-LabStateRoot {
@@ -24,6 +33,105 @@ param(
 )
 
 return (Join-Path $ProjectRoot '.lab-state')
+}
+
+function Get-ProjectProfilePath {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+return (Join-Path $ProjectRoot '.rhcsa-profile.json')
+}
+
+function ConvertTo-ProjectProfile {
+param(
+[AllowEmptyString()]
+[string]$Profile
+)
+
+$value = ([string]$Profile).Trim().ToLowerInvariant() -replace '[-_]', ''
+switch ($value) {
+{ $_ -in @('', '9', 'rhel9', 'rhcsa9', 'ex2009') } { return 'rhel9' }
+{ $_ -in @('10', 'rhel10', 'rhcsa10', 'ex20010') } { return 'rhel10' }
+default { throw "Unsupported project profile '$Profile'. Use RHCSA9 or RHCSA10." }
+}
+}
+
+function Get-ProjectTrackFromProfile {
+param(
+[AllowEmptyString()]
+[string]$Profile
+)
+
+switch (ConvertTo-ProjectProfile -Profile $Profile) {
+'rhel10' { return 'rhcsa10' }
+default { return 'rhcsa9' }
+}
+}
+
+function Get-ProjectProfile {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+$data = Get-ProjectProfileData -ProjectRoot $ProjectRoot
+if ($null -eq $data) {
+return 'rhel9'
+}
+
+$profileValue = ''
+if ($null -ne $data.PSObject.Properties['profile']) {
+$profileValue = [string]$data.profile
+}
+elseif ($null -ne $data.PSObject.Properties['track']) {
+$profileValue = [string]$data.track
+}
+
+return (ConvertTo-ProjectProfile -Profile $profileValue)
+}
+
+function Get-ProjectScenarioTrack {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+return (Get-ProjectTrackFromProfile -Profile (Get-ProjectProfile -ProjectRoot $ProjectRoot))
+}
+
+function Get-ProjectProfileData {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+$path = Get-ProjectProfilePath -ProjectRoot $ProjectRoot
+if (-not (Test-Path -LiteralPath $path)) {
+return $null
+}
+
+$raw = Get-Content -LiteralPath $path -Raw -ErrorAction Stop
+if ([string]::IsNullOrWhiteSpace($raw)) {
+return $null
+}
+
+try {
+return ($raw | ConvertFrom-Json -ErrorAction Stop)
+}
+catch {
+throw "Invalid project profile file '$path'."
+}
+}
+
+function Get-ProjectTimerDefault {
+param(
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+$data = Get-ProjectProfileData -ProjectRoot $ProjectRoot
+if ($null -eq $data -or $null -eq $data.PSObject.Properties['timer_default_enabled']) {
+return $false
+}
+
+return [bool]$data.timer_default_enabled
 }
 
 function Get-GeneratedRuntimeRoot {
@@ -148,6 +256,76 @@ New-Item -ItemType Directory -Path $directory -Force | Out-Null
 if ($PSCmdlet.ShouldProcess($Path, 'Write UTF-8 text without BOM')) {
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($Path, $Content, $utf8NoBom)
+}
+}
+
+function Set-ProjectProfile {
+[CmdletBinding(SupportsShouldProcess)]
+param(
+[Parameter(Mandatory = $true)]
+[string]$Profile,
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+$normalizedProfile = ConvertTo-ProjectProfile -Profile $Profile
+$track = Get-ProjectTrackFromProfile -Profile $normalizedProfile
+$path = Get-ProjectProfilePath -ProjectRoot $ProjectRoot
+$timerDefault = Get-ProjectTimerDefault -ProjectRoot $ProjectRoot
+$content = ([ordered]@{
+profile = $normalizedProfile
+track = $track
+timer_default_enabled = $timerDefault
+} | ConvertTo-Json)
+
+if ($PSCmdlet.ShouldProcess($path, 'Write project profile')) {
+Set-Utf8NoBomFile -Path $path -Content $content
+}
+
+return [PSCustomObject]@{
+Profile = $normalizedProfile
+Track = $track
+Path = $path
+TimerDefaultEnabled = $timerDefault
+}
+}
+
+function Set-ProjectTimerDefault {
+[CmdletBinding(SupportsShouldProcess)]
+param(
+[Parameter(Mandatory = $true)]
+[bool]$Enabled,
+[string]$ProjectRoot = (Get-ProjectRoot)
+)
+
+$data = Get-ProjectProfileData -ProjectRoot $ProjectRoot
+$profile = 'rhel9'
+if ($null -ne $data) {
+if ($null -ne $data.PSObject.Properties['profile']) {
+$profile = [string]$data.profile
+}
+elseif ($null -ne $data.PSObject.Properties['track']) {
+$profile = [string]$data.track
+}
+}
+
+$normalizedProfile = ConvertTo-ProjectProfile -Profile $profile
+$track = Get-ProjectTrackFromProfile -Profile $normalizedProfile
+$path = Get-ProjectProfilePath -ProjectRoot $ProjectRoot
+$content = ([ordered]@{
+profile = $normalizedProfile
+track = $track
+timer_default_enabled = [bool]$Enabled
+} | ConvertTo-Json)
+
+if ($PSCmdlet.ShouldProcess($path, 'Write project timer default')) {
+Set-Utf8NoBomFile -Path $path -Content $content
+}
+
+return [PSCustomObject]@{
+Enabled = [bool]$Enabled
+Profile = $normalizedProfile
+Track = $track
+Path = $path
 }
 }
 

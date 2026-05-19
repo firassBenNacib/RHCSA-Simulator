@@ -20,9 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /root/rhcsa10-transfer.txt containing TRANSFER10.",
-        "Copy the file to server:/root/rhcsa10-transfer.txt.",
-        "Verify the file exists on server."
+        "On client, create /root/rhcsa10-transfer.txt containing TRANSFER10.",
+        "On client, copy the file to server:/root/rhcsa10-transfer.txt."
       ],
       "hints": [
         "Use scp or rsync over SSH.",
@@ -30,33 +29,29 @@
       ],
       "checks": [
         "test -f /root/rhcsa10-transfer.txt",
-        "# server test \"$(cat /root/rhcsa10-transfer.txt)\" = TRANSFER10",
-        "# server test -f /root/rhcsa10-transfer.txt"
+        "# server test \"$(cat /root/rhcsa10-transfer.txt)\" = TRANSFER10"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /root/rhcsa10-transfer.txt containing TRANSFER10",
-        "Copy the file to server:/root/rhcsa10-transfer.txt",
-        "Verify the file exists on server"
+        "create /root/rhcsa10-transfer.txt containing TRANSFER10",
+        "copy the file to server:/root/rhcsa10-transfer.txt"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
           "echo TRANSFER10 > /root/rhcsa10-transfer.txt"
         ],
         [
-          "scp /root/rhcsa10-transfer.txt root@server:/root/rhcsa10-transfer.txt"
-        ],
-        [
-          "ssh root@server 'cat /root/rhcsa10-transfer.txt'"
+          "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/rhcsa_vagrant_ed25519 /root/rhcsa10-transfer.txt root@server:/root/rhcsa10-transfer.txt",
+          "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/rhcsa_vagrant_ed25519 root@server 'cat /root/rhcsa10-transfer.txt'"
         ]
       ]
     }
-  }
+  },
+  "vm_scripts": null
 }

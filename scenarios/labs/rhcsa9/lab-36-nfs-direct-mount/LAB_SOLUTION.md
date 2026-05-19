@@ -29,16 +29,13 @@ vim /etc/fstab
 
 ---
 
-## Task 02 - Use the mount options ro,sync (client) - 10 pts
+## Task 02 - Mount the NFS export and read the file (client) - 20 pts
 
 ```bash
-mount -a
-```
-
----
-
-## Task 03 - Ensure the mount is available after a reboot and (client) - 10 pts
-
-```bash
+# On client
+dnf install -y nfs-utils
+systemctl enable --now nfs-client.target || true
+mount /mnt/direct36 || mount -a
+for attempt in 1 2 3 4 5; do mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt && break; sleep 2; done
 ls /mnt/direct36
 ```

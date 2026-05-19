@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-17-user-defaults` |
+| Scenario ID | `lab-17-user-defaults` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |
@@ -25,12 +25,6 @@ Set default inactive password period for new users to 14 days.
 
 ---
 
-## Task 02 - Set default account expiration date to 2030-12-31 (client) - 10 pts
+## Task 02 - Set default account expiration date to 2030-12-31 (client) - 20 pts
 
 Set default account expiration date to 2030-12-31.
-
----
-
-## Task 03 - Verify the new useradd defaults (client) - 10 pts
-
-Verify the new useradd defaults.

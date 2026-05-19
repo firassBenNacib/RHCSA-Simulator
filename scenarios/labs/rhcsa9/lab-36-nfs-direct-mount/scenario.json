@@ -26,8 +26,7 @@
     "lab": {
       "tasks": [
         "Persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.",
-        "Use the mount options ro,sync.",
-        "Ensure the mount is available after a reboot and that the file nfs36.txt can be read from the mount point."
+        "On client, use the mount options ro,sync, mount it now, and ensure the file nfs36.txt can be read from the mount point."
       ],
       "hints": [
         "Use /etc/fstab for persistence.",
@@ -35,21 +34,18 @@
       ],
       "checks": [
         "grep -Fqx '192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0' /etc/fstab",
-        "mountpoint -q /mnt/direct36",
-        "test -f /mnt/direct36/nfs36.txt"
+        "mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt"
       ],
       "solution_outline": [
         "Configure a direct persistent NFS mount."
       ],
       "task_titles": [
         "Persistently mount the NFS export...",
-        "Use the mount options ro,sync",
-        "Ensure the mount is available after a reboot and..."
+        "Mount the NFS export and read the file"
       ],
       "task_points": [
         10,
-        10,
-        10
+        20
       ],
       "solution_commands": [
         [
@@ -58,9 +54,11 @@
           "192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0"
         ],
         [
-          "mount -a"
-        ],
-        [
+          "# On client",
+          "dnf install -y nfs-utils",
+          "systemctl enable --now nfs-client.target || true",
+          "mount /mnt/direct36 || mount -a",
+          "for attempt in 1 2 3 4 5; do mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt && break; sleep 2; done",
           "ls /mnt/direct36"
         ]
       ]

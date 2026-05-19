@@ -4,7 +4,7 @@
 ## Overview
 | Field | Value |
 |---|---|
-| Scenario ID | `rhcsa10-lab-20-selinux-mode` |
+| Scenario ID | `lab-20-selinux-mode` |
 | Mode | Lab |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |
@@ -25,12 +25,6 @@ Set SELinux to enforcing mode immediately.
 
 ---
 
-## Task 02 - Configure SELinux to boot in enforcing mode (client) - 10 pts
+## Task 02 - Configure SELinux to boot in enforcing mode (client) - 20 pts
 
 Configure SELinux to boot in enforcing mode.
-
----
-
-## Task 03 - Verify current and persistent SELinux mode (client) - 10 pts
-
-Verify current and persistent SELinux mode.

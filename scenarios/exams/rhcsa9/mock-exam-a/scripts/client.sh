@@ -15,8 +15,6 @@ fi
 
     grubby --update-kernel=ALL --remove-args="audit_backlog_limit=8192" >/dev/null 2>&1 || true
 
-    rhcsa_configure_password_recovery disable
-    rhcsa_configure_password_recovery enable
     mkdir -p /root/.repo-backup-client-exam-a
     rhcsa_reset_repo_directory /root/.repo-backup-client-exam-a
     hostnamectl set-hostname client
@@ -26,14 +24,16 @@ fi
     python - <<'EOF'
 from pathlib import Path
 p = Path('/etc/httpd/conf/httpd.conf')
-text = p.read_text() if p.exists() else ''
-for old in ['Listen 8282','Listen 80']:
-    pass
-if text:
+if p.exists():
+    text = p.read_text()
     text = text.replace('Listen 8282', 'Listen 80')
     p.write_text(text)
 EOF
+    mkdir -p /var/www/html
+    echo 'exam-a portal' > /var/www/html/index.html
+    restorecon -Rv /var/www/html >/dev/null 2>&1 || true
     systemctl disable --now httpd >/dev/null 2>&1 || true
+    rm -f /etc/httpd/conf.d/opsa-listen.conf
     firewall-cmd --permanent --remove-port=8282/tcp >/dev/null 2>&1 || true
     firewall-cmd --reload >/dev/null 2>&1 || true
     semanage port -d -t http_port_t -p tcp 8282 >/dev/null 2>&1 || true
@@ -47,7 +47,9 @@ EOF
     userdel -r netopsa >/dev/null 2>&1 || true
     id amber >/dev/null 2>&1 || useradd -m amber
     id violet >/dev/null 2>&1 || useradd -m violet
-    id frost >/dev/null 2>&1 || useradd -m -s /sbin/nologin frost
+    id frost >/dev/null 2>&1 || useradd -M -s /sbin/nologin frost
+    usermod -s /sbin/nologin frost >/dev/null 2>&1 || true
+    rm -rf /home/frost
     mkdir -p /opt/exam-a/find/a /opt/exam-a/find/b/sub
     echo 'a1' > /opt/exam-a/find/a/file1.txt
     echo 'a2' > /opt/exam-a/find/b/sub/file2.txt
@@ -79,15 +81,32 @@ for line in p.read_text().splitlines():
     lines.append(line)
 p.write_text('\n'.join(lines) + '\n')
 EOF
+    for dev in /dev/sdb[0-9]*; do
+        [ -e "$dev" ] || continue
+        swapoff "$dev" >/dev/null 2>&1 || true
+        findmnt -nr -S "$dev" -o TARGET 2>/dev/null | sort -r | xargs -r umount >/dev/null 2>&1 || true
+    done
+    for vg in $(pvs --noheadings -o vg_name /dev/sdb[0-9]* 2>/dev/null | awk 'NF{print $1}' | sort -u); do
+        vgchange -an "$vg" >/dev/null 2>&1 || true
+    done
+    for dev in /dev/sdb[0-9]*; do
+        [ -e "$dev" ] || continue
+        pvremove -ffy "$dev" >/dev/null 2>&1 || true
+        wipefs -a "$dev" >/dev/null 2>&1 || true
+    done
+    sed -i '/[[:space:]]swap[[:space:]]swap[[:space:]]/d' /etc/fstab
+    partx -d /dev/sdb >/dev/null 2>&1 || true
     wipefs -a /dev/sdb >/dev/null 2>&1 || true
-    sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+    dd if=/dev/zero of=/dev/sdb bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
+    blockdev --rereadpt /dev/sdb >/dev/null 2>&1 || true
+    partprobe /dev/sdb >/dev/null 2>&1 || true
 umount /mnt/reviewa >/dev/null 2>&1 || true
         sed -i '\#/mnt/reviewa#d' /etc/fstab
         lvremove -fy /dev/reviewvga/reviewa >/dev/null 2>&1 || true
         vgremove -fy reviewvga >/dev/null 2>&1 || true
         pvremove -ffy /dev/sdc1 >/dev/null 2>&1 || true
         wipefs -a /dev/sdc >/dev/null 2>&1 || true
-        sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+        dd if=/dev/zero of=/dev/sdc bs=1M count=8 conv=fsync >/dev/null 2>&1 || true
         printf 'label: gpt
 ,700M,L
 ' | sfdisk /dev/sdc >/dev/null 2>&1
@@ -106,16 +125,17 @@ umount /mnt/reviewa >/dev/null 2>&1 || true
     podman image exists localhost/rhcsa-httpd-base:latest || podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null
     id oriona >/dev/null 2>&1 || useradd -m oriona
     oriona_uid="$(id -u oriona)"
-    runuser -l oriona -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$oriona_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true"
-    mkdir -p /opt/ina /opt/outa /opt/rhcsa/workspaces/exam-a/site-content
+    runuser -l oriona -c "export XDG_RUNTIME_DIR=/tmp/podman-run-$oriona_uid; install -d -m 700 \"\$XDG_RUNTIME_DIR\"; podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true; podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null"
+    mkdir -p /opt/inc /opt/outa /opt/rhcsa/workspaces/exam-a/site-content
     cat > /opt/rhcsa/workspaces/exam-a/site-content/index.html <<'EOF'
 exam a container
 EOF
-    cat > /opt/rhcsa/workspaces/exam-a/Containerfile <<'EOF'
+cat > /opt/rhcsa/workspaces/exam-a/Containerfile <<'EOF'
 FROM localhost/rhcsa-httpd-base:latest
 COPY site-content/ /var/www/html/
+CMD ["/usr/bin/bash", "-lc", "while true; do sleep 300; done"]
 EOF
-    chown -R oriona:oriona /opt/rhcsa/workspaces/exam-a /opt/ina /opt/outa
+    chown -R oriona:oriona /opt/rhcsa/workspaces/exam-a /opt/inc /opt/outa
     runuser -l oriona -c 'podman rm -f pdfa >/dev/null 2>&1 || true'
     runuser -l oriona -c 'podman rmi -f localhost/opsa-web:latest >/dev/null 2>&1 || true'
     rm -rf /home/oriona/.config/systemd/user

@@ -32,10 +32,10 @@
         "Use podman image inspect with --format."
       ],
       "checks": [
-        "getent passwd scope46 >/dev/null && getent shadow scope46 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "getent passwd scope46 >/dev/null && getent shadow scope46 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
         "runuser -l scope46 -c 'podman image exists localhost/rhcsa-httpd-base:latest'",
-        "runuser -l scope46 -c 'test -s ~/workdir.txt && test \"$(podman inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}})\" = \"$(cat ~/workdir.txt)\"'",
-        "runuser -l scope46 -c 'test -s ~/user.txt && actual=\"$(podman inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}})\" && if [ -z \"$actual\" ]; then test \"$(cat ~/user.txt)\" = root; else test \"$(cat ~/user.txt)\" = \"$actual\"; fi'"
+        "runuser -l scope46 -c 'test -f /home/scope46/workdir.txt && test \"$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}})\" = \"$(cat /home/scope46/workdir.txt)\"'",
+        "runuser -l scope46 -c 'test -s /home/scope46/user.txt && actual=\"$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}})\" && if [ -z \"$actual\" ]; then test \"$(cat /home/scope46/user.txt)\" = root; else test \"$(cat /home/scope46/user.txt)\" = \"$actual\"; fi'"
       ],
       "solution_outline": [],
       "task_titles": [
@@ -53,20 +53,18 @@
       "solution_commands": [
         [
           "id scope46 >/dev/null 2>&1 || useradd -m scope46",
-          "passwd scope46",
-          "# enter: cinder9"
+          "echo 'scope46:cinder9' | chpasswd"
         ],
         [
-          "su - scope46",
-          "podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar"
+          "runuser -l scope46 -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'"
         ],
         [
-          "su - scope46",
-          "podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > ~/workdir.txt"
+          "runuser -l scope46 -c 'podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > /home/scope46/workdir.txt'"
         ],
         [
-          "su - scope46",
-          "u=$(podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}); echo \"${u:-root}\" > ~/user.txt"
+          "u=\"$(runuser -l scope46 -c 'podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.User}}')\"",
+          "echo \"${u:-root}\" > /home/scope46/user.txt",
+          "chown scope46:scope46 /home/scope46/user.txt"
         ]
       ]
     }
