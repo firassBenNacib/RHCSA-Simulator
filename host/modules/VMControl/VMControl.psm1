@@ -3336,10 +3336,7 @@ function Repair-BaselineSnapshotIfNeeded {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    $machineToCheck = @('client')
-    if ($Manifest.Flags.RequiresServer) {
-        $machineToCheck = @('server', 'client')
-    }
+    $machineToCheck = @('server', 'client')
 
     $missingBaseline = @()
     foreach ($machine in $machineToCheck) {
@@ -3978,10 +3975,7 @@ function Start-ScenarioRun {
 
     $baselineResult = $null
     $restoreMethod = 'snapshot'
-    $restoreMachineNames = @('client')
-    if ($modeLower -eq 'exam' -or [bool]$manifest.Flags.RequiresServer -or -not [string]::IsNullOrWhiteSpace([string]$manifest.VmScripts.ServerRelative)) {
-        $restoreMachineNames = @('server', 'client')
-    }
+    $restoreMachineNames = @('server', 'client')
 
     if ($needsBaselineBootstrap) {
         Write-WorkflowStatus -Area 'scenario' -Message 'Baseline snapshots are missing; rebuilding the clean baseline first'
@@ -4020,6 +4014,7 @@ function Start-ScenarioRun {
         }
 
 	        $null = Repair-BaselineSnapshotIfNeeded -Manifest $manifest -ProjectRoot $ProjectRoot
+
 	        Invoke-ScenarioProvisioning -Manifest $manifest -ProjectRoot $ProjectRoot
 	        $startedAt = Get-Date
 	        $endsAt = $startedAt.AddMinutes($manifest.TimeLimitMinutes)

@@ -7,12 +7,12 @@
 | Scenario ID | `rhcsa10-mock-exam-g` |
 | Mode | Exam |
 | Time limit | 180 minutes |
-| Objectives | boot-and-recovery, essential-tools, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
+| Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Recovery + NFS + Process focus: root password recovery, NFS mounts, process management, LVM, users/groups, and systemd timers on RHEL 10.
 
 ### Systems
-- server
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -20,132 +20,132 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientg.exam10.lab and map serverg.exam10.lab to 192.168 (server) - 5 pts
+## Question 01 - (client) The root password has been lost. Boot into emergency mode and r (client) - 5 pts
 
-Set hostname to clientg.exam10.lab and map serverg.exam10.lab to 192.168.122.3.
-
----
-
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.66/24, gateway 192.1 (server) - 5 pts
-
-Configure System eth1 with IPv4 address 192.168.122.66/24, gateway 192.168.122.1, and DNS 192.168.122.3.
+(client) The root password has been lost. Boot into emergency mode and reset the root password to cinder9.
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 02 - (client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/ho (client) - 5 pts
 
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
-
----
-
-## Question 04 - Create system Flatpak remote examgflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
-
-Create system Flatpak remote examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+(client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mapping 192.168.122.3 to serverg.exam10.lab.
 
 ---
 
-## Question 05 - Install org.rhcsa.Tools from examgflatpak, then remove it after verifica (server) - 5 pts
+## Question 03 - (client) Configure the connection "System eth1" with static IPv4: addres (client) - 5 pts
 
-Install org.rhcsa.Tools from examgflatpak, then remove it after verification.
-
----
-
-## Question 06 - Create group teamg10, create user userg10, set password cinder9, and add (server) - 5 pts
-
-Create group teamg10, create user userg10, set password cinder9, and add the user to teamg10.
+(client) Configure the connection "System eth1" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.
 
 ---
 
-## Question 07 - Allow %teamg10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+## Question 04 - (client) Add the kernel boot argument audit_backlog_limit=8192 to the de (client) - 5 pts
 
-Allow %teamg10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
-
----
-
-## Question 08 - Set maximum password age for userg10 to 51 days and warning period to 7 (server) - 5 pts
-
-Set maximum password age for userg10 to 51 days and warning period to 7 days.
+(client) Add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.
 
 ---
 
-## Question 09 - Create /usr/local/bin/g-who that prints the primary group for the suppli (server) - 5 pts
+## Question 05 - (client) Create enabled BaseOS and AppStream repository definitions usin (client) - 5 pts
 
-Create /usr/local/bin/g-who that prints the primary group for the supplied user argument.
-
----
-
-## Question 10 - Write users whose shell ends with sh to /root/g-shell-users.txt (server) - 5 pts
-
-Write users whose shell ends with sh to /root/g-shell-users.txt.
+(client) Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 11 - Create gzip archive /root/g-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 06 - (client) Add a system-level Flatpak remote named examgflatpak pointing t (client) - 5 pts
 
-Create gzip archive /root/g-etc.tar.gz containing /etc/hosts and /etc/fstab.
-
----
-
-## Question 12 - Create /root/g-original, hard link /root/g-hard, and symlink /root/g-sof (server) - 5 pts
-
-Create /root/g-original, hard link /root/g-hard, and symlink /root/g-soft.
+(client) Add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote, verify it is listed, then remove it.
 
 ---
 
-## Question 13 - Create and enable examgtimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 07 - (client) Mount the NFS export server:/exports/shareg at /mnt/shareg pers (client) - 5 pts
 
-Create and enable examgtimer.timer that runs every 10 minutes.
-
----
-
-## Question 14 - Create VG vgg10 and LV datag mounted at /mnt/datag10 (server) - 4 pts
-
-Create VG vgg10 and LV datag mounted at /mnt/datag10.
+(client) Mount the NFS export server:/exports/shareg at /mnt/shareg persistently via /etc/fstab. The mount must survive reboots.
 
 ---
 
-## Question 15 - Allow TCP port 8106 permanently in firewalld and reload (server) - 4 pts
+## Question 08 - (client) Create group devg10. Create users grant10 and hazel10 with devg (client) - 5 pts
 
-Allow TCP port 8106 permanently in firewalld and reload.
-
----
-
-## Question 16 - Create /var/www/html/g.html and restore its default SELinux context (server) - 4 pts
-
-Create /var/www/html/g.html and restore its default SELinux context.
+(client) Create group devg10. Create users grant10 and hazel10 with devg10 as a supplementary group and passwords set to cinder9.
 
 ---
 
-## Question 17 - Persistently enable httpd_can_network_connect (server) - 4 pts
+## Question 09 - (client) Create directory /srv/devg10 owned by root:devg10 with permissi (client) - 5 pts
 
-Persistently enable httpd_can_network_connect.
-
----
-
-## Question 18 - Activate the throughput-performance tuned profile (server) - 4 pts
-
-Activate the throughput-performance tuned profile.
+(client) Create directory /srv/devg10 owned by root:devg10 with permissions 1770 (setgid and sticky bit, no world access).
 
 ---
 
-## Question 19 - Configure persistent systemd journal storage (server) - 4 pts
+## Question 10 - (client) Create user noaccess70 with no home directory and login shell / (client) - 5 pts
 
-Configure persistent systemd journal storage.
-
----
-
-## Question 20 - Create a cron job for userg10 that writes EXAM10 to /home/userg10/exam10 (server) - 4 pts
-
-Create a cron job for userg10 that writes EXAM10 to /home/userg10/exam10.log every 15 minutes.
+(client) Create user noaccess70 with no home directory and login shell /sbin/nologin.
 
 ---
 
-## Question 21 - Set the default target to multi-user.target without rebooting (server) - 4 pts
+## Question 11 - (client) Set password aging for grant10: maximum 35 days, minimum 5 days (client) - 5 pts
 
-Set the default target to multi-user.target without rebooting.
+(client) Set password aging for grant10: maximum 35 days, minimum 5 days, warning 7 days. Add umask 0077 to /home/grant10/.bashrc.
 
 ---
 
-## Question 22 - Install lsof and ensure tcpdump is removed (server) - 4 pts
+## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 5 pts
 
-Install lsof and ensure tcpdump is removed.
+(client) Create user copy10 with UID 5010 and password cinder9 on the client. Also create user copy10 with the same UID 5010 and password cinder9 on the server.
+
+---
+
+## Question 13 - (client) As copy10, generate an SSH key pair (no passphrase) and distrib (client) - 4 pts
+
+(client) As copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then use scp to copy /etc/hostname from the server to /home/copy10/server-hostname on the client.
+
+---
+
+## Question 14 - (client) Schedule an at job for user hazel10 that runs: echo "exam-g tas (client) - 4 pts
+
+(client) Schedule an at job for user hazel10 that runs: echo "exam-g task" >> /home/hazel10/at-result.txt.
+
+---
+
+## Question 15 - (server) Configure persistent systemd journal storage on the server (client) - 4 pts
+
+(server) Configure persistent systemd journal storage on the server.
+
+---
+
+## Question 16 - (client) Run the command "sleep 600" in the background, then renice that (client) - 4 pts
+
+(client) Run the command "sleep 600" in the background, then renice that process to priority 15.
+
+---
+
+## Question 17 - (client) Find all files under /opt/exam-g/find owned by user grant10 tha (client) - 4 pts
+
+(client) Find all files under /opt/exam-g/find owned by user grant10 that were modified in the last day. Write the list to /root/grant-files (one path per line).
+
+---
+
+## Question 18 - (client) Extract all lines containing the string "data" from /usr/share/ (client) - 4 pts
+
+(client) Extract all lines containing the string "data" from /usr/share/dict/words and write them to /root/g-data-lines.
+
+---
+
+## Question 19 - (client) Create a gzip-compressed tar archive /root/g-etc.tar.gz contain (client) - 4 pts
+
+(client) Create a gzip-compressed tar archive /root/g-etc.tar.gz containing the entire /etc directory.
+
+---
+
+## Question 20 - (client) Create a systemd timer examgtimer.timer that triggers its compa (client) - 4 pts
+
+(client) Create a systemd timer examgtimer.timer that triggers its companion service every 12 minutes. Enable the timer persistently.
+
+---
+
+## Question 21 - (client) Create a 500 MiB swap partition on /dev/sdb, format it as swap, (client) - 4 pts
+
+(client) Create a 500 MiB swap partition on /dev/sdb, format it as swap, and enable it persistently via /etc/fstab.
+
+---
+
+## Question 22 - (client) Create physical volume on /dev/sdc, volume group vgg10, logical (client) - 4 pts
+
+(client) Create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10.
