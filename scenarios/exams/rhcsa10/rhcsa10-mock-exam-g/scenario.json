@@ -1,15 +1,14 @@
 {
   "id": "rhcsa10-mock-exam-g",
   "title": "RHCSA 10 Mock Exam G",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "Recovery + server administration focus: root password recovery, server-side login policy, process management, file search, systemd timers, swap, and LVM storage.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
+    "filesystems-and-autofs",
     "networking-and-firewall",
     "processes-logs-tuning",
     "selinux-and-default-perms",
-    "shell-scripting",
-    "software-management",
     "software-scheduling-time",
     "storage-lvm",
     "users-sudo-ssh"
@@ -23,90 +22,95 @@
   ],
   "rhel_major": 10,
   "flags": {
-    "password_recovery": false,
+    "password_recovery": true,
     "requires_server": true
   },
   "content": {
     "exam": {
       "tasks": [
-        "Set hostname to clientg.exam10.lab and map serverg.exam10.lab to 192.168.122.3.",
-        "Configure System eth1 with IPv4 address 192.168.122.66/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "Create system Flatpak remote examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from examgflatpak, then remove it after verification.",
-        "Create group teamg10, create user userg10, set password cinder9, and add the user to teamg10.",
-        "Allow %teamg10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
-        "Set maximum password age for userg10 to 51 days and warning period to 7 days.",
-        "Create /usr/local/bin/g-who that prints the primary group for the supplied user argument.",
-        "Write users whose shell ends with sh to /root/g-shell-users.txt.",
-        "Create gzip archive /root/g-etc.tar.gz containing /etc/hosts and /etc/fstab.",
-        "Create /root/g-original, hard link /root/g-hard, and symlink /root/g-soft.",
-        "Create and enable examgtimer.timer that runs every 10 minutes.",
-        "Create VG vgg10 and LV datag mounted at /mnt/datag10.",
-        "Allow TCP port 8106 permanently in firewalld and reload.",
-        "Create /var/www/html/g.html and restore its default SELinux context.",
-        "Persistently enable httpd_can_network_connect.",
-        "Activate the throughput-performance tuned profile.",
-        "Configure persistent systemd journal storage.",
-        "Create a cron job for userg10 that writes EXAM10 to /home/userg10/exam10.log every 15 minutes.",
-        "Set the default target to multi-user.target without rebooting.",
-        "Install lsof and ensure tcpdump is removed."
+        "(client) The root password has been lost. Boot into emergency mode and reset the root password to cinder9.",
+        "(client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mapping 192.168.122.3 to serverg.exam10.lab.",
+        "(client) Configure the connection \"System eth1\" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.",
+        "(client) Add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.",
+        "(client) Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "(client) Add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote, verify it is listed, then remove it.",
+        "(server) Set the server login message in /etc/motd to Authorized exam-g server.",
+        "(client) Create group devg10. Create users grant10 and hazel10 with devg10 as a supplementary group and passwords set to cinder9.",
+        "(client) Create directory /srv/devg10 owned by root:devg10 with permissions 1770 (setgid and sticky bit, no world access).",
+        "(client) Create user noaccess70 with no home directory and login shell /sbin/nologin.",
+        "(client) Set password aging for grant10: maximum 35 days, minimum 5 days, warning 7 days. Add umask 0077 to /home/grant10/.bashrc.",
+        "(client) Create user copy10 with UID 5010 and password cinder9 on the client. Also create user copy10 with the same UID 5010 and password cinder9 on the server.",
+        "(client) As copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then use scp to copy /etc/hostname from the server to /home/copy10/server-hostname on the client.",
+        "(client) Schedule an at job for user hazel10 that runs: echo \"exam-g task\" >> /home/hazel10/at-result.txt",
+        "(server) Configure persistent systemd journal storage on the server.",
+        "(client) Run the command \"sleep 600\" in the background, then renice that process to priority 15.",
+        "(client) Find all files under /opt/exam-g/find owned by user grant10 that were modified in the last day. Write the list to /root/grant-files (one path per line).",
+        "(client) Extract all lines containing the string \"data\" from /usr/share/dict/words and write them to /root/g-data-lines.",
+        "(client) Create a gzip-compressed tar archive /root/g-etc.tar.gz containing the entire /etc directory.",
+        "(client) Create a systemd timer examgtimer.timer that triggers its companion service every 12 minutes. Enable the timer persistently.",
+        "(client) Create a 500 MiB swap partition on /dev/sdb, format it as swap, and enable it persistently via /etc/fstab.",
+        "(client) Create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
         "Use local repositories and local documentation; do not depend on internet access.",
-        "Flatpak and systemd timer tasks belong to the RHCSA 10 track."
+        "Flatpak and systemd timer tasks belong to the RHCSA 10 track.",
+        "Task 1 requires rebooting into a rescue target to reset the root password.",
+        "Tasks marked (server) must be performed on the server VM."
       ],
       "checks": [
+        "echo cinder9 | su - root -c 'whoami' 2>/dev/null | grep -qx root",
         "hostnamectl --static | grep -qx clientg.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverg\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.66/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "grep -q 'audit_backlog_limit=8192' /proc/cmdline || grubby --info=DEFAULT | grep -q 'audit_backlog_limit=8192'",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examgflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
-        "getent group teamg10 >/dev/null && id -nG userg10 | tr ' ' '\\n' | grep -qx teamg10",
-        "grep -ERq '^%teamg10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
-        "chage -l userg10 | grep -Eq 'Maximum.*51'",
-        "test -x /usr/local/bin/g-who && /usr/local/bin/g-who root | grep -qx root",
-        "test -s /root/g-shell-users.txt && grep -q '^root$' /root/g-shell-users.txt",
-        "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
-        "test \"$(stat -c %i /root/g-original)\" = \"$(stat -c %i /root/g-hard)\" && test -L /root/g-soft",
-        "systemctl cat examgtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examgtimer.timer | grep -qx enabled",
-        "lvs /dev/vgg10/datag >/dev/null && findmnt -no TARGET /mnt/datag10 | grep -qx /mnt/datag10",
-        "firewall-cmd --permanent --query-port=8106/tcp && firewall-cmd --query-port=8106/tcp",
-        "ls -Z /var/www/html/g.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "tuned-adm active | grep -q throughput-performance",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examgflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && ! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "grep -qx 'Authorized exam-g server' /etc/motd",
+        "getent group devg10 >/dev/null && id -nG grant10 | tr ' ' '\\n' | grep -qx devg10 && id -nG hazel10 | tr ' ' '\\n' | grep -qx devg10",
+        "test -d /srv/devg10 && stat -c '%a' /srv/devg10 | grep -qx 1770 && stat -c '%G' /srv/devg10 | grep -qx devg10 && stat -c '%U' /srv/devg10 | grep -qx root",
+        "id noaccess70 >/dev/null 2>&1 && getent passwd noaccess70 | grep -q '/sbin/nologin' && ! test -d /home/noaccess70",
+        "chage -l grant10 | grep -Eq 'Maximum.*35' && chage -l grant10 | grep -Eq 'Minimum.*5' && chage -l grant10 | grep -Eq 'warning.*7' && grep -q 'umask 0077' /home/grant10/.bashrc",
+        "id -u copy10 | grep -qx 5010",
+        "test -f /home/copy10/server-hostname && test -s /home/copy10/server-hostname",
+        "test -f /home/hazel10/at-result.txt || atq 2>/dev/null | grep -q .",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
-        "crontab -l -u userg10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userg10/exam10.log'",
-        "systemctl get-default | grep -qx multi-user.target",
-        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
+        "ps -eo ni,comm | awk '$2==\"sleep\" && $1==15 {found=1} END{exit !found}'",
+        "test -s /root/grant-files",
+        "test -s /root/g-data-lines && grep -q 'data' /root/g-data-lines",
+        "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | grep -q 'etc/'",
+        "systemctl cat examgtimer.timer >/dev/null 2>&1 && systemctl is-enabled examgtimer.timer | grep -qx enabled",
+        "swapon --show | grep -q '/dev/sdb' && grep -q '/dev/sdb.*swap' /etc/fstab",
+        "lvs /dev/vgg10/datag >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag10 | grep -qx /mnt/datag10 && grep -q '/dev/vgg10/datag.*/mnt/datag10' /etc/fstab"
       ],
       "solution_outline": [
-        "Work through each question independently and verify before moving on."
+        "Work through each question independently and verify before moving on.",
+        "Complete the root password recovery first since it requires a reboot.",
+        "Set up networking and repos early so server-side and package tasks can succeed.",
+        "Create users on both client and server before configuring SSH keys."
       ],
       "task_titles": [
-        "Set hostname to clientg.exam10.lab and map serverg.exam10.lab to 192.168",
-        "Configure System eth1 with IPv4 address 192.168.122.66/24, gateway 192.1",
-        "Create enabled BaseOS and AppStream repository definitions using http://",
-        "Create system Flatpak remote examgflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from examgflatpak, then remove it after verifica",
-        "Create group teamg10, create user userg10, set password cinder9, and add",
-        "Allow %teamg10 to run /usr/bin/systemctl without a password by using a s",
-        "Set maximum password age for userg10 to 51 days and warning period to 7 ",
-        "Create /usr/local/bin/g-who that prints the primary group for the suppli",
-        "Write users whose shell ends with sh to /root/g-shell-users.txt",
-        "Create gzip archive /root/g-etc.tar.gz containing /etc/hosts and /etc/fs",
-        "Create /root/g-original, hard link /root/g-hard, and symlink /root/g-sof",
-        "Create and enable examgtimer.timer that runs every 10 minutes",
-        "Create VG vgg10 and LV datag mounted at /mnt/datag10",
-        "Allow TCP port 8106 permanently in firewalld and reload",
-        "Create /var/www/html/g.html and restore its default SELinux context",
-        "Persistently enable httpd_can_network_connect",
-        "Activate the throughput-performance tuned profile",
-        "Configure persistent systemd journal storage",
-        "Create a cron job for userg10 that writes EXAM10 to /home/userg10/exam10",
-        "Set the default target to multi-user.target without rebooting",
-        "Install lsof and ensure tcpdump is removed"
+        "(client) The root password has been lost. Boot into emergency mode and r",
+        "(client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/ho",
+        "(client) Configure the connection \"System eth1\" with static IPv4: addres",
+        "(client) Add the kernel boot argument audit_backlog_limit=8192 to the de",
+        "(client) Create enabled BaseOS and AppStream repository definitions usin",
+        "(client) Add a system-level Flatpak remote named examgflatpak pointing t",
+        "(server) Set the server login message in /etc/motd to Authorized exam-g ",
+        "(client) Create group devg10. Create users grant10 and hazel10 with devg",
+        "(client) Create directory /srv/devg10 owned by root:devg10 with permissi",
+        "(client) Create user noaccess70 with no home directory and login shell /",
+        "(client) Set password aging for grant10: maximum 35 days, minimum 5 days",
+        "(client) Create user copy10 with UID 5010 and password cinder9 on the cl",
+        "(client) As copy10, generate an SSH key pair (no passphrase) and distrib",
+        "(client) Schedule an at job for user hazel10 that runs: echo \"exam-g tas",
+        "(server) Configure persistent systemd journal storage on the server",
+        "(client) Run the command \"sleep 600\" in the background, then renice that",
+        "(client) Find all files under /opt/exam-g/find owned by user grant10 tha",
+        "(client) Extract all lines containing the string \"data\" from /usr/share/",
+        "(client) Create a gzip-compressed tar archive /root/g-etc.tar.gz contain",
+        "(client) Create a systemd timer examgtimer.timer that triggers its compa",
+        "(client) Create a 500 MiB swap partition on /dev/sdb, format it as swap,",
+        "(client) Create physical volume on /dev/sdc, volume group vgg10, logical"
       ],
       "task_points": [
         5,
@@ -134,115 +138,70 @@
       ],
       "solution_commands": [
         [
+          "# Reboot, interrupt GRUB, append rd.break to kernel line",
+          "# mount -o remount,rw /sysroot",
+          "# chroot /sysroot",
+          "echo 'root:cinder9' | chpasswd",
+          "touch /.autorelabel",
+          "# exit; reboot"
+        ],
+        [
           "hostnamectl set-hostname clientg.exam10.lab",
           "echo '192.168.122.3 serverg.exam10.lab' >> /etc/hosts"
         ],
         [
-          "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.66/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
         ],
         [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
-          "[rhcsa10-exam-baseos]",
-          "name=RHCSA10 Exam BaseOS",
-          "baseurl=http://server/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[rhcsa10-exam-appstream]",
-          "name=RHCSA10 Exam AppStream",
-          "baseurl=http://server/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          "EOF"
+          "grubby --args='audit_backlog_limit=8192' --update-kernel=DEFAULT",
+          "grub2-mkconfig -o /boot/grub2/grub.cfg"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo"
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF"
         ],
         [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo",
           "flatpak install --system -y examgflatpak org.rhcsa.Tools",
           "flatpak list --system --app",
           "flatpak uninstall --system -y org.rhcsa.Tools"
         ],
         [
-          "groupadd teamg10",
-          "useradd -G teamg10 userg10",
-          "passwd userg10",
-          "# enter: cinder9"
+          "# On server:",
+          "echo 'Authorized exam-g server' > /etc/motd"
         ],
         [
-          "echo '%teamg10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamg10",
-          "chmod 440 /etc/sudoers.d/teamg10"
+          "groupadd devg10",
+          "useradd -G devg10 grant10",
+          "useradd -G devg10 hazel10",
+          "echo 'grant10:cinder9' | chpasswd",
+          "echo 'hazel10:cinder9' | chpasswd"
         ],
         [
-          "chage -M 51 -W 7 userg10"
+          "mkdir -p /srv/devg10",
+          "chown root:devg10 /srv/devg10",
+          "chmod 1770 /srv/devg10"
         ],
         [
-          "cat > /usr/local/bin/g-who <<'EOF'",
-          "#!/bin/bash",
-          "test -n \"${1:-}\" || exit 2",
-          "id -gn \"$1\"",
-          "EOF",
-          "chmod +x /usr/local/bin/g-who"
+          "useradd -M -s /sbin/nologin noaccess70"
         ],
         [
-          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/g-shell-users.txt"
+          "chage -M 35 -m 5 -W 7 grant10",
+          "echo 'umask 0077' >> /home/grant10/.bashrc"
         ],
         [
-          "tar -czf /root/g-etc.tar.gz /etc/hosts /etc/fstab",
-          "tar -tzf /root/g-etc.tar.gz"
+          "useradd -u 5010 copy10",
+          "echo 'copy10:cinder9' | chpasswd",
+          "# On server:",
+          "ssh root@server 'useradd -u 5010 copy10; echo copy10:cinder9 | chpasswd'"
         ],
         [
-          "echo link > /root/g-original",
-          "ln /root/g-original /root/g-hard",
-          "ln -s /root/g-original /root/g-soft"
+          "su - copy10 -c 'ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa'",
+          "su - copy10 -c 'ssh-copy-id copy10@server'",
+          "su - copy10 -c 'scp server:/etc/hostname ~/server-hostname'"
         ],
         [
-          "cat > /usr/local/sbin/examgtimer.sh <<'EOF'",
-          "#!/bin/bash",
-          "echo examgtimer >> /var/log/examgtimer.log",
-          "EOF",
-          "chmod +x /usr/local/sbin/examgtimer.sh",
-          "cat > /etc/systemd/system/examgtimer.service <<'EOF'",
-          "[Service]",
-          "Type=oneshot",
-          "ExecStart=/usr/local/sbin/examgtimer.sh",
-          "EOF",
-          "cat > /etc/systemd/system/examgtimer.timer <<'EOF'",
-          "[Timer]",
-          "OnCalendar=*:0/10",
-          "Persistent=true",
-          "[Install]",
-          "WantedBy=timers.target",
-          "EOF",
-          "systemctl daemon-reload",
-          "systemctl enable --now examgtimer.timer"
-        ],
-        [
-          "pvcreate /dev/sdb",
-          "vgcreate vgg10 /dev/sdb",
-          "lvcreate -L 384M -n datag vgg10",
-          "mkfs.xfs -f /dev/vgg10/datag",
-          "mkdir -p /mnt/datag10",
-          "echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab",
-          "mount -a"
-        ],
-        [
-          "firewall-cmd --permanent --add-port=8106/tcp",
-          "firewall-cmd --reload"
-        ],
-        [
-          "echo g > /var/www/html/g.html",
-          "chcon -t user_tmp_t /var/www/html/g.html",
-          "restorecon -v /var/www/html/g.html"
-        ],
-        [
-          "setsebool -P httpd_can_network_connect on"
-        ],
-        [
-          "systemctl enable --now tuned",
-          "tuned-adm profile throughput-performance"
+          "su - hazel10 -c 'echo \"echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt\" | at now + 1 minute'"
         ],
         [
           "mkdir -p /var/log/journal",
@@ -251,17 +210,42 @@
           "systemctl restart systemd-journald"
         ],
         [
-          "echo '*/15 * * * * echo EXAM10 >> /home/userg10/exam10.log' | crontab -u userg10 -"
+          "sleep 600 &",
+          "SLEEP_PID=$!",
+          "renice -n 15 $SLEEP_PID"
         ],
         [
-          "systemctl set-default multi-user.target",
-          "systemctl get-default"
+          "find /opt/exam-g/find -user grant10 -mtime -1 -type f > /root/grant-files"
         ],
         [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
-          "dnf clean all",
-          "dnf install -y lsof",
-          "dnf remove -y tcpdump"
+          "grep 'data' /usr/share/dict/words > /root/g-data-lines"
+        ],
+        [
+          "tar -czf /root/g-etc.tar.gz /etc"
+        ],
+        [
+          "cat > /usr/local/sbin/examgtimer.sh <<'EOF'\n#!/bin/bash\necho examgtimer >> /var/log/examgtimer.log\nEOF",
+          "chmod +x /usr/local/sbin/examgtimer.sh",
+          "cat > /etc/systemd/system/examgtimer.service <<'EOF'\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/examgtimer.sh\nEOF",
+          "cat > /etc/systemd/system/examgtimer.timer <<'EOF'\n[Timer]\nOnCalendar=*:0/12\nPersistent=true\n[Install]\nWantedBy=timers.target\nEOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now examgtimer.timer"
+        ],
+        [
+          "parted /dev/sdb mklabel msdos",
+          "parted /dev/sdb mkpart primary linux-swap 1MiB 500MiB",
+          "mkswap /dev/sdb1",
+          "echo '/dev/sdb1 swap swap defaults 0 0' >> /etc/fstab",
+          "swapon -a"
+        ],
+        [
+          "pvcreate /dev/sdc",
+          "vgcreate vgg10 /dev/sdc",
+          "lvcreate -L 300M -n datag vgg10",
+          "mkfs.xfs /dev/vgg10/datag",
+          "mkdir -p /mnt/datag10",
+          "echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab",
+          "mount -a"
         ]
       ]
     }

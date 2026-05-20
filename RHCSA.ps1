@@ -1104,10 +1104,12 @@ throw "Unknown profile argument '-Track'."
 
 $requestedProfile = if ($PSBoundParameters.ContainsKey('Profile')) { $Profile } else { $item }
 if ([string]::IsNullOrWhiteSpace($requestedProfile)) {
-Write-Output (Get-UiHeading -Text 'Project profile' -StyleName 'Accent')
-Write-Output (Format-UiLabelValue -Label 'Profile' -Value $effectiveProfile.ToUpperInvariant())
-Write-Output (Format-UiLabelValue -Label 'Track' -Value $effectiveTrack.ToUpperInvariant())
-Write-Output (Format-UiLabelValue -Label 'Config' -Value (Get-ProjectProfilePath -ProjectRoot $projectRoot))
+$profileContent = @(
+(Format-UiKeyValue -Key 'Profile' -Value (Format-StyledText -Text $effectiveProfile.ToUpperInvariant() -StyleName 'Accent')),
+(Format-UiKeyValue -Key 'Track' -Value (Format-StyledText -Text $effectiveTrack.ToUpperInvariant() -StyleName 'Accent')),
+(Format-UiKeyValue -Key 'Config' -Value (Format-StyledText -Text (Get-ProjectProfilePath -ProjectRoot $projectRoot) -StyleName 'Muted'))
+)
+Format-UiPanel -Title 'Profile' -TitleStyle 'Info' -ContentLines $profileContent | Write-Output
 break
 }
 
@@ -1118,10 +1120,12 @@ Write-Output (Format-StyledText -Text ('Cleared active run for {0} before switch
 }
 
 $updatedProfile = Set-ProjectProfile -Profile $requestedProfile -ProjectRoot $projectRoot
-Write-Output (Get-UiHeading -Text 'Project profile updated' -StyleName 'Success')
-Write-Output (Format-UiLabelValue -Label 'Profile' -Value $updatedProfile.Profile.ToUpperInvariant())
-Write-Output (Format-UiLabelValue -Label 'Track' -Value $updatedProfile.Track.ToUpperInvariant())
-Write-Output (Format-UiLabelValue -Label 'Config' -Value $updatedProfile.Path)
+$profileContent = @(
+(Format-UiKeyValue -Key 'Profile' -Value (Format-StyledText -Text $updatedProfile.Profile.ToUpperInvariant() -StyleName 'Accent')),
+(Format-UiKeyValue -Key 'Track' -Value (Format-StyledText -Text $updatedProfile.Track.ToUpperInvariant() -StyleName 'Accent')),
+(Format-UiKeyValue -Key 'Config' -Value (Format-StyledText -Text $updatedProfile.Path -StyleName 'Muted'))
+)
+Format-UiPanel -Title 'Profile Updated' -TitleStyle 'Success' -ContentLines $profileContent | Write-Output
 break
 }
 'config/timer' {
@@ -1158,20 +1162,27 @@ $timerCommand = if ([string]::IsNullOrWhiteSpace($item)) { 'status' } else { $it
 switch ($timerCommand) {
 'status' {
 $enabled = Get-ProjectTimerDefault -ProjectRoot $projectRoot
-Write-Output (Get-UiHeading -Text 'Timer default' -StyleName 'Accent')
-Write-Output (Format-UiLabelValue -Label 'Default' -Value ($(if ($enabled) { 'on' } else { 'off' })))
+$stateText = if ($enabled) { Format-StyledText -Text 'on' -StyleName 'Success' } else { Format-StyledText -Text 'off' -StyleName 'Muted' }
+$timerContent = @(
+(Format-UiKeyValue -Key 'Default' -Value $stateText)
+)
+Format-UiPanel -Title 'Timer' -TitleStyle 'Info' -ContentLines $timerContent | Write-Output
 break
 }
 'on' {
 Set-ProjectTimerDefault -Enabled $true -ProjectRoot $projectRoot | Out-Null
-Write-Output (Get-UiHeading -Text 'Timer default updated' -StyleName 'Success')
-Write-Output (Format-UiLabelValue -Label 'Default' -Value 'on')
+$timerContent = @(
+(Format-UiKeyValue -Key 'Default' -Value (Format-StyledText -Text 'on' -StyleName 'Success'))
+)
+Format-UiPanel -Title 'Timer Updated' -TitleStyle 'Success' -ContentLines $timerContent | Write-Output
 break
 }
 'off' {
 Set-ProjectTimerDefault -Enabled $false -ProjectRoot $projectRoot | Out-Null
-Write-Output (Get-UiHeading -Text 'Timer default updated' -StyleName 'Success')
-Write-Output (Format-UiLabelValue -Label 'Default' -Value 'off')
+$timerContent = @(
+(Format-UiKeyValue -Key 'Default' -Value (Format-StyledText -Text 'off' -StyleName 'Muted'))
+)
+Format-UiPanel -Title 'Timer Updated' -TitleStyle 'Success' -ContentLines $timerContent | Write-Output
 break
 }
 default {

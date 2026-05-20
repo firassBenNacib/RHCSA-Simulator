@@ -187,6 +187,10 @@ else
 fi
 """
 
+    scripts["lab-18-ssh-key-auth"] = h + """
+userdel -r key10 >/dev/null 2>&1 || true
+"""
+
     scripts["lab-19-firewalld-service"] = h + """
 systemctl disable --now firewalld >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-service=https >/dev/null 2>&1 || true
@@ -307,6 +311,13 @@ wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
 """
 
+    scripts["lab-41-nfs-mount"] = h + """
+dnf install -y nfs-utils >/dev/null 2>&1 || true
+umount /mnt/serverdirect10 >/dev/null 2>&1 || true
+sed -i '\\#/mnt/serverdirect10#d' /etc/fstab
+rm -rf /mnt/serverdirect10
+"""
+
     scripts["lab-42-autofs"] = h + """
 systemctl disable --now autofs >/dev/null 2>&1 || true
 rm -f /etc/auto.remote10 /etc/auto.master.d/rhcsa10.autofs
@@ -317,6 +328,10 @@ rm -rf /remote10
     scripts["lab-43-sticky-directory"] = h + """
 groupdel share10 >/dev/null 2>&1 || true
 rm -rf /srv/share10
+"""
+
+    scripts["lab-45-secure-copy"] = h + """
+rm -f /root/rhcsa10-transfer.txt
 """
 
     scripts["lab-46-package-file-install"] = h + """
@@ -343,6 +358,20 @@ mkdir -p /root/.repo-backup-server-lab04
 rhcsa_reset_repo_directory /root/.repo-backup-server-lab04
 """
 
+    scripts["lab-18-ssh-key-auth"] = h + """
+install -d -m 700 /root/.ssh
+ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519_key10 -N '' -C 'key10-test' >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-28-chrony-client"] = h + """
+dnf install -y chrony >/dev/null 2>&1 || true
+cat > /etc/chrony.d/lab28-server.conf <<'EOF'
+allow 192.168.122.0/24
+local stratum 10
+EOF
+systemctl enable --now chronyd
+"""
+
     scripts["lab-41-nfs-mount"] = h + """
 mkdir -p /exports/direct
 echo 'nfs direct mount lab 41' > /exports/direct/welcome.txt
@@ -363,6 +392,10 @@ cat > /etc/exports.d/lab42.exports <<'EOFX'
 EOFX
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-45-secure-copy"] = h + """
+systemctl enable --now sshd
 """
 
     return scripts
@@ -1079,6 +1112,23 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     checks = list(updated.get("checks", []))
     commands = [list(command_group) for command_group in updated.get("solution_commands", [])]
 
+    if exam_id == "rhcsa10-mock-exam-g":
+        for index, task in enumerate(tasks):
+            if "server:/exports/shareg" not in str(task):
+                continue
+            tasks[index] = "(server) Set the server login message in /etc/motd to Authorized exam-g server."
+            if index < len(checks):
+                checks[index] = "grep -qx 'Authorized exam-g server' /etc/motd"
+            if index < len(commands):
+                commands[index] = [
+                    "# On server:",
+                    "echo 'Authorized exam-g server' > /etc/motd",
+                ]
+
+        for field_name in ("hints", "solution_outline"):
+            values = [str(value) for value in updated.get(field_name, [])]
+            updated[field_name] = [value.replace("NFS and package tasks", "server-side and package tasks") for value in values]
+
     for index, task in enumerate(tasks):
         task_text = str(task)
         match = re.fullmatch(
@@ -1173,6 +1223,11 @@ def _update_exam_manifest(manifest_path: Path) -> None:
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["exam"]
     manifest.setdefault("content", {})["exam"] = _repair_exam_progression(str(manifest["id"]), exam_block)
+    if str(manifest["id"]) == "rhcsa10-mock-exam-g":
+        manifest["description"] = (
+            "Recovery + server administration focus: root password recovery, server-side login policy, "
+            "process management, file search, systemd timers, swap, and LVM storage."
+        )
     manifest.setdefault("flags", {})
     manifest["flags"]["requires_server"] = True
     manifest["vm_scripts"] = _write_scenario_scripts(

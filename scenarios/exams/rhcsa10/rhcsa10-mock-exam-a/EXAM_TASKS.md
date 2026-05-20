@@ -7,11 +7,12 @@
 | Scenario ID | `rhcsa10-mock-exam-a` |
 | Mode | Exam |
 | Time limit | 180 minutes |
-| Objectives | essential-tools, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
+| Objectives | boot-and-recovery, essential-tools, networking-and-firewall, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+A 22-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak management, systemd timers, LVM storage, firewall, SELinux, shell scripting, and chrony time synchronisation across client and server.
 
 ### Systems
+- client
 - server
 
 ## General Instructions
@@ -20,132 +21,154 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clienta.exam10.lab and map servera.exam10.lab to 192.168 (server) - 5 pts
+## Question 01 - Recover root access on client from the console (client) - 5 pts
 
-Set hostname to clienta.exam10.lab and map servera.exam10.lab to 192.168.122.3.
+Recover root access on client from the console.
 
----
-
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.60/24, gateway 192.1 (server) - 5 pts
-
-Configure System eth1 with IPv4 address 192.168.122.60/24, gateway 192.168.122.1, and DNS 192.168.122.3.
+Set the root password to: cinder9
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 02 - Set the hostname on client to clienta.exam10.lab (client) - 5 pts
 
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
-
----
-
-## Question 04 - Create system Flatpak remote examaflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
-
-Create system Flatpak remote examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+Set the hostname on client to clienta.exam10.lab. Add a persistent hosts entry so that servera.exam10.lab resolves to 192.168.122.3.
 
 ---
 
-## Question 05 - Install org.rhcsa.Tools from examaflatpak, then remove it after verifica (server) - 5 pts
+## Question 03 - Configure the network connection for eth1 on client with the following s (client) - 5 pts
 
-Install org.rhcsa.Tools from examaflatpak, then remove it after verification.
+Configure the network connection for eth1 on client with the following settings:
 
----
-
-## Question 06 - Create group teama10, create user usera10, set password cinder9, and add (server) - 5 pts
-
-Create group teama10, create user usera10, set password cinder9, and add the user to teama10.
-
----
-
-## Question 07 - Allow %teama10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
-
-Allow %teama10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+- **IP Address:** 192.168.122.60/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Method:** manual
+- **Autoconnect:** yes
 
 ---
 
-## Question 08 - Set maximum password age for usera10 to 45 days and warning period to 7 (server) - 5 pts
+## Question 04 - Configure the bootloader on client so every installed kernel boots with (client) - 5 pts
 
-Set maximum password age for usera10 to 45 days and warning period to 7 days.
+Configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
 
----
-
-## Question 09 - Create /usr/local/bin/a-who that prints the primary group for the suppli (server) - 5 pts
-
-Create /usr/local/bin/a-who that prints the primary group for the supplied user argument.
+**Requirements**
+- The change must persist across reboots.
+- Do not rely on a one-time GRUB edit.
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/a-shell-users.txt (server) - 5 pts
+## Question 05 - Create enabled BaseOS and AppStream repository definitions on client usi (client) - 5 pts
 
-Write users whose shell ends with sh to /root/a-shell-users.txt.
+Create enabled BaseOS and AppStream repository definitions on client using:
 
----
-
-## Question 11 - Create gzip archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
-
-Create gzip archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fstab.
-
----
-
-## Question 12 - Create /root/a-original, hard link /root/a-hard, and symlink /root/a-sof (server) - 5 pts
-
-Create /root/a-original, hard link /root/a-hard, and symlink /root/a-soft.
+- **BaseOS:** http://server/repo/BaseOS/
+- **AppStream:** http://server/repo/AppStream/
+- **gpgcheck:** disabled
+- **Repositories:** enabled
 
 ---
 
-## Question 13 - Create and enable examatimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 06 - create the same BaseOS and AppStream repository definitions: (server) - 5 pts
 
-Create and enable examatimer.timer that runs every 10 minutes.
+On server, create the same BaseOS and AppStream repository definitions:
 
----
-
-## Question 14 - Create VG vga10 and LV dataa mounted at /mnt/dataa10 (server) - 4 pts
-
-Create VG vga10 and LV dataa mounted at /mnt/dataa10.
-
----
-
-## Question 15 - Allow TCP port 8100 permanently in firewalld and reload (server) - 4 pts
-
-Allow TCP port 8100 permanently in firewalld and reload.
+- **BaseOS:** http://server/repo/BaseOS/
+- **AppStream:** http://server/repo/AppStream/
+- **gpgcheck:** disabled
+- **Repositories:** enabled
 
 ---
 
-## Question 16 - Create /var/www/html/a.html and restore its default SELinux context (server) - 4 pts
+## Question 07 - add a system-level Flatpak remote named examaflatpak pointing to file:// (client) - 5 pts
 
-Create /var/www/html/a.html and restore its default SELinux context.
-
----
-
-## Question 17 - Persistently enable httpd_can_network_connect (server) - 4 pts
-
-Persistently enable httpd_can_network_connect.
+On client, add a system-level Flatpak remote named examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Then install org.rhcsa.Tools from that remote, verify it appears in the installed list, and remove it.
 
 ---
 
-## Question 18 - Create /srv/teama10 owned by root:teama10 with mode 3770 (server) - 4 pts
+## Question 08 - Create group opsa10 on client (client) - 5 pts
 
-Create /srv/teama10 owned by root:teama10 with mode 3770.
-
----
-
-## Question 19 - Activate the throughput-performance tuned profile (server) - 4 pts
-
-Activate the throughput-performance tuned profile.
+Create group opsa10 on client. Create users anna10 and atlas10 with opsa10 as a supplementary group. Set passwords for both users to cinder9.
 
 ---
 
-## Question 20 - Configure persistent systemd journal storage (server) - 4 pts
+## Question 09 - allow members of %opsa10 to run /usr/bin/systemctl without a password pr (client) - 5 pts
 
-Configure persistent systemd journal storage.
-
----
-
-## Question 21 - Use server as the only chrony source and enable chronyd (server) - 4 pts
-
-Use server as the only chrony source and enable chronyd.
+On client, allow members of %opsa10 to run /usr/bin/systemctl without a password prompt. Use a sudoers drop-in file.
 
 ---
 
-## Question 22 - Create a cron job for usera10 that writes EXAM10 to /home/usera10/exam10 (server) - 4 pts
+## Question 10 - set the maximum password age for anna10 to 45 days and the password warn (client) - 5 pts
 
-Create a cron job for usera10 that writes EXAM10 to /home/usera10/exam10.log every 15 minutes.
+On client, set the maximum password age for anna10 to 45 days and the password warning period to 7 days.
+
+---
+
+## Question 11 - Create an executable script /usr/local/bin/a-who on client that accepts (client) - 5 pts
+
+Create an executable script /usr/local/bin/a-who on client that accepts a username as its first argument and prints that user's primary group name.
+
+---
+
+## Question 12 - write all usernames whose login shell ends with sh to /root/a-shell-user (client) - 5 pts
+
+On client, write all usernames whose login shell ends with sh to /root/a-shell-users.txt, one per line, sorted alphabetically.
+
+---
+
+## Question 13 - create a gzip-compressed tar archive /root/a-etc.tar.gz containing /etc/ (client) - 4 pts
+
+On client, create a gzip-compressed tar archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fstab.
+
+---
+
+## Question 14 - create a regular file /root/a-original with some content (client) - 4 pts
+
+On client, create a regular file /root/a-original with some content. Create a hard link /root/a-hard pointing to the same inode. Create a symbolic link /root/a-soft pointing to /root/a-original.
+
+---
+
+## Question 15 - create a systemd timer unit examatimer.timer that triggers an associated (client) - 4 pts
+
+On client, create a systemd timer unit examatimer.timer that triggers an associated examatimer.service every 10 minutes. The service should run a one-shot script. Enable the timer so it starts at boot.
+
+---
+
+## Question 16 - create volume group vga10 using /dev/sdb (client) - 4 pts
+
+On client, create volume group vga10 using /dev/sdb. Create logical volume dataa of at least 384 MiB inside vga10. Format it with XFS and mount it persistently at /mnt/dataa10.
+
+---
+
+## Question 17 - permanently allow TCP port 8100 through the firewall and reload firewall (client) - 4 pts
+
+On client, permanently allow TCP port 8100 through the firewall and reload firewalld so the rule takes effect at runtime.
+
+---
+
+## Question 18 - create the file /var/www/html/a.html and restore its default SELinux con (client) - 4 pts
+
+On client, create the file /var/www/html/a.html and restore its default SELinux context so the type is httpd_sys_content_t.
+
+---
+
+## Question 19 - persistently enable the SELinux boolean httpd_can_network_connect (client) - 4 pts
+
+On client, persistently enable the SELinux boolean httpd_can_network_connect.
+
+---
+
+## Question 20 - create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se (client) - 4 pts
+
+On client, create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (setgid + sticky + rwx for owner and group).
+
+---
+
+## Question 21 - configure persistent systemd journal storage by setting Storage=persiste (server) - 4 pts
+
+On server, configure persistent systemd journal storage by setting Storage=persistent in journald.conf, create the /var/log/journal directory, and restart systemd-journald.
+
+---
+
+## Question 22 - configure the server (192.168.122.3) as the only chrony time source (client) - 4 pts
+
+On client, configure the server (192.168.122.3) as the only chrony time source. Remove all other pool/server lines. Enable and start chronyd.

@@ -53,5 +53,8 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": {
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
+  }
 }
