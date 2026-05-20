@@ -1112,6 +1112,23 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     checks = list(updated.get("checks", []))
     commands = [list(command_group) for command_group in updated.get("solution_commands", [])]
 
+    if exam_id == "rhcsa10-mock-exam-g":
+        for index, task in enumerate(tasks):
+            if "server:/exports/shareg" not in str(task):
+                continue
+            tasks[index] = "(server) Set the server login message in /etc/motd to Authorized exam-g server."
+            if index < len(checks):
+                checks[index] = "grep -qx 'Authorized exam-g server' /etc/motd"
+            if index < len(commands):
+                commands[index] = [
+                    "# On server:",
+                    "echo 'Authorized exam-g server' > /etc/motd",
+                ]
+
+        for field_name in ("hints", "solution_outline"):
+            values = [str(value) for value in updated.get(field_name, [])]
+            updated[field_name] = [value.replace("NFS and package tasks", "server-side and package tasks") for value in values]
+
     for index, task in enumerate(tasks):
         task_text = str(task)
         match = re.fullmatch(
@@ -1206,6 +1223,11 @@ def _update_exam_manifest(manifest_path: Path) -> None:
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["exam"]
     manifest.setdefault("content", {})["exam"] = _repair_exam_progression(str(manifest["id"]), exam_block)
+    if str(manifest["id"]) == "rhcsa10-mock-exam-g":
+        manifest["description"] = (
+            "Recovery + server administration focus: root password recovery, server-side login policy, "
+            "process management, file search, systemd timers, swap, and LVM storage."
+        )
     manifest.setdefault("flags", {})
     manifest["flags"]["requires_server"] = True
     manifest["vm_scripts"] = _write_scenario_scripts(

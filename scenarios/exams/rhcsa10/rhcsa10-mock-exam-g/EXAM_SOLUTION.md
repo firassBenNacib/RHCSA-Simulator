@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-Recovery + NFS + Process focus: root password recovery, NFS mounts, process management, LVM, users/groups, and systemd timers on RHEL 10.
+Recovery + server administration focus: root password recovery, server-side login policy, process management, file search, systemd timers, swap, and LVM storage.
 
 ### Systems
 - client
@@ -91,12 +91,11 @@ flatpak uninstall --system -y org.rhcsa.Tools
 
 ---
 
-## Question 07 - (client) Mount the NFS export server:/exports/shareg at /mnt/shareg pers (client) - 5 pts
+## Question 07 - (server) Set the server login message in /etc/motd to Authorized exam-g (client) - 5 pts
 
 ```bash
-mkdir -p /mnt/shareg
-echo 'server:/exports/shareg /mnt/shareg nfs defaults,_netdev 0 0' >> /etc/fstab
-mount -a
+# On server:
+echo 'Authorized exam-g server' > /etc/motd
 ```
 
 ---
