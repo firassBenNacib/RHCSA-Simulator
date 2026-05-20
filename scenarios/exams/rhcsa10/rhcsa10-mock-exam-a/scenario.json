@@ -1,11 +1,11 @@
 {
   "id": "rhcsa10-mock-exam-a",
   "title": "RHCSA 10 Mock Exam A",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "A 22-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak management, systemd timers, LVM storage, firewall, SELinux, shell scripting, and chrony time synchronisation across client and server.",
   "objective_tags": [
+    "boot-and-recovery",
     "essential-tools",
     "networking-and-firewall",
-    "processes-logs-tuning",
     "selinux-and-default-perms",
     "shell-scripting",
     "software-management",
@@ -22,90 +22,58 @@
   ],
   "rhel_major": 10,
   "flags": {
-    "password_recovery": false,
+    "password_recovery": true,
     "requires_server": true
   },
   "content": {
     "exam": {
       "tasks": [
-        "Set hostname to clienta.exam10.lab and map servera.exam10.lab to 192.168.122.3.",
-        "Configure System eth1 with IPv4 address 192.168.122.60/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "Create system Flatpak remote examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from examaflatpak, then remove it after verification.",
-        "Create group teama10, create user usera10, set password cinder9, and add the user to teama10.",
-        "Allow %teama10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
-        "Set maximum password age for usera10 to 45 days and warning period to 7 days.",
-        "Create /usr/local/bin/a-who that prints the primary group for the supplied user argument.",
-        "Write users whose shell ends with sh to /root/a-shell-users.txt.",
-        "Create gzip archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fstab.",
-        "Create /root/a-original, hard link /root/a-hard, and symlink /root/a-soft.",
-        "Create and enable examatimer.timer that runs every 10 minutes.",
-        "Create VG vga10 and LV dataa mounted at /mnt/dataa10.",
-        "Allow TCP port 8100 permanently in firewalld and reload.",
-        "Create /var/www/html/a.html and restore its default SELinux context.",
-        "Persistently enable httpd_can_network_connect.",
-        "Create /srv/teama10 owned by root:teama10 with mode 3770.",
-        "Activate the throughput-performance tuned profile.",
-        "Configure persistent systemd journal storage.",
-        "Use server as the only chrony source and enable chronyd.",
-        "Create a cron job for usera10 that writes EXAM10 to /home/usera10/exam10.log every 15 minutes."
-      ],
-      "hints": [
-        "Make changes persistent unless a question says otherwise.",
-        "Use local repositories and local documentation; do not depend on internet access.",
-        "Flatpak and systemd timer tasks belong to the RHCSA 10 track."
-      ],
-      "checks": [
-        "hostnamectl --static | grep -qx clienta.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servera\\.exam10\\.lab$' /etc/hosts",
-        "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.60/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examaflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
-        "getent group teama10 >/dev/null && id -nG usera10 | tr ' ' '\\n' | grep -qx teama10",
-        "grep -ERq '^%teama10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
-        "chage -l usera10 | grep -Eq 'Maximum.*45'",
-        "test -x /usr/local/bin/a-who && /usr/local/bin/a-who root | grep -qx root",
-        "test -s /root/a-shell-users.txt && grep -q '^root$' /root/a-shell-users.txt",
-        "test -f /root/a-etc.tar.gz && tar -tzf /root/a-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
-        "test \"$(stat -c %i /root/a-original)\" = \"$(stat -c %i /root/a-hard)\" && test -L /root/a-soft",
-        "systemctl cat examatimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examatimer.timer | grep -qx enabled",
-        "lvs /dev/vga10/dataa >/dev/null && findmnt -no TARGET /mnt/dataa10 | grep -qx /mnt/dataa10",
-        "firewall-cmd --permanent --query-port=8100/tcp && firewall-cmd --query-port=8100/tcp",
-        "ls -Z /var/www/html/a.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "stat -c '%G:%a' /srv/teama10 | grep -qx teama10:3770",
-        "tuned-adm active | grep -q throughput-performance",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
-        "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
-        "crontab -l -u usera10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/usera10/exam10.log'"
-      ],
-      "solution_outline": [
-        "Work through each question independently and verify before moving on."
+        "Recover root access on client from the console.\n\nSet the root password to: cinder9",
+        "Set the hostname on client to clienta.exam10.lab.\nAdd a persistent hosts entry so that servera.exam10.lab resolves to 192.168.122.3.",
+        "Configure the network connection for eth1 on client with the following settings:\n\nIP Address: 192.168.122.60/24\nGateway: 192.168.122.1\nDNS: 192.168.122.3\nMethod: manual\nAutoconnect: yes",
+        "Configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time GRUB edit.",
+        "Create enabled BaseOS and AppStream repository definitions on client using:\n\nBaseOS: http://server/repo/BaseOS/\nAppStream: http://server/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "On server, create the same BaseOS and AppStream repository definitions:\n\nBaseOS: http://server/repo/BaseOS/\nAppStream: http://server/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
+        "On client, add a system-level Flatpak remote named examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.\nThen install org.rhcsa.Tools from that remote, verify it appears in the installed list, and remove it.",
+        "Create group opsa10 on client.\nCreate users anna10 and atlas10 with opsa10 as a supplementary group.\nSet passwords for both users to cinder9.",
+        "On client, allow members of %opsa10 to run /usr/bin/systemctl without a password prompt.\nUse a sudoers drop-in file.",
+        "On client, set the maximum password age for anna10 to 45 days and the password warning period to 7 days.",
+        "Create an executable script /usr/local/bin/a-who on client that accepts a username as its first argument and prints that user's primary group name.",
+        "On client, write all usernames whose login shell ends with sh to /root/a-shell-users.txt, one per line, sorted alphabetically.",
+        "On client, create a gzip-compressed tar archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fstab.",
+        "On client, create a regular file /root/a-original with some content.\nCreate a hard link /root/a-hard pointing to the same inode.\nCreate a symbolic link /root/a-soft pointing to /root/a-original.",
+        "On client, create a systemd timer unit examatimer.timer that triggers an associated examatimer.service every 10 minutes.\nThe service should run a one-shot script.\nEnable the timer so it starts at boot.",
+        "On client, create volume group vga10 using /dev/sdb.\nCreate logical volume dataa of at least 384 MiB inside vga10.\nFormat it with XFS and mount it persistently at /mnt/dataa10.",
+        "On client, permanently allow TCP port 8100 through the firewall and reload firewalld so the rule takes effect at runtime.",
+        "On client, create the file /var/www/html/a.html and restore its default SELinux context so the type is httpd_sys_content_t.",
+        "On client, persistently enable the SELinux boolean httpd_can_network_connect.",
+        "On client, create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (setgid + sticky + rwx for owner and group).",
+        "On server, configure persistent systemd journal storage by setting Storage=persistent in journald.conf, create the /var/log/journal directory, and restart systemd-journald.",
+        "On client, configure the server (192.168.122.3) as the only chrony time source.\nRemove all other pool/server lines.\nEnable and start chronyd."
       ],
       "task_titles": [
-        "Set hostname to clienta.exam10.lab and map servera.exam10.lab to 192.168",
-        "Configure System eth1 with IPv4 address 192.168.122.60/24, gateway 192.1",
-        "Create enabled BaseOS and AppStream repository definitions using http://",
-        "Create system Flatpak remote examaflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from examaflatpak, then remove it after verifica",
-        "Create group teama10, create user usera10, set password cinder9, and add",
-        "Allow %teama10 to run /usr/bin/systemctl without a password by using a s",
-        "Set maximum password age for usera10 to 45 days and warning period to 7 ",
-        "Create /usr/local/bin/a-who that prints the primary group for the suppli",
-        "Write users whose shell ends with sh to /root/a-shell-users.txt",
-        "Create gzip archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fs",
-        "Create /root/a-original, hard link /root/a-hard, and symlink /root/a-sof",
-        "Create and enable examatimer.timer that runs every 10 minutes",
-        "Create VG vga10 and LV dataa mounted at /mnt/dataa10",
-        "Allow TCP port 8100 permanently in firewalld and reload",
-        "Create /var/www/html/a.html and restore its default SELinux context",
-        "Persistently enable httpd_can_network_connect",
-        "Create /srv/teama10 owned by root:teama10 with mode 3770",
-        "Activate the throughput-performance tuned profile",
-        "Configure persistent systemd journal storage",
-        "Use server as the only chrony source and enable chronyd",
-        "Create a cron job for usera10 that writes EXAM10 to /home/usera10/exam10"
+        "Recover root access on client from the console",
+        "Set the hostname on client to clienta.exam10.lab",
+        "Configure the network connection for eth1 on client with the following s",
+        "Configure the bootloader on client so every installed kernel boots with ",
+        "Create enabled BaseOS and AppStream repository definitions on client usi",
+        "create the same BaseOS and AppStream repository definitions:",
+        "add a system-level Flatpak remote named examaflatpak pointing to file://",
+        "Create group opsa10 on client",
+        "allow members of %opsa10 to run /usr/bin/systemctl without a password pr",
+        "set the maximum password age for anna10 to 45 days and the password warn",
+        "Create an executable script /usr/local/bin/a-who on client that accepts ",
+        "write all usernames whose login shell ends with sh to /root/a-shell-user",
+        "create a gzip-compressed tar archive /root/a-etc.tar.gz containing /etc/",
+        "create a regular file /root/a-original with some content",
+        "create a systemd timer unit examatimer.timer that triggers an associated",
+        "create volume group vga10 using /dev/sdb",
+        "permanently allow TCP port 8100 through the firewall and reload firewall",
+        "create the file /var/www/html/a.html and restore its default SELinux con",
+        "persistently enable the SELinux boolean httpd_can_network_connect",
+        "create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se",
+        "configure persistent systemd journal storage by setting Storage=persiste",
+        "configure the server (192.168.122.3) as the only chrony time source"
       ],
       "task_points": [
         5,
@@ -131,15 +99,59 @@
         4,
         4
       ],
+      "hints": [
+        "Make all changes persistent across reboots unless a task explicitly states otherwise.",
+        "Use local repositories and local documentation only; do not depend on internet access.",
+        "Flatpak and systemd timer tasks are RHCSA 10 specific topics."
+      ],
+      "checks": [
+        "echo cinder9 | su - root -c whoami 2>/dev/null | grep -qx root",
+        "hostnamectl --static | grep -qx clienta.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servera\\.exam10\\.lab' /etc/hosts",
+        "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v d=\"$private_dev\" '$2 == d {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.60/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
+        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examaflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && ! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "getent group opsa10 >/dev/null && id -nG anna10 | tr ' ' '\\n' | grep -qx opsa10 && id -nG atlas10 | tr ' ' '\\n' | grep -qx opsa10",
+        "grep -ERq '^%opsa10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
+        "chage -l anna10 | grep -Eq 'Maximum.*45' && chage -l anna10 | grep -Eq 'warning.*7'",
+        "test -x /usr/local/bin/a-who && /usr/local/bin/a-who root | grep -qx root",
+        "test -s /root/a-shell-users.txt && grep -q '^root$' /root/a-shell-users.txt",
+        "test -f /root/a-etc.tar.gz && tar -tzf /root/a-etc.tar.gz | grep -q 'etc/hosts' && tar -tzf /root/a-etc.tar.gz | grep -q 'etc/fstab'",
+        "test -f /root/a-original && test \"$(stat -c %i /root/a-original)\" = \"$(stat -c %i /root/a-hard)\" && test -L /root/a-soft && readlink /root/a-soft | grep -q a-original",
+        "systemctl cat examatimer.timer >/dev/null 2>&1 && systemctl cat examatimer.timer | grep -q 'OnCalendar=.*0/10' && systemctl is-enabled examatimer.timer | grep -qx enabled",
+        "lvs /dev/vga10/dataa >/dev/null 2>&1 && findmnt -no TARGET /mnt/dataa10 | grep -qx /mnt/dataa10 && grep -q '/mnt/dataa10' /etc/fstab",
+        "firewall-cmd --permanent --query-port=8100/tcp && firewall-cmd --query-port=8100/tcp",
+        "test -f /var/www/html/a.html && ls -Z /var/www/html/a.html | grep -q httpd_sys_content_t",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "stat -c '%G:%a' /srv/opsa10 | grep -qx opsa10:3770",
+        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
+        "grep -Eq '^server[[:space:]]+server[[:space:]]+iburst' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled"
+      ],
+      "solution_outline": [
+        "Start with root recovery (task 1) since the root password is needed for all other tasks.",
+        "Configure networking and hostname early so server connectivity works for repo and chrony tasks.",
+        "Work through each question independently, verifying before moving on."
+      ],
       "solution_commands": [
+        [
+          "# Boot into emergency mode: at GRUB, press 'e', append rd.break to the linux line, Ctrl+X",
+          "# mount -o remount,rw /sysroot",
+          "# chroot /sysroot",
+          "# echo cinder9 | passwd --stdin root",
+          "# touch /.autorelabel",
+          "# exit; exit"
+        ],
         [
           "hostnamectl set-hostname clienta.exam10.lab",
           "echo '192.168.122.3 servera.exam10.lab' >> /etc/hosts"
         ],
         [
-          "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.60/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
@@ -157,25 +169,40 @@
           "EOF"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo"
+          "# On server:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
+          "[rhcsa10-exam-baseos]",
+          "name=RHCSA10 Exam BaseOS",
+          "baseurl=http://server/repo/BaseOS/",
+          "enabled=1",
+          "gpgcheck=0",
+          "",
+          "[rhcsa10-exam-appstream]",
+          "name=RHCSA10 Exam AppStream",
+          "baseurl=http://server/repo/AppStream/",
+          "enabled=1",
+          "gpgcheck=0",
+          "EOF"
         ],
         [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo",
           "flatpak install --system -y examaflatpak org.rhcsa.Tools",
           "flatpak list --system --app",
           "flatpak uninstall --system -y org.rhcsa.Tools"
         ],
         [
-          "groupadd teama10",
-          "useradd -G teama10 usera10",
-          "passwd usera10",
-          "# enter: cinder9"
+          "groupadd opsa10",
+          "useradd -G opsa10 anna10",
+          "useradd -G opsa10 atlas10",
+          "echo cinder9 | passwd --stdin anna10",
+          "echo cinder9 | passwd --stdin atlas10"
         ],
         [
-          "echo '%teama10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teama10",
-          "chmod 440 /etc/sudoers.d/teama10"
+          "echo '%opsa10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsa10",
+          "chmod 440 /etc/sudoers.d/opsa10"
         ],
         [
-          "chage -M 45 -W 7 usera10"
+          "chage -M 45 -W 7 anna10"
         ],
         [
           "cat > /usr/local/bin/a-who <<'EOF'",
@@ -189,29 +216,35 @@
           "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/a-shell-users.txt"
         ],
         [
-          "tar -czf /root/a-etc.tar.gz /etc/hosts /etc/fstab",
-          "tar -tzf /root/a-etc.tar.gz"
+          "tar -czf /root/a-etc.tar.gz /etc/hosts /etc/fstab"
         ],
         [
-          "echo link > /root/a-original",
+          "echo 'exam-a link test' > /root/a-original",
           "ln /root/a-original /root/a-hard",
           "ln -s /root/a-original /root/a-soft"
         ],
         [
           "cat > /usr/local/sbin/examatimer.sh <<'EOF'",
           "#!/bin/bash",
-          "echo examatimer >> /var/log/examatimer.log",
+          "echo examatimer ran at $(date) >> /var/log/examatimer.log",
           "EOF",
           "chmod +x /usr/local/sbin/examatimer.sh",
           "cat > /etc/systemd/system/examatimer.service <<'EOF'",
+          "[Unit]",
+          "Description=Exam A Timer Service",
+          "",
           "[Service]",
           "Type=oneshot",
           "ExecStart=/usr/local/sbin/examatimer.sh",
           "EOF",
           "cat > /etc/systemd/system/examatimer.timer <<'EOF'",
+          "[Unit]",
+          "Description=Exam A Timer",
+          "",
           "[Timer]",
           "OnCalendar=*:0/10",
           "Persistent=true",
+          "",
           "[Install]",
           "WantedBy=timers.target",
           "EOF",
@@ -222,7 +255,7 @@
           "pvcreate /dev/sdb",
           "vgcreate vga10 /dev/sdb",
           "lvcreate -L 384M -n dataa vga10",
-          "mkfs.xfs -f /dev/vga10/dataa",
+          "mkfs.xfs /dev/vga10/dataa",
           "mkdir -p /mnt/dataa10",
           "echo '/dev/vga10/dataa /mnt/dataa10 xfs defaults 0 0' >> /etc/fstab",
           "mount -a"
@@ -232,21 +265,17 @@
           "firewall-cmd --reload"
         ],
         [
-          "echo a > /var/www/html/a.html",
-          "chcon -t user_tmp_t /var/www/html/a.html",
+          "mkdir -p /var/www/html",
+          "echo 'exam a' > /var/www/html/a.html",
           "restorecon -v /var/www/html/a.html"
         ],
         [
           "setsebool -P httpd_can_network_connect on"
         ],
         [
-          "mkdir -p /srv/teama10",
-          "chown root:teama10 /srv/teama10",
-          "chmod 3770 /srv/teama10"
-        ],
-        [
-          "systemctl enable --now tuned",
-          "tuned-adm profile throughput-performance"
+          "mkdir -p /srv/opsa10",
+          "chown root:opsa10 /srv/opsa10",
+          "chmod 3770 /srv/opsa10"
         ],
         [
           "mkdir -p /var/log/journal",
@@ -255,12 +284,10 @@
           "systemctl restart systemd-journald"
         ],
         [
+          "dnf install -y chrony",
           "sed -i '/^pool /d;/^server /d' /etc/chrony.conf",
           "echo 'server server iburst' >> /etc/chrony.conf",
           "systemctl enable --now chronyd"
-        ],
-        [
-          "echo '*/15 * * * * echo EXAM10 >> /home/usera10/exam10.log' | crontab -u usera10 -"
         ]
       ]
     }
