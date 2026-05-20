@@ -1,7 +1,7 @@
 {
   "id": "rhcsa10-mock-exam-g",
   "title": "RHCSA 10 Mock Exam G",
-  "description": "Recovery + NFS + Process focus: root password recovery, NFS mounts, process management, LVM, users/groups, and systemd timers on RHEL 10.",
+  "description": "Recovery + server administration focus: root password recovery, server-side login policy, process management, file search, systemd timers, swap, and LVM storage.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
@@ -34,7 +34,7 @@
         "(client) Add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.",
         "(client) Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "(client) Add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote, verify it is listed, then remove it.",
-        "(client) Mount the NFS export server:/exports/shareg at /mnt/shareg persistently via /etc/fstab. The mount must survive reboots.",
+        "(server) Set the server login message in /etc/motd to Authorized exam-g server.",
         "(client) Create group devg10. Create users grant10 and hazel10 with devg10 as a supplementary group and passwords set to cinder9.",
         "(client) Create directory /srv/devg10 owned by root:devg10 with permissions 1770 (setgid and sticky bit, no world access).",
         "(client) Create user noaccess70 with no home directory and login shell /sbin/nologin.",
@@ -65,7 +65,7 @@
         "grep -q 'audit_backlog_limit=8192' /proc/cmdline || grubby --info=DEFAULT | grep -q 'audit_backlog_limit=8192'",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examgflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && ! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
-        "findmnt -no SOURCE /mnt/shareg | grep -q 'server:/exports/shareg' && grep -q 'server:/exports/shareg.*/mnt/shareg' /etc/fstab",
+        "grep -qx 'Authorized exam-g server' /etc/motd",
         "getent group devg10 >/dev/null && id -nG grant10 | tr ' ' '\\n' | grep -qx devg10 && id -nG hazel10 | tr ' ' '\\n' | grep -qx devg10",
         "test -d /srv/devg10 && stat -c '%a' /srv/devg10 | grep -qx 1770 && stat -c '%G' /srv/devg10 | grep -qx devg10 && stat -c '%U' /srv/devg10 | grep -qx root",
         "id noaccess70 >/dev/null 2>&1 && getent passwd noaccess70 | grep -q '/sbin/nologin' && ! test -d /home/noaccess70",
@@ -85,7 +85,7 @@
       "solution_outline": [
         "Work through each question independently and verify before moving on.",
         "Complete the root password recovery first since it requires a reboot.",
-        "Set up networking and repos early so NFS and package tasks can succeed.",
+        "Set up networking and repos early so server-side and package tasks can succeed.",
         "Create users on both client and server before configuring SSH keys."
       ],
       "task_titles": [
@@ -95,7 +95,7 @@
         "(client) Add the kernel boot argument audit_backlog_limit=8192 to the de",
         "(client) Create enabled BaseOS and AppStream repository definitions usin",
         "(client) Add a system-level Flatpak remote named examgflatpak pointing t",
-        "(client) Mount the NFS export server:/exports/shareg at /mnt/shareg pers",
+        "(server) Set the server login message in /etc/motd to Authorized exam-g ",
         "(client) Create group devg10. Create users grant10 and hazel10 with devg",
         "(client) Create directory /srv/devg10 owned by root:devg10 with permissi",
         "(client) Create user noaccess70 with no home directory and login shell /",
@@ -167,9 +167,8 @@
           "flatpak uninstall --system -y org.rhcsa.Tools"
         ],
         [
-          "mkdir -p /mnt/shareg",
-          "echo 'server:/exports/shareg /mnt/shareg nfs defaults,_netdev 0 0' >> /etc/fstab",
-          "mount -a"
+          "# On server:",
+          "echo 'Authorized exam-g server' > /etc/motd"
         ],
         [
           "groupadd devg10",
