@@ -81,12 +81,21 @@ param(
 )
 
 $nameWidth = Get-MaxCellWidth -Value ($Entry | ForEach-Object { $_.Name }) -Minimum 4
-$lines = @()
+$descriptionWidth = Get-MaxCellWidth -Value ($Entry | ForEach-Object { $_.Description }) -Minimum 11
+$contentLines = @(
+('{0}  {1}' -f `
+(Format-PaddedCell -Text 'COMMAND' -Width $nameWidth -StyleName 'Accent'),
+(Format-PaddedCell -Text 'DESCRIPTION' -Width $descriptionWidth -StyleName 'Accent')),
+(Format-StyledText -Text ('{0}  {1}' -f ('-' * $nameWidth), ('-' * $descriptionWidth)) -StyleName 'Muted')
+)
+
 foreach ($item in @($Entry)) {
-$lines += (' {0} {1}' -f (Format-PaddedCell -Text $item.Name -Width $nameWidth -StyleName 'Accent'), $item.Description)
+$contentLines += ('{0}  {1}' -f `
+(Format-PaddedCell -Text $item.Name -Width $nameWidth -StyleName 'Accent'),
+(Format-PaddedCell -Text $item.Description -Width $descriptionWidth))
 }
 
-return $lines
+return @(Format-UiPanel -Title 'Commands' -TitleStyle 'Header' -ContentLines $contentLines)
 }
 
 function Get-HelpOutput {
@@ -335,16 +344,12 @@ $entry = @(
 [PSCustomObject]@{ Name = 'timer'; Description = 'Show or change the default timer mode' }
 [PSCustomObject]@{ Name = 'completion'; Description = 'Generate or install PowerShell completion' }
 )
-return @(
-(Get-UiHeading -Text 'RHCSA Simulator'),
-(Format-StyledText -Text 'Usage: .\RHCSA.ps1 <command> [args]' -StyleName 'Muted'),
-'',
-'Commands:',
-(Format-HelpEntryList -Entry $entry),
-'',
-(Format-StyledText -Text 'Help: .\RHCSA.ps1 help <command>' -StyleName 'Muted'),
-'',
-'Examples:',
+$overview = @(
+(Format-UiKeyValue -Key 'Usage' -Value (Format-StyledText -Text '.\RHCSA.ps1 <command> [args]' -StyleName 'Command') -KeyWidth 8),
+(Format-UiKeyValue -Key 'Help' -Value (Format-StyledText -Text '.\RHCSA.ps1 help <command>' -StyleName 'Command') -KeyWidth 8)
+)
+
+$examples = @(
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 pause'),
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 down'),
@@ -352,6 +357,14 @@ return @(
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
+)
+
+return @(
+(Format-UiPanel -Title 'RHCSA Simulator' -TitleStyle 'Header' -ContentLines $overview),
+'',
+(Format-HelpEntryList -Entry $entry),
+'',
+(Format-UiPanel -Title 'Examples' -TitleStyle 'Info' -ContentLines $examples)
 )
 }
 }

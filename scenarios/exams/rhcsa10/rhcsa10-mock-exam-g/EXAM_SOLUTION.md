@@ -7,12 +7,12 @@
 | Scenario ID | `rhcsa10-mock-exam-g` |
 | Mode | Exam |
 | Time limit | 180 minutes |
-| Objectives | boot-and-recovery, essential-tools, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
+| Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Recovery + NFS + Process focus: root password recovery, NFS mounts, process management, LVM, users/groups, and systemd timers on RHEL 10.
 
 ### Systems
-- server
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -20,7 +20,20 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientg.exam10.lab and map serverg.exam10.lab to 192.168 (server) - 5 pts
+## Question 01 - (client) The root password has been lost. Boot into emergency mode and r (client) - 5 pts
+
+```bash
+# Reboot, interrupt GRUB, append rd.break to kernel line
+# mount -o remount,rw /sysroot
+# chroot /sysroot
+echo 'root:cinder9' | chpasswd
+touch /.autorelabel
+# exit; reboot
+```
+
+---
+
+## Question 02 - (client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/ho (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clientg.exam10.lab
@@ -29,17 +42,25 @@ echo '192.168.122.3 serverg.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.66/24, gateway 192.1 (server) - 5 pts
+## Question 03 - (client) Configure the connection "System eth1" with static IPv4: addres (client) - 5 pts
 
 ```bash
-nmcli connection show "System eth1"
 nmcli connection modify "System eth1" ipv4.addresses 192.168.122.66/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
 nmcli connection up "System eth1"
 ```
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 04 - (client) Add the kernel boot argument audit_backlog_limit=8192 to the de (client) - 5 pts
+
+```bash
+grubby --args='audit_backlog_limit=8192' --update-kernel=DEFAULT
+grub2-mkconfig -o /boot/grub2/grub.cfg
+```
+
+---
+
+## Question 05 - (client) Create enabled BaseOS and AppStream repository definitions usin (client) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -59,17 +80,10 @@ EOF
 
 ---
 
-## Question 04 - Create system Flatpak remote examgflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+## Question 06 - (client) Add a system-level Flatpak remote named examgflatpak pointing t (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo
-```
-
----
-
-## Question 05 - Install org.rhcsa.Tools from examgflatpak, then remove it after verifica (server) - 5 pts
-
-```bash
 flatpak install --system -y examgflatpak org.rhcsa.Tools
 flatpak list --system --app
 flatpak uninstall --system -y org.rhcsa.Tools
@@ -77,75 +91,130 @@ flatpak uninstall --system -y org.rhcsa.Tools
 
 ---
 
-## Question 06 - Create group teamg10, create user userg10, set password cinder9, and add (server) - 5 pts
+## Question 07 - (client) Mount the NFS export server:/exports/shareg at /mnt/shareg pers (client) - 5 pts
 
 ```bash
-groupadd teamg10
-useradd -G teamg10 userg10
-passwd userg10
-# enter: cinder9
+mkdir -p /mnt/shareg
+echo 'server:/exports/shareg /mnt/shareg nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
 ```
 
 ---
 
-## Question 07 - Allow %teamg10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+## Question 08 - (client) Create group devg10. Create users grant10 and hazel10 with devg (client) - 5 pts
 
 ```bash
-echo '%teamg10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamg10
-chmod 440 /etc/sudoers.d/teamg10
+groupadd devg10
+useradd -G devg10 grant10
+useradd -G devg10 hazel10
+echo 'grant10:cinder9' | chpasswd
+echo 'hazel10:cinder9' | chpasswd
 ```
 
 ---
 
-## Question 08 - Set maximum password age for userg10 to 51 days and warning period to 7 (server) - 5 pts
+## Question 09 - (client) Create directory /srv/devg10 owned by root:devg10 with permissi (client) - 5 pts
 
 ```bash
-chage -M 51 -W 7 userg10
+mkdir -p /srv/devg10
+chown root:devg10 /srv/devg10
+chmod 1770 /srv/devg10
 ```
 
 ---
 
-## Question 09 - Create /usr/local/bin/g-who that prints the primary group for the suppli (server) - 5 pts
+## Question 10 - (client) Create user noaccess70 with no home directory and login shell / (client) - 5 pts
 
 ```bash
-cat > /usr/local/bin/g-who <<'EOF'
-#!/bin/bash
-test -n "${1:-}" || exit 2
-id -gn "$1"
-EOF
-chmod +x /usr/local/bin/g-who
+useradd -M -s /sbin/nologin noaccess70
 ```
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/g-shell-users.txt (server) - 5 pts
+## Question 11 - (client) Set password aging for grant10: maximum 35 days, minimum 5 days (client) - 5 pts
 
 ```bash
-awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/g-shell-users.txt
+chage -M 35 -m 5 -W 7 grant10
+echo 'umask 0077' >> /home/grant10/.bashrc
 ```
 
 ---
 
-## Question 11 - Create gzip archive /root/g-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 5 pts
 
 ```bash
-tar -czf /root/g-etc.tar.gz /etc/hosts /etc/fstab
-tar -tzf /root/g-etc.tar.gz
+useradd -u 5010 copy10
+echo 'copy10:cinder9' | chpasswd
+# On server:
+ssh root@server 'useradd -u 5010 copy10; echo copy10:cinder9 | chpasswd'
 ```
 
 ---
 
-## Question 12 - Create /root/g-original, hard link /root/g-hard, and symlink /root/g-sof (server) - 5 pts
+## Question 13 - (client) As copy10, generate an SSH key pair (no passphrase) and distrib (client) - 4 pts
 
 ```bash
-echo link > /root/g-original
-ln /root/g-original /root/g-hard
-ln -s /root/g-original /root/g-soft
+su - copy10 -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
+su - copy10 -c 'ssh-copy-id copy10@server'
+su - copy10 -c 'scp server:/etc/hostname ~/server-hostname'
 ```
 
 ---
 
-## Question 13 - Create and enable examgtimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 14 - (client) Schedule an at job for user hazel10 that runs: echo "exam-g tas (client) - 4 pts
+
+```bash
+su - hazel10 -c 'echo "echo \"exam-g task\" >> /home/hazel10/at-result.txt" | at now + 1 minute'
+```
+
+---
+
+## Question 15 - (server) Configure persistent systemd journal storage on the server (client) - 4 pts
+
+```bash
+mkdir -p /var/log/journal
+install -D -m 0644 /dev/null /etc/systemd/journald.conf
+grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 16 - (client) Run the command "sleep 600" in the background, then renice that (client) - 4 pts
+
+```bash
+sleep 600 &
+SLEEP_PID=$!
+renice -n 15 $SLEEP_PID
+```
+
+---
+
+## Question 17 - (client) Find all files under /opt/exam-g/find owned by user grant10 tha (client) - 4 pts
+
+```bash
+find /opt/exam-g/find -user grant10 -mtime -1 -type f > /root/grant-files
+```
+
+---
+
+## Question 18 - (client) Extract all lines containing the string "data" from /usr/share/ (client) - 4 pts
+
+```bash
+grep 'data' /usr/share/dict/words > /root/g-data-lines
+```
+
+---
+
+## Question 19 - (client) Create a gzip-compressed tar archive /root/g-etc.tar.gz contain (client) - 4 pts
+
+```bash
+tar -czf /root/g-etc.tar.gz /etc
+```
+
+---
+
+## Question 20 - (client) Create a systemd timer examgtimer.timer that triggers its compa (client) - 4 pts
 
 ```bash
 cat > /usr/local/sbin/examgtimer.sh <<'EOF'
@@ -160,7 +229,7 @@ ExecStart=/usr/local/sbin/examgtimer.sh
 EOF
 cat > /etc/systemd/system/examgtimer.timer <<'EOF'
 [Timer]
-OnCalendar=*:0/10
+OnCalendar=*:0/12
 Persistent=true
 [Install]
 WantedBy=timers.target
@@ -171,101 +240,26 @@ systemctl enable --now examgtimer.timer
 
 ---
 
-## Question 14 - Create VG vgg10 and LV datag mounted at /mnt/datag10 (server) - 4 pts
+## Question 21 - (client) Create a 500 MiB swap partition on /dev/sdb, format it as swap, (client) - 4 pts
 
 ```bash
-pvcreate /dev/sdb
-vgcreate vgg10 /dev/sdb
-lvcreate -L 384M -n datag vgg10
-mkfs.xfs -f /dev/vgg10/datag
+parted /dev/sdb mklabel msdos
+parted /dev/sdb mkpart primary linux-swap 1MiB 500MiB
+mkswap /dev/sdb1
+echo '/dev/sdb1 swap swap defaults 0 0' >> /etc/fstab
+swapon -a
+```
+
+---
+
+## Question 22 - (client) Create physical volume on /dev/sdc, volume group vgg10, logical (client) - 4 pts
+
+```bash
+pvcreate /dev/sdc
+vgcreate vgg10 /dev/sdc
+lvcreate -L 300M -n datag vgg10
+mkfs.xfs /dev/vgg10/datag
 mkdir -p /mnt/datag10
 echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab
 mount -a
-```
-
----
-
-## Question 15 - Allow TCP port 8106 permanently in firewalld and reload (server) - 4 pts
-
-```bash
-firewall-cmd --permanent --add-port=8106/tcp
-firewall-cmd --reload
-```
-
----
-
-## Question 16 - Create /var/www/html/g.html and restore its default SELinux context (server) - 4 pts
-
-```bash
-echo g > /var/www/html/g.html
-chcon -t user_tmp_t /var/www/html/g.html
-restorecon -v /var/www/html/g.html
-```
-
----
-
-## Question 17 - Persistently enable httpd_can_network_connect (server) - 4 pts
-
-```bash
-setsebool -P httpd_can_network_connect on
-```
-
----
-
-## Question 18 - Activate the throughput-performance tuned profile (server) - 4 pts
-
-```bash
-systemctl enable --now tuned
-tuned-adm profile throughput-performance
-```
-
----
-
-## Question 19 - Configure persistent systemd journal storage (server) - 4 pts
-
-```bash
-mkdir -p /var/log/journal
-install -D -m 0644 /dev/null /etc/systemd/journald.conf
-grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf
-systemctl restart systemd-journald
-```
-
----
-
-## Question 20 - Create a cron job for userg10 that writes EXAM10 to /home/userg10/exam10 (server) - 4 pts
-
-```bash
-echo '*/15 * * * * echo EXAM10 >> /home/userg10/exam10.log' | crontab -u userg10 -
-```
-
----
-
-## Question 21 - Set the default target to multi-user.target without rebooting (server) - 4 pts
-
-```bash
-systemctl set-default multi-user.target
-systemctl get-default
-```
-
----
-
-## Question 22 - Install lsof and ensure tcpdump is removed (server) - 4 pts
-
-```bash
-cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
-[rhcsa10-exam-baseos]
-name=RHCSA10 Exam BaseOS
-baseurl=http://server/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[rhcsa10-exam-appstream]
-name=RHCSA10 Exam AppStream
-baseurl=http://server/repo/AppStream/
-enabled=1
-gpgcheck=0
-EOF
-dnf clean all
-dnf install -y lsof
-dnf remove -y tcpdump
 ```

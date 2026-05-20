@@ -187,6 +187,10 @@ else
 fi
 """
 
+    scripts["lab-18-ssh-key-auth"] = h + """
+userdel -r key10 >/dev/null 2>&1 || true
+"""
+
     scripts["lab-19-firewalld-service"] = h + """
 systemctl disable --now firewalld >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-service=https >/dev/null 2>&1 || true
@@ -307,6 +311,13 @@ wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
 """
 
+    scripts["lab-41-nfs-mount"] = h + """
+dnf install -y nfs-utils >/dev/null 2>&1 || true
+umount /mnt/serverdirect10 >/dev/null 2>&1 || true
+sed -i '\\#/mnt/serverdirect10#d' /etc/fstab
+rm -rf /mnt/serverdirect10
+"""
+
     scripts["lab-42-autofs"] = h + """
 systemctl disable --now autofs >/dev/null 2>&1 || true
 rm -f /etc/auto.remote10 /etc/auto.master.d/rhcsa10.autofs
@@ -317,6 +328,10 @@ rm -rf /remote10
     scripts["lab-43-sticky-directory"] = h + """
 groupdel share10 >/dev/null 2>&1 || true
 rm -rf /srv/share10
+"""
+
+    scripts["lab-45-secure-copy"] = h + """
+rm -f /root/rhcsa10-transfer.txt
 """
 
     scripts["lab-46-package-file-install"] = h + """
@@ -343,6 +358,20 @@ mkdir -p /root/.repo-backup-server-lab04
 rhcsa_reset_repo_directory /root/.repo-backup-server-lab04
 """
 
+    scripts["lab-18-ssh-key-auth"] = h + """
+install -d -m 700 /root/.ssh
+ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519_key10 -N '' -C 'key10-test' >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-28-chrony-client"] = h + """
+dnf install -y chrony >/dev/null 2>&1 || true
+cat > /etc/chrony.d/lab28-server.conf <<'EOF'
+allow 192.168.122.0/24
+local stratum 10
+EOF
+systemctl enable --now chronyd
+"""
+
     scripts["lab-41-nfs-mount"] = h + """
 mkdir -p /exports/direct
 echo 'nfs direct mount lab 41' > /exports/direct/welcome.txt
@@ -363,6 +392,10 @@ cat > /etc/exports.d/lab42.exports <<'EOFX'
 EOFX
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-45-secure-copy"] = h + """
+systemctl enable --now sshd
 """
 
     return scripts

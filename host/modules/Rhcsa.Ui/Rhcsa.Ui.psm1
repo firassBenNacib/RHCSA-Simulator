@@ -61,6 +61,153 @@ param(
 return Format-StyledText -Text $Text -StyleName $StyleName
 }
 
+function Get-UiPlainText {
+param(
+[string]$Text
+)
+
+return ([string]$Text) -replace '\x1b\[[0-9;]*m', ''
+}
+
+function Get-UiBoxChar {
+param(
+[string]$Name
+)
+
+$hasUnicode = $true
+try {
+if ([Console]::OutputEncoding.CodePage -ne 65001) {
+$hasUnicode = $false
+}
+}
+catch {
+$hasUnicode = $false
+}
+
+if (-not $hasUnicode) {
+switch ($Name) {
+'TopLeft' { return '+' }
+'TopRight' { return '+' }
+'BottomLeft' { return '+' }
+'BottomRight' { return '+' }
+'Horizontal' { return '-' }
+'Vertical' { return '|' }
+'TeeLeft' { return '+' }
+'TeeRight' { return '+' }
+'Bullet' { return '*' }
+'Dot' { return '.' }
+default { return ' ' }
+}
+}
+
+switch ($Name) {
+'TopLeft' { return [string][char]0x256D }
+'TopRight' { return [string][char]0x256E }
+'BottomLeft' { return [string][char]0x2570 }
+'BottomRight' { return [string][char]0x256F }
+'Horizontal' { return [string][char]0x2500 }
+'Vertical' { return [string][char]0x2502 }
+'TeeLeft' { return [string][char]0x251C }
+'TeeRight' { return [string][char]0x2524 }
+'Bullet' { return [string][char]0x25CF }
+'Dot' { return [string][char]0x2500 }
+default { return ' ' }
+}
+}
+
+function Format-UiPanel {
+param(
+[string]$Title,
+[string]$TitleStyle = 'Header',
+[string[]]$ContentLines = @(),
+[int]$MinWidth = 40,
+[int]$Width = 0
+)
+
+$contentWidth = if ($Width -gt 0) { $Width } else { $MinWidth }
+foreach ($line in @($ContentLines)) {
+$plain = Get-UiPlainText -Text $line
+if ($Width -le 0 -and $plain.Length + 3 -gt $contentWidth) {
+$contentWidth = $plain.Length + 3
+}
+}
+$titlePlain = Get-UiPlainText -Text $Title
+if ($Width -le 0 -and $titlePlain.Length + 5 -gt $contentWidth) {
+$contentWidth = $titlePlain.Length + 5
+}
+
+$tl = Get-UiBoxChar 'TopLeft'
+$tr = Get-UiBoxChar 'TopRight'
+$bl = Get-UiBoxChar 'BottomLeft'
+$br = Get-UiBoxChar 'BottomRight'
+$hz = Get-UiBoxChar 'Horizontal'
+$vt = Get-UiBoxChar 'Vertical'
+
+$innerWidth = $contentWidth - 2
+$styledTitle = Format-StyledText -Text (" {0} " -f $Title) -StyleName $TitleStyle
+$titleBar = '{0}{1}{2}{3}{4}' -f `
+(Format-StyledText -Text $tl -StyleName 'Muted'),
+(Format-StyledText -Text ($hz * 1) -StyleName 'Muted'),
+$styledTitle,
+(Format-StyledText -Text ($hz * [Math]::Max(0, $innerWidth - $titlePlain.Length - 3)) -StyleName 'Muted'),
+(Format-StyledText -Text $tr -StyleName 'Muted')
+
+$lines = @($titleBar)
+foreach ($content in @($ContentLines)) {
+$plainContent = Get-UiPlainText -Text $content
+$pad = [Math]::Max(0, $innerWidth - $plainContent.Length - 1)
+$lines += '{0} {1}{2}{3}' -f `
+(Format-StyledText -Text $vt -StyleName 'Muted'),
+$content,
+(' ' * $pad),
+(Format-StyledText -Text $vt -StyleName 'Muted')
+}
+
+$bottomBar = '{0}{1}{2}' -f `
+(Format-StyledText -Text $bl -StyleName 'Muted'),
+(Format-StyledText -Text ($hz * $innerWidth) -StyleName 'Muted'),
+(Format-StyledText -Text $br -StyleName 'Muted')
+$lines += $bottomBar
+
+return $lines
+}
+
+function Get-ScenarioCatalogPanelWidth {
+param(
+[object[]]$ScenarioList = @(),
+[int]$Minimum = 48
+)
+
+if (@($ScenarioList).Count -eq 0) {
+return $Minimum
+}
+
+$rows = foreach ($scenario in @($ScenarioList | Sort-Object Id)) {
+[PSCustomObject]@{
+Id = [string]$scenario.Id
+Minutes = ('{0}m' -f $scenario.TimeLimitMinutes)
+Title = [string]$scenario.Title
+}
+}
+
+$idWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Id }) -Minimum 2
+$minutesWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Minutes }) -Minimum 4
+$titleWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Title }) -Minimum 5
+$tableWidth = $idWidth + 2 + $minutesWidth + 2 + $titleWidth
+return [Math]::Max($Minimum, $tableWidth + 3)
+}
+
+function Format-UiKeyValue {
+param(
+[string]$Key,
+[string]$Value,
+[int]$KeyWidth = 10
+)
+
+$paddedKey = $Key.PadRight($KeyWidth)
+return '{0}  {1}' -f (Format-StyledText -Text $paddedKey -StyleName 'Muted'), $Value
+}
+
 function Format-UiCommandLine {
 param(
 [string]$CommandText
@@ -117,7 +264,8 @@ param(
 [string]$SectionTitle,
 [Parameter(Mandatory = $true)]
 [string]$SectionStyleName,
-[object[]]$ScenarioList = @()
+[object[]]$ScenarioList = @(),
+[int]$PanelWidth = 0
 )
 
 if (@($ScenarioList).Count -eq 0) {
@@ -133,33 +281,31 @@ Title = [string]$scenario.Title
 }
 
 $idWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Id }) -Minimum 2
-$minutesWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Minutes }) -Minimum 3
+$minutesWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Minutes }) -Minimum 4
 $titleWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Title }) -Minimum 5
 
-$headerLine = '{0} {1} {2}' -f `
+$headerLine = '{0}  {1}  {2}' -f `
 (Format-PaddedCell -Text 'ID' -Width $idWidth -StyleName 'Accent'),
-(Format-PaddedCell -Text 'MIN' -Width $minutesWidth -StyleName 'Accent'),
+(Format-PaddedCell -Text 'TIME' -Width $minutesWidth -StyleName 'Accent'),
 (Format-PaddedCell -Text 'TITLE' -Width $titleWidth -StyleName 'Accent')
 
-$separatorLine = Format-StyledText -Text ('{0} {1} {2}' -f `
+$separatorLine = Format-StyledText -Text ('{0}  {1}  {2}' -f `
 ('-' * $idWidth), ('-' * $minutesWidth), ('-' * $titleWidth)) -StyleName 'Muted'
 
-$lines = @(
-(Get-UiHeading -Text $SectionTitle -StyleName $SectionStyleName),
-'',
-$headerLine,
-$separatorLine
-)
+$contentLines = @($headerLine, $separatorLine)
 
 foreach ($row in $rows) {
-$lines += ('{0} {1} {2}' -f `
+$contentLines += ('{0}  {1}  {2}' -f `
 (Format-PaddedCell -Text $row.Id -Width $idWidth -StyleName 'Accent'),
 (Format-PaddedCell -Text $row.Minutes -Width $minutesWidth -StyleName 'Muted'),
 (Format-PaddedCell -Text $row.Title -Width $titleWidth))
 }
 
-$lines += ''
-return $lines
+if ($PanelWidth -gt 0) {
+return @(Format-UiPanel -Title $SectionTitle -TitleStyle $SectionStyleName -ContentLines $contentLines -MinWidth $PanelWidth)
+}
+
+return @(Format-UiPanel -Title $SectionTitle -TitleStyle $SectionStyleName -ContentLines $contentLines)
 }
 
 function Format-ScenarioCatalogOutput {
@@ -191,19 +337,26 @@ $summary = switch ($Filter) {
 default { '{0} scenarios | {1} labs | {2} exams' -f $scenarioList.Count, $labList.Count, $examList.Count }
 }
 
-$lines = @(
-(Get-UiHeading -Text 'Scenarios'),
-(Format-StyledText -Text ("Track: {0}" -f (ConvertTo-ScenarioTrack -Track $Track).ToUpperInvariant()) -StyleName 'Muted'),
-(Format-StyledText -Text $summary -StyleName 'Muted'),
-''
+$headerContent = @(
+(Format-UiKeyValue -Key 'Track' -Value (Format-StyledText -Text (ConvertTo-ScenarioTrack -Track $Track).ToUpperInvariant() -StyleName 'Accent')),
+(Format-UiKeyValue -Key 'Total' -Value (Format-StyledText -Text $summary -StyleName 'Muted'))
 )
 
+$catalogPanelWidth = [Math]::Max(
+(Get-ScenarioCatalogPanelWidth -ScenarioList $labList -Minimum 54),
+(Get-ScenarioCatalogPanelWidth -ScenarioList $examList -Minimum 54)
+)
+
+$lines = @(Format-UiPanel -Title 'Scenarios' -TitleStyle 'Header' -ContentLines $headerContent -MinWidth $catalogPanelWidth)
+$lines += ''
+
 if ($labList.Count -gt 0) {
-$lines += Format-ScenarioCatalogTable -SectionTitle 'Labs' -SectionStyleName 'Lab' -ScenarioList $labList
+$lines += Format-ScenarioCatalogTable -SectionTitle 'Labs' -SectionStyleName 'Lab' -ScenarioList $labList -PanelWidth $catalogPanelWidth
+$lines += ''
 }
 
 if ($examList.Count -gt 0) {
-$lines += Format-ScenarioCatalogTable -SectionTitle 'Exams' -SectionStyleName 'Exam' -ScenarioList $examList
+$lines += Format-ScenarioCatalogTable -SectionTitle 'Exams' -SectionStyleName 'Exam' -ScenarioList $examList -PanelWidth $catalogPanelWidth
 }
 
 return $lines
@@ -244,10 +397,9 @@ param(
 
 $statusList = @($MachineStatus)
 if ($statusList.Count -eq 0) {
-return @(
-(Get-UiHeading -Text 'VMs'),
+return @(Format-UiPanel -Title 'VMs' -TitleStyle 'Info' -ContentLines @(
 (Format-StyledText -Text 'No Vagrant status data was returned for this project.' -StyleName 'Warning')
-)
+))
 }
 
 $rows = foreach ($machine in $statusList) {
@@ -260,28 +412,23 @@ State = [string]$machine.StateHuman
 $nameWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.Name }) -Minimum 2
 $stateWidth = Get-MaxCellWidth -Value ($rows | ForEach-Object { $_.State }) -Minimum 5
 
-$headerLine = '{0} {1}' -f `
+$headerLine = '{0}  {1}' -f `
 (Format-PaddedCell -Text 'VM' -Width $nameWidth -StyleName 'Accent'),
 (Format-PaddedCell -Text 'STATE' -Width $stateWidth -StyleName 'Accent')
 
-$separatorLine = Format-StyledText -Text ('{0} {1}' -f `
+$separatorLine = Format-StyledText -Text ('{0}  {1}' -f `
 ('-' * $nameWidth), ('-' * $stateWidth)) -StyleName 'Muted'
 
-$lines = @(
-(Get-UiHeading -Text 'VMs'),
-'',
-$headerLine,
-$separatorLine
-)
+$contentLines = @($headerLine, $separatorLine)
 
 foreach ($row in $rows) {
 $stateStyle = if ($row.State -eq 'running') { 'Success' } elseif ($row.State -eq 'not created') { 'Muted' } else { 'Warning' }
-$lines += ('{0} {1}' -f `
+$contentLines += ('{0}  {1}' -f `
 (Format-PaddedCell -Text $row.Name -Width $nameWidth -StyleName 'Accent'),
 (Format-PaddedCell -Text $row.State -Width $stateWidth -StyleName $stateStyle))
 }
 
-return $lines
+return @(Format-UiPanel -Title 'VMs' -TitleStyle 'Info' -ContentLines $contentLines)
 }
 
 function Get-RhcsaAsciiBanner {
@@ -315,7 +462,7 @@ param(
 
 $vmSummary = @($BaselineStatus.MachineStatus | ForEach-Object { '{0} {1}' -f $_.Name, $_.StateHuman }) -join ' | '
 $scenarioSummary = if ($null -eq $ScenarioStatus) {
-'No active scenario'
+Format-StyledText -Text 'No active scenario' -StyleName 'Muted'
 }
 else {
 '{0} ({1})' -f $ScenarioStatus.ScenarioId, $ScenarioStatus.Mode
@@ -328,14 +475,15 @@ $stateStyle = switch ([string]$BaselineStatus.State) {
 default { 'Muted' }
 }
 
-return @(
-(Get-UiHeading -Text 'RHCSA'),
-(Format-UiLabelValue -Label 'Profile' -Value $ProjectProfile.ToUpperInvariant()),
-(Format-UiLabelValue -Label 'Track' -Value $ScenarioTrack.ToUpperInvariant()),
-(Format-UiLabelValue -Label 'Baseline' -Value (Format-StyledText -Text $BaselineStatus.StateText -StyleName $stateStyle)),
-(Format-UiLabelValue -Label 'VMs' -Value $vmSummary),
-(Format-UiLabelValue -Label 'Scenario' -Value $scenarioSummary)
+$contentLines = @(
+(Format-UiKeyValue -Key 'Profile' -Value $ProjectProfile.ToUpperInvariant()),
+(Format-UiKeyValue -Key 'Track' -Value (Format-StyledText -Text $ScenarioTrack.ToUpperInvariant() -StyleName 'Accent')),
+(Format-UiKeyValue -Key 'Baseline' -Value (Format-StyledText -Text $BaselineStatus.StateText -StyleName $stateStyle)),
+(Format-UiKeyValue -Key 'VMs' -Value $vmSummary),
+(Format-UiKeyValue -Key 'Scenario' -Value $scenarioSummary)
 )
+
+return @(Format-UiPanel -Title 'RHCSA Status' -TitleStyle 'Header' -ContentLines $contentLines)
 }
 
 function Format-BaselineStartOutput {

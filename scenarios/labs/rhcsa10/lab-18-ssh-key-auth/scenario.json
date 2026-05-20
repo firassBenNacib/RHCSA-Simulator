@@ -15,7 +15,7 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
@@ -64,5 +64,8 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": {
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
+  }
 }
