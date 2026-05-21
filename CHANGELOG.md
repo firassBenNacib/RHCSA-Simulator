@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.11](https://github.com/firassBenNacib/rhcsa_exam_vms/compare/v1.0.10...v1.0.11) (2026-05-21)
+
+
+### Bug Fixes
+
+* align verifier profile and scenario metadata ([5c68d77](https://github.com/firassBenNacib/rhcsa_exam_vms/commit/5c68d77995ccf8c5e08b3d5f7cc9d103b0e3875c))
+* use patched Go toolchain directive ([832ffeb](https://github.com/firassBenNacib/rhcsa_exam_vms/commit/832ffeb91e0dcbb812022753ab8412fb58efc136))
+
 ## [1.0.10](https://github.com/firassBenNacib/rhcsa_exam_vms/compare/v1.0.9...v1.0.10) (2026-05-21)
 
 
