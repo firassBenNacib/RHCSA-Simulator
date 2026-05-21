@@ -5,6 +5,11 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to publish artifacts for; leave empty for a snapshot build"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -18,6 +23,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
 
       - name: Set up Go
@@ -36,7 +42,7 @@ jobs:
           args: check
 
       - name: Build snapshot artifacts
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
         uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7
         with:
           distribution: goreleaser
@@ -46,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Smoke test Linux binary
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -55,14 +61,14 @@ jobs:
           "$binary" --version
 
       - name: Upload snapshot artifacts
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rhcsa-tui-snapshot
           path: dist/**
 
       - name: Publish tagged release
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' || inputs.tag != '' }}
         uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7
         with:
           distribution: goreleaser
@@ -72,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Smoke test published Linux binary
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' || inputs.tag != '' }}
         shell: bash
         run: |
           set -euo pipefail
