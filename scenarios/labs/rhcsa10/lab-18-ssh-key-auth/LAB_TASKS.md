@@ -13,6 +13,7 @@ Configure key-based SSH authentication.
 
 ### Systems
 - client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

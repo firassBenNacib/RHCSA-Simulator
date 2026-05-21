@@ -12,6 +12,7 @@
 A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
 
 ### Systems
+- client
 - server
 
 ## General Instructions
@@ -39,7 +40,18 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Use server as the only chrony source and enable chronyd (server) - 4 pts
+## Question 03 - Configure persistent systemd journal storage (server) - 4 pts
+
+```bash
+mkdir -p /var/log/journal
+install -D -m 0644 /dev/null /etc/systemd/journald.conf
+grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf
+systemctl restart systemd-journald
+```
+
+---
+
+## Question 04 - Use server as the only chrony source and enable chronyd (server) - 4 pts
 
 ```bash
 sed -i '/^pool /d;/^server /d' /etc/chrony.conf
@@ -49,7 +61,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 04 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 05 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -69,7 +81,7 @@ EOF
 
 ---
 
-## Question 05 - Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+## Question 06 - Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examdflatpak file:///opt/rhcsa/flatpak/repo
@@ -77,7 +89,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examdflatpak file://
 
 ---
 
-## Question 06 - Install org.rhcsa.Tools from examdflatpak, then remove it after verifica (server) - 5 pts
+## Question 07 - Install org.rhcsa.Tools from examdflatpak, then remove it after verifica (server) - 5 pts
 
 ```bash
 flatpak install --system -y examdflatpak org.rhcsa.Tools
@@ -87,7 +99,7 @@ flatpak uninstall --system -y org.rhcsa.Tools
 
 ---
 
-## Question 07 - Create group teamd10, create user userd10, set password cinder9, and add (server) - 5 pts
+## Question 08 - Create group teamd10, create user userd10, set password cinder9, and add (server) - 5 pts
 
 ```bash
 groupadd teamd10
@@ -98,7 +110,7 @@ passwd userd10
 
 ---
 
-## Question 08 - Allow %teamd10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+## Question 09 - Allow %teamd10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
 
 ```bash
 echo '%teamd10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamd10
@@ -107,7 +119,7 @@ chmod 440 /etc/sudoers.d/teamd10
 
 ---
 
-## Question 09 - Set maximum password age for userd10 to 48 days and warning period to 7 (server) - 5 pts
+## Question 10 - Set maximum password age for userd10 to 48 days and warning period to 7 (server) - 5 pts
 
 ```bash
 chage -M 48 -W 7 userd10
@@ -115,7 +127,7 @@ chage -M 48 -W 7 userd10
 
 ---
 
-## Question 10 - Create /usr/local/bin/d-who that prints the primary group for the suppli (server) - 5 pts
+## Question 11 - Create /usr/local/bin/d-who that prints the primary group for the suppli (server) - 5 pts
 
 ```bash
 cat > /usr/local/bin/d-who <<'EOF'
@@ -128,7 +140,7 @@ chmod +x /usr/local/bin/d-who
 
 ---
 
-## Question 11 - Write users whose shell ends with sh to /root/d-shell-users.txt (server) - 5 pts
+## Question 12 - Write users whose shell ends with sh to /root/d-shell-users.txt (server) - 5 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/d-shell-users.txt
@@ -136,7 +148,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/d-shell-users.txt
 
 ---
 
-## Question 12 - Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 13 - Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
 
 ```bash
 tar -czf /root/d-etc.tar.gz /etc/hosts /etc/fstab
@@ -145,7 +157,7 @@ tar -tzf /root/d-etc.tar.gz
 
 ---
 
-## Question 13 - Create /root/d-original, hard link /root/d-hard, and symlink /root/d-sof (server) - 5 pts
+## Question 14 - Create /root/d-original, hard link /root/d-hard, and symlink /root/d-sof (server) - 5 pts
 
 ```bash
 echo link > /root/d-original
@@ -155,7 +167,7 @@ ln -s /root/d-original /root/d-soft
 
 ---
 
-## Question 14 - Create and enable examdtimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 15 - Create and enable examdtimer.timer that runs every 10 minutes (server) - 4 pts
 
 ```bash
 cat > /usr/local/sbin/examdtimer.sh <<'EOF'
@@ -181,7 +193,7 @@ systemctl enable --now examdtimer.timer
 
 ---
 
-## Question 15 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (server) - 4 pts
+## Question 16 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (server) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -195,7 +207,7 @@ mount -a
 
 ---
 
-## Question 16 - Create /var/www/html/d.html and restore its default SELinux context (server) - 4 pts
+## Question 17 - Create /var/www/html/d.html and restore its default SELinux context (server) - 4 pts
 
 ```bash
 echo d > /var/www/html/d.html
@@ -205,21 +217,10 @@ restorecon -v /var/www/html/d.html
 
 ---
 
-## Question 17 - Persistently enable httpd_can_network_connect (server) - 4 pts
+## Question 18 - Persistently enable httpd_can_network_connect (server) - 4 pts
 
 ```bash
 setsebool -P httpd_can_network_connect on
-```
-
----
-
-## Question 18 - Configure persistent systemd journal storage (server) - 4 pts
-
-```bash
-mkdir -p /var/log/journal
-install -D -m 0644 /dev/null /etc/systemd/journald.conf
-grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf
-systemctl restart systemd-journald
 ```
 
 ---

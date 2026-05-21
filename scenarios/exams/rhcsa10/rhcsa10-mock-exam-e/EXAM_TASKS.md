@@ -12,6 +12,7 @@
 A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
 
 ### Systems
+- client
 - server
 
 ## General Instructions
@@ -32,87 +33,87 @@ Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - Allow TCP port 8104 permanently in firewalld and reload (server) - 4 pts
-
-Allow TCP port 8104 permanently in firewalld and reload.
-
----
-
-## Question 04 - Create /var/www/html/e.html and restore its default SELinux context (server) - 4 pts
-
-Create /var/www/html/e.html and restore its default SELinux context.
-
----
-
-## Question 05 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
-
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
-
----
-
-## Question 06 - Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
-
-Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
-
----
-
-## Question 07 - Install org.rhcsa.Tools from exameflatpak, then remove it after verifica (server) - 5 pts
-
-Install org.rhcsa.Tools from exameflatpak, then remove it after verification.
-
----
-
-## Question 08 - Create group teame10, create user usere10, set password cinder9, and add (server) - 5 pts
-
-Create group teame10, create user usere10, set password cinder9, and add the user to teame10.
-
----
-
-## Question 09 - Allow %teame10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
-
-Allow %teame10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
-
----
-
-## Question 10 - Set maximum password age for usere10 to 49 days and warning period to 7 (server) - 5 pts
-
-Set maximum password age for usere10 to 49 days and warning period to 7 days.
-
----
-
-## Question 11 - Create /usr/local/bin/e-who that prints the primary group for the suppli (server) - 5 pts
-
-Create /usr/local/bin/e-who that prints the primary group for the supplied user argument.
-
----
-
-## Question 12 - Write users whose shell ends with sh to /root/e-shell-users.txt (server) - 5 pts
-
-Write users whose shell ends with sh to /root/e-shell-users.txt.
-
----
-
-## Question 13 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
-
-Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fstab.
-
----
-
-## Question 14 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (server) - 5 pts
-
-Create /root/e-original, hard link /root/e-hard, and symlink /root/e-soft.
-
----
-
-## Question 15 - Create and enable exametimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 03 - Create and enable exametimer.timer that runs every 10 minutes (server) - 4 pts
 
 Create and enable exametimer.timer that runs every 10 minutes.
 
 ---
 
-## Question 16 - Create VG vge10 and LV datae mounted at /mnt/datae10 (server) - 4 pts
+## Question 04 - Create VG vge10 and LV datae mounted at /mnt/datae10 (server) - 4 pts
 
 Create VG vge10 and LV datae mounted at /mnt/datae10.
+
+---
+
+## Question 05 - Allow TCP port 8104 permanently in firewalld and reload (server) - 4 pts
+
+Allow TCP port 8104 permanently in firewalld and reload.
+
+---
+
+## Question 06 - Create /var/www/html/e.html and restore its default SELinux context (server) - 4 pts
+
+Create /var/www/html/e.html and restore its default SELinux context.
+
+---
+
+## Question 07 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+
+Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 08 - Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+
+Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+
+---
+
+## Question 09 - Install org.rhcsa.Tools from exameflatpak, then remove it after verifica (server) - 5 pts
+
+Install org.rhcsa.Tools from exameflatpak, then remove it after verification.
+
+---
+
+## Question 10 - Create group teame10, create user usere10, set password cinder9, and add (server) - 5 pts
+
+Create group teame10, create user usere10, set password cinder9, and add the user to teame10.
+
+---
+
+## Question 11 - Allow %teame10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+
+Allow %teame10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+
+---
+
+## Question 12 - Set maximum password age for usere10 to 49 days and warning period to 7 (server) - 5 pts
+
+Set maximum password age for usere10 to 49 days and warning period to 7 days.
+
+---
+
+## Question 13 - Create /usr/local/bin/e-who that prints the primary group for the suppli (server) - 5 pts
+
+Create /usr/local/bin/e-who that prints the primary group for the supplied user argument.
+
+---
+
+## Question 14 - Write users whose shell ends with sh to /root/e-shell-users.txt (server) - 5 pts
+
+Write users whose shell ends with sh to /root/e-shell-users.txt.
+
+---
+
+## Question 15 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+
+Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fstab.
+
+---
+
+## Question 16 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (server) - 5 pts
+
+Create /root/e-original, hard link /root/e-hard, and symlink /root/e-soft.
 
 ---
 

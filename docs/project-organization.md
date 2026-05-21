@@ -40,15 +40,15 @@ The PowerShell host code is split into focused `.psm1` modules under `host/modul
 | VMControl | VM lifecycle, SSH, interactive commands |
 | Checks | Lab and exam check execution and scoring |
 
-## Recommended Direction
+## Project Layout Guidance
 
-Keep `RHCSA.ps1` as a small facade over focused PowerShell modules. The modules live under `host/modules/` and are imported by `host/modules/RhcsaSimulator`.
+`RHCSA.ps1` is the user-facing entrypoint. Most behavior lives in focused PowerShell modules under `host/modules/`, imported through `host/modules/RhcsaSimulator`.
 
-Keep Python implementation in `tools/scenarios/`. Host orchestration should stay in PowerShell; Python tooling should not be mixed back into `host/`.
+Python scenario tooling lives in `tools/scenarios/`. The host runtime stays in PowerShell, while Python handles generation, audit, and replay helpers.
 
-Keep Go package tests beside package source. In Go, colocated `*_test.go` files are idiomatic. A separate `tests/` directory should only be used for end-to-end flows, fixtures, or black-box integration tests that span multiple packages.
+Go package tests are colocated with package source through standard `*_test.go` files. A top-level `tests/` directory is reserved for future end-to-end flows, fixtures, or black-box integration tests that span multiple packages.
 
-## Track Notes
+## Track Status
 
 RHCSA 9 remains the default stable track. RHCSA 10 stays separate so Flatpak, systemd timer, and RHEL 10 package assumptions do not leak into RHCSA 9 labs and exams.
 
@@ -56,4 +56,4 @@ Both tracks contain 48 labs and 8 mock exams. Full live replay for RHCSA 9 and R
 
 Track-specific notes live in `docs/rhcsa9-track.md` and `docs/rhcsa10-track.md`.
 
-Do not copy tasks from exam dumps or proprietary PDFs. Use those materials only as a coverage-gap signal.
+Scenario text in this repository should be original. Public objectives can help identify coverage gaps, but exam dumps and proprietary course material are not acceptable source text.

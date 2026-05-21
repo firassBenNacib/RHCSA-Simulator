@@ -33,6 +33,7 @@ from smoke_test_scenarios import ( # noqa: E402
     filter_ids,
     get_baseline_status,
     parse_check_output,
+    project_default_track,
     resolve_scenario_token,
     run_ps,
     scenario_ids,
@@ -1731,26 +1732,27 @@ def main() -> int:
     parser.add_argument("--ensure-up", action="store_true")
     parser.add_argument("--start-timeout", type=int, default=1200)
     parser.add_argument("--exec-timeout", type=int, default=1200)
-    parser.add_argument("--track", default="rhcsa9", help="Scenario track to verify: rhcsa9, rhcsa10, or all.")
+    parser.add_argument("--track", default="auto", help="Scenario track to verify: rhcsa9, rhcsa10, all, or auto for the current project profile.")
     parser.add_argument("--audit-only", action="store_true", help="Only audit whether tasks are auto-replayable; do not start scenarios.")
     args = parser.parse_args()
     if args.lab_only:
         args.only = [*(args.only or []), *args.lab_only]
     args.kind = normalize_kind(args.kind)
     normalize_only_kind_shortcut(args)
-    args.track = normalize_track(args.track)
+    track_token = str(args.track or "auto").strip().lower()
+    args.track = project_default_track() if track_token in {"auto", "project", "current"} else normalize_track(args.track)
     args.only_by_kind = resolve_only_by_kind(args)
 
     if args.ensure_up:
         baseline_status = get_baseline_status()
-        if baseline_status != "ready":
+        if baseline_status not in {"ready", "available"}:
             up_proc = run_ps("up", timeout_seconds=args.start_timeout)
-            sys.stdout.write(up_proc.stdout)
-            sys.stderr.write(up_proc.stderr)
             if up_proc.returncode != 0:
+                sys.stdout.write(up_proc.stdout)
+                sys.stderr.write(up_proc.stderr)
                 return up_proc.returncode
     elif not args.audit_only and get_baseline_status() not in {"ready", "available"}:
-        print("Baseline is not ready. Run '.\\RHCSA.ps1 up' first or use '--ensure-up'.", file=sys.stderr)
+        print("Baseline is not ready. Run '.\\RHCSA.ps1 up' first, or rerun this verifier with '--ensure-up'.", file=sys.stderr)
         return 1
 
     failures: list[str] = []
