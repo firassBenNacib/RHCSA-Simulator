@@ -1,6 +1,6 @@
 # Release Process
 
-The repository publishes source through git and TUI binaries through GitHub Releases. Do not commit built `.exe`, Linux, or macOS binaries.
+The repository publishes source through git and TUI binaries through GitHub Releases. Built `.exe`, Linux, and macOS binaries are release assets, not source-controlled files.
 
 ## Normal Release
 

@@ -191,6 +191,7 @@ def run_ps(*args: str, timeout_seconds: int = 180) -> subprocess.CompletedProces
         ],
         cwd=ROOT,
         text=True,
+        encoding="utf-8",
         errors="replace",
         capture_output=True,
         timeout=timeout_seconds,
@@ -216,9 +217,30 @@ def parse_reported_scenario(output: str) -> str | None:
 def parse_baseline_status(output: str) -> str | None:
     clean = ANSI_RE.sub("", output)
     match = BASELINE_RE.search(clean)
-    if not match:
-        return None
-    return match.group(1).strip().lower()
+    if match:
+        return match.group(1).strip().lower()
+
+    for line in clean.splitlines():
+        normalized = line.strip().strip("│|").strip()
+        match = re.match(r"^Baseline\s*:?\s+(.+)$", normalized, re.I)
+        if match:
+            return match.group(1).strip().lower()
+    return None
+
+
+def project_default_track() -> str:
+    profile_path = ROOT / ".rhcsa-profile.json"
+    try:
+        data = json.loads(profile_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "rhcsa9"
+
+    raw_track = str(data.get("track") or data.get("profile") or "rhcsa9")
+    try:
+        normalized = normalize_track(raw_track)
+    except SystemExit:
+        return "rhcsa9"
+    return "rhcsa9" if normalized == "all" else normalized
 
 
 def get_baseline_status() -> str | None:
@@ -392,8 +414,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--track",
-        default="rhcsa9",
-        help="Scenario track to smoke test: rhcsa9, rhcsa10, or all.",
+        default="auto",
+        help="Scenario track to smoke test: rhcsa9, rhcsa10, all, or auto for the current project profile.",
     )
     parser.add_argument(
         "--ensure-up",
@@ -414,7 +436,7 @@ def main() -> int:
 
     if args.ensure_up:
         baseline_status = get_baseline_status()
-        if baseline_status != "ready":
+        if baseline_status not in {"ready", "available"}:
             up_timeout = max(args.start_timeout or 0, 1800)
             try:
                 up_proc = run_ps("up", timeout_seconds=up_timeout)
@@ -426,13 +448,13 @@ def main() -> int:
                     file=sys.stderr,
                 )
                 return 1
-            sys.stdout.write(up_proc.stdout)
-            sys.stderr.write(up_proc.stderr)
             if up_proc.returncode != 0:
+                sys.stdout.write(up_proc.stdout)
+                sys.stderr.write(up_proc.stderr)
                 return up_proc.returncode
     else:
         baseline_status = get_baseline_status()
-        if baseline_status != "ready":
+        if baseline_status not in {"ready", "available"}:
             print(
                 "Baseline is not ready. Run '.\\RHCSA.ps1 up' first, or rerun with '--ensure-up'.",
                 file=sys.stderr,
@@ -440,7 +462,8 @@ def main() -> int:
             return 1
 
     failures: list[SmokeResult] = []
-    track = normalize_track(args.track)
+    track_token = str(args.track or "auto").strip().lower()
+    track = project_default_track() if track_token in {"auto", "project", "current"} else normalize_track(args.track)
 
     for kind in iter_selected_kinds(args.kind):
         ids = filter_ids(scenario_ids(kind, track), args.start_from, args.end_at, args.only)

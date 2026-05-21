@@ -12,6 +12,7 @@
 A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
 
 ### Systems
+- client
 - server
 
 ## General Instructions

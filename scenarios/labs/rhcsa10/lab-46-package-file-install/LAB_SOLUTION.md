@@ -13,6 +13,7 @@ Install software from a local RPM file.
 
 ### Systems
 - client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

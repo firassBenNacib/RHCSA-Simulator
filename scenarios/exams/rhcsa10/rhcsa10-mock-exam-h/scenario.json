@@ -31,6 +31,8 @@
       "tasks": [
         "Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Activate the throughput-performance tuned profile.",
+        "Install lsof and ensure tcpdump is removed.",
         "Use server as the only chrony source and enable chronyd.",
         "Allow TCP port 8107 permanently in firewalld and reload.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
@@ -46,11 +48,9 @@
         "Create and enable examhtimer.timer that runs every 10 minutes.",
         "Create VG vgh10 and LV datah mounted at /mnt/datah10.",
         "Persistently enable httpd_can_network_connect.",
-        "Activate the throughput-performance tuned profile.",
         "Configure persistent systemd journal storage.",
         "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.",
-        "Set the default target to multi-user.target without rebooting.",
-        "Install lsof and ensure tcpdump is removed."
+        "Set the default target to multi-user.target without rebooting."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -60,6 +60,8 @@
       "checks": [
         "hostnamectl --static | grep -qx clienth.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverh\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.67/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "tuned-adm active | grep -q throughput-performance",
+        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
         "firewall-cmd --permanent --query-port=8107/tcp && firewall-cmd --query-port=8107/tcp",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
@@ -75,11 +77,9 @@
         "systemctl cat examhtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examhtimer.timer | grep -qx enabled",
         "lvs /dev/vgh10/datah >/dev/null && findmnt -no TARGET /mnt/datah10 | grep -qx /mnt/datah10",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "tuned-adm active | grep -q throughput-performance",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "crontab -l -u userh10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log'",
-        "systemctl get-default | grep -qx multi-user.target",
-        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
+        "systemctl get-default | grep -qx multi-user.target"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -87,6 +87,8 @@
       "task_titles": [
         "Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.1",
+        "Activate the throughput-performance tuned profile",
+        "Install lsof and ensure tcpdump is removed",
         "Use server as the only chrony source and enable chronyd",
         "Allow TCP port 8107 permanently in firewalld and reload",
         "Create enabled BaseOS and AppStream repository definitions using http://",
@@ -102,29 +104,27 @@
         "Create and enable examhtimer.timer that runs every 10 minutes",
         "Create VG vgh10 and LV datah mounted at /mnt/datah10",
         "Persistently enable httpd_can_network_connect",
-        "Activate the throughput-performance tuned profile",
         "Configure persistent systemd journal storage",
         "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10",
-        "Set the default target to multi-user.target without rebooting",
-        "Install lsof and ensure tcpdump is removed"
+        "Set the default target to multi-user.target without rebooting"
       ],
       "task_points": [
         5,
         5,
         4,
         4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
         4,
         4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
         4,
         4,
         4,
@@ -141,6 +141,16 @@
           "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.67/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "systemctl enable --now tuned",
+          "tuned-adm profile throughput-performance"
+        ],
+        [
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "dnf install -y lsof",
+          "dnf remove -y tcpdump"
         ],
         [
           "sed -i '/^pool /d;/^server /d' /etc/chrony.conf",
@@ -241,10 +251,6 @@
           "setsebool -P httpd_can_network_connect on"
         ],
         [
-          "systemctl enable --now tuned",
-          "tuned-adm profile throughput-performance"
-        ],
-        [
           "mkdir -p /var/log/journal",
           "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
           "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
@@ -256,12 +262,6 @@
         [
           "systemctl set-default multi-user.target",
           "systemctl get-default"
-        ],
-        [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
-          "dnf clean all",
-          "dnf install -y lsof",
-          "dnf remove -y tcpdump"
         ]
       ]
     }

@@ -7,6 +7,7 @@ from pathlib import Path
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOL_ROOT))
 
+from smoke_test_scenarios import parse_baseline_status  # noqa: E402
 from verify_scenario_solutions import load_manifest  # noqa: E402
 
 
@@ -34,6 +35,21 @@ class VerifyLoaderTests(unittest.TestCase):
             {"client": "scripts/client.sh", "server": "scripts/server.sh"},
         )
         self.assertTrue(manifest["flags"]["requires_server"])
+
+    def test_parse_baseline_status_accepts_boxed_cli_output(self) -> None:
+        output = "\n".join([
+            "╭─ RHCSA Status ─────────────────────────────╮",
+            "│ Profile     RHEL10                         │",
+            "│ Track       RHCSA10                        │",
+            "│ Baseline    ready                          │",
+            "╰────────────────────────────────────────────╯",
+        ])
+        self.assertEqual(parse_baseline_status(output), "ready")
+
+    def test_rhcsa10_exams_render_client_server_systems(self) -> None:
+        tasks_path = Path("scenarios/exams/rhcsa10/rhcsa10-mock-exam-b/EXAM_TASKS.md")
+        content = tasks_path.read_text(encoding="utf-8")
+        self.assertIn("### Systems\n- client\n- server", content)
 
 
 if __name__ == "__main__":

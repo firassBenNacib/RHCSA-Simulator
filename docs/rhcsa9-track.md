@@ -50,4 +50,4 @@ RHCSA 9 scenarios should use:
 }
 ```
 
-Keep RHCSA 10-only topics such as Flatpak and systemd timers in the RHCSA 10 track unless a scenario is deliberately tested and marked as dual-track.
+RHCSA 10-only topics such as Flatpak and systemd timers belong in the RHCSA 10 track unless a scenario is deliberately tested and marked as dual-track.
