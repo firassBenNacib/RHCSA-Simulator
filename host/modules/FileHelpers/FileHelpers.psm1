@@ -46,24 +46,26 @@ return (Join-Path $ProjectRoot '.rhcsa-profile.json')
 function ConvertTo-ProjectProfile {
 param(
 [AllowEmptyString()]
-[string]$Profile
+[Alias('Profile')]
+[string]$ProjectProfile
 )
 
-$value = ([string]$Profile).Trim().ToLowerInvariant() -replace '[-_]', ''
+$value = ([string]$ProjectProfile).Trim().ToLowerInvariant() -replace '[-_]', ''
 switch ($value) {
 { $_ -in @('', '9', 'rhel9', 'rhcsa9', 'ex2009') } { return 'rhel9' }
 { $_ -in @('10', 'rhel10', 'rhcsa10', 'ex20010') } { return 'rhel10' }
-default { throw "Unsupported project profile '$Profile'. Use RHCSA9 or RHCSA10." }
+default { throw "Unsupported project profile '$ProjectProfile'. Use RHCSA9 or RHCSA10." }
 }
 }
 
 function Get-ProjectTrackFromProfile {
 param(
 [AllowEmptyString()]
-[string]$Profile
+[Alias('Profile')]
+[string]$ProjectProfile
 )
 
-switch (ConvertTo-ProjectProfile -Profile $Profile) {
+switch (ConvertTo-ProjectProfile -Profile $ProjectProfile) {
 'rhel10' { return 'rhcsa10' }
 default { return 'rhcsa9' }
 }
@@ -263,11 +265,12 @@ function Set-ProjectProfile {
 [CmdletBinding(SupportsShouldProcess)]
 param(
 [Parameter(Mandatory = $true)]
-[string]$Profile,
+[Alias('Profile')]
+[string]$ProjectProfile,
 [string]$ProjectRoot = (Get-ProjectRoot)
 )
 
-$normalizedProfile = ConvertTo-ProjectProfile -Profile $Profile
+$normalizedProfile = ConvertTo-ProjectProfile -Profile $ProjectProfile
 $track = Get-ProjectTrackFromProfile -Profile $normalizedProfile
 $path = Get-ProjectProfilePath -ProjectRoot $ProjectRoot
 $timerDefault = Get-ProjectTimerDefault -ProjectRoot $ProjectRoot
@@ -298,17 +301,17 @@ param(
 )
 
 $data = Get-ProjectProfileData -ProjectRoot $ProjectRoot
-$profile = 'rhel9'
+$profileName = 'rhel9'
 if ($null -ne $data) {
 if ($null -ne $data.PSObject.Properties['profile']) {
-$profile = [string]$data.profile
+$profileName = [string]$data.profile
 }
 elseif ($null -ne $data.PSObject.Properties['track']) {
-$profile = [string]$data.track
+$profileName = [string]$data.track
 }
 }
 
-$normalizedProfile = ConvertTo-ProjectProfile -Profile $profile
+$normalizedProfile = ConvertTo-ProjectProfile -Profile $profileName
 $track = Get-ProjectTrackFromProfile -Profile $normalizedProfile
 $path = Get-ProjectProfilePath -ProjectRoot $ProjectRoot
 $content = ([ordered]@{

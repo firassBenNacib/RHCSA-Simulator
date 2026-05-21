@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to /var/tmp/rhcsa10-service.out.",
-        "Create a oneshot service named rhcsa10-service.service that runs the script.",
-        "Enable and start the service."
+        "On server, create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to /var/tmp/rhcsa10-service.out.",
+        "On server, create a oneshot service named rhcsa10-service.service that runs the script.",
+        "On server, enable and start the service."
       ],
       "hints": [
         "Use Type=oneshot.",
         "Reload systemd before enabling a new unit."
       ],
       "checks": [
-        "test -x /usr/local/sbin/rhcsa10-service.sh",
-        "test -f /etc/systemd/system/rhcsa10-service.service && grep -Fqx 'ExecStart=/usr/local/sbin/rhcsa10-service.sh' /etc/systemd/system/rhcsa10-service.service",
-        "systemctl is-enabled rhcsa10-service.service | grep -qx enabled && grep -qx SERVICE10 /var/tmp/rhcsa10-service.out"
+        "# server test -x /usr/local/sbin/rhcsa10-service.sh",
+        "# server test -f /etc/systemd/system/rhcsa10-service.service && grep -Fqx 'ExecStart=/usr/local/sbin/rhcsa10-service.sh' /etc/systemd/system/rhcsa10-service.service",
+        "# server systemctl is-enabled rhcsa10-service.service | grep -qx enabled && grep -qx SERVICE10 /var/tmp/rhcsa10-service.out"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to /var/",
-        "Create a oneshot service named rhcsa10-service.service that runs the scr",
-        "Enable and start the service"
+        "create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to /var/",
+        "create a oneshot service named rhcsa10-service.service that runs the scr",
+        "enable and start the service"
       ],
       "task_points": [
         10,
@@ -75,5 +75,7 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": {
+    "server": "scripts/server.sh"
+  }
 }

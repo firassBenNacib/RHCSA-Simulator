@@ -142,7 +142,8 @@ if ($value -like "$wordToComplete*") {
 }
 }
 })]
-[string]$Profile,
+[Alias('Profile')]
+[string]$ProjectProfile,
 
 [ValidateSet('server', 'client', 'servervm', 'clientvm')]
 [ArgumentCompleter({
@@ -205,8 +206,8 @@ $projectRoot = Get-ProjectRoot -Start $PSScriptRoot
 $boundParameters = $PSBoundParameters
 
 function Get-EffectiveProjectProfile {
-    if ($boundParameters.ContainsKey('Profile') -and -not [string]::IsNullOrWhiteSpace($Profile)) {
-        return (ConvertTo-ProjectProfile -Profile $Profile)
+    if ($boundParameters.ContainsKey('ProjectProfile') -and -not [string]::IsNullOrWhiteSpace($ProjectProfile)) {
+        return (ConvertTo-ProjectProfile -Profile $ProjectProfile)
     }
 
     return (Get-ProjectProfile -ProjectRoot $projectRoot)
@@ -328,7 +329,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown up argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 Set-ProjectProfile -Profile $effectiveProfile -ProjectRoot $projectRoot | Out-Null
 }
 
@@ -422,7 +423,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown resume argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown resume argument '-Profile'."
 }
 
@@ -479,7 +480,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown pause argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown pause argument '-Profile'."
 }
 
@@ -537,7 +538,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown down argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown down argument '-Profile'."
 }
 
@@ -609,7 +610,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown repo argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown repo argument '-Profile'."
 }
 
@@ -650,7 +651,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown destroy argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown destroy argument '-Profile'."
 }
 
@@ -680,7 +681,7 @@ if ($PSBoundParameters.ContainsKey('Vm')) {
 throw "Unknown list argument '-Vm'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown list argument '-Profile'."
 }
 
@@ -717,7 +718,7 @@ if ($PSBoundParameters.ContainsKey('Vm')) {
 throw "Unknown start argument '-Vm'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown start argument '-Profile'."
 }
 
@@ -759,7 +760,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown exit-run argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown exit-run argument '-Profile'."
 }
 
@@ -805,7 +806,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown reset argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown reset argument '-Profile'."
 }
 
@@ -848,7 +849,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown status argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown status argument '-Profile'."
 }
 
@@ -881,7 +882,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown check argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown check argument '-Profile'."
 }
 
@@ -922,7 +923,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown status argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown status argument '-Profile'."
 }
 
@@ -959,7 +960,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown vms argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown vms argument '-Profile'."
 }
 
@@ -992,7 +993,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown ssh argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown ssh argument '-Profile'."
 }
 
@@ -1039,7 +1040,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown ssh-config argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown ssh-config argument '-Profile'."
 }
 
@@ -1069,7 +1070,7 @@ if ($remainingItem.Count -gt 0) {
 throw "Unknown tui argument '$($remainingItem[0])'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown tui argument '-Profile'."
 }
 
@@ -1102,7 +1103,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown profile argument '-Track'."
 }
 
-$requestedProfile = if ($PSBoundParameters.ContainsKey('Profile')) { $Profile } else { $item }
+$requestedProfile = if ($PSBoundParameters.ContainsKey('ProjectProfile')) { $ProjectProfile } else { $item }
 if ([string]::IsNullOrWhiteSpace($requestedProfile)) {
 $profileContent = @(
 (Format-UiKeyValue -Key 'Profile' -Value (Format-StyledText -Text $effectiveProfile.ToUpperInvariant() -StyleName 'Accent')),
@@ -1154,7 +1155,7 @@ if ($PSBoundParameters.ContainsKey('Track')) {
 throw "Unknown timer argument '-Track'."
 }
 
-if ($PSBoundParameters.ContainsKey('Profile')) {
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown timer argument '-Profile'."
 }
 
