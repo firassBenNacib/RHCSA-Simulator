@@ -44,6 +44,10 @@ param(
 [string]$StyleName
 )
 
+if ($env:RHCSA_PLAIN_HELP -match '^(1|true|yes|on)$') {
+return $Text
+}
+
 $prefix = Get-UiStyleCode -StyleName $StyleName
 if ([string]::IsNullOrEmpty($prefix)) {
 return $Text

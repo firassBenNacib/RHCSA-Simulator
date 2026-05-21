@@ -14,7 +14,10 @@ SCENARIOS_ROOT = ROOT / "scenarios"
 
 
 def write_text(path: Path, content: str) -> None:
-    path.write_text(content.rstrip() + "\n", encoding="utf-8")
+    rendered = content.rstrip() + "\n"
+    if path.exists() and path.read_text(encoding="utf-8") == rendered:
+        return
+    path.write_text(rendered, encoding="utf-8")
 
 
 def clean_text(value: str) -> str:
@@ -277,8 +280,12 @@ def collect_systems(tasks: list[str], requires_server: bool, default_system: str
     return ["client"]
 
 
-def systems_table(tasks: list[str], requires_server: bool, default_system: str) -> str:
+def systems_table(tasks: list[str], requires_server: bool, default_system: str, mode: str) -> str:
     systems = collect_systems(tasks, requires_server, default_system)
+    if requires_server and mode == "Exam":
+        systems = ["client", "server"]
+    elif requires_server and "client" in systems and "server" not in systems:
+        systems.append("server")
     if systems == ["client"]:
         return "\n".join([
             "### Systems",
@@ -301,7 +308,7 @@ def metadata_lines(data: dict, mode: str, tasks: list[str], default_system: str)
         "",
         normalize_task_text(data["description"]),
         "",
-        systems_table(tasks, bool(data.get("flags", {}).get("requires_server", False)), default_system),
+        systems_table(tasks, bool(data.get("flags", {}).get("requires_server", False)), default_system, mode),
         "## General Instructions",
         "1. Unless a task states otherwise, make all changes persistent across reboots.",
     ]

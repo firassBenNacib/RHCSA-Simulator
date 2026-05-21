@@ -46,12 +46,16 @@ def private_connection_check(command: str) -> str:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    rendered = json.dumps(data, indent=2) + "\n"
+    if path.exists() and path.read_text(encoding="utf-8") == rendered:
+        return
+    path.write_text(rendered, encoding="utf-8")
 
 
 def write_script(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    if not path.exists() or path.read_text(encoding="utf-8") != content:
+        path.write_text(content, encoding="utf-8")
     path.chmod(0o755)
 
 

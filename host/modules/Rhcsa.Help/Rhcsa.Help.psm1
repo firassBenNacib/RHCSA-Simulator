@@ -121,6 +121,8 @@ param(
 [string]$Scope = 'general'
 )
 
+$env:RHCSA_PLAIN_HELP = '1'
+
 switch ($Scope) {
 'up' {
 return @(

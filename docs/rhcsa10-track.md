@@ -52,4 +52,4 @@ RHCSA 10 scenarios should use:
 }
 ```
 
-Regenerate RHCSA 10 scenarios from `tools/scenarios/generate_rhcsa10_scenarios.py`. Do not hand-edit generated RHCSA 10 manifests unless the generator is updated in the same change.
+Regenerate RHCSA 10 scenarios from `tools/scenarios/generate_rhcsa10_scenarios.py`. Generated manifests should be changed through the generator so future regeneration stays reproducible.
