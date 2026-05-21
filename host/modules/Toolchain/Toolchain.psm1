@@ -125,11 +125,12 @@ function Get-ProjectVagrantBoxName {
 param(
 [string]$ProjectRoot = (Get-ProjectRoot),
 [AllowEmptyString()]
-[string]$Profile = ''
+[Alias('Profile')]
+[string]$ProjectProfile = ''
 )
 
-if ([string]::IsNullOrWhiteSpace($Profile)) {
-$Profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+if ([string]::IsNullOrWhiteSpace($ProjectProfile)) {
+$ProjectProfile = Get-ProjectProfile -ProjectRoot $ProjectRoot
 }
 
 $override = [string]$env:RHCSA_BOX
@@ -137,7 +138,7 @@ if (-not [string]::IsNullOrWhiteSpace($override)) {
 return $override.Trim()
 }
 
-switch (ConvertTo-ProjectProfile -Profile $Profile) {
+switch (ConvertTo-ProjectProfile -Profile $ProjectProfile) {
 'rhel10' { return 'boxomatic/almalinux-10' }
 default { return 'generic/rocky9' }
 }
@@ -147,11 +148,12 @@ function Get-ProjectVagrantBoxUrl {
 param(
 [string]$ProjectRoot = (Get-ProjectRoot),
 [AllowEmptyString()]
-[string]$Profile = ''
+[Alias('Profile')]
+[string]$ProjectProfile = ''
 )
 
-if ([string]::IsNullOrWhiteSpace($Profile)) {
-$Profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+if ([string]::IsNullOrWhiteSpace($ProjectProfile)) {
+$ProjectProfile = Get-ProjectProfile -ProjectRoot $ProjectRoot
 }
 
 $override = [string]$env:RHCSA_BOX_URL
@@ -159,7 +161,7 @@ if (-not [string]::IsNullOrWhiteSpace($override)) {
 return $override.Trim()
 }
 
-switch (ConvertTo-ProjectProfile -Profile $Profile) {
+switch (ConvertTo-ProjectProfile -Profile $ProjectProfile) {
 default { return '' }
 }
 }
@@ -213,19 +215,20 @@ function Assert-ProjectVagrantBoxReady {
 param(
 [string]$ProjectRoot = (Get-ProjectRoot),
 [AllowEmptyString()]
-[string]$Profile = ''
+[Alias('Profile')]
+[string]$ProjectProfile = ''
 )
 
-if ([string]::IsNullOrWhiteSpace($Profile)) {
-$Profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+if ([string]::IsNullOrWhiteSpace($ProjectProfile)) {
+$ProjectProfile = Get-ProjectProfile -ProjectRoot $ProjectRoot
 }
 
-$boxName = Get-ProjectVagrantBoxName -ProjectRoot $ProjectRoot -Profile $Profile
+$boxName = Get-ProjectVagrantBoxName -ProjectRoot $ProjectRoot -Profile $ProjectProfile
 if (Test-VagrantBoxInstalled -BoxName $boxName -ProjectRoot $ProjectRoot) {
 return
 }
 
-$boxUrl = Get-ProjectVagrantBoxUrl -ProjectRoot $ProjectRoot -Profile $Profile
+$boxUrl = Get-ProjectVagrantBoxUrl -ProjectRoot $ProjectRoot -Profile $ProjectProfile
 
 $missing = @()
 if (-not (Test-CurlExecutableAvailable)) {

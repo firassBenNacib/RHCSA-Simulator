@@ -363,6 +363,19 @@ install -d -m 700 /root/.ssh
 ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519_key10 -N '' -C 'key10-test' >/dev/null 2>&1 || true
 """
 
+    scripts["lab-24-process-priority"] = h + """
+if [ -s /run/rhcsa10-sleep.pid ]; then
+  kill "$(cat /run/rhcsa10-sleep.pid)" >/dev/null 2>&1 || true
+fi
+rm -f /run/rhcsa10-sleep.pid
+"""
+
+    scripts["lab-26-persistent-journal"] = h + """
+systemctl restart systemd-journald >/dev/null 2>&1 || true
+rm -rf /var/log/journal
+sed -i '/^Storage=/d' /etc/systemd/journald.conf 2>/dev/null || true
+"""
+
     scripts["lab-28-chrony-client"] = h + """
 dnf install -y chrony >/dev/null 2>&1 || true
 cat > /etc/chrony.d/lab28-server.conf <<'EOF'
@@ -370,6 +383,22 @@ allow 192.168.122.0/24
 local stratum 10
 EOF
 systemctl enable --now chronyd
+"""
+
+    scripts["lab-29-default-target"] = h + """
+systemctl set-default graphical.target >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-30-systemd-service"] = h + """
+systemctl disable --now rhcsa10-service.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/rhcsa10-service.service /usr/local/sbin/rhcsa10-service.sh /var/tmp/rhcsa10-service.out
+systemctl daemon-reload
+"""
+
+    scripts["lab-31-systemd-timer"] = h + """
+systemctl disable --now rhcsa10-timer.timer >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/rhcsa10-timer.service /etc/systemd/system/rhcsa10-timer.timer /usr/local/sbin/rhcsa10-timer.sh /var/log/rhcsa10-timer.log
+systemctl daemon-reload
 """
 
     scripts["lab-41-nfs-mount"] = h + """
@@ -551,6 +580,34 @@ def _replace_lab_progression(
     updated["solution_commands"] = commands
     updated["task_titles"] = [task_title(task) for task in tasks]
     updated["task_points"] = points or [10 for _ in tasks]
+    return updated
+
+
+def _server_check(command: str) -> str:
+    if command.lstrip().startswith("# server "):
+        return command
+    return f"# server {command}"
+
+
+def _ssh_server_check(command: str) -> str:
+    escaped = command.replace("'", "'\"'\"'")
+    return f"ssh server bash -lc 'set -euo pipefail; {escaped}'"
+
+
+def _reorder_parallel(values: list[Any], order: list[int]) -> list[Any]:
+    if len(values) != len(order):
+        return values
+    return [values[index] for index in order]
+
+
+def _retarget_lab_to_server(block: dict[str, Any]) -> dict[str, Any]:
+    updated = dict(block)
+    updated["tasks"] = [
+        task if re.search(r"\bon server\b", str(task), re.I) else f"On server, {str(task)[0].lower()}{str(task)[1:]}"
+        for task in updated.get("tasks", [])
+    ]
+    updated["checks"] = [_server_check(str(check)) for check in updated.get("checks", [])]
+    updated["task_titles"] = [task_title(task) for task in updated["tasks"]]
     return updated
 
 
@@ -812,12 +869,12 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         )
 
     if lab_id == "lab-29-default-target":
-        return _replace_lab_progression(
+        return _retarget_lab_to_server(_replace_lab_progression(
             block,
             ["Set the default systemd target to multi-user.target without rebooting."],
             ["systemctl get-default | grep -qx multi-user.target && readlink /etc/systemd/system/default.target | grep -q multi-user.target"],
             [["systemctl set-default multi-user.target", "systemctl get-default"]],
-        )
+        ))
 
     if lab_id == "lab-30-systemd-service":
         checks = list(block.get("checks", []))
@@ -833,7 +890,14 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         updated = dict(block)
         updated["checks"] = checks
         updated["solution_commands"] = commands
-        return updated
+        return _retarget_lab_to_server(updated)
+
+    if lab_id in {
+        "lab-24-process-priority",
+        "lab-26-persistent-journal",
+        "lab-31-systemd-timer",
+    }:
+        return _retarget_lab_to_server(block)
 
     if lab_id == "lab-34-grub-argument":
         return _replace_lab_progression(
@@ -1089,10 +1153,12 @@ def _update_lab_manifest(manifest_path: Path, client_scripts: dict[str, str], se
         "lab-07-flatpak-package",
         "lab-05-rpm-packages",
     }
+    has_server_task = any(re.search(r"\bon server\b", str(task), re.I) for task in lab_block.get("tasks", []))
     manifest["flags"]["requires_server"] = (
         bool(manifest["flags"].get("requires_server"))
         or ("server" in scenario_scripts)
         or (lab_id in server_prerequisite_labs)
+        or has_server_task
     )
 
     write_json(manifest_path, manifest)
@@ -1114,11 +1180,12 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
 
     if exam_id == "rhcsa10-mock-exam-g":
         for index, task in enumerate(tasks):
-            if "server:/exports/shareg" not in str(task):
+            task_text = str(task)
+            if "server:/exports/shareg" not in task_text and "Authorized exam-g server" not in task_text:
                 continue
             tasks[index] = "(server) Set the server login message in /etc/motd to Authorized exam-g server."
             if index < len(checks):
-                checks[index] = "grep -qx 'Authorized exam-g server' /etc/motd"
+                checks[index] = _ssh_server_check("grep -qx 'Authorized exam-g server' /etc/motd")
             if index < len(commands):
                 commands[index] = [
                     "# On server:",
@@ -1203,7 +1270,33 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
                 "systemctl restart systemd-journald",
             ]
         if index < len(checks):
-            checks[index] = "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf"
+            check_command = "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf"
+            checks[index] = _ssh_server_check(check_command) if re.search(r"\bon server\b|\(server\)", str(tasks[index]), re.I) else check_command
+
+    for index, task in enumerate(tasks):
+        if index >= len(checks):
+            continue
+        task_text = str(task).lower()
+        if "on server, create the same baseos and appstream repository definitions" in task_text:
+            checks[index] = _ssh_server_check(
+                "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && "
+                "grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d"
+            )
+
+    exam_task_orders = {
+        "rhcsa10-mock-exam-c": [0, 1, 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21],
+        "rhcsa10-mock-exam-d": [0, 1, 17, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21],
+        "rhcsa10-mock-exam-e": [0, 1, 14, 15, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21],
+        "rhcsa10-mock-exam-f": [0, 1, 21, 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20],
+        "rhcsa10-mock-exam-h": [0, 1, 17, 21, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20],
+    }
+    order = exam_task_orders.get(exam_id)
+    if order and sorted(order) == list(range(len(tasks))):
+        tasks = _reorder_parallel(tasks, order)
+        checks = _reorder_parallel(checks, order)
+        commands = _reorder_parallel(commands, order)
+        if len(updated.get("task_points", [])) == len(order):
+            updated["task_points"] = _reorder_parallel(list(updated["task_points"]), order)
 
     updated["tasks"] = tasks
     updated["checks"] = checks

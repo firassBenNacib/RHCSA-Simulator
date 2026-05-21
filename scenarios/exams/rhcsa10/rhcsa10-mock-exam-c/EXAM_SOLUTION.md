@@ -39,7 +39,16 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 03 - Allow TCP port 8102 permanently in firewalld and reload (server) - 4 pts
+
+```bash
+firewall-cmd --permanent --add-port=8102/tcp
+firewall-cmd --reload
+```
+
+---
+
+## Question 04 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -59,7 +68,7 @@ EOF
 
 ---
 
-## Question 04 - Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+## Question 05 - Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file:///opt/rhcsa/flatpak/repo
@@ -67,7 +76,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file://
 
 ---
 
-## Question 05 - Install org.rhcsa.Tools from examcflatpak, then remove it after verifica (server) - 5 pts
+## Question 06 - Install org.rhcsa.Tools from examcflatpak, then remove it after verifica (server) - 5 pts
 
 ```bash
 flatpak install --system -y examcflatpak org.rhcsa.Tools
@@ -77,7 +86,7 @@ flatpak uninstall --system -y org.rhcsa.Tools
 
 ---
 
-## Question 06 - Create group teamc10, create user userc10, set password cinder9, and add (server) - 5 pts
+## Question 07 - Create group teamc10, create user userc10, set password cinder9, and add (server) - 5 pts
 
 ```bash
 groupadd teamc10
@@ -88,7 +97,7 @@ passwd userc10
 
 ---
 
-## Question 07 - Allow %teamc10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+## Question 08 - Allow %teamc10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
 
 ```bash
 echo '%teamc10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamc10
@@ -97,7 +106,7 @@ chmod 440 /etc/sudoers.d/teamc10
 
 ---
 
-## Question 08 - Set maximum password age for userc10 to 47 days and warning period to 7 (server) - 5 pts
+## Question 09 - Set maximum password age for userc10 to 47 days and warning period to 7 (server) - 5 pts
 
 ```bash
 chage -M 47 -W 7 userc10
@@ -105,7 +114,7 @@ chage -M 47 -W 7 userc10
 
 ---
 
-## Question 09 - Create /usr/local/bin/c-who that prints the primary group for the suppli (server) - 5 pts
+## Question 10 - Create /usr/local/bin/c-who that prints the primary group for the suppli (server) - 5 pts
 
 ```bash
 cat > /usr/local/bin/c-who <<'EOF'
@@ -118,7 +127,7 @@ chmod +x /usr/local/bin/c-who
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/c-shell-users.txt (server) - 5 pts
+## Question 11 - Write users whose shell ends with sh to /root/c-shell-users.txt (server) - 5 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/c-shell-users.txt
@@ -126,7 +135,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/c-shell-users.txt
 
 ---
 
-## Question 11 - Create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 12 - Create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
 
 ```bash
 tar -czf /root/c-etc.tar.gz /etc/hosts /etc/fstab
@@ -135,7 +144,7 @@ tar -tzf /root/c-etc.tar.gz
 
 ---
 
-## Question 12 - Create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (server) - 5 pts
+## Question 13 - Create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (server) - 5 pts
 
 ```bash
 echo link > /root/c-original
@@ -145,7 +154,7 @@ ln -s /root/c-original /root/c-soft
 
 ---
 
-## Question 13 - Create and enable examctimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 14 - Create and enable examctimer.timer that runs every 10 minutes (server) - 4 pts
 
 ```bash
 cat > /usr/local/sbin/examctimer.sh <<'EOF'
@@ -171,7 +180,7 @@ systemctl enable --now examctimer.timer
 
 ---
 
-## Question 14 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (server) - 4 pts
+## Question 15 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (server) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -181,15 +190,6 @@ mkfs.xfs -f /dev/vgc10/datac
 mkdir -p /mnt/datac10
 echo '/dev/vgc10/datac /mnt/datac10 xfs defaults 0 0' >> /etc/fstab
 mount -a
-```
-
----
-
-## Question 15 - Allow TCP port 8102 permanently in firewalld and reload (server) - 4 pts
-
-```bash
-firewall-cmd --permanent --add-port=8102/tcp
-firewall-cmd --reload
 ```
 
 ---

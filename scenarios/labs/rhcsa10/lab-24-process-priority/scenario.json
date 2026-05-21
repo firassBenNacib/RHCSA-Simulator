@@ -15,28 +15,28 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Start a detached background sleep process and save its PID in /run/rhcsa10-sleep.pid.",
-        "Change the process nice value to 8."
+        "On server, start a detached background sleep process and save its PID in /run/rhcsa10-sleep.pid.",
+        "On server, change the process nice value to 8."
       ],
       "hints": [
         "Use nohup or shell backgrounding.",
         "Use renice against the PID."
       ],
       "checks": [
-        "test -s /run/rhcsa10-sleep.pid && kill -0 $(cat /run/rhcsa10-sleep.pid)",
-        "(ps -o ni= -p $(cat /run/rhcsa10-sleep.pid) | awk '{exit !($1 == 8)}') && (kill -0 $(cat /run/rhcsa10-sleep.pid))"
+        "# server test -s /run/rhcsa10-sleep.pid && kill -0 $(cat /run/rhcsa10-sleep.pid)",
+        "# server (ps -o ni= -p $(cat /run/rhcsa10-sleep.pid) | awk '{exit !($1 == 8)}') && (kill -0 $(cat /run/rhcsa10-sleep.pid))"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Start a detached background sleep process and save its PID in /run/rhcsa",
-        "Change the process nice value to 8"
+        "start a detached background sleep process and save its PID in /run/rhcsa",
+        "change the process nice value to 8"
       ],
       "task_points": [
         10,
@@ -55,6 +55,7 @@
     }
   },
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   }
 }

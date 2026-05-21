@@ -1,6 +1,6 @@
 # Scenario Coverage Review
 
-This project uses original scenario wording. Public Red Hat objectives and private local study PDFs may guide coverage gaps, but exam-dump or commercial-course wording must not be copied into the repository.
+This project uses original scenario wording. Public objectives may guide coverage gaps, but exam-dump or commercial-course wording must not be copied into the repository.
 
 ## Current Scenario Tracks
 
@@ -24,6 +24,7 @@ The RHCSA 10 track is separate and covers the RHEL 10-specific additions without
 | systemd timer units | covered in RHCSA 10 labs and exams |
 | Podman/container administration | RHCSA 9 only |
 | Storage, users, networking, SELinux | covered with RHCSA 10-specific scenario IDs and metadata |
+| Client/server operations | both tracks include client-only, server-only, and client/server scenarios |
 
 ## Scenario Quality Rules
 

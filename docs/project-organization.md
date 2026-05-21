@@ -48,18 +48,6 @@ Keep Python implementation in `tools/scenarios/`. Host orchestration should stay
 
 Keep Go package tests beside package source. In Go, colocated `*_test.go` files are idiomatic. A separate `tests/` directory should only be used for end-to-end flows, fixtures, or black-box integration tests that span multiple packages.
 
-## Comparison Notes
-
-AustinNicely's `rhcsa-simulator` is a Python-first, single-host simulator with generated task categories, validators, progress tracking, an installer, `requirements.txt`, and `pytest.ini`. This project is a VM-first simulator, so the architecture should not be copied directly, but several ideas are useful:
-
-* keep validators and scenario tooling modular
-* provide local developer commands for repeatable checks
-* keep Python tests in CI
-* document installation and extension paths clearly
-* keep release assets out of git and publish them through GitHub Releases
-
-Those ideas map here to `tools/scenarios`, `Makefile`, Python unit tests in CI, GoReleaser release packaging, and PowerShell orchestration under `host/`.
-
 ## Track Notes
 
 RHCSA 9 remains the default stable track. RHCSA 10 stays separate so Flatpak, systemd timer, and RHEL 10 package assumptions do not leak into RHCSA 9 labs and exams.

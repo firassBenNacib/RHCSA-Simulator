@@ -98,6 +98,23 @@ $contentLines += ('{0}  {1}' -f `
 return @(Format-UiPanel -Title 'Commands' -TitleStyle 'Header' -ContentLines $contentLines)
 }
 
+function Format-HelpOptionList {
+param(
+[Parameter(Mandatory = $true)]
+[object[]]$Option
+)
+
+$nameWidth = Get-MaxCellWidth -Value ($Option | ForEach-Object { $_.Name }) -Minimum 0
+$lines = @()
+foreach ($item in @($Option)) {
+$lines += ' {0}  {1}' -f `
+(Format-PaddedCell -Text ([string]$item.Name) -Width $nameWidth -StyleName 'Accent'),
+([string]$item.Description)
+}
+
+return $lines
+}
+
 function Get-HelpOutput {
 param(
 [ValidateSet('general', 'up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
@@ -112,13 +129,15 @@ return @(
 (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 up [-Profile RHCSA9|RHCSA10] [-Refresh] [-NoProvision] [-NormalStart] [-HeadlessClient] [-RealisticMode] [-ForceHostCleanup]'),
 '',
 'Options:',
-' -Profile Persist the project baseline profile before startup',
-' -Refresh Re-run baseline provisioning even when the simulator is already running',
-' -NoProvision Start both VMs without guest provisioning',
-' -NormalStart Compatibility switch; normal behavior is already the default',
-' -HeadlessClient Compatibility switch for older workflows',
-' -RealisticMode Compatibility switch for older workflows',
-' -ForceHostCleanup Kill global Vagrant/VirtualBox lock holders as a last resort',
+@(Format-HelpOptionList -Option @(
+[PSCustomObject]@{ Name = '-Profile'; Description = 'Persist the project baseline profile before startup' }
+[PSCustomObject]@{ Name = '-Refresh'; Description = 'Re-run baseline provisioning even when the simulator is already running' }
+[PSCustomObject]@{ Name = '-NoProvision'; Description = 'Start both VMs without guest provisioning' }
+[PSCustomObject]@{ Name = '-NormalStart'; Description = 'Compatibility switch; normal behavior is already the default' }
+[PSCustomObject]@{ Name = '-HeadlessClient'; Description = 'Compatibility switch for older workflows' }
+[PSCustomObject]@{ Name = '-RealisticMode'; Description = 'Compatibility switch for older workflows' }
+[PSCustomObject]@{ Name = '-ForceHostCleanup'; Description = 'Kill global Vagrant/VirtualBox lock holders as a last resort' }
+)),
 '',
 'Examples:',
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
@@ -162,7 +181,9 @@ return @(
 (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 destroy [-ForceHostCleanup]'),
 '',
 'Options:',
-' -ForceHostCleanup Kill global Vagrant/VirtualBox lock holders as a last resort',
+@(Format-HelpOptionList -Option @(
+[PSCustomObject]@{ Name = '-ForceHostCleanup'; Description = 'Kill global Vagrant/VirtualBox lock holders as a last resort' }
+)),
 '',
 'Example:',
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 destroy')
@@ -189,9 +210,11 @@ return @(
 (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 start -Id <scenario-id> -Mode <Lab|Exam> [-Track Auto|RHCSA9|RHCSA10|All]'),
 '',
 'Options:',
-' -Id Scenario id to start',
-' -Mode Lab or Exam',
-' -Track Scenario track, default project profile',
+@(Format-HelpOptionList -Option @(
+[PSCustomObject]@{ Name = '-Id'; Description = 'Scenario id to start' }
+[PSCustomObject]@{ Name = '-Mode'; Description = 'Lab or Exam' }
+[PSCustomObject]@{ Name = '-Track'; Description = 'Scenario track, default project profile' }
+)),
 '',
 'Examples:',
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
@@ -344,27 +367,23 @@ $entry = @(
 [PSCustomObject]@{ Name = 'timer'; Description = 'Show or change the default timer mode' }
 [PSCustomObject]@{ Name = 'completion'; Description = 'Generate or install PowerShell completion' }
 )
-$overview = @(
-(Format-UiKeyValue -Key 'Usage' -Value (Format-StyledText -Text '.\RHCSA.ps1 <command> [args]' -StyleName 'Command') -KeyWidth 8),
-(Format-UiKeyValue -Key 'Help' -Value (Format-StyledText -Text '.\RHCSA.ps1 help <command>' -StyleName 'Command') -KeyWidth 8)
-)
-
-$examples = @(
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 pause'),
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 down'),
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
-)
-
 return @(
-(Format-UiPanel -Title 'RHCSA Simulator' -TitleStyle 'Header' -ContentLines $overview),
+'RHCSA Simulator',
+'Usage: .\RHCSA.ps1 <command> [args]',
 '',
-(Format-HelpEntryList -Entry $entry),
+'Commands:',
+@($entry | ForEach-Object { ' {0,-10} {1}' -f $_.Name, $_.Description }),
 '',
-(Format-UiPanel -Title 'Examples' -TitleStyle 'Info' -ContentLines $examples)
+'Help: .\RHCSA.ps1 help <command>',
+'',
+'Examples:',
+' > .\RHCSA.ps1 up',
+' > .\RHCSA.ps1 pause',
+' > .\RHCSA.ps1 down',
+' > .\RHCSA.ps1 list labs',
+' > .\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab',
+' > .\RHCSA.ps1 ssh',
+' > .\RHCSA.ps1 tui'
 )
 }
 }
