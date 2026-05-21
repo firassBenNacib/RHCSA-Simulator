@@ -93,10 +93,10 @@ function Get-VagrantUpTimeoutSeconds {
         }
     }
 
-    $profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
-    if ($profile -eq 'rhel10') {
+    $projectProfile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+    if ($projectProfile -eq 'rhel10') {
         try {
-            $boxName = Get-ProjectVagrantBoxName -ProjectRoot $ProjectRoot -Profile $profile
+            $boxName = Get-ProjectVagrantBoxName -ProjectRoot $ProjectRoot -Profile $projectProfile
             if (-not (Test-VagrantBoxInstalled -BoxName $boxName -ProjectRoot $ProjectRoot)) {
                 return 1800
             }
@@ -1678,8 +1678,8 @@ function Assert-GuestBaselineMarker {
         }
     }
 
-    $profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
-    throw "Guest baseline marker is missing or incorrect on $MachineName for profile '$profile'."
+    $projectProfile = Get-ProjectProfile -ProjectRoot $ProjectRoot
+    throw "Guest baseline marker is missing or incorrect on $MachineName for profile '$projectProfile'."
 }
 
 function Get-GuestPrivateNetworkAddress {
@@ -1908,12 +1908,13 @@ function Invoke-BaselineGuestProvisioning {
     function Get-OfflineIsoPathForProfile {
         param(
             [string]$ProjectRoot,
-            [string]$Profile
+            [Alias('Profile')]
+            [string]$ProjectProfile
         )
 
         $isoName = [string]$env:RHCSA_ISO
         if ([string]::IsNullOrWhiteSpace($isoName)) {
-            $isoName = if ($Profile -eq 'rhel10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
+            $isoName = if ($ProjectProfile -eq 'rhel10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
         }
 
         $isoPath = if ([System.IO.Path]::IsPathRooted($isoName)) {

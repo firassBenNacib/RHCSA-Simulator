@@ -110,7 +110,7 @@
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v d=\"$private_dev\" '$2 == d {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.60/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "ssh server bash -lc 'set -euo pipefail; grep -ERq '\"'\"'^baseurl=http://server/repo/BaseOS/?$'\"'\"' /etc/yum.repos.d && grep -ERq '\"'\"'^baseurl=http://server/repo/AppStream/?$'\"'\"' /etc/yum.repos.d'",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examaflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && ! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group opsa10 >/dev/null && id -nG anna10 | tr ' ' '\\n' | grep -qx opsa10 && id -nG atlas10 | tr ' ' '\\n' | grep -qx opsa10",
         "grep -ERq '^%opsa10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
@@ -125,7 +125,7 @@
         "test -f /var/www/html/a.html && ls -Z /var/www/html/a.html | grep -q httpd_sys_content_t",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
         "stat -c '%G:%a' /srv/opsa10 | grep -qx opsa10:3770",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
+        "ssh server bash -lc 'set -euo pipefail; test -d /var/log/journal && grep -Eq '\"'\"'^Storage=persistent$'\"'\"' /etc/systemd/journald.conf'",
         "grep -Eq '^server[[:space:]]+server[[:space:]]+iburst' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled"
       ],
       "solution_outline": [

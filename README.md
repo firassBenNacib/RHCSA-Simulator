@@ -71,7 +71,7 @@ Generated runtime cache is written locally under `.lab-state/generated/`, is cre
 .\RHCSA.ps1 up
 ```
 
-Switch the project to RHCSA 10 when you want the RHEL 10/Rocky 10 baseline and RHCSA 10 catalog:
+Switch the project to RHCSA 10 when you want the RHEL 10-compatible baseline and RHCSA 10 catalog:
 
 ```powershell
 .\RHCSA.ps1 profile RHCSA10
@@ -277,7 +277,7 @@ go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
 
 The repository includes:
 
-* `.github/workflows/ci.yml` for Go tests/vet/staticcheck/build, Go coverage artifacts, Python syntax and unit tests, scenario audits, PowerShell parsing, PSScriptAnalyzer, Vagrantfile syntax, and whitespace checks.
+* `.github/workflows/ci.yml` for Go tests/vet/build, Go coverage artifacts, Python syntax and unit tests, scenario audits, PowerShell parsing, PSScriptAnalyzer, Vagrantfile syntax, and whitespace checks.
 * `.github/workflows/security.yml` for Go vulnerability scans and dependency review on pull requests.
 * `.github/workflows/release-please.yml` for automated release PRs and semantic version tags from `main`.
 * `.github/workflows/release-tui.yml` for GoReleaser-built Windows, Linux, and macOS TUI archives with checksums and generated changelogs.
@@ -320,7 +320,7 @@ The default RHCSA 10 box name is `boxomatic/almalinux-10`, which boots reliably 
 $env:RHCSA_BOX = 'boxomatic/almalinux-10'
 ```
 
-The public EX200 page currently states the exam is based on RHEL 10 and includes Flatpak plus systemd timer objectives. Rocky Linux 10 is available as a compatible community target, but AMD/Intel hosts need x86-64-v3 support. See [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track-specific notes.
+RHCSA 10 content includes Flatpak and systemd timer practice while RHCSA 9 keeps Podman/container practice. Some RHEL-compatible 10 boxes require x86-64-v3 CPU support. See [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track-specific notes.
 
 ### Scenario replay verification
 
@@ -429,7 +429,7 @@ Commands
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure, comparison notes, and refactor direction. See [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage, [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track notes, and [docs/release.md](docs/release.md) for release automation.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure, [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage, [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track notes, and [docs/release.md](docs/release.md) for release automation.
 
 Fast local checks:
 

@@ -39,7 +39,24 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 03 - Allow TCP port 8105 permanently in firewalld and reload (server) - 4 pts
+
+```bash
+firewall-cmd --permanent --add-port=8105/tcp
+firewall-cmd --reload
+```
+
+---
+
+## Question 04 - Persistently enable httpd_can_network_connect (server) - 4 pts
+
+```bash
+setsebool -P httpd_can_network_connect on
+```
+
+---
+
+## Question 05 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -59,7 +76,7 @@ EOF
 
 ---
 
-## Question 04 - Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+## Question 06 - Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examfflatpak file:///opt/rhcsa/flatpak/repo
@@ -67,7 +84,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examfflatpak file://
 
 ---
 
-## Question 05 - Install org.rhcsa.Tools from examfflatpak, then remove it after verifica (server) - 5 pts
+## Question 07 - Install org.rhcsa.Tools from examfflatpak, then remove it after verifica (server) - 5 pts
 
 ```bash
 flatpak install --system -y examfflatpak org.rhcsa.Tools
@@ -77,7 +94,7 @@ flatpak uninstall --system -y org.rhcsa.Tools
 
 ---
 
-## Question 06 - Create group teamf10, create user userf10, set password cinder9, and add (server) - 5 pts
+## Question 08 - Create group teamf10, create user userf10, set password cinder9, and add (server) - 5 pts
 
 ```bash
 groupadd teamf10
@@ -88,7 +105,7 @@ passwd userf10
 
 ---
 
-## Question 07 - Allow %teamf10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+## Question 09 - Allow %teamf10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
 
 ```bash
 echo '%teamf10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamf10
@@ -97,7 +114,7 @@ chmod 440 /etc/sudoers.d/teamf10
 
 ---
 
-## Question 08 - Set maximum password age for userf10 to 50 days and warning period to 7 (server) - 5 pts
+## Question 10 - Set maximum password age for userf10 to 50 days and warning period to 7 (server) - 5 pts
 
 ```bash
 chage -M 50 -W 7 userf10
@@ -105,7 +122,7 @@ chage -M 50 -W 7 userf10
 
 ---
 
-## Question 09 - Create /usr/local/bin/f-who that prints the primary group for the suppli (server) - 5 pts
+## Question 11 - Create /usr/local/bin/f-who that prints the primary group for the suppli (server) - 5 pts
 
 ```bash
 cat > /usr/local/bin/f-who <<'EOF'
@@ -118,7 +135,7 @@ chmod +x /usr/local/bin/f-who
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/f-shell-users.txt (server) - 5 pts
+## Question 12 - Write users whose shell ends with sh to /root/f-shell-users.txt (server) - 5 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/f-shell-users.txt
@@ -126,7 +143,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/f-shell-users.txt
 
 ---
 
-## Question 11 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 13 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
 
 ```bash
 tar -czf /root/f-etc.tar.gz /etc/hosts /etc/fstab
@@ -135,7 +152,7 @@ tar -tzf /root/f-etc.tar.gz
 
 ---
 
-## Question 12 - Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof (server) - 5 pts
+## Question 14 - Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof (server) - 5 pts
 
 ```bash
 echo link > /root/f-original
@@ -145,7 +162,7 @@ ln -s /root/f-original /root/f-soft
 
 ---
 
-## Question 13 - Create and enable examftimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 15 - Create and enable examftimer.timer that runs every 10 minutes (server) - 4 pts
 
 ```bash
 cat > /usr/local/sbin/examftimer.sh <<'EOF'
@@ -171,7 +188,7 @@ systemctl enable --now examftimer.timer
 
 ---
 
-## Question 14 - Create VG vgf10 and LV dataf mounted at /mnt/dataf10 (server) - 4 pts
+## Question 16 - Create VG vgf10 and LV dataf mounted at /mnt/dataf10 (server) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -185,15 +202,7 @@ mount -a
 
 ---
 
-## Question 15 - Persistently enable httpd_can_network_connect (server) - 4 pts
-
-```bash
-setsebool -P httpd_can_network_connect on
-```
-
----
-
-## Question 16 - Create /var/www/html/f.html and restore its default SELinux context (server) - 4 pts
+## Question 17 - Create /var/www/html/f.html and restore its default SELinux context (server) - 4 pts
 
 ```bash
 echo f > /var/www/html/f.html
@@ -203,7 +212,7 @@ restorecon -v /var/www/html/f.html
 
 ---
 
-## Question 17 - Activate the throughput-performance tuned profile (server) - 4 pts
+## Question 18 - Activate the throughput-performance tuned profile (server) - 4 pts
 
 ```bash
 systemctl enable --now tuned
@@ -212,7 +221,7 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Question 18 - Configure persistent systemd journal storage (server) - 4 pts
+## Question 19 - Configure persistent systemd journal storage (server) - 4 pts
 
 ```bash
 mkdir -p /var/log/journal
@@ -223,7 +232,7 @@ systemctl restart systemd-journald
 
 ---
 
-## Question 19 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (server) - 4 pts
+## Question 20 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (server) - 4 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log' | crontab -u userf10 -
@@ -231,7 +240,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log' | crontab -u userf10
 
 ---
 
-## Question 20 - Set the default target to multi-user.target without rebooting (server) - 4 pts
+## Question 21 - Set the default target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
 systemctl set-default multi-user.target
@@ -240,7 +249,7 @@ systemctl get-default
 
 ---
 
-## Question 21 - Install lsof and ensure tcpdump is removed (server) - 4 pts
+## Question 22 - Install lsof and ensure tcpdump is removed (server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -259,13 +268,4 @@ EOF
 dnf clean all
 dnf install -y lsof
 dnf remove -y tcpdump
-```
-
----
-
-## Question 22 - Allow TCP port 8105 permanently in firewalld and reload (server) - 4 pts
-
-```bash
-firewall-cmd --permanent --add-port=8105/tcp
-firewall-cmd --reload
 ```

@@ -32,6 +32,8 @@
       "tasks": [
         "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Allow TCP port 8104 permanently in firewalld and reload.",
+        "Create /var/www/html/e.html and restore its default SELinux context.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
         "Install org.rhcsa.Tools from exameflatpak, then remove it after verification.",
@@ -44,8 +46,6 @@
         "Create /root/e-original, hard link /root/e-hard, and symlink /root/e-soft.",
         "Create and enable exametimer.timer that runs every 10 minutes.",
         "Create VG vge10 and LV datae mounted at /mnt/datae10.",
-        "Allow TCP port 8104 permanently in firewalld and reload.",
-        "Create /var/www/html/e.html and restore its default SELinux context.",
         "Activate the throughput-performance tuned profile.",
         "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10.log every 15 minutes.",
         "Mount server:/exports/direct at /mnt/edirect persistently.",
@@ -61,6 +61,8 @@
       "checks": [
         "hostnamectl --static | grep -qx cliente.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servere\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.64/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "firewall-cmd --permanent --query-port=8104/tcp && firewall-cmd --query-port=8104/tcp",
+        "ls -Z /var/www/html/e.html | grep -q httpd_sys_content_t",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"exameflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
@@ -73,8 +75,6 @@
         "test \"$(stat -c %i /root/e-original)\" = \"$(stat -c %i /root/e-hard)\" && test -L /root/e-soft",
         "systemctl cat exametimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled exametimer.timer | grep -qx enabled",
         "lvs /dev/vge10/datae >/dev/null && findmnt -no TARGET /mnt/datae10 | grep -qx /mnt/datae10",
-        "firewall-cmd --permanent --query-port=8104/tcp && firewall-cmd --query-port=8104/tcp",
-        "ls -Z /var/www/html/e.html | grep -q httpd_sys_content_t",
         "tuned-adm active | grep -q throughput-performance",
         "crontab -l -u usere10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/usere10/exam10.log'",
         "findmnt -no SOURCE,TARGET /mnt/edirect | grep -qx 'server:/exports/direct /mnt/edirect'",
@@ -88,6 +88,8 @@
       "task_titles": [
         "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.1",
+        "Allow TCP port 8104 permanently in firewalld and reload",
+        "Create /var/www/html/e.html and restore its default SELinux context",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/",
         "Install org.rhcsa.Tools from exameflatpak, then remove it after verifica",
@@ -100,8 +102,6 @@
         "Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof",
         "Create and enable exametimer.timer that runs every 10 minutes",
         "Create VG vge10 and LV datae mounted at /mnt/datae10",
-        "Allow TCP port 8104 permanently in firewalld and reload",
-        "Create /var/www/html/e.html and restore its default SELinux context",
         "Activate the throughput-performance tuned profile",
         "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10",
         "Mount server:/exports/direct at /mnt/edirect persistently",
@@ -112,18 +112,18 @@
       "task_points": [
         5,
         5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
         4,
         4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
         4,
         4,
         4,
@@ -142,6 +142,15 @@
           "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.64/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8104/tcp",
+          "firewall-cmd --reload"
+        ],
+        [
+          "echo e > /var/www/html/e.html",
+          "chcon -t user_tmp_t /var/www/html/e.html",
+          "restorecon -v /var/www/html/e.html"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
@@ -228,15 +237,6 @@
           "mkdir -p /mnt/datae10",
           "echo '/dev/vge10/datae /mnt/datae10 xfs defaults 0 0' >> /etc/fstab",
           "mount -a"
-        ],
-        [
-          "firewall-cmd --permanent --add-port=8104/tcp",
-          "firewall-cmd --reload"
-        ],
-        [
-          "echo e > /var/www/html/e.html",
-          "chcon -t user_tmp_t /var/www/html/e.html",
-          "restorecon -v /var/www/html/e.html"
         ],
         [
           "systemctl enable --now tuned",
