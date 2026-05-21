@@ -32,6 +32,7 @@
       "tasks": [
         "Set hostname to clientd.exam10.lab and map serverd.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.63/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Configure persistent systemd journal storage.",
         "Use server as the only chrony source and enable chronyd.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
@@ -47,7 +48,6 @@
         "Create VG vgd10 and LV datad mounted at /mnt/datad10.",
         "Create /var/www/html/d.html and restore its default SELinux context.",
         "Persistently enable httpd_can_network_connect.",
-        "Configure persistent systemd journal storage.",
         "Create a cron job for userd10 that writes EXAM10 to /home/userd10/exam10.log every 15 minutes.",
         "Configure autofs so /remoted/projects mounts server:/exports/autofs/projects.",
         "Set the default target to multi-user.target without rebooting.",
@@ -61,6 +61,7 @@
       "checks": [
         "hostnamectl --static | grep -qx clientd.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverd\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.63/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examdflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
@@ -76,7 +77,6 @@
         "lvs /dev/vgd10/datad >/dev/null && findmnt -no TARGET /mnt/datad10 | grep -qx /mnt/datad10",
         "ls -Z /var/www/html/d.html | grep -q httpd_sys_content_t",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "crontab -l -u userd10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log'",
         "grep -Eq '^/remoted[[:space:]]+/etc/auto.remoted' /etc/auto.master.d/d.autofs && systemctl is-enabled autofs | grep -qx enabled",
         "systemctl get-default | grep -qx multi-user.target",
@@ -88,6 +88,7 @@
       "task_titles": [
         "Set hostname to clientd.exam10.lab and map serverd.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.63/24, gateway 192.1",
+        "Configure persistent systemd journal storage",
         "Use server as the only chrony source and enable chronyd",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/",
@@ -103,7 +104,6 @@
         "Create VG vgd10 and LV datad mounted at /mnt/datad10",
         "Create /var/www/html/d.html and restore its default SELinux context",
         "Persistently enable httpd_can_network_connect",
-        "Configure persistent systemd journal storage",
         "Create a cron job for userd10 that writes EXAM10 to /home/userd10/exam10",
         "Configure autofs so /remoted/projects mounts server:/exports/autofs/proj",
         "Set the default target to multi-user.target without rebooting",
@@ -113,17 +113,17 @@
         5,
         5,
         4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
         4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
         4,
         4,
         4,
@@ -142,6 +142,12 @@
           "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.63/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "mkdir -p /var/log/journal",
+          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
+          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
+          "systemctl restart systemd-journald"
         ],
         [
           "sed -i '/^pool /d;/^server /d' /etc/chrony.conf",
@@ -241,12 +247,6 @@
         ],
         [
           "setsebool -P httpd_can_network_connect on"
-        ],
-        [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald"
         ],
         [
           "echo '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log' | crontab -u userd10 -"

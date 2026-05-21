@@ -13,6 +13,7 @@ Recovery + server administration focus: root password recovery, server-side logi
 
 ### Systems
 - client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.

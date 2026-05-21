@@ -26,13 +26,13 @@ The RHCSA 10 track is separate and covers the RHEL 10-specific additions without
 | Storage, users, networking, SELinux | covered with RHCSA 10-specific scenario IDs and metadata |
 | Client/server operations | both tracks include client-only, server-only, and client/server scenarios |
 
-## Scenario Quality Rules
+## Scenario Quality Guidelines
 
-- Keep RHCSA 9 and RHCSA 10 tracks separate unless a scenario passes replay on both profiles.
-- Keep generated RHCSA 10 exams varied enough that repeated topic blocks do not drift into near-identical exams.
-- Do not duplicate PDF exam text. Rewrite tasks as original simulator scenarios with checks and solutions.
-- Add runtime scripts only when the baseline needs prepared files, users, repositories, or local services.
-- Regenerate scenario Markdown after editing `scenario.json`.
+- RHCSA 9 and RHCSA 10 tracks stay separate unless a scenario passes replay on both profiles.
+- Generated RHCSA 10 exams should remain varied so repeated topic blocks do not drift into near-identical exams.
+- Scenario wording should be original. Public objectives can guide coverage, but PDF or exam-dump text should not be copied.
+- Runtime scripts are useful when the baseline needs prepared files, users, repositories, or local services.
+- Scenario Markdown should be regenerated after editing `scenario.json`.
 
 ## Runtime Validation Notes
 

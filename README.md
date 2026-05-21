@@ -447,7 +447,7 @@ python -m unittest discover tools/scenarios/tests
 python host/verify_scenario_solutions.py --kind all --track all --audit-only
 ```
 
-Keep these user entrypoints working:
+Core user entrypoints:
 
 ```powershell
 .\RHCSA.ps1 tui
