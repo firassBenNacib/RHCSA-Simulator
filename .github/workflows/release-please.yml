@@ -18,6 +18,13 @@ jobs:
 
     steps:
       - name: Run Release Please
+        id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
           release-type: simple
+
+      - name: Build TUI release artifacts
+        if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run release-tui.yml --ref main -f tag="${{ steps.release.outputs.tag_name }}"
