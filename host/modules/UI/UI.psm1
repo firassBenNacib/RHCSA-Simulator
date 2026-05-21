@@ -11,6 +11,7 @@ $script:WorkflowProgressLastHeartbeat = $null
 $script:WorkflowProgressLineActive = $false
 $script:WorkflowProgressRow = $null
 $script:WorkflowProgressCursorVisible = $null
+$script:WorkflowProgressInputMode = $null
 
 function Test-WorkflowVerboseOutput {
 return ($env:RHCSA_VERBOSE -match '^(1|true|yes|on)$')
@@ -101,6 +102,7 @@ return $false
 }
 }
 catch {
+$null = $_
 return $false
 }
 
@@ -117,6 +119,7 @@ $script:WorkflowProgressCursorVisible = [Console]::CursorVisible
 }
 }
 catch {
+$null = $_
 }
 }
 
@@ -127,8 +130,55 @@ if (-not [Console]::IsOutputRedirected -and $null -ne $script:WorkflowProgressCu
 }
 }
 catch {
+$null = $_
 }
 $script:WorkflowProgressCursorVisible = $null
+}
+
+function Disable-WorkflowProgressInputEcho {
+try {
+if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT -or [Console]::IsInputRedirected) {
+return
+}
+
+if (-not ('RhcsaConsoleNative' -as [type])) {
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class RhcsaConsoleNative {
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr GetStdHandle(int nStdHandle);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int lpMode);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool FlushConsoleInputBuffer(IntPtr hConsoleInput);
+}
+'@
+}
+
+$handle = [RhcsaConsoleNative]::GetStdHandle(-10)
+$mode = 0
+if ($script:WorkflowProgressInputMode -eq $null -and [RhcsaConsoleNative]::GetConsoleMode($handle, [ref]$mode)) {
+$script:WorkflowProgressInputMode = [PSCustomObject]@{ Handle = $handle; Mode = $mode }
+$newMode = $mode -band (-bnot 0x0006)
+[void][RhcsaConsoleNative]::SetConsoleMode($handle, $newMode)
+}
+}
+catch {
+$null = $_
+}
+}
+
+function Restore-WorkflowProgressInputEcho {
+try {
+if ($null -ne $script:WorkflowProgressInputMode) {
+$handle = $script:WorkflowProgressInputMode.Handle
+[void][RhcsaConsoleNative]::FlushConsoleInputBuffer($handle)
+[void][RhcsaConsoleNative]::SetConsoleMode($handle, [int]$script:WorkflowProgressInputMode.Mode)
+}
+}
+catch {
+$null = $_
+}
+$script:WorkflowProgressInputMode = $null
 }
 
 function Set-WorkflowProgressCursorToRow {
@@ -148,6 +198,7 @@ $script:WorkflowProgressRow = $row
 return $true
 }
 catch {
+$null = $_
 return $false
 }
 }
@@ -169,6 +220,7 @@ $bufferWidth = [Math]::Max([Console]::BufferWidth, 1)
 [Console]::Out.Write(' ' * ($bufferWidth - 1))
 }
 catch {
+$null = $_
 }
 }
 
@@ -188,6 +240,7 @@ try {
 $interactive = (-not [Console]::IsOutputRedirected)
 }
 catch {
+$null = $_
 $interactive = $false
 }
 
@@ -200,6 +253,7 @@ return
 
 try {
 $bufferWidth = [Math]::Max([Console]::BufferWidth, 1)
+$observedRow = [Console]::CursorTop
 $text = ([string]::Join(' ', @($Lines))).Trim()
 if ($text.Length -gt ($bufferWidth - 1)) {
     $text = $text.Substring(0, [Math]::Max($bufferWidth - 1, 0))
@@ -208,15 +262,26 @@ if ($text.Length -lt ($bufferWidth - 1)) {
     $text = $text + (' ' * (($bufferWidth - 1) - $text.Length))
 }
 Set-WorkflowProgressCursorHidden
+Disable-WorkflowProgressInputEcho
 if (Set-WorkflowProgressCursorToRow) {
 $row = [int]$script:WorkflowProgressRow
 if ([bool]$script:WorkflowProgressLineActive) {
-    # Enter can scroll an active bottom-row progress line up by one row.
-    Clear-WorkflowProgressLineAt -Row ($row - 1)
+    try {
+        $fromRow = [Math]::Min($row, $observedRow)
+        $toRow = [Math]::Max($row, $observedRow)
+        for ($clearRow = $fromRow; $clearRow -le $toRow; $clearRow++) {
+            Clear-WorkflowProgressLineAt -Row $clearRow
+        }
+    }
+    catch {
+        $null = $_
+        Clear-WorkflowProgressLineAt -Row $row
+    }
 }
 Clear-WorkflowProgressLineAt -Row $row
 [Console]::SetCursorPosition(0, $row)
 [Console]::Out.Write($text)
+[Console]::SetCursorPosition(0, $row)
 }
 else {
 [Console]::Out.Write("`r$text")
@@ -224,6 +289,7 @@ else {
 $script:WorkflowProgressLineActive = $true
 }
 catch {
+$null = $_
 foreach ($line in $Lines) {
 [Console]::Out.WriteLine($line)
 }
@@ -342,6 +408,7 @@ return
 }
 }
 catch {
+$null = $_
 return
 }
 
@@ -391,11 +458,13 @@ try {
     }
 }
 catch {
+$null = $_
     [Console]::Out.WriteLine()
 }
 $script:WorkflowProgressLineActive = $false
 $script:WorkflowProgressRow = $null
 Restore-WorkflowProgressCursor
+Restore-WorkflowProgressInputEcho
 }
 
 function Stop-WorkflowProgress {
@@ -422,6 +491,7 @@ if (-not [Console]::IsOutputRedirected) {
 }
 }
 catch {
+$null = $_
 [Console]::Out.WriteLine()
 }
 }
@@ -435,6 +505,7 @@ $script:WorkflowProgressLastHeartbeat = $null
 $script:WorkflowProgressLineActive = $false
 $script:WorkflowProgressRow = $null
 Restore-WorkflowProgressCursor
+Restore-WorkflowProgressInputEcho
 }
 
 function Test-ProgressOnlyOutputLine {
@@ -465,11 +536,13 @@ if (-not [Console]::IsOutputRedirected) {
 }
 }
 catch {
+$null = $_
 [Console]::Out.WriteLine()
 }
 $script:WorkflowProgressLineActive = $false
 $script:WorkflowProgressRow = $null
 Restore-WorkflowProgressCursor
+Restore-WorkflowProgressInputEcho
 }
 
 $emitted = $false

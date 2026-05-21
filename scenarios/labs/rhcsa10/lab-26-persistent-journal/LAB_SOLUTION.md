@@ -12,14 +12,14 @@
 Preserve systemd journal logs.
 
 ### Systems
-- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure persistent systemd journals (client) - 10 pts
+## Task 01 - configure persistent systemd journals (server) - 10 pts
 
 ```bash
 mkdir -p /var/log/journal
@@ -28,7 +28,7 @@ install -D -m 0644 /dev/null /etc/systemd/journald.conf
 
 ---
 
-## Task 02 - Restart systemd-journald (client) - 10 pts
+## Task 02 - restart systemd-journald (server) - 10 pts
 
 ```bash
 grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf

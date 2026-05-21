@@ -15,28 +15,28 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Configure persistent systemd journals.",
-        "Restart systemd-journald."
+        "On server, configure persistent systemd journals.",
+        "On server, restart systemd-journald."
       ],
       "hints": [
         "Create /var/log/journal.",
         "Restart systemd-journald after changing storage."
       ],
       "checks": [
-        "test -d /var/log/journal",
-        "grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf && systemctl is-active systemd-journald | grep -qx active"
+        "# server test -d /var/log/journal",
+        "# server grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf && systemctl is-active systemd-journald | grep -qx active"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure persistent systemd journals",
-        "Restart systemd-journald"
+        "configure persistent systemd journals",
+        "restart systemd-journald"
       ],
       "task_points": [
         10,
@@ -56,6 +56,7 @@
     }
   },
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   }
 }

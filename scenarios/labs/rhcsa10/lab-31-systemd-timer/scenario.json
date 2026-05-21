@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to /var/log/rhcsa10-timer.log.",
-        "Create a oneshot service named rhcsa10-timer.service that runs /usr/local/sbin/rhcsa10-timer.sh.",
-        "Create rhcsa10-timer.timer so it runs every 5 minutes, is persistent, and starts automatically at boot."
+        "On server, create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to /var/log/rhcsa10-timer.log.",
+        "On server, create a oneshot service named rhcsa10-timer.service that runs /usr/local/sbin/rhcsa10-timer.sh.",
+        "On server, create rhcsa10-timer.timer so it runs every 5 minutes, is persistent, and starts automatically at boot."
       ],
       "hints": [
         "Enable the timer unit, not the service unit.",
         "Use OnCalendar and Persistent in the timer unit."
       ],
       "checks": [
-        "test -x /usr/local/sbin/rhcsa10-timer.sh && grep -Fqx 'echo TIMER OK >> /var/log/rhcsa10-timer.log' /usr/local/sbin/rhcsa10-timer.sh",
-        "systemctl cat rhcsa10-timer.service | grep -Fqx 'ExecStart=/usr/local/sbin/rhcsa10-timer.sh' && systemctl cat rhcsa10-timer.service | grep -Fqx 'Type=oneshot'",
-        "systemctl cat rhcsa10-timer.timer | grep -Fqx 'OnCalendar=*:0/5' && systemctl cat rhcsa10-timer.timer | grep -Fqx 'Persistent=true' && systemctl is-enabled rhcsa10-timer.timer | grep -qx enabled"
+        "# server test -x /usr/local/sbin/rhcsa10-timer.sh && grep -Fqx 'echo TIMER OK >> /var/log/rhcsa10-timer.log' /usr/local/sbin/rhcsa10-timer.sh",
+        "# server systemctl cat rhcsa10-timer.service | grep -Fqx 'ExecStart=/usr/local/sbin/rhcsa10-timer.sh' && systemctl cat rhcsa10-timer.service | grep -Fqx 'Type=oneshot'",
+        "# server systemctl cat rhcsa10-timer.timer | grep -Fqx 'OnCalendar=*:0/5' && systemctl cat rhcsa10-timer.timer | grep -Fqx 'Persistent=true' && systemctl is-enabled rhcsa10-timer.timer | grep -qx enabled"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to /var/l",
-        "Create a oneshot service named rhcsa10-timer.service that runs /usr/loca",
-        "Create rhcsa10-timer.timer so it runs every 5 minutes, is persistent, an"
+        "create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to /var/l",
+        "create a oneshot service named rhcsa10-timer.service that runs /usr/loca",
+        "create rhcsa10-timer.timer so it runs every 5 minutes, is persistent, an"
       ],
       "task_points": [
         10,
@@ -82,5 +82,7 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": {
+    "server": "scripts/server.sh"
+  }
 }

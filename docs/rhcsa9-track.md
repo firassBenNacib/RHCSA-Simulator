@@ -1,45 +1,47 @@
 # RHCSA 9 Track
 
-RHCSA 9 is the default simulator track and the stable baseline for the original lab and mock exam corpus. It stays separate from RHCSA 10 so Podman-era objectives, package names, and RHEL 9 service behavior remain reproducible.
+RHCSA 9 is the default simulator track. It keeps the original lab and mock exam set stable on a RHEL 9-compatible baseline.
 
-## Runtime Baseline
+## Runtime
 
-The RHCSA 9 profile uses the local `rhel-9.7-x86_64-dvd.iso` as the offline package source and the RHCSA 9 scenario catalog:
+Use the RHCSA 9 profile when training against the RHEL 9 objective set:
 
 ```powershell
 .\RHCSA.ps1 profile RHCSA9
 .\RHCSA.ps1 up
 ```
 
-The track contains 48 labs and 8 mock exams under:
+The profile uses `rhel-9.7-x86_64-dvd.iso` in the project root as the offline package source.
+
+## Catalog
+
+The RHCSA 9 catalog contains 48 labs and 8 mock exams:
 
 ```text
 scenarios/labs/rhcsa9/
 scenarios/exams/rhcsa9/
 ```
 
-## Coverage
-
-RHCSA 9 covers the expected core simulator areas: boot recovery, DNF repositories, networking, users and groups, sudo, SELinux, firewalld, storage, NFS/autofs, cron/at, logs, tuned, SSH, archives, find/grep, and Podman/container administration.
-
-RHCSA 10-only objectives such as Flatpak and systemd timer tasks belong in the RHCSA 10 track unless a scenario is deliberately proven on both profiles.
+Coverage includes networking, DNF repositories, users and groups, sudo, SELinux, firewalld, storage, NFS/autofs, cron/at, logs, tuned, SSH, archives, find/grep, boot recovery, and Podman/container tasks.
 
 ## Verification
 
 Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment:
 
 ```powershell
-.\RHCSA.ps1 profile RHCSA9
-.\RHCSA.ps1 up
 python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
 python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
 ```
 
-Full live replay for RHCSA 9 labs and exams has passed on the supported local Windows + VirtualBox workflow.
+For a fast metadata-only check:
 
-## Authoring Rules
+```powershell
+python3.13.exe .\host\verify_scenario_solutions.py --kind all --track RHCSA9 --audit-only
+```
 
-Use original wording and keep RHCSA 9 scenarios tagged for the RHCSA 9 runtime:
+## Authoring
+
+RHCSA 9 scenarios should use:
 
 ```json
 {
@@ -48,4 +50,4 @@ Use original wording and keep RHCSA 9 scenarios tagged for the RHCSA 9 runtime:
 }
 ```
 
-Only mark a scenario as dual-track after it passes audit validation and live replay on both RHCSA 9 and RHCSA 10 baselines.
+Keep RHCSA 10-only topics such as Flatpak and systemd timers in the RHCSA 10 track unless a scenario is deliberately tested and marked as dual-track.

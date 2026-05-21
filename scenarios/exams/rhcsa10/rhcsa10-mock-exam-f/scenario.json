@@ -31,6 +31,8 @@
       "tasks": [
         "Set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Allow TCP port 8105 permanently in firewalld and reload.",
+        "Persistently enable httpd_can_network_connect.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
         "Install org.rhcsa.Tools from examfflatpak, then remove it after verification.",
@@ -43,14 +45,12 @@
         "Create /root/f-original, hard link /root/f-hard, and symlink /root/f-soft.",
         "Create and enable examftimer.timer that runs every 10 minutes.",
         "Create VG vgf10 and LV dataf mounted at /mnt/dataf10.",
-        "Persistently enable httpd_can_network_connect.",
         "Create /var/www/html/f.html and restore its default SELinux context.",
         "Activate the throughput-performance tuned profile.",
         "Configure persistent systemd journal storage.",
         "Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10.log every 15 minutes.",
         "Set the default target to multi-user.target without rebooting.",
-        "Install lsof and ensure tcpdump is removed.",
-        "Allow TCP port 8105 permanently in firewalld and reload."
+        "Install lsof and ensure tcpdump is removed."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -60,6 +60,8 @@
       "checks": [
         "hostnamectl --static | grep -qx clientf.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverf\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.65/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "firewall-cmd --permanent --query-port=8105/tcp && firewall-cmd --query-port=8105/tcp",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examfflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
@@ -72,14 +74,12 @@
         "test \"$(stat -c %i /root/f-original)\" = \"$(stat -c %i /root/f-hard)\" && test -L /root/f-soft",
         "systemctl cat examftimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examftimer.timer | grep -qx enabled",
         "lvs /dev/vgf10/dataf >/dev/null && findmnt -no TARGET /mnt/dataf10 | grep -qx /mnt/dataf10",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
         "ls -Z /var/www/html/f.html | grep -q httpd_sys_content_t",
         "tuned-adm active | grep -q throughput-performance",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "crontab -l -u userf10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log'",
         "systemctl get-default | grep -qx multi-user.target",
-        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
-        "firewall-cmd --permanent --query-port=8105/tcp && firewall-cmd --query-port=8105/tcp"
+        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -87,6 +87,8 @@
       "task_titles": [
         "Set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.1",
+        "Allow TCP port 8105 permanently in firewalld and reload",
+        "Persistently enable httpd_can_network_connect",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/",
         "Install org.rhcsa.Tools from examfflatpak, then remove it after verifica",
@@ -99,30 +101,28 @@
         "Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof",
         "Create and enable examftimer.timer that runs every 10 minutes",
         "Create VG vgf10 and LV dataf mounted at /mnt/dataf10",
-        "Persistently enable httpd_can_network_connect",
         "Create /var/www/html/f.html and restore its default SELinux context",
         "Activate the throughput-performance tuned profile",
         "Configure persistent systemd journal storage",
         "Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10",
         "Set the default target to multi-user.target without rebooting",
-        "Install lsof and ensure tcpdump is removed",
-        "Allow TCP port 8105 permanently in firewalld and reload"
+        "Install lsof and ensure tcpdump is removed"
       ],
       "task_points": [
         5,
         5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
         4,
         4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
         4,
         4,
         4,
@@ -141,6 +141,13 @@
           "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.65/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8105/tcp",
+          "firewall-cmd --reload"
+        ],
+        [
+          "setsebool -P httpd_can_network_connect on"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
@@ -229,9 +236,6 @@
           "mount -a"
         ],
         [
-          "setsebool -P httpd_can_network_connect on"
-        ],
-        [
           "echo f > /var/www/html/f.html",
           "chcon -t user_tmp_t /var/www/html/f.html",
           "restorecon -v /var/www/html/f.html"
@@ -258,10 +262,6 @@
           "dnf clean all",
           "dnf install -y lsof",
           "dnf remove -y tcpdump"
-        ],
-        [
-          "firewall-cmd --permanent --add-port=8105/tcp",
-          "firewall-cmd --reload"
         ]
       ]
     }

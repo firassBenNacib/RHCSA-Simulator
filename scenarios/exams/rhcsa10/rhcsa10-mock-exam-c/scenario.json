@@ -32,6 +32,7 @@
       "tasks": [
         "Set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Allow TCP port 8102 permanently in firewalld and reload.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
         "Install org.rhcsa.Tools from examcflatpak, then remove it after verification.",
@@ -44,7 +45,6 @@
         "Create /root/c-original, hard link /root/c-hard, and symlink /root/c-soft.",
         "Create and enable examctimer.timer that runs every 10 minutes.",
         "Create VG vgc10 and LV datac mounted at /mnt/datac10.",
-        "Allow TCP port 8102 permanently in firewalld and reload.",
         "Create /var/www/html/c.html and restore its default SELinux context.",
         "Activate the throughput-performance tuned profile.",
         "Configure persistent systemd journal storage.",
@@ -61,6 +61,7 @@
       "checks": [
         "hostnamectl --static | grep -qx clientc.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverc\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.62/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "firewall-cmd --permanent --query-port=8102/tcp && firewall-cmd --query-port=8102/tcp",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examcflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
@@ -73,7 +74,6 @@
         "test \"$(stat -c %i /root/c-original)\" = \"$(stat -c %i /root/c-hard)\" && test -L /root/c-soft",
         "systemctl cat examctimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examctimer.timer | grep -qx enabled",
         "lvs /dev/vgc10/datac >/dev/null && findmnt -no TARGET /mnt/datac10 | grep -qx /mnt/datac10",
-        "firewall-cmd --permanent --query-port=8102/tcp && firewall-cmd --query-port=8102/tcp",
         "ls -Z /var/www/html/c.html | grep -q httpd_sys_content_t",
         "tuned-adm active | grep -q throughput-performance",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
@@ -88,6 +88,7 @@
       "task_titles": [
         "Set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.1",
+        "Allow TCP port 8102 permanently in firewalld and reload",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/",
         "Install org.rhcsa.Tools from examcflatpak, then remove it after verifica",
@@ -100,7 +101,6 @@
         "Create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof",
         "Create and enable examctimer.timer that runs every 10 minutes",
         "Create VG vgc10 and LV datac mounted at /mnt/datac10",
-        "Allow TCP port 8102 permanently in firewalld and reload",
         "Create /var/www/html/c.html and restore its default SELinux context",
         "Activate the throughput-performance tuned profile",
         "Configure persistent systemd journal storage",
@@ -112,17 +112,17 @@
       "task_points": [
         5,
         5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
         4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
         4,
         4,
         4,
@@ -142,6 +142,10 @@
           "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.62/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "firewall-cmd --permanent --add-port=8102/tcp",
+          "firewall-cmd --reload"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
@@ -228,10 +232,6 @@
           "mkdir -p /mnt/datac10",
           "echo '/dev/vgc10/datac /mnt/datac10 xfs defaults 0 0' >> /etc/fstab",
           "mount -a"
-        ],
-        [
-          "firewall-cmd --permanent --add-port=8102/tcp",
-          "firewall-cmd --reload"
         ],
         [
           "echo c > /var/www/html/c.html",
