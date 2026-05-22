@@ -78,9 +78,9 @@ param(
 [string]$Name
 )
 
-$hasUnicode = $true
+$hasUnicode = -not ($env:RHCSA_ASCII_UI -match '^(1|true|yes|on)$')
 try {
-if ([Console]::OutputEncoding.CodePage -ne 65001) {
+if ($hasUnicode -and [Console]::OutputEncoding.CodePage -ne 65001) {
 $hasUnicode = $false
 }
 }
