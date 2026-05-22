@@ -4305,6 +4305,23 @@ function Test-VBoxVmRegistration {
     return $null -ne ($RegisteredVm | Where-Object { $_.Id -eq $VmId } | Select-Object -First 1)
 }
 
+function Get-LabProjectNameCandidate {
+    param(
+        [string]$ProjectName
+    )
+
+    $names = @(
+        $ProjectName,
+        'RHCSA-Simulator',
+        'RHCSA_SIMULATOR',
+        'rhcsa_exam_vms'
+    ) | Where-Object {
+        -not [string]::IsNullOrWhiteSpace([string]$_)
+    } | Select-Object -Unique
+
+    return @($names)
+}
+
 function Get-LabVBoxVmCandidate {
     param(
         [string]$ProjectRoot = (Get-ProjectRoot),
@@ -4325,11 +4342,20 @@ function Get-LabVBoxVmCandidate {
         }
     }
 
-    $namePattern = '^' + [regex]::Escape($projectName) + '_(server|client)_'
+    $namePatterns = @(Get-LabProjectNameCandidate -ProjectName $projectName | ForEach-Object {
+        '^' + [regex]::Escape([string]$_) + '_(server|client)_'
+    })
     $legacyPattern = '^rhcsa-ex200-(server|client)'
 
     foreach ($machine in $registeredVm) {
-        if ($machine.Name -match $namePattern -or $machine.Name -match $legacyPattern) {
+        $matchesProjectName = $false
+        foreach ($pattern in $namePatterns) {
+            if ($machine.Name -match $pattern) {
+                $matchesProjectName = $true
+                break
+            }
+        }
+        if ($matchesProjectName -or $machine.Name -match $legacyPattern) {
             if (-not ($candidate | Where-Object { $_.Id -eq $machine.Id })) {
                 $candidate += $machine
             }
@@ -4670,7 +4696,7 @@ function Invoke-OrphanVmFolderCleanup {
     )
 
     foreach ($folder in @(Get-LabVBoxVmFolderCandidate -VBoxMachineFolder $VBoxMachineFolder -ProjectName $ProjectName)) {
-        Remove-Item -LiteralPath $folder.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        Invoke-LiteralPathRemovalWithRetry -LiteralPath $folder.FullName -Recurse -Force -MaxAttempts 10 | Out-Null
     }
 }
 
@@ -4684,12 +4710,13 @@ function Get-LabVBoxVmFolderCandidate {
         return @()
     }
 
-    $patterns = @(
-        "${ProjectName}_server_*",
-        "${ProjectName}_client_*",
-        'rhcsa-ex200-server*',
-        'rhcsa-ex200-client*'
-    )
+    $patterns = @()
+    foreach ($name in @(Get-LabProjectNameCandidate -ProjectName $ProjectName)) {
+        $patterns += "${name}_server_*"
+        $patterns += "${name}_client_*"
+    }
+    $patterns += 'rhcsa-ex200-server*'
+    $patterns += 'rhcsa-ex200-client*'
 
     $candidate = @()
     foreach ($pattern in $patterns) {
@@ -4713,11 +4740,20 @@ function Invoke-LabVBoxVmFolderMediaCleanup {
         Invoke-VBoxHardDiskCleanup -VBoxManagePath $VBoxManagePath -FolderPath $folder.FullName
     }
 
-    $projectFolderPattern = '\\VirtualBox VMs\\' + [regex]::Escape($ProjectName) + '_(server|client)_'
+    $projectFolderPatterns = @(Get-LabProjectNameCandidate -ProjectName $ProjectName | ForEach-Object {
+        '\\VirtualBox VMs\\' + [regex]::Escape([string]$_) + '_(server|client)_'
+    })
     $legacyFolderPattern = '\\VirtualBox VMs\\rhcsa-ex200-(server|client)'
     foreach ($hardDisk in @(Get-VBoxHardDiskCatalog -VBoxManagePath $VBoxManagePath)) {
         $location = ([string]$hardDisk.Location).Replace('/', '\')
-        if ($location -notmatch $projectFolderPattern -and $location -notmatch $legacyFolderPattern) {
+        $matchesProjectFolder = $false
+        foreach ($pattern in $projectFolderPatterns) {
+            if ($location -match $pattern) {
+                $matchesProjectFolder = $true
+                break
+            }
+        }
+        if (-not $matchesProjectFolder -and $location -notmatch $legacyFolderPattern) {
             continue
         }
 
@@ -4759,7 +4795,7 @@ function Invoke-OrphanVagrantImportFolderCleanup {
                     return
                 }
 
-                Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                Invoke-LiteralPathRemovalWithRetry -LiteralPath $_.FullName -Recurse -Force -MaxAttempts 10 | Out-Null
             }
     }
 }
@@ -4774,9 +4810,12 @@ function Test-VBoxFolderArtifactPresent {
         return $false
     }
 
-    $patterns = @(
-        "$ProjectName`_server_*",
-        "$ProjectName`_client_*",
+    $patterns = @()
+    foreach ($name in @(Get-LabProjectNameCandidate -ProjectName $ProjectName)) {
+        $patterns += "$name`_server_*"
+        $patterns += "$name`_client_*"
+    }
+    $patterns += @(
         'rhcsa-ex200-server*',
         'rhcsa-ex200-client*',
         'generic-rocky9-virtualbox-*',
@@ -4838,6 +4877,41 @@ function Assert-LabDiskSpaceReady {
     }
 }
 
+function Invoke-WindowsPathRemovalFallback {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$LiteralPath,
+        [switch]$Recurse
+    )
+
+    if ($env:OS -ne 'Windows_NT' -or [string]::IsNullOrWhiteSpace($env:SystemRoot)) {
+        return
+    }
+
+    $cmdPath = Join-Path $env:SystemRoot 'System32\cmd.exe'
+    if (-not (Test-Path -LiteralPath $cmdPath)) {
+        return
+    }
+
+    try {
+        $item = Get-Item -LiteralPath $LiteralPath -ErrorAction Stop
+        $isDirectory = [bool]$item.PSIsContainer
+    }
+    catch {
+        $isDirectory = $Recurse.IsPresent
+    }
+
+    $escapedPath = ([string]$LiteralPath).Replace('"', '""')
+    $commandText = if ($isDirectory -or $Recurse.IsPresent) {
+        'rmdir /s /q "{0}"' -f $escapedPath
+    }
+    else {
+        'del /f /q "{0}"' -f $escapedPath
+    }
+
+    & $cmdPath /c $commandText *> $null
+}
+
 function Invoke-LiteralPathRemovalWithRetry {
     param(
         [Parameter(Mandatory = $true)]
@@ -4856,7 +4930,12 @@ function Invoke-LiteralPathRemovalWithRetry {
             Remove-Item -LiteralPath $LiteralPath -Recurse:$Recurse -Force:$Force -ErrorAction Stop
         }
         catch {
+            Invoke-WindowsPathRemovalFallback -LiteralPath $LiteralPath -Recurse:$Recurse
             Start-Sleep -Milliseconds ([Math]::Min(250 * $attempt, 1000))
+        }
+
+        if (Test-Path -LiteralPath $LiteralPath) {
+            Invoke-WindowsPathRemovalFallback -LiteralPath $LiteralPath -Recurse:$Recurse
         }
 
         if (-not (Test-Path -LiteralPath $LiteralPath)) {
@@ -5105,7 +5184,13 @@ function Remove-LabEnvironment {
         }
 
         if ($remainingPaths.Count -gt 0 -and ($remainingPaths | Where-Object { $_ -match '\\.lab-disks($|\\|/)' })) {
-            Stop-Process -Name VBoxSVC -Force -ErrorAction SilentlyContinue
+            $processNames = if (Test-ForceHostCleanupEnabled) {
+                @('VBoxSVC', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxManage')
+            }
+            else {
+                @('VBoxSVC')
+            }
+            Stop-Process -Name $processNames -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
 
             if ($vboxManage) {
