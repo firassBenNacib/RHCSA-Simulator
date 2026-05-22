@@ -34,7 +34,7 @@
         "Configure a repository file on client with the following settings:\n\nBaseOS: http://server/repo/BaseOS/\nAppStream: http://server/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure the same repository file on server.\n\nBaseOS: http://server/repo/BaseOS/\nAppStream: http://server/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "Configure Apache on client so it serves the existing site on TCP port 8282.\n\nRequirements:\n- Start the service automatically at boot.\n- Open the port permanently in the firewall.\n- Make the SELinux change required for the new port.\n- Leave the existing document root content in place.",
-        "Create group sysopsa and users violet and amber with sysopsa as a supplementary group at creation time. Create user frost without a home directory and with login shell /sbin/nologin.",
+        "Create group sysopsa and ensure users violet and amber have sysopsa as a supplementary group. Create user frost without a home directory and with login shell /sbin/nologin.",
         "Set the password of violet, amber, and frost to cinder9.",
         "Allow members of sysopsa to run /usr/sbin/useradd through sudo. Allow violet to run /usr/bin/passwd for other users without a sudo password prompt. Use sudoers drop-ins.",
         "Create /srv/sysopsa owned by root:sysopsa with mode 2770 so new files inherit the sysopsa group.",
@@ -163,8 +163,10 @@
         ],
         [
           "getent group sysopsa >/dev/null || groupadd sysopsa",
-          "id violet >/dev/null 2>&1 || useradd -m -G sysopsa violet",
-          "id amber >/dev/null 2>&1 || useradd -m -G sysopsa amber",
+          "id violet >/dev/null 2>&1 || useradd -m violet",
+          "id -nG violet | tr ' ' '\\n' | grep -qx sysopsa || gpasswd -a violet sysopsa",
+          "id amber >/dev/null 2>&1 || useradd -m amber",
+          "id -nG amber | tr ' ' '\\n' | grep -qx sysopsa || gpasswd -a amber sysopsa",
           "id frost >/dev/null 2>&1 || useradd -M -s /sbin/nologin frost",
           "usermod -s /sbin/nologin frost",
           "rm -rf /home/frost"
