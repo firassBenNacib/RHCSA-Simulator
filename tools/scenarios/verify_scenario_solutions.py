@@ -1318,6 +1318,9 @@ def start_or_reset_scenario(scenario_id: str, mode: str, track: str, start_timeo
         "machine state: Running",
         "machine state: Starting",
         "Failed to restore snapshot 'base-clean'",
+        "is still reported as not created after startup",
+        "has no registered machine id",
+        "has no readable local Vagrant status",
     )
 
     clear_vagrant_process_locks()
