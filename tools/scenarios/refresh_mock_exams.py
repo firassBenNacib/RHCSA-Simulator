@@ -118,9 +118,9 @@ def main() -> int:
             block("Users And Group", "Create group sysopsa and ensure users violet and amber have sysopsa as a supplementary group. Create user frost without a home directory and with login shell /sbin/nologin.", [
                 "groupadd sysopsa",
                 "useradd violet",
-                "usermod -aG sysopsa violet",
+                "gpasswd -a violet sysopsa",
                 "useradd amber",
-                "usermod -aG sysopsa amber",
+                "gpasswd -a amber sysopsa",
                 "useradd -M -s /sbin/nologin frost",
             ]),
             block("User Passwords", "Set the password of violet, amber, and frost to cinder9.", [

@@ -62,6 +62,7 @@ COMMAND_PREFIXES = {
     "getenforce",
     "getfacl",
     "getsebool",
+    "gpasswd",
     "grubby",
     "groupadd",
     "hostnamectl",
