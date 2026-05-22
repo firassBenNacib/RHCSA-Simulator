@@ -116,8 +116,10 @@ systemctl restart httpd
 
 ```bash
 getent group sysopsa >/dev/null || groupadd sysopsa
-id violet >/dev/null 2>&1 || useradd -m -G sysopsa violet
-id amber >/dev/null 2>&1 || useradd -m -G sysopsa amber
+id violet >/dev/null 2>&1 || useradd -m violet
+id -nG violet | tr ' ' '\n' | grep -qx sysopsa || gpasswd -a violet sysopsa
+id amber >/dev/null 2>&1 || useradd -m amber
+id -nG amber | tr ' ' '\n' | grep -qx sysopsa || gpasswd -a amber sysopsa
 id frost >/dev/null 2>&1 || useradd -M -s /sbin/nologin frost
 usermod -s /sbin/nologin frost
 rm -rf /home/frost

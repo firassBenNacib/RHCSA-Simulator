@@ -87,7 +87,7 @@ Configure Apache on client so it serves the existing site on TCP port 8282.
 
 ## Question 07 - Users And Group (client) - 5 pts
 
-Create group sysopsa and users violet and amber with sysopsa as a supplementary group at creation time. Create user frost without a home directory and with login shell /sbin/nologin.
+Create group sysopsa and ensure users violet and amber have sysopsa as a supplementary group. Create user frost without a home directory and with login shell /sbin/nologin.
 
 ---
 

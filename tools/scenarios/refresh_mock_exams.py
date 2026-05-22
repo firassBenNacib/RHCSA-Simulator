@@ -115,10 +115,12 @@ def main() -> int:
                 "semanage port -a -t http_port_t -p tcp 8282 || semanage port -m -t http_port_t -p tcp 8282",
                 "systemctl restart httpd",
             ]),
-            block("Users And Group", "Create group sysopsa and users violet and amber with sysopsa as a supplementary group at creation time. Create user frost without a home directory and with login shell /sbin/nologin.", [
+            block("Users And Group", "Create group sysopsa and ensure users violet and amber have sysopsa as a supplementary group. Create user frost without a home directory and with login shell /sbin/nologin.", [
                 "groupadd sysopsa",
-                "useradd -G sysopsa violet",
-                "useradd -G sysopsa amber",
+                "useradd violet",
+                "gpasswd -a violet sysopsa",
+                "useradd amber",
+                "gpasswd -a amber sysopsa",
                 "useradd -M -s /sbin/nologin frost",
             ]),
             block("User Passwords", "Set the password of violet, amber, and frost to cinder9.", [
