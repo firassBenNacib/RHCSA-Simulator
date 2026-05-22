@@ -179,6 +179,9 @@ def filter_ids(ids: list[str], start_from: str | None, end_at: str | None, only:
 
 
 def run_ps(*args: str, timeout_seconds: int = 180) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env.setdefault("NO_COLOR", "1")
+    env.setdefault("RHCSA_ASCII_UI", "1")
     return subprocess.run(
         [
             "powershell.exe",
@@ -194,6 +197,7 @@ def run_ps(*args: str, timeout_seconds: int = 180) -> subprocess.CompletedProces
         encoding="utf-8",
         errors="replace",
         capture_output=True,
+        env=env,
         timeout=timeout_seconds,
     )
 
@@ -218,14 +222,25 @@ def parse_baseline_status(output: str) -> str | None:
     clean = ANSI_RE.sub("", output)
     match = BASELINE_RE.search(clean)
     if match:
-        return match.group(1).strip().lower()
+        return normalize_baseline_status(match.group(1))
 
     for line in clean.splitlines():
         normalized = line.strip().strip("│|").strip()
-        match = re.match(r"^Baseline\s*:?\s+(.+)$", normalized, re.I)
+        match = re.search(r"\bBaseline\s*:?\s+(.+)$", normalized, re.I)
         if match:
-            return match.group(1).strip().lower()
+            return normalize_baseline_status(match.group(1))
     return None
+
+
+def normalize_baseline_status(value: str) -> str:
+    words = re.findall(r"[a-z]+", value.lower())
+    if words[:2] == ["not", "built"]:
+        return "not built"
+    if words:
+        first = words[0]
+        if first in {"ready", "available", "incomplete"}:
+            return first
+    return value.strip().lower()
 
 
 def project_default_track() -> str:
