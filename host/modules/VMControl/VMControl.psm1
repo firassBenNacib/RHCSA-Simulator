@@ -3709,12 +3709,10 @@ function Start-BaselineSession {
         }
     }
 
-    Assert-LabDiskSpaceReady -ProjectRoot $ProjectRoot
-
     $baselineStatus = Get-BaselineStatus -ProjectRoot $ProjectRoot
     $baselineSnapshotModeReady = Test-BaseSnapshotModeReady -ProjectRoot $ProjectRoot
 
-    if (-not $ForceRefresh -and -not $NoProvision -and $baselineSnapshotModeReady -and [string]$baselineStatus.State -eq 'ready' -and $null -eq (Get-ActiveRunState -ProjectRoot $ProjectRoot)) {
+    if (-not $ForceRefresh -and -not $NoProvision -and $baselineSnapshotModeReady -and [string]$baselineStatus.State -eq 'ready') {
         Remove-VagrantActionMarkers -ProjectRoot $ProjectRoot
         return [PSCustomObject]@{
             Skipped = $false
@@ -3726,7 +3724,7 @@ function Start-BaselineSession {
         }
     }
 
-    if (-not $ForceRefresh -and -not $NoProvision -and $baselineSnapshotModeReady -and [string]$baselineStatus.State -eq 'available' -and $null -eq (Get-ActiveRunState -ProjectRoot $ProjectRoot)) {
+    if (-not $ForceRefresh -and -not $NoProvision -and $baselineSnapshotModeReady -and [string]$baselineStatus.State -eq 'available') {
         Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
         if (Test-LabMachinesInVBoxState -DesiredState @('saved') -ProjectRoot $ProjectRoot) {
             Resume-SavedLabEnvironment -ProjectRoot $ProjectRoot
@@ -3746,6 +3744,8 @@ function Start-BaselineSession {
             AlreadyReady = $true
         }
     }
+
+    Assert-LabDiskSpaceReady -ProjectRoot $ProjectRoot
 
     if (-not $SkipEnvironmentRecovery -and [string]$baselineStatus.State -eq 'incomplete') {
         $notices += 'Detected an incomplete baseline from a prior failed run. Rebuilding it from scratch.'
