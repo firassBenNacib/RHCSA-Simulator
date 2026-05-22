@@ -368,22 +368,22 @@ $entry = @(
 [PSCustomObject]@{ Name = 'completion'; Description = 'Generate or install PowerShell completion' }
 )
 return @(
-'RHCSA Simulator',
-'Usage: .\RHCSA.ps1 <command> [args]',
+(Get-UiHeading -Text 'RHCSA Simulator'),
+('Usage: {0}' -f (Format-StyledText -Text '.\RHCSA.ps1 <command> [args]' -StyleName 'Command')),
 '',
-'Commands:',
-@($entry | ForEach-Object { ' {0,-10} {1}' -f $_.Name, $_.Description }),
+(Format-StyledText -Text 'Commands:' -StyleName 'Accent'),
+@($entry | ForEach-Object { ' {0} {1}' -f (Format-PaddedCell -Text $_.Name -Width 10 -StyleName 'Command'), $_.Description }),
 '',
-'Help: .\RHCSA.ps1 help <command>',
+('Help: {0}' -f (Format-StyledText -Text '.\RHCSA.ps1 help <command>' -StyleName 'Command')),
 '',
-'Examples:',
-' > .\RHCSA.ps1 up',
-' > .\RHCSA.ps1 pause',
-' > .\RHCSA.ps1 down',
-' > .\RHCSA.ps1 list labs',
-' > .\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab',
-' > .\RHCSA.ps1 ssh',
-' > .\RHCSA.ps1 tui'
+(Format-StyledText -Text 'Examples:' -StyleName 'Accent'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 pause'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 down'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 list labs'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 ssh'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 tui')
 )
 }
 }
@@ -395,11 +395,7 @@ param(
 [string]$Scope = 'general'
 )
 
-$escape = [regex]::Escape([string][char]27)
-$ansiPattern = '{0}\[[0-9;]*m' -f $escape
-return @(Get-HelpOutputRaw -Scope $Scope | ForEach-Object {
-[regex]::Replace([string]$_, $ansiPattern, '')
-})
+return @(Get-HelpOutputRaw -Scope $Scope)
 }
 
 Export-ModuleMember -Function @(

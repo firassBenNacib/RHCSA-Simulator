@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Repo = 'firassBenNacib/rhcsa_exam_vms',
+    [string]$Repo = 'firassBenNacib/RHCSA-Simulator',
     [string]$ProjectRoot = (Get-Location).Path,
     [switch]$Launch
 )
