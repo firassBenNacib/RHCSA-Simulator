@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.15](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.14...v1.0.15) (2026-05-22)
+
+
+### Bug Fixes
+
+* harden replay cleanup after VirtualBox crash ([9f6f68a](https://github.com/firassBenNacib/RHCSA-Simulator/commit/9f6f68ad4bb8cc6c57fddf1b1cf2b36ae3ddac93))
+* harden replay cleanup and rhcsa9 checks ([802d167](https://github.com/firassBenNacib/RHCSA-Simulator/commit/802d1679f19037ae094d8cd3c93459f0fe9a8705))
+* satisfy scenario audit for exam group replay ([cfd5519](https://github.com/firassBenNacib/RHCSA-Simulator/commit/cfd55198e26dd5b4ce700ad91c1c1bcd0a9254e4))
+
 ## [1.0.14](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.13...v1.0.14) (2026-05-22)
 
 
