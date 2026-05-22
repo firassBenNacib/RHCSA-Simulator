@@ -27,4 +27,4 @@ jobs:
         if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run release-tui.yml --ref main -f tag="${{ steps.release.outputs.tag_name }}"
+        run: gh workflow run release-tui.yml --repo "${{ github.repository }}" --ref main -f tag="${{ steps.release.outputs.tag_name }}"

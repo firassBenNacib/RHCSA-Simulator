@@ -121,8 +121,11 @@ param(
 [string]$Scope = 'general'
 )
 
+$previousPlainHelp = $env:RHCSA_PLAIN_HELP
+$hadPlainHelp = $null -ne [Environment]::GetEnvironmentVariable('RHCSA_PLAIN_HELP', 'Process')
 $env:RHCSA_PLAIN_HELP = '1'
 
+try {
 switch ($Scope) {
 'up' {
 return @(
@@ -387,6 +390,15 @@ return @(
 ' > .\RHCSA.ps1 ssh',
 ' > .\RHCSA.ps1 tui'
 )
+}
+}
+}
+finally {
+if ($hadPlainHelp) {
+$env:RHCSA_PLAIN_HELP = $previousPlainHelp
+}
+else {
+Remove-Item Env:RHCSA_PLAIN_HELP -ErrorAction SilentlyContinue
 }
 }
 }
