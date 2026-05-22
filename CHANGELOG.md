@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.13](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.12...v1.0.13) (2026-05-22)
+
+
+### Bug Fixes
+
+* keep colored verifier output and avoid rebuild fallback ([e65ec6c](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e65ec6c4e51ddc99d5f588e748c08c0ae4131263))
+
 ## [1.0.12](https://github.com/firassBenNacib/rhcsa_exam_vms/compare/v1.0.11...v1.0.12) (2026-05-22)
 
 
