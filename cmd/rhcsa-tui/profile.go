@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/firassBenNacib/rhcsa_exam_vms/internal/catalog"
+	"github.com/firassBenNacib/RHCSA-Simulator/internal/catalog"
 )
 
 type projectProfileFile struct {

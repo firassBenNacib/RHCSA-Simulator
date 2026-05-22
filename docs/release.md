@@ -30,7 +30,7 @@ Snapshot builds are for testing artifacts only. They are uploaded as workflow ar
 Windows users can install the latest release TUI binary with:
 
 ```powershell
-irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/firassBenNacib/RHCSA-Simulator/main/install.ps1 | iex
 ```
 
 The installer supports both the older raw `rhcsa-tui-windows-amd64.exe` release asset and the GoReleaser `rhcsa-tui_*_windows_amd64.zip` archive.

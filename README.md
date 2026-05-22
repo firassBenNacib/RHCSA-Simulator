@@ -19,6 +19,8 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * PowerShell 5.1 or newer
 * [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
+* hardware virtualization enabled in BIOS/UEFI
+* at least 20 GB free on the Windows drive before building a baseline
 * `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
 * `rhel-10.1-x86_64-dvd.iso` if you use the RHCSA 10 profile
 * [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
@@ -28,21 +30,21 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 Clone:
 
 ```powershell
-git clone https://github.com/firassBenNacib/rhcsa_exam_vms.git
-cd rhcsa_exam_vms
+git clone https://github.com/firassBenNacib/RHCSA-Simulator.git
+cd RHCSA-Simulator
 ```
 
 Install or refresh the prebuilt TUI binary from the latest GitHub Release. The installer downloads the Windows TUI archive, extracts `rhcsa-tui.exe` into `.build/`, and keeps the source tree clean:
 
 ```powershell
-irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/install.ps1 -OutFile install.ps1
+irm https://raw.githubusercontent.com/firassBenNacib/RHCSA-Simulator/main/install.ps1 -OutFile install.ps1
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 If you trust the repository and want a one-line installer:
 
 ```powershell
-irm https://raw.githubusercontent.com/firassBenNacib/rhcsa_exam_vms/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/firassBenNacib/RHCSA-Simulator/main/install.ps1 | iex
 ```
 
 Private forks can use the same installer by setting `GITHUB_TOKEN` before running it.
@@ -149,8 +151,8 @@ You can also double-click:
 `rhcsa-tui.exe` is a terminal application, not a desktop GUI application. Double-clicking the executable directly can open and close a console too quickly to see. Use `rhcsa-tui.cmd` for double-click launches, or run the executable from a terminal:
 
 ```powershell
-.\.build\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms
-.\.build\rhcsa-tui.exe --project-root C:\path\to\rhcsa_exam_vms --track rhcsa10
+.\.build\rhcsa-tui.exe --project-root C:\path\to\RHCSA-Simulator
+.\.build\rhcsa-tui.exe --project-root C:\path\to\RHCSA-Simulator --track rhcsa10
 ```
 
 The TUI finds `RHCSA.ps1` from:
@@ -349,6 +351,10 @@ The simulator scopes cleanup to this project by default. It should not kill unre
 ```
 
 You can also set `RHCSA_FORCE_HOST_CLEANUP=1` for one terminal session.
+
+### VirtualBox host issues
+
+`VBoxHeadless.exe` crashes are host VirtualBox failures, not lab check failures. If Windows shows a `VBoxHeadless.exe - Application Error` dialog, reboot Windows, update VirtualBox to the current stable release, confirm VT-x/AMD-V is enabled, and free disk space before rebuilding with `.\RHCSA.ps1 destroy` and `.\RHCSA.ps1 up`.
 
 ## Commands
 
