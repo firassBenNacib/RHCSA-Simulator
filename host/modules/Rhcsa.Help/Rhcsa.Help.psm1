@@ -115,17 +115,12 @@ $lines += ' {0}  {1}' -f `
 return $lines
 }
 
-function Get-HelpOutput {
+function Get-HelpOutputRaw {
 param(
 [ValidateSet('general', 'up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
 [string]$Scope = 'general'
 )
 
-$previousPlainHelp = $env:RHCSA_PLAIN_HELP
-$hadPlainHelp = $null -ne [Environment]::GetEnvironmentVariable('RHCSA_PLAIN_HELP', 'Process')
-$env:RHCSA_PLAIN_HELP = '1'
-
-try {
 switch ($Scope) {
 'up' {
 return @(
@@ -393,14 +388,26 @@ return @(
 }
 }
 }
-finally {
-if ($hadPlainHelp) {
-$env:RHCSA_PLAIN_HELP = $previousPlainHelp
-}
-else {
-Remove-Item Env:RHCSA_PLAIN_HELP -ErrorAction SilentlyContinue
-}
-}
+
+function Get-HelpOutput {
+param(
+[ValidateSet('general', 'up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
+[string]$Scope = 'general'
+)
+
+$escape = [regex]::Escape([string][char]27)
+$ansiPattern = '{0}\[[0-9;]*m' -f $escape
+return @(Get-HelpOutputRaw -Scope $Scope | ForEach-Object {
+[regex]::Replace([string]$_, $ansiPattern, '')
+})
 }
 
-Export-ModuleMember -Function *
+Export-ModuleMember -Function @(
+'ConvertTo-VmName',
+'Format-ErrorOutput',
+'Format-HelpEntryList',
+'Format-HelpUsageLine',
+'Get-HelpOutput',
+'Get-RecommendedHelpCommand',
+'Test-HelpToken'
+)

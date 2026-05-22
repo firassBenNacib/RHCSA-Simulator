@@ -4009,6 +4009,11 @@ function Start-ScenarioRun {
             }
         }
         catch {
+            $baselineStatusAfterRestoreFailure = Get-BaselineStatus -ProjectRoot $ProjectRoot
+            if ([string]$baselineStatusAfterRestoreFailure.State -in @('ready', 'available')) {
+                throw
+            }
+
             $restoreMethod = 'baseline-rebuild'
             $baselineResult = Start-BaselineSession -ProjectRoot $ProjectRoot
             Clear-LiveCleanBaselineState -ProjectRoot $ProjectRoot

@@ -179,9 +179,6 @@ def filter_ids(ids: list[str], start_from: str | None, end_at: str | None, only:
 
 
 def run_ps(*args: str, timeout_seconds: int = 180) -> subprocess.CompletedProcess[str]:
-    env = os.environ.copy()
-    env.setdefault("NO_COLOR", "1")
-    env.setdefault("RHCSA_ASCII_UI", "1")
     return subprocess.run(
         [
             "powershell.exe",
@@ -197,7 +194,6 @@ def run_ps(*args: str, timeout_seconds: int = 180) -> subprocess.CompletedProces
         encoding="utf-8",
         errors="replace",
         capture_output=True,
-        env=env,
         timeout=timeout_seconds,
     )
 
