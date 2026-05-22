@@ -1,4 +1,4 @@
-module github.com/firassBenNacib/rhcsa_exam_vms
+module github.com/firassBenNacib/RHCSA-Simulator
 
 go 1.25.8
 
