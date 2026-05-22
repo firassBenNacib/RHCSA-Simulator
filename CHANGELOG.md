@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.14](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.13...v1.0.14) (2026-05-22)
+
+
+### Bug Fixes
+
+* restore CLI colors and release dispatch ([1c0cc22](https://github.com/firassBenNacib/RHCSA-Simulator/commit/1c0cc22755c6d8e4cf4935a90989d569d3fd02f6))
+* restore colored CLI output and release dispatch ([a1da54b](https://github.com/firassBenNacib/RHCSA-Simulator/commit/a1da54ba4ebcf96e5c8f72ef8b8114a067b04abd))
+
 ## [1.0.13](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.12...v1.0.13) (2026-05-22)
 
 
