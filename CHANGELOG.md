@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.12](https://github.com/firassBenNacib/rhcsa_exam_vms/compare/v1.0.11...v1.0.12) (2026-05-22)
+
+
+### Bug Fixes
+
+* repair CLI state handling and release dispatch ([d758a2f](https://github.com/firassBenNacib/rhcsa_exam_vms/commit/d758a2fb491601e63ff0f3cc833047bef093c1fc))
+
 ## [1.0.11](https://github.com/firassBenNacib/rhcsa_exam_vms/compare/v1.0.10...v1.0.11) (2026-05-21)
 
 
