@@ -31,26 +31,26 @@
       "tasks": [
         "Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
+        "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
+        "Install org.rhcsa.Tools from examhflatpak, then remove it after verification.",
+        "Create and enable examhtimer.timer that runs every 10 minutes.",
+        "Create group teamh10, create user userh10, set password cinder9, and add the user to teamh10.",
+        "Set maximum password age for userh10 to 52 days and warning period to 7 days.",
+        "Persistently enable httpd_can_network_connect.",
+        "Write users whose shell ends with sh to /root/h-shell-users.txt.",
+        "Configure persistent systemd journal storage.",
+        "Create /root/h-original, hard link /root/h-hard, and symlink /root/h-soft.",
+        "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.",
+        "Create VG vgh10 and LV datah mounted at /mnt/datah10.",
+        "Set the default target to multi-user.target without rebooting.",
         "Activate the throughput-performance tuned profile.",
         "Install lsof and ensure tcpdump is removed.",
         "Use server as the only chrony source and enable chronyd.",
         "Allow TCP port 8107 permanently in firewalld and reload.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from examhflatpak, then remove it after verification.",
-        "Create group teamh10, create user userh10, set password cinder9, and add the user to teamh10.",
         "Allow %teamh10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
-        "Set maximum password age for userh10 to 52 days and warning period to 7 days.",
         "Create /usr/local/bin/h-who that prints the primary group for the supplied user argument.",
-        "Write users whose shell ends with sh to /root/h-shell-users.txt.",
-        "Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab.",
-        "Create /root/h-original, hard link /root/h-hard, and symlink /root/h-soft.",
-        "Create and enable examhtimer.timer that runs every 10 minutes.",
-        "Create VG vgh10 and LV datah mounted at /mnt/datah10.",
-        "Persistently enable httpd_can_network_connect.",
-        "Configure persistent systemd journal storage.",
-        "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.",
-        "Set the default target to multi-user.target without rebooting."
+        "Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -60,26 +60,26 @@
       "checks": [
         "hostnamectl --static | grep -qx clienth.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverh\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.67/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examhflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
+        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "systemctl cat examhtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examhtimer.timer | grep -qx enabled",
+        "getent group teamh10 >/dev/null && id -nG userh10 | tr ' ' '\\n' | grep -qx teamh10",
+        "chage -l userh10 | grep -Eq 'Maximum.*52'",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "test -s /root/h-shell-users.txt && grep -q '^root$' /root/h-shell-users.txt",
+        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
+        "test \"$(stat -c %i /root/h-original)\" = \"$(stat -c %i /root/h-hard)\" && test -L /root/h-soft",
+        "crontab -l -u userh10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log'",
+        "lvs /dev/vgh10/datah >/dev/null && findmnt -no TARGET /mnt/datah10 | grep -qx /mnt/datah10",
+        "systemctl get-default | grep -qx multi-user.target",
         "tuned-adm active | grep -q throughput-performance",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
         "firewall-cmd --permanent --query-port=8107/tcp && firewall-cmd --query-port=8107/tcp",
         "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examhflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
-        "getent group teamh10 >/dev/null && id -nG userh10 | tr ' ' '\\n' | grep -qx teamh10",
         "grep -ERq '^%teamh10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
-        "chage -l userh10 | grep -Eq 'Maximum.*52'",
         "test -x /usr/local/bin/h-who && /usr/local/bin/h-who root | grep -qx root",
-        "test -s /root/h-shell-users.txt && grep -q '^root$' /root/h-shell-users.txt",
-        "test -f /root/h-etc.tar.gz && tar -tzf /root/h-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
-        "test \"$(stat -c %i /root/h-original)\" = \"$(stat -c %i /root/h-hard)\" && test -L /root/h-soft",
-        "systemctl cat examhtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examhtimer.timer | grep -qx enabled",
-        "lvs /dev/vgh10/datah >/dev/null && findmnt -no TARGET /mnt/datah10 | grep -qx /mnt/datah10",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
-        "crontab -l -u userh10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log'",
-        "systemctl get-default | grep -qx multi-user.target"
+        "test -f /root/h-etc.tar.gz && tar -tzf /root/h-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -87,50 +87,50 @@
       "task_titles": [
         "Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.1",
+        "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/",
+        "Install org.rhcsa.Tools from examhflatpak, then remove it after verifica",
+        "Create and enable examhtimer.timer that runs every 10 minutes",
+        "Create group teamh10, create user userh10, set password cinder9, and add",
+        "Set maximum password age for userh10 to 52 days and warning period to 7 ",
+        "Persistently enable httpd_can_network_connect",
+        "Write users whose shell ends with sh to /root/h-shell-users.txt",
+        "Configure persistent systemd journal storage",
+        "Create /root/h-original, hard link /root/h-hard, and symlink /root/h-sof",
+        "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10",
+        "Create VG vgh10 and LV datah mounted at /mnt/datah10",
+        "Set the default target to multi-user.target without rebooting",
         "Activate the throughput-performance tuned profile",
         "Install lsof and ensure tcpdump is removed",
         "Use server as the only chrony source and enable chronyd",
         "Allow TCP port 8107 permanently in firewalld and reload",
         "Create enabled BaseOS and AppStream repository definitions using http://",
-        "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from examhflatpak, then remove it after verifica",
-        "Create group teamh10, create user userh10, set password cinder9, and add",
         "Allow %teamh10 to run /usr/bin/systemctl without a password by using a s",
-        "Set maximum password age for userh10 to 52 days and warning period to 7 ",
         "Create /usr/local/bin/h-who that prints the primary group for the suppli",
-        "Write users whose shell ends with sh to /root/h-shell-users.txt",
-        "Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs",
-        "Create /root/h-original, hard link /root/h-hard, and symlink /root/h-sof",
-        "Create and enable examhtimer.timer that runs every 10 minutes",
-        "Create VG vgh10 and LV datah mounted at /mnt/datah10",
-        "Persistently enable httpd_can_network_connect",
-        "Configure persistent systemd journal storage",
-        "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10",
-        "Set the default target to multi-user.target without rebooting"
+        "Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs"
       ],
       "task_points": [
         5,
         5,
+        5,
+        5,
         4,
+        5,
+        5,
         4,
+        5,
         4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
         5,
         4,
         4,
         4,
         4,
         4,
-        4
+        4,
+        4,
+        5,
+        5,
+        5,
+        5
       ],
       "solution_commands": [
         [
@@ -141,6 +141,77 @@
           "nmcli connection show \"System eth1\"",
           "nmcli connection modify \"System eth1\" ipv4.addresses 192.168.122.67/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
+        ],
+        [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo"
+        ],
+        [
+          "flatpak install --system -y examhflatpak org.rhcsa.Tools",
+          "flatpak list --system --app",
+          "flatpak uninstall --system -y org.rhcsa.Tools"
+        ],
+        [
+          "cat > /usr/local/sbin/examhtimer.sh <<'EOF'",
+          "#!/bin/bash",
+          "echo examhtimer >> /var/log/examhtimer.log",
+          "EOF",
+          "chmod +x /usr/local/sbin/examhtimer.sh",
+          "cat > /etc/systemd/system/examhtimer.service <<'EOF'",
+          "[Service]",
+          "Type=oneshot",
+          "ExecStart=/usr/local/sbin/examhtimer.sh",
+          "EOF",
+          "cat > /etc/systemd/system/examhtimer.timer <<'EOF'",
+          "[Timer]",
+          "OnCalendar=*:0/10",
+          "Persistent=true",
+          "[Install]",
+          "WantedBy=timers.target",
+          "EOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now examhtimer.timer"
+        ],
+        [
+          "groupadd teamh10",
+          "useradd -G teamh10 userh10",
+          "passwd userh10",
+          "# enter: cinder9"
+        ],
+        [
+          "chage -M 52 -W 7 userh10"
+        ],
+        [
+          "setsebool -P httpd_can_network_connect on"
+        ],
+        [
+          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt"
+        ],
+        [
+          "mkdir -p /var/log/journal",
+          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
+          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
+          "systemctl restart systemd-journald"
+        ],
+        [
+          "echo link > /root/h-original",
+          "ln /root/h-original /root/h-hard",
+          "ln -s /root/h-original /root/h-soft"
+        ],
+        [
+          "echo '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log' | crontab -u userh10 -"
+        ],
+        [
+          "pvcreate /dev/sdb",
+          "vgcreate vgh10 /dev/sdb",
+          "lvcreate -L 384M -n datah vgh10",
+          "mkfs.xfs -f /dev/vgh10/datah",
+          "mkdir -p /mnt/datah10",
+          "echo '/dev/vgh10/datah /mnt/datah10 xfs defaults 0 0' >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "systemctl set-default multi-user.target",
+          "systemctl get-default"
         ],
         [
           "systemctl enable --now tuned",
@@ -177,25 +248,8 @@
           "EOF"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo"
-        ],
-        [
-          "flatpak install --system -y examhflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
-        ],
-        [
-          "groupadd teamh10",
-          "useradd -G teamh10 userh10",
-          "passwd userh10",
-          "# enter: cinder9"
-        ],
-        [
           "echo '%teamh10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamh10",
           "chmod 440 /etc/sudoers.d/teamh10"
-        ],
-        [
-          "chage -M 52 -W 7 userh10"
         ],
         [
           "cat > /usr/local/bin/h-who <<'EOF'",
@@ -206,62 +260,8 @@
           "chmod +x /usr/local/bin/h-who"
         ],
         [
-          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt"
-        ],
-        [
           "tar -czf /root/h-etc.tar.gz /etc/hosts /etc/fstab",
           "tar -tzf /root/h-etc.tar.gz"
-        ],
-        [
-          "echo link > /root/h-original",
-          "ln /root/h-original /root/h-hard",
-          "ln -s /root/h-original /root/h-soft"
-        ],
-        [
-          "cat > /usr/local/sbin/examhtimer.sh <<'EOF'",
-          "#!/bin/bash",
-          "echo examhtimer >> /var/log/examhtimer.log",
-          "EOF",
-          "chmod +x /usr/local/sbin/examhtimer.sh",
-          "cat > /etc/systemd/system/examhtimer.service <<'EOF'",
-          "[Service]",
-          "Type=oneshot",
-          "ExecStart=/usr/local/sbin/examhtimer.sh",
-          "EOF",
-          "cat > /etc/systemd/system/examhtimer.timer <<'EOF'",
-          "[Timer]",
-          "OnCalendar=*:0/10",
-          "Persistent=true",
-          "[Install]",
-          "WantedBy=timers.target",
-          "EOF",
-          "systemctl daemon-reload",
-          "systemctl enable --now examhtimer.timer"
-        ],
-        [
-          "pvcreate /dev/sdb",
-          "vgcreate vgh10 /dev/sdb",
-          "lvcreate -L 384M -n datah vgh10",
-          "mkfs.xfs -f /dev/vgh10/datah",
-          "mkdir -p /mnt/datah10",
-          "echo '/dev/vgh10/datah /mnt/datah10 xfs defaults 0 0' >> /etc/fstab",
-          "mount -a"
-        ],
-        [
-          "setsebool -P httpd_can_network_connect on"
-        ],
-        [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald"
-        ],
-        [
-          "echo '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log' | crontab -u userh10 -"
-        ],
-        [
-          "systemctl set-default multi-user.target",
-          "systemctl get-default"
         ]
       ]
     }

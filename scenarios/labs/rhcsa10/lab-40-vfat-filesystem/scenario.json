@@ -29,7 +29,7 @@
         "Use vfat in /etc/fstab."
       ],
       "checks": [
-        "test -b /dev/sdb1",
+        "parted -sm /dev/sdb unit MiB print | awk -F: '$1 == \"1\" && int($4) >= 250 && int($4) <= 260 {ok=1} END {exit !ok}'",
         "blkid /dev/sdb1 | grep -q 'TYPE=\"vfat\"' && blkid /dev/sdb1 | grep -q 'LABEL_FATBOOT=\"RHCSA10VFAT\"\\|LABEL=\"RHCSA10VFAT\"'",
         "findmnt -no TARGET /mnt/vfat10 | grep -qx /mnt/vfat10 && grep -Eq '^LABEL=RHCSA10VFAT[[:space:]]+/mnt/vfat10[[:space:]]+vfat' /etc/fstab"
       ],
@@ -48,10 +48,14 @@
       ],
       "solution_commands": [
         [
-          "parted -s /dev/sdb mklabel gpt mkpart primary fat32 1MiB 257MiB"
+          "wipefs -a /dev/sdb >/dev/null 2>&1 || true",
+          "sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true",
+          "parted -s /dev/sdb mklabel gpt mkpart primary fat32 1MiB 257MiB",
+          "partprobe /dev/sdb || true",
+          "udevadm settle"
         ],
         [
-          "mkfs.vfat -n RHCSA10VFAT /dev/sdb1"
+          "mkfs.vfat -F 32 -n RHCSA10VFAT /dev/sdb1"
         ],
         [
           "mkdir -p /mnt/vfat10",

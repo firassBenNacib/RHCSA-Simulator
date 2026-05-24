@@ -40,7 +40,113 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create and enable exametimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+
+```bash
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+```
+
+---
+
+## Question 04 - Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+
+```bash
+flatpak remote-add --system --if-not-exists --no-gpg-verify exameflatpak file:///opt/rhcsa/flatpak/repo
+```
+
+---
+
+## Question 05 - Install org.rhcsa.Tools from exameflatpak, then remove it after verifica (server) - 5 pts
+
+```bash
+flatpak install --system -y exameflatpak org.rhcsa.Tools
+flatpak list --system --app
+flatpak uninstall --system -y org.rhcsa.Tools
+```
+
+---
+
+## Question 06 - Create group teame10, create user usere10, set password cinder9, and add (server) - 5 pts
+
+```bash
+groupadd teame10
+useradd -G teame10 usere10
+passwd usere10
+# enter: cinder9
+```
+
+---
+
+## Question 07 - Allow %teame10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+
+```bash
+echo '%teame10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teame10
+chmod 440 /etc/sudoers.d/teame10
+```
+
+---
+
+## Question 08 - Set maximum password age for usere10 to 49 days and warning period to 7 (server) - 5 pts
+
+```bash
+chage -M 49 -W 7 usere10
+```
+
+---
+
+## Question 09 - Create /usr/local/bin/e-who that prints the primary group for the suppli (server) - 5 pts
+
+```bash
+cat > /usr/local/bin/e-who <<'EOF'
+#!/bin/bash
+test -n "${1:-}" || exit 2
+id -gn "$1"
+EOF
+chmod +x /usr/local/bin/e-who
+```
+
+---
+
+## Question 10 - Write users whose shell ends with sh to /root/e-shell-users.txt (server) - 5 pts
+
+```bash
+awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/e-shell-users.txt
+```
+
+---
+
+## Question 11 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+
+```bash
+tar -czf /root/e-etc.tar.gz /etc/hosts /etc/fstab
+tar -tzf /root/e-etc.tar.gz
+```
+
+---
+
+## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (server) - 5 pts
+
+```bash
+echo link > /root/e-original
+ln /root/e-original /root/e-hard
+ln -s /root/e-original /root/e-soft
+```
+
+---
+
+## Question 13 - Create and enable exametimer.timer that runs every 10 minutes (server) - 4 pts
 
 ```bash
 cat > /usr/local/sbin/exametimer.sh <<'EOF'
@@ -66,7 +172,7 @@ systemctl enable --now exametimer.timer
 
 ---
 
-## Question 04 - Create VG vge10 and LV datae mounted at /mnt/datae10 (server) - 4 pts
+## Question 14 - Create VG vge10 and LV datae mounted at /mnt/datae10 (server) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -80,7 +186,7 @@ mount -a
 
 ---
 
-## Question 05 - Allow TCP port 8104 permanently in firewalld and reload (server) - 4 pts
+## Question 15 - Allow TCP port 8104 permanently in firewalld and reload (server) - 4 pts
 
 ```bash
 firewall-cmd --permanent --add-port=8104/tcp
@@ -89,118 +195,12 @@ firewall-cmd --reload
 
 ---
 
-## Question 06 - Create /var/www/html/e.html and restore its default SELinux context (server) - 4 pts
+## Question 16 - Create /var/www/html/e.html and restore its default SELinux context (server) - 4 pts
 
 ```bash
 echo e > /var/www/html/e.html
 chcon -t user_tmp_t /var/www/html/e.html
 restorecon -v /var/www/html/e.html
-```
-
----
-
-## Question 07 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
-
-```bash
-cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
-[rhcsa10-exam-baseos]
-name=RHCSA10 Exam BaseOS
-baseurl=http://server/repo/BaseOS/
-enabled=1
-gpgcheck=0
-
-[rhcsa10-exam-appstream]
-name=RHCSA10 Exam AppStream
-baseurl=http://server/repo/AppStream/
-enabled=1
-gpgcheck=0
-EOF
-```
-
----
-
-## Question 08 - Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
-
-```bash
-flatpak remote-add --system --if-not-exists --no-gpg-verify exameflatpak file:///opt/rhcsa/flatpak/repo
-```
-
----
-
-## Question 09 - Install org.rhcsa.Tools from exameflatpak, then remove it after verifica (server) - 5 pts
-
-```bash
-flatpak install --system -y exameflatpak org.rhcsa.Tools
-flatpak list --system --app
-flatpak uninstall --system -y org.rhcsa.Tools
-```
-
----
-
-## Question 10 - Create group teame10, create user usere10, set password cinder9, and add (server) - 5 pts
-
-```bash
-groupadd teame10
-useradd -G teame10 usere10
-passwd usere10
-# enter: cinder9
-```
-
----
-
-## Question 11 - Allow %teame10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
-
-```bash
-echo '%teame10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teame10
-chmod 440 /etc/sudoers.d/teame10
-```
-
----
-
-## Question 12 - Set maximum password age for usere10 to 49 days and warning period to 7 (server) - 5 pts
-
-```bash
-chage -M 49 -W 7 usere10
-```
-
----
-
-## Question 13 - Create /usr/local/bin/e-who that prints the primary group for the suppli (server) - 5 pts
-
-```bash
-cat > /usr/local/bin/e-who <<'EOF'
-#!/bin/bash
-test -n "${1:-}" || exit 2
-id -gn "$1"
-EOF
-chmod +x /usr/local/bin/e-who
-```
-
----
-
-## Question 14 - Write users whose shell ends with sh to /root/e-shell-users.txt (server) - 5 pts
-
-```bash
-awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/e-shell-users.txt
-```
-
----
-
-## Question 15 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
-
-```bash
-tar -czf /root/e-etc.tar.gz /etc/hosts /etc/fstab
-tar -tzf /root/e-etc.tar.gz
-```
-
----
-
-## Question 16 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (server) - 5 pts
-
-```bash
-echo link > /root/e-original
-ln /root/e-original /root/e-hard
-ln -s /root/e-original /root/e-soft
 ```
 
 ---

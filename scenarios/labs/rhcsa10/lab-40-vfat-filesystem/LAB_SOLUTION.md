@@ -22,7 +22,11 @@ Create and mount a VFAT filesystem.
 ## Task 01 - Create a 256 MiB partition on /dev/sdb (client) - 10 pts
 
 ```bash
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
 parted -s /dev/sdb mklabel gpt mkpart primary fat32 1MiB 257MiB
+partprobe /dev/sdb || true
+udevadm settle
 ```
 
 ---
@@ -30,7 +34,7 @@ parted -s /dev/sdb mklabel gpt mkpart primary fat32 1MiB 257MiB
 ## Task 02 - Format it as VFAT with label RHCSA10VFAT (client) - 10 pts
 
 ```bash
-mkfs.vfat -n RHCSA10VFAT /dev/sdb1
+mkfs.vfat -F 32 -n RHCSA10VFAT /dev/sdb1
 ```
 
 ---
