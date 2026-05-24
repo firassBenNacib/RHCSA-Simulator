@@ -20,6 +20,7 @@ userdel -r userd10 >/dev/null 2>&1 || true
 groupdel teamd10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamd10-systemctl
 
+
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true
 semanage port -d -t http_port_t -p tcp 8103 >/dev/null 2>&1 || true

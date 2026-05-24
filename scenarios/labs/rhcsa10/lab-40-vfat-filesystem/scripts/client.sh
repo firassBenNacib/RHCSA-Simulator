@@ -6,3 +6,5 @@ umount /mnt/vfat10 >/dev/null 2>&1 || true
 sed -i '\#/mnt/vfat10#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
+udevadm settle

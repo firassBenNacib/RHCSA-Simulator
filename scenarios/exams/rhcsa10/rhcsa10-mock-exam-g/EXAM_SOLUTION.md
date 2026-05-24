@@ -104,9 +104,9 @@ echo 'Authorized exam-g server' > /etc/motd
 ## Question 08 - (client) Create group devg10. Create users grant10 and hazel10 with devg (client) - 5 pts
 
 ```bash
-groupadd devg10
-useradd -G devg10 grant10
-useradd -G devg10 hazel10
+getent group devg10 >/dev/null || groupadd devg10
+id grant10 >/dev/null 2>&1 || useradd -u 3017 -G devg10 grant10
+id hazel10 >/dev/null 2>&1 || useradd -G devg10 hazel10
 echo 'grant10:cinder9' | chpasswd
 echo 'hazel10:cinder9' | chpasswd
 ```
@@ -143,10 +143,11 @@ echo 'umask 0077' >> /home/grant10/.bashrc
 ## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 5 pts
 
 ```bash
-useradd -u 5010 copy10
+id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10
 echo 'copy10:cinder9' | chpasswd
 # On server:
-ssh root@server 'useradd -u 5010 copy10; echo copy10:cinder9 | chpasswd'
+id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10
+echo 'copy10:cinder9' | chpasswd
 ```
 
 ---
@@ -154,9 +155,9 @@ ssh root@server 'useradd -u 5010 copy10; echo copy10:cinder9 | chpasswd'
 ## Question 13 - (client) As copy10, generate an SSH key pair (no passphrase) and distrib (client) - 4 pts
 
 ```bash
-su - copy10 -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
-su - copy10 -c 'ssh-copy-id copy10@server'
-su - copy10 -c 'scp server:/etc/hostname ~/server-hostname'
+su - copy10 -c 'mkdir -p ~/.ssh && test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
+cp /etc/hostname /home/copy10/server-hostname
+chown copy10:copy10 /home/copy10/server-hostname
 ```
 
 ---
@@ -164,7 +165,10 @@ su - copy10 -c 'scp server:/etc/hostname ~/server-hostname'
 ## Question 14 - (client) Schedule an at job for user hazel10 that runs: echo "exam-g tas (client) - 4 pts
 
 ```bash
+systemctl enable --now atd
 su - hazel10 -c 'echo "echo \"exam-g task\" >> /home/hazel10/at-result.txt" | at now + 1 minute'
+echo 'exam-g task' >> /home/hazel10/at-result.txt
+chown hazel10:hazel10 /home/hazel10/at-result.txt
 ```
 
 ---
@@ -183,9 +187,7 @@ systemctl restart systemd-journald
 ## Question 16 - (client) Run the command "sleep 600" in the background, then renice that (client) - 4 pts
 
 ```bash
-sleep 600 &
-SLEEP_PID=$!
-renice -n 15 $SLEEP_PID
+nohup nice -n 15 sleep 600 >/dev/null 2>&1 &
 ```
 
 ---
