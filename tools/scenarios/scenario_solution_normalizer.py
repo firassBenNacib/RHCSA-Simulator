@@ -212,6 +212,7 @@ def normalize_command_list(commands: list[str]) -> list[str]:
         if cmd == "python3 - <<'EOF'" and "sshd_config" in "\n".join(flattened[i : min(i + 20, len(flattened))]):
             normalized.extend([
                 "vim /etc/ssh/sshd_config",
+                "Port 22",
                 "Port 2222",
                 "PasswordAuthentication yes",
                 "PubkeyAuthentication yes",

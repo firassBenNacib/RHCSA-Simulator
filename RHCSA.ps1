@@ -655,7 +655,7 @@ if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
 throw "Unknown destroy argument '-Profile'."
 }
 
-$result = Remove-LabEnvironment -ProjectRoot $projectRoot
+$result = Remove-LabEnvironment -ProjectRoot $projectRoot -ForceHostCleanup:$script:ForceHostCleanup
 Format-DestroyOutput -DestroyResult $result | Write-Output
 break
 }

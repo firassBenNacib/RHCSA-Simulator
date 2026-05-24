@@ -144,8 +144,14 @@ elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
 ## Question 11 - SSH Key Generation (client) - 5 pts
 
 ```bash
-su - elio
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+install -d -m 700 -o elio -g elio /home/elio/.ssh
+cat > /home/elio/.ssh/id_ed25519 <<'EOF'
+[runtime-generated-ssh-material]
+EOF
+printf '%s\n' '[runtime-generated-ssh-public-key]' > /home/elio/.ssh/id_ed25519.pub
+chown elio:elio /home/elio/.ssh/id_ed25519 /home/elio/.ssh/id_ed25519.pub
+chmod 0600 /home/elio/.ssh/id_ed25519
+chmod 0644 /home/elio/.ssh/id_ed25519.pub
 ```
 
 ---
@@ -166,20 +172,24 @@ chmod 0755 /home/backupf/inbox
 ## Question 13 - Passwordless SSH (server) - 4 pts
 
 ```bash
-# On client
+# Run on server
+install -d -m 700 -o backupf -g backupf /home/backupf/.ssh
+printf '%s\n' '[runtime-generated-ssh-public-key]' > /home/backupf/.ssh/authorized_keys
+chown backupf:backupf /home/backupf/.ssh/authorized_keys
+chmod 0600 /home/backupf/.ssh/authorized_keys
+# Run on client
 su - elio
-ssh-copy-id -p 2222 backupf@server
-ssh -p 2222 -o BatchMode=yes backupf@server true
+ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true
 ```
 
 ---
 
-## Question 14 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (client + server) - 4 pts
 
 ```bash
-# On client
+# Run on client
 su - elio
-rsync -e "ssh -p 2222" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt
+rsync -e "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt
 ```
 
 ---

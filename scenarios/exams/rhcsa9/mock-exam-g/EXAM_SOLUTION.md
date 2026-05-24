@@ -132,10 +132,22 @@ chmod 0755 /home/copyg/inbox
 ## Question 11 - SSH Key And Secure Copy (client + server) - 5 pts
 
 ```bash
+install -d -m 700 -o copyg -g copyg /home/copyg/.ssh
+cat > /home/copyg/.ssh/id_ed25519 <<'EOF'
+[runtime-generated-ssh-material]
+EOF
+printf '%s\n' '[runtime-generated-ssh-public-key]' > /home/copyg/.ssh/id_ed25519.pub
+chown copyg:copyg /home/copyg/.ssh/id_ed25519 /home/copyg/.ssh/id_ed25519.pub
+chmod 0600 /home/copyg/.ssh/id_ed25519
+chmod 0644 /home/copyg/.ssh/id_ed25519.pub
+# Run on server
+install -d -m 700 -o copyg -g copyg /home/copyg/.ssh
+printf '%s\n' '[runtime-generated-ssh-public-key]' > /home/copyg/.ssh/authorized_keys
+chown copyg:copyg /home/copyg/.ssh/authorized_keys
+chmod 0600 /home/copyg/.ssh/authorized_keys
+# Run on client
 su - copyg
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-ssh-copy-id copyg@server
-scp /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
+scp -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
 ```
 
 ---

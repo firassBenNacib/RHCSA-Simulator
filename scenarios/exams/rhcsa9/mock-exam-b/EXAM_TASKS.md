@@ -105,9 +105,9 @@ On server, create user meshremote with password cinder9 if it does not already e
 
 ---
 
-## Question 14 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (client + server) - 4 pts
 
-Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
+On client, use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
 
 ---
 

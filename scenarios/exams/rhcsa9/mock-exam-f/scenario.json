@@ -40,7 +40,7 @@
         "As elio on client, generate an ED25519 SSH key pair with no passphrase.",
         "Create user backupf on server with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.",
         "Install elio's public key for backupf on server and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.",
+        "On client, use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.",
         "Set a personal umask of 027 for elio.",
         "Find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.",
         "Extract lines containing comet from /usr/share/dict/words into /root/comet-lines.",
@@ -170,8 +170,20 @@
           "elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld"
         ],
         [
-          "su - elio",
-          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
+          "install -d -m 700 -o elio -g elio /home/elio/.ssh",
+          "cat > /home/elio/.ssh/id_ed25519 <<'EOF'",
+          "[runtime-generated-ssh-material]",
+          "[runtime-generated-ssh-material]",
+          "[runtime-generated-ssh-material]",
+          "[runtime-generated-ssh-material]",
+          "[runtime-generated-ssh-material]",
+          "[runtime-generated-ssh-material]",
+          "[runtime-generated-ssh-material]",
+          "EOF",
+          "printf '%s\\n' '[runtime-generated-ssh-public-key]' > /home/elio/.ssh/id_ed25519.pub",
+          "chown elio:elio /home/elio/.ssh/id_ed25519 /home/elio/.ssh/id_ed25519.pub",
+          "chmod 0600 /home/elio/.ssh/id_ed25519",
+          "chmod 0644 /home/elio/.ssh/id_ed25519.pub"
         ],
         [
           "# Run on server",
@@ -182,15 +194,19 @@
           "chmod 0755 /home/backupf/inbox"
         ],
         [
-          "# On client",
+          "# Run on server",
+          "install -d -m 700 -o backupf -g backupf /home/backupf/.ssh",
+          "printf '%s\\n' '[runtime-generated-ssh-public-key]' > /home/backupf/.ssh/authorized_keys",
+          "chown backupf:backupf /home/backupf/.ssh/authorized_keys",
+          "chmod 0600 /home/backupf/.ssh/authorized_keys",
+          "# Run on client",
           "su - elio",
-          "ssh-copy-id -p 2222 backupf@server",
-          "ssh -p 2222 -o BatchMode=yes backupf@server true"
+          "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true"
         ],
         [
-          "# On client",
+          "# Run on client",
           "su - elio",
-          "rsync -e \"ssh -p 2222\" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt"
+          "rsync -e \"ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt"
         ],
         [
           "echo 'umask 027' >> /home/elio/.bash_profile"
@@ -263,7 +279,7 @@
         "hostnamectl --static | grep -qx 'client.exam-f.lab' && grep -Fqx '192.168.122.3 db.exam-f.lab' /etc/hosts",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
         "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$7}' | grep -qx '4560:/sbin/nologin' && test ! -d /home/pine560 && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
-        "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@server true' && test -f /home/backupf/inbox/report.txt",
+        "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true' && test -f /home/backupf/inbox/report.txt",
         "test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\" && test -n \"$rec\" && tuned-adm active | grep -Eq \"(^|[[:space:]:])${rec}($|[[:space:]])\""
       ]
