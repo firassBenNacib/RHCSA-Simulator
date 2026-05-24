@@ -105,9 +105,9 @@ Install elio's public key for backupf on server and verify passwordless SSH acce
 
 ---
 
-## Question 14 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (client + server) - 4 pts
 
-Use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.
+On client, use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.
 
 ---
 

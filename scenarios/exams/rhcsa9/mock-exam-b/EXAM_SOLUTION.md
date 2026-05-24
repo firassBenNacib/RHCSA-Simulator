@@ -160,8 +160,13 @@ firewall-cmd --reload
 id mira >/dev/null 2>&1 || useradd -m mira
 echo cinder9 | passwd --stdin mira
 install -d -m 700 -o mira -g mira /home/mira/.ssh
-su - mira
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+cat > /home/mira/.ssh/id_ed25519 <<'EOF'
+[runtime-generated-ssh-material]
+EOF
+printf '%s\n' '[runtime-generated-ssh-public-key]' > /home/mira/.ssh/id_ed25519.pub
+chown mira:mira /home/mira/.ssh/id_ed25519 /home/mira/.ssh/id_ed25519.pub
+chmod 0600 /home/mira/.ssh/id_ed25519
+chmod 0644 /home/mira/.ssh/id_ed25519.pub
 ```
 
 ---
@@ -175,20 +180,23 @@ echo cinder9 | passwd --stdin meshremote
 mkdir -p /home/meshremote/inbox
 chown meshremote:meshremote /home/meshremote/inbox
 chmod 0755 /home/meshremote/inbox
-# On client
+install -d -m 700 -o meshremote -g meshremote /home/meshremote/.ssh
+printf '%s\n' '[runtime-generated-ssh-public-key]' > /home/meshremote/.ssh/authorized_keys
+chown meshremote:meshremote /home/meshremote/.ssh/authorized_keys
+chmod 0600 /home/meshremote/.ssh/authorized_keys
+# Run on client
 su - mira
-ssh-copy-id -p 2222 meshremote@server
-ssh -p 2222 -o BatchMode=yes meshremote@server true
+ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null meshremote@server true
 ```
 
 ---
 
-## Question 14 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (client + server) - 4 pts
 
 ```bash
-# On client
+# Run on client
 su - mira
-rsync -e "ssh -p 2222" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt
+rsync -e "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt
 ```
 
 ---

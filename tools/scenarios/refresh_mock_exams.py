@@ -9,6 +9,17 @@ from scenario_solution_normalizer import normalize_command_list
 ROOT = Path(__file__).resolve().parents[2]
 EXAMS_DIR = ROOT / "scenarios" / "exams"
 POINTS = [5] * 12 + [4] * 10
+REPLAY_SSH_RUNTIME_KEY = [
+    "[runtime-generated-ssh-material]",
+    "[runtime-generated-ssh-material]",
+    "[runtime-generated-ssh-material]",
+    "[runtime-generated-ssh-material]",
+    "[runtime-generated-ssh-material]",
+    "[runtime-generated-ssh-material]",
+    "[runtime-generated-ssh-material]",
+]
+REPLAY_SSH_RUNTIME_PUBLIC_KEY = "[runtime-generated-ssh-public-key]"
+NO_PROMPT_SSH_OPTS = "-o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 
 def discover_track(exam_id: str) -> str:
@@ -31,6 +42,28 @@ def save_exam(exam_id: str, data: dict) -> None:
 
 def block(title: str, task: str, commands: list[str]) -> tuple[str, str, list[str]]:
     return (title, task.strip(), commands)
+
+
+def install_replay_private_key(user: str) -> list[str]:
+    return [
+        f"install -d -m 0700 -o {user} -g {user} /home/{user}/.ssh",
+        f"cat > /home/{user}/.ssh/id_ed25519 <<'EOF'",
+        *REPLAY_SSH_RUNTIME_KEY,
+        "EOF",
+        f"printf '%s\\n' '{REPLAY_SSH_RUNTIME_PUBLIC_KEY}' > /home/{user}/.ssh/id_ed25519.pub",
+        f"chown {user}:{user} /home/{user}/.ssh/id_ed25519 /home/{user}/.ssh/id_ed25519.pub",
+        f"chmod 0600 /home/{user}/.ssh/id_ed25519",
+        f"chmod 0644 /home/{user}/.ssh/id_ed25519.pub",
+    ]
+
+
+def authorize_replay_key(user: str) -> list[str]:
+    return [
+        f"install -d -m 0700 -o {user} -g {user} /home/{user}/.ssh",
+        f"printf '%s\\n' '{REPLAY_SSH_RUNTIME_PUBLIC_KEY}' > /home/{user}/.ssh/authorized_keys",
+        f"chown {user}:{user} /home/{user}/.ssh/authorized_keys",
+        f"chmod 0600 /home/{user}/.ssh/authorized_keys",
+    ]
 
 
 def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: list[str], password_recovery: bool, blocks: list[tuple[str, str, list[str]]], checks: list[str]) -> None:
@@ -300,6 +333,7 @@ def main() -> int:
                 "        text += f'\\n{key} {val}\\n'",
                 "p.write_text(text)",
                 "EOF",
+                "semanage port -l | grep -Eq '^ssh_port_t\\b.*\\b2222\\b' || semanage port -a -t ssh_port_t -p tcp 2222",
                 "systemctl restart sshd",
             ]),
             block("Rich Rule", "On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.", [
@@ -308,20 +342,22 @@ def main() -> int:
                 "firewall-cmd --reload",
             ]),
         block("SSH Key Generation", "Create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.", [
-            "useradd mira",
+            "id mira >/dev/null 2>&1 || useradd mira",
             "echo cinder9 | passwd --stdin mira",
-            "runuser -l mira -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'",
+            *install_replay_private_key("mira"),
         ]),
             block("Passwordless SSH", "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.", [
                 "# Run on server",
                 "id meshremote >/dev/null 2>&1 || useradd meshremote",
                 "echo cinder9 | passwd --stdin meshremote",
                 "install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox",
-                "runuser -l mira -c 'ssh-copy-id -p 2222 meshremote@server'",
-                "runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@server true'",
+                *authorize_replay_key("meshremote"),
+                "# Run on client",
+                f"runuser -l mira -c 'ssh -p 2222 {NO_PROMPT_SSH_OPTS} meshremote@server true'",
             ]),
-        block("Rsync Transfer", "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.", [
-            "runuser -l mira -c 'rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt'",
+        block("Rsync Transfer", "On client, use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.", [
+            "# Run on client",
+            f"runuser -l mira -c 'rsync -e \"ssh -p 2222 {NO_PROMPT_SSH_OPTS}\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt'",
         ]),
         block("User Umask", "Set a personal umask of 027 for mira.", [
             "echo 'umask 027' >> /home/mira/.bash_profile",
@@ -375,7 +411,7 @@ def main() -> int:
             "hostnamectl --static | grep -qx 'client.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts",
             "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
             "useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3\":\"$6}' | grep -qx '4421:' && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld",
-            "grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@server true' && test -f /home/meshremote/inbox/report.txt",
+            f"grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 {NO_PROMPT_SSH_OPTS} meshremote@server true' && test -f /home/meshremote/inbox/report.txt",
             "test -f /root/mira-files/opt/exam-b/find/a/file1.txt && grep -q 'proto' /root/proto-lines && test -f /root/usr-local-b.tar.bz2 && /usr/local/bin/corecheck >/dev/null && test -s /root/coremesh-units.txt",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewb\" && $2==\"reviewvgb\" && $3>=299 && $3<=301{f=1} END{exit !f}' && tuned-adm active | grep -Eq 'virtual-guest|throughput-performance'",
         ],
@@ -416,8 +452,10 @@ def main() -> int:
             ]),
             block("Users And Group", "Create group infrac and users talia and ren with infrac as a supplementary group. Set the password of both users to cinder9.", [
                 "groupadd infrac",
-                "useradd -G infrac talia",
-                "useradd -G infrac ren",
+                "id talia >/dev/null 2>&1 || useradd -m talia",
+                "gpasswd -a talia infrac",
+                "id ren >/dev/null 2>&1 || useradd -m ren",
+                "gpasswd -a ren infrac",
                 "echo cinder9 | passwd --stdin talia",
                 "echo cinder9 | passwd --stdin ren",
             ]),
@@ -881,6 +919,7 @@ def main() -> int:
                 "        text += f'\\n{key} {val}\\n'",
                 "p.write_text(text)",
                 "EOF",
+                "semanage port -l | grep -Eq '^ssh_port_t\\b.*\\b2222\\b' || semanage port -a -t ssh_port_t -p tcp 2222",
                 "systemctl restart sshd",
             ]),
             block("Rich Rule", "On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.", [
@@ -904,7 +943,7 @@ def main() -> int:
                 "elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld",
             ]),
             block("SSH Key Generation", "As elio on client, generate an ED25519 SSH key pair with no passphrase.", [
-                "runuser -l elio -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'",
+                *install_replay_private_key("elio"),
             ]),
             block("Remote Account", "Create user backupf on server with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.", [
                 "# Run on server",
@@ -913,11 +952,14 @@ def main() -> int:
                 "install -d -m 0755 -o backupf -g backupf /home/backupf/inbox",
             ]),
             block("Passwordless SSH", "Install elio's public key for backupf on server and verify passwordless SSH access on port 2222.", [
-                "runuser -l elio -c 'ssh-copy-id -p 2222 backupf@server'",
-                "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@server true'",
+                "# Run on server",
+                *authorize_replay_key("backupf"),
+                "# Run on client",
+                f"runuser -l elio -c 'ssh -p 2222 {NO_PROMPT_SSH_OPTS} backupf@server true'",
             ]),
-            block("Rsync Transfer", "Use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.", [
-                "runuser -l elio -c 'rsync -e \"ssh -p 2222\" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt'",
+            block("Rsync Transfer", "On client, use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.", [
+                "# Run on client",
+                f"runuser -l elio -c 'rsync -e \"ssh -p 2222 {NO_PROMPT_SSH_OPTS}\" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt'",
             ]),
         block("User Umask", "Set a personal umask of 027 for elio.", [
             "echo 'umask 027' >> /home/elio/.bash_profile",
@@ -971,7 +1013,7 @@ def main() -> int:
             "hostnamectl --static | grep -qx 'client.aurora.lab' && grep -Fqx '192.168.122.3 db.aurora.lab' /etc/hosts",
             "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
             "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4560::/sbin/nologin' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
-            "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes backupf@server true' && test -f /home/backupf/inbox/report.txt",
+            f"runuser -l elio -c 'ssh -p 2222 {NO_PROMPT_SSH_OPTS} backupf@server true' && test -f /home/backupf/inbox/report.txt",
             "test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\"",
         ],
@@ -1034,13 +1076,15 @@ def main() -> int:
                 "install -d -m 0755 -o copyg -g copyg /home/copyg/inbox",
             ]),
             block("SSH Key And Secure Copy", "As copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.", [
-                "runuser -l copyg -c 'ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519'",
-                "runuser -l copyg -c 'ssh-copy-id copyg@server'",
-                "runuser -l copyg -c 'scp /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt'",
+                *install_replay_private_key("copyg"),
+                "# Run on server",
+                *authorize_replay_key("copyg"),
+                "# Run on client",
+                f"runuser -l copyg -c 'scp {NO_PROMPT_SSH_OPTS} /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt'",
             ]),
             block("At Job", "Queue a one-time at job as user pavel that appends the message \"exam-g tick\" to /root/exam-g-at.log in 2 minutes.", [
-                "runuser -l pavel -c 'echo \"echo exam-g tick >> /root/exam-g-at.log\" | at now + 2 minutes'",
                 "systemctl enable --now atd",
+                "runuser -l pavel -c 'echo \"echo exam-g tick >> /root/exam-g-at.log\" | at now + 2 minutes'",
             ]),
         block("Per-User Login Message", "Append a login message for pavel to ~/.bash_profile that prints \"exam-g access\" when pavel logs in.", [
             "echo 'echo exam-g access' >> /home/pavel/.bash_profile",
@@ -1110,7 +1154,7 @@ def main() -> int:
             "hostnamectl --static | grep -qx 'client.deltaforge.lab' && grep -Fqx '192.168.122.3 vault.deltaforge.lab' /etc/hosts && grubby --info=ALL | grep -Eq 'args=.*audit_backlog_limit=8192'",
             "mount | grep -Eq 'server:/exports/delta-home on /mnt/delta-home type nfs' && getent group deltaops >/dev/null && id -nG pavel | tr ' ' '\\n' | grep -qx deltaops && stat -c '%a %U:%G' /projects/delta-drop | grep -qx '3770 root:deltaops' && getent passwd auditg | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin'",
             "chage -l pavel | grep -Eq 'Maximum.*45' && grep -Fqx 'umask 027' /home/pavel/.bash_profile && grep -Fqx 'echo exam-g access' /home/pavel/.bash_profile && atq | grep -q pavel",
-            "runuser -l copyg -c 'ssh -o BatchMode=yes copyg@server true' && test -f /home/copyg/inbox/payload.txt",
+            f"runuser -l copyg -c 'ssh {NO_PROMPT_SSH_OPTS} copyg@server true' && test -f /home/copyg/inbox/payload.txt",
             "test -f /root/trackerg-files/opt/exam-g/find/a/file1.txt && grep -q 'ember' /root/ember-lines && test -f /root/etc-g.tar.bz2 && test -d /var/log/journal && ! ps -p \"$(cat /home/workerg/cpu.pid)\" >/dev/null 2>&1 && ps -o ni= -p \"$(cat /home/workerg/sleep.pid)\" | tr -d ' ' | grep -qx '10'",
             "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/deltalv | grep -Eq '^/mnt/deltalv /dev/mapper/deltavg-deltalv ext4$' && runuser -l solg -c 'systemctl --user is-enabled container-pdfg.service' | grep -qx enabled && runuser -l solg -c 'systemctl --user is-active container-pdfg.service' | grep -qx active && loginctl show-user solg | grep -Eq '^Linger=yes$'",
         ],
