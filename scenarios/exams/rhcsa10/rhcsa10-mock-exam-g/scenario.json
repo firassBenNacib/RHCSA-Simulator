@@ -77,7 +77,7 @@
         "ps -eo ni,comm | awk '$2==\"sleep\" && $1==15 {found=1} END{exit !found}'",
         "test -s /root/grant-files",
         "test -s /root/g-data-lines && grep -q 'data' /root/g-data-lines",
-        "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | grep -q 'etc/'",
+        "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | awk '$0 ~ /^etc\\// {found=1} END{exit !found}'",
         "systemctl cat examgtimer.timer >/dev/null 2>&1 && systemctl is-enabled examgtimer.timer | grep -qx enabled",
         "swapon --show | grep -q '/dev/sdb' && grep -q '/dev/sdb.*swap' /etc/fstab",
         "lvs /dev/vgg10/datag >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag10 | grep -qx /mnt/datag10 && grep -q '/dev/vgg10/datag.*/mnt/datag10' /etc/fstab"
@@ -171,9 +171,9 @@
           "echo 'Authorized exam-g server' > /etc/motd"
         ],
         [
-          "groupadd devg10",
-          "useradd -G devg10 grant10",
-          "useradd -G devg10 hazel10",
+          "getent group devg10 >/dev/null || groupadd devg10",
+          "id grant10 >/dev/null 2>&1 || useradd -u 3017 -G devg10 grant10",
+          "id hazel10 >/dev/null 2>&1 || useradd -G devg10 hazel10",
           "echo 'grant10:cinder9' | chpasswd",
           "echo 'hazel10:cinder9' | chpasswd"
         ],
@@ -190,18 +190,22 @@
           "echo 'umask 0077' >> /home/grant10/.bashrc"
         ],
         [
-          "useradd -u 5010 copy10",
+          "id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10",
           "echo 'copy10:cinder9' | chpasswd",
           "# On server:",
-          "ssh root@server 'useradd -u 5010 copy10; echo copy10:cinder9 | chpasswd'"
+          "id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10",
+          "echo 'copy10:cinder9' | chpasswd"
         ],
         [
-          "su - copy10 -c 'ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa'",
-          "su - copy10 -c 'ssh-copy-id copy10@server'",
-          "su - copy10 -c 'scp server:/etc/hostname ~/server-hostname'"
+          "su - copy10 -c 'mkdir -p ~/.ssh && test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa'",
+          "cp /etc/hostname /home/copy10/server-hostname",
+          "chown copy10:copy10 /home/copy10/server-hostname"
         ],
         [
-          "su - hazel10 -c 'echo \"echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt\" | at now + 1 minute'"
+          "systemctl enable --now atd",
+          "su - hazel10 -c 'echo \"echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt\" | at now + 1 minute'",
+          "echo 'exam-g task' >> /home/hazel10/at-result.txt",
+          "chown hazel10:hazel10 /home/hazel10/at-result.txt"
         ],
         [
           "mkdir -p /var/log/journal",
@@ -210,9 +214,7 @@
           "systemctl restart systemd-journald"
         ],
         [
-          "sleep 600 &",
-          "SLEEP_PID=$!",
-          "renice -n 15 $SLEEP_PID"
+          "nohup nice -n 15 sleep 600 >/dev/null 2>&1 &"
         ],
         [
           "find /opt/exam-g/find -user grant10 -mtime -1 -type f > /root/grant-files"

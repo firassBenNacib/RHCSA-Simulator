@@ -20,6 +20,29 @@ userdel -r userg10 >/dev/null 2>&1 || true
 groupdel teamg10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamg10-systemctl
 
+# --- Exam G find dataset and users ---
+userdel -r grant10 >/dev/null 2>&1 || true
+userdel -r hazel10 >/dev/null 2>&1 || true
+userdel -r copy10 >/dev/null 2>&1 || true
+userdel -r noaccess70 >/dev/null 2>&1 || true
+groupdel devg10 >/dev/null 2>&1 || true
+rm -rf /srv/devg10 /opt/exam-g/find /home/hazel10 /home/grant10 /home/copy10
+mkdir -p /opt/exam-g/find/recent /opt/exam-g/find/archive
+echo 'grant recent' > /opt/exam-g/find/recent/grant-a.txt
+echo 'grant archive' > /opt/exam-g/find/archive/grant-old.txt
+echo 'root recent' > /opt/exam-g/find/recent/root-a.txt
+touch -d '2 days ago' /opt/exam-g/find/archive/grant-old.txt
+chown 3017:0 /opt/exam-g/find/recent/grant-a.txt /opt/exam-g/find/archive/grant-old.txt
+chown root:root /opt/exam-g/find/recent/root-a.txt
+mkdir -p /usr/share/dict
+cat > /usr/share/dict/words <<'EOFWORDS'
+alpha
+database
+metadata
+kernel
+EOFWORDS
+
+
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true
 semanage port -d -t http_port_t -p tcp 8106 >/dev/null 2>&1 || true

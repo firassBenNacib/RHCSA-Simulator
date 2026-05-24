@@ -313,6 +313,8 @@ umount /mnt/vfat10 >/dev/null 2>&1 || true
 sed -i '\\#/mnt/vfat10#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
+udevadm settle
 """
 
     scripts["lab-41-nfs-mount"] = h + """
@@ -364,7 +366,7 @@ rhcsa_reset_repo_directory /root/.repo-backup-server-lab04
 
     scripts["lab-18-ssh-key-auth"] = h + """
 install -d -m 700 /root/.ssh
-ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519_key10 -N '' -C 'key10-test' >/dev/null 2>&1 || true
+test -f /root/.ssh/id_ed25519_key10 || ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519_key10 -N '' -C 'key10-test' >/dev/null 2>&1
 """
 
     scripts["lab-24-process-priority"] = h + """
@@ -382,9 +384,13 @@ sed -i '/^Storage=/d' /etc/systemd/journald.conf 2>/dev/null || true
 
     scripts["lab-28-chrony-client"] = h + """
 dnf install -y chrony >/dev/null 2>&1 || true
-cat > /etc/chrony.d/lab28-server.conf <<'EOF'
+install -d -m 755 /etc/chrony.d
+cat > /etc/chrony.conf <<'EOF'
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
 allow 192.168.122.0/24
 local stratum 10
+logdir /var/log/chrony
 EOF
 systemctl enable --now chronyd
 """
@@ -441,6 +447,31 @@ def _exam_scripts(seed: int) -> tuple[str, str]:
     group = f"team{letter}10"
     remote = f"exam{letter}flatpak"
     timer = f"exam{letter}timer"
+    exam_g_client_reset = ""
+    if letter == "g":
+        exam_g_client_reset = """
+# --- Exam G find dataset and users ---
+userdel -r grant10 >/dev/null 2>&1 || true
+userdel -r hazel10 >/dev/null 2>&1 || true
+userdel -r copy10 >/dev/null 2>&1 || true
+userdel -r noaccess70 >/dev/null 2>&1 || true
+groupdel devg10 >/dev/null 2>&1 || true
+rm -rf /srv/devg10 /opt/exam-g/find /home/hazel10 /home/grant10 /home/copy10
+mkdir -p /opt/exam-g/find/recent /opt/exam-g/find/archive
+echo 'grant recent' > /opt/exam-g/find/recent/grant-a.txt
+echo 'grant archive' > /opt/exam-g/find/archive/grant-old.txt
+echo 'root recent' > /opt/exam-g/find/recent/root-a.txt
+touch -d '2 days ago' /opt/exam-g/find/archive/grant-old.txt
+chown 3017:0 /opt/exam-g/find/recent/grant-a.txt /opt/exam-g/find/archive/grant-old.txt
+chown root:root /opt/exam-g/find/recent/root-a.txt
+mkdir -p /usr/share/dict
+cat > /usr/share/dict/words <<'EOFWORDS'
+alpha
+database
+metadata
+kernel
+EOFWORDS
+"""
 
     client = CLIENT_SCRIPT_HEADER + f"""
 # --- Reset hostname and network ---
@@ -460,6 +491,7 @@ flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 userdel -r {user} >/dev/null 2>&1 || true
 groupdel {group} >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/{group}-systemctl
+{exam_g_client_reset}
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true
@@ -602,6 +634,82 @@ def _reorder_parallel(values: list[Any], order: list[int]) -> list[Any]:
     if len(values) != len(order):
         return values
     return [values[index] for index in order]
+
+
+def _move_parallel_item(values: list[Any], source_index: int, target_index: int) -> list[Any]:
+    if not (0 <= source_index < len(values)):
+        return values
+    moved = list(values)
+    item = moved.pop(source_index)
+    moved.insert(target_index, item)
+    return moved
+
+
+def _order_user_prerequisites(
+    tasks: list[str],
+    checks: list[str],
+    commands: list[list[str]],
+    points: list[Any],
+) -> tuple[list[str], list[str], list[list[str]], list[Any]]:
+    for create_index, task in enumerate(list(tasks)):
+        match = re.search(r"\bcreate user\s+([a-z0-9_-]+)\b", str(task), re.I)
+        if not match:
+            continue
+
+        user = match.group(1)
+        dependent_indexes = [
+            index
+            for index, candidate in enumerate(tasks)
+            if index != create_index
+            and re.search(rf"\b{re.escape(user)}\b", str(candidate), re.I)
+            and not re.search(r"\bcreate user\b", str(candidate), re.I)
+        ]
+        if not dependent_indexes:
+            continue
+
+        first_dependent = min(dependent_indexes)
+        if create_index <= first_dependent:
+            continue
+
+        tasks = _move_parallel_item(tasks, create_index, first_dependent)
+        checks = _move_parallel_item(checks, create_index, first_dependent)
+        commands = _move_parallel_item(commands, create_index, first_dependent)
+        if points:
+            points = _move_parallel_item(points, create_index, first_dependent)
+
+    return tasks, checks, commands, points
+
+
+def _order_flatpak_prerequisites(
+    tasks: list[str],
+    checks: list[str],
+    commands: list[list[str]],
+    points: list[Any],
+) -> tuple[list[str], list[str], list[list[str]], list[Any]]:
+    for install_index, task in enumerate(list(tasks)):
+        match = re.search(r"\bInstall org\.rhcsa\.Tools from\s+([a-z0-9_-]+)\b", str(task), re.I)
+        if not match:
+            continue
+
+        remote = match.group(1)
+        remote_index = next(
+            (
+                index
+                for index, candidate in enumerate(tasks)
+                if re.search(rf"\bCreate system Flatpak remote\s+{re.escape(remote)}\b", str(candidate), re.I)
+            ),
+            None,
+        )
+        if remote_index is None or remote_index <= install_index:
+            continue
+
+        tasks = _move_parallel_item(tasks, remote_index, install_index)
+        checks = _move_parallel_item(checks, remote_index, install_index)
+        commands = _move_parallel_item(commands, remote_index, install_index)
+        if points:
+            points = _move_parallel_item(points, remote_index, install_index)
+
+    return tasks, checks, commands, points
 
 
 def _retarget_lab_to_server(block: dict[str, Any]) -> dict[str, Any]:
@@ -824,6 +932,33 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         updated["checks"] = checks
         return updated
 
+    if lab_id == "lab-18-ssh-key-auth":
+        return _replace_lab_progression(
+            block,
+            [
+                "On client, create user key10 and set password cinder9.",
+                "On client, create /home/key10/.ssh/authorized_keys with the provided public key text ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10.",
+                "On client, set secure ownership and permissions on the SSH directory and authorized_keys file.",
+            ],
+            [
+                "getent passwd key10 >/dev/null",
+                "grep -Fqx 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' /home/key10/.ssh/authorized_keys",
+                "stat -c '%U:%a' /home/key10/.ssh /home/key10/.ssh/authorized_keys | grep -qx 'key10:700' && stat -c '%U:%a' /home/key10/.ssh/authorized_keys | grep -qx 'key10:600'",
+            ],
+            [
+                ["useradd -m key10", "echo 'key10:cinder9' | chpasswd"],
+                [
+                    "install -d -m 700 -o key10 -g key10 /home/key10/.ssh",
+                    "echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' > /home/key10/.ssh/authorized_keys",
+                ],
+                [
+                    "chown key10:key10 /home/key10/.ssh/authorized_keys",
+                    "chmod 600 /home/key10/.ssh/authorized_keys",
+                    "restorecon -RF /home/key10/.ssh",
+                ],
+            ],
+        )
+
     if lab_id == "lab-21-selinux-restorecon":
         return _replace_lab_progression(
             block,
@@ -998,11 +1133,22 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
 
     if lab_id == "lab-40-vfat-filesystem":
         checks = list(block.get("checks", []))
-        checks[0] = "test -b /dev/sdb1"
+        checks[0] = "parted -sm /dev/sdb unit MiB print | awk -F: '$1 == \"1\" && int($4) >= 250 && int($4) <= 260 {ok=1} END {exit !ok}'"
         checks[1] = "blkid /dev/sdb1 | grep -q 'TYPE=\"vfat\"' && blkid /dev/sdb1 | grep -q 'LABEL_FATBOOT=\"RHCSA10VFAT\"\\|LABEL=\"RHCSA10VFAT\"'"
         checks[2] = "findmnt -no TARGET /mnt/vfat10 | grep -qx /mnt/vfat10 && grep -Eq '^LABEL=RHCSA10VFAT[[:space:]]+/mnt/vfat10[[:space:]]+vfat' /etc/fstab"
         updated = dict(block)
         updated["checks"] = checks
+        commands = [list(command_group) for command_group in block.get("solution_commands", [])]
+        if len(commands) >= 3:
+            commands[0] = [
+                "wipefs -a /dev/sdb >/dev/null 2>&1 || true",
+                "sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true",
+                "parted -s /dev/sdb mklabel gpt mkpart primary fat32 1MiB 257MiB",
+                "partprobe /dev/sdb || true",
+                "udevadm settle",
+            ]
+            commands[1] = ["mkfs.vfat -F 32 -n RHCSA10VFAT /dev/sdb1"]
+            updated["solution_commands"] = commands
         return updated
 
     if lab_id == "lab-41-nfs-mount":
@@ -1185,16 +1331,62 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     if exam_id == "rhcsa10-mock-exam-g":
         for index, task in enumerate(tasks):
             task_text = str(task)
-            if "server:/exports/shareg" not in task_text and "Authorized exam-g server" not in task_text:
-                continue
-            tasks[index] = "(server) Set the server login message in /etc/motd to Authorized exam-g server."
-            if index < len(checks):
-                checks[index] = _ssh_server_check("grep -qx 'Authorized exam-g server' /etc/motd")
-            if index < len(commands):
-                commands[index] = [
-                    "# On server:",
-                    "echo 'Authorized exam-g server' > /etc/motd",
-                ]
+            if "server:/exports/shareg" in task_text or "Authorized exam-g server" in task_text:
+                tasks[index] = "(server) Set the server login message in /etc/motd to Authorized exam-g server."
+                if index < len(checks):
+                    checks[index] = _ssh_server_check("grep -qx 'Authorized exam-g server' /etc/motd")
+                if index < len(commands):
+                    commands[index] = [
+                        "# On server:",
+                        "echo 'Authorized exam-g server' > /etc/motd",
+                    ]
+
+            if "Create user copy10" in task_text and "same UID 5010" in task_text:
+                if index < len(commands):
+                    commands[index] = [
+                        "id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10",
+                        "echo 'copy10:cinder9' | chpasswd",
+                        "# On server:",
+                        "id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10",
+                        "echo 'copy10:cinder9' | chpasswd",
+                    ]
+
+            if "Create group devg10" in task_text and "grant10" in task_text:
+                if index < len(commands):
+                    commands[index] = [
+                        "getent group devg10 >/dev/null || groupadd devg10",
+                        "id grant10 >/dev/null 2>&1 || useradd -u 3017 -G devg10 grant10",
+                        "id hazel10 >/dev/null 2>&1 || useradd -G devg10 hazel10",
+                        "echo 'grant10:cinder9' | chpasswd",
+                        "echo 'hazel10:cinder9' | chpasswd",
+                    ]
+
+            if "As copy10" in task_text and "server-hostname" in task_text:
+                if index < len(commands):
+                    commands[index] = [
+                        "su - copy10 -c 'mkdir -p ~/.ssh && test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa'",
+                        "cp /etc/hostname /home/copy10/server-hostname",
+                        "chown copy10:copy10 /home/copy10/server-hostname",
+                    ]
+
+            if "Schedule an at job for user hazel10" in task_text:
+                if index < len(commands):
+                    commands[index] = [
+                        "systemctl enable --now atd",
+                        "su - hazel10 -c 'echo \"echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt\" | at now + 1 minute'",
+                        "echo 'exam-g task' >> /home/hazel10/at-result.txt",
+                        "chown hazel10:hazel10 /home/hazel10/at-result.txt",
+                    ]
+
+            if 'Run the command "sleep 600"' in task_text and "renice" in task_text:
+                if index < len(commands):
+                    commands[index] = [
+                        "nohup nice -n 15 sleep 600 >/dev/null 2>&1 &",
+                    ]
+
+            if "gzip-compressed tar archive /root/g-etc.tar.gz" in task_text:
+                if index < len(checks):
+                    checks[index] = "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | awk '$0 ~ /^etc\\// {found=1} END{exit !found}'"
 
         for field_name in ("hints", "solution_outline"):
             values = [str(value) for value in updated.get(field_name, [])]
@@ -1301,6 +1493,12 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         commands = _reorder_parallel(commands, order)
         if len(updated.get("task_points", [])) == len(order):
             updated["task_points"] = _reorder_parallel(list(updated["task_points"]), order)
+
+    task_points = list(updated.get("task_points", []))
+    tasks, checks, commands, task_points = _order_flatpak_prerequisites(tasks, checks, commands, task_points)
+    tasks, checks, commands, task_points = _order_user_prerequisites(tasks, checks, commands, task_points)
+    if task_points:
+        updated["task_points"] = task_points
 
     updated["tasks"] = tasks
     updated["checks"] = checks

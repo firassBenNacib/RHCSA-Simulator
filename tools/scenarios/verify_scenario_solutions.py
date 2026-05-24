@@ -492,9 +492,9 @@ def render_write_file(path: str, lines: list[str], mode: str | None = None) -> s
     body = "\n".join(lines)
     script = (
         f"install -d -m 755 {shell_quote(str(Path(path).parent))}\n"
-        f"cat > {shell_quote(path)} <<'__CODEX__'\n"
+        f"cat > {shell_quote(path)} <<'__RHCSA_FILE__'\n"
         f"{body}\n"
-        "__CODEX__"
+        "__RHCSA_FILE__"
     )
     if mode:
         script += f"\nchmod {mode} {shell_quote(path)}"
@@ -625,7 +625,7 @@ def render_ssh_copy_id(command: str, current_user: str) -> str | None:
     dest_user, dest_host = remote_spec.split("@", 1)
     return "::".join(
         [
-            "__CODEX_SSH_COPY_ID__",
+            "__RHCSA_SSH_COPY_ID__",
             current_user,
             dest_user,
             dest_host,
@@ -645,9 +645,9 @@ def resolve_vm_alias(hostname: str) -> str | None:
 
 def execute_special_unit(unit: ExecutionUnit, timeout: int) -> subprocess.CompletedProcess[str] | None:
     marker = unit.script.strip()
-    if marker.startswith("set -euo pipefail\n__CODEX_SSH_COPY_ID__::"):
+    if marker.startswith("set -euo pipefail\n__RHCSA_SSH_COPY_ID__::"):
         marker = marker.splitlines()[-1]
-    if not marker.startswith("__CODEX_SSH_COPY_ID__::"):
+    if not marker.startswith("__RHCSA_SSH_COPY_ID__::"):
         return None
 
     _, current_user, dest_user, dest_host, port, pubkey_path = marker.split("::", 5)
