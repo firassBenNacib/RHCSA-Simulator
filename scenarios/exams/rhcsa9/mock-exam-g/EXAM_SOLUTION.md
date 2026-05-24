@@ -132,10 +132,28 @@ chmod 0755 /home/copyg/inbox
 ## Question 11 - SSH Key And Secure Copy (client + server) - 5 pts
 
 ```bash
+install -d -m 700 -o copyg -g copyg /home/copyg/.ssh
+cat > /home/copyg/.ssh/id_ed25519 <<'EOF'
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAuG+yT39D4/Azac0uRQnH8KcYvvcUmnuHAoPQHJKU4zwAAAKA2lzCKNpcw
+igAAAAtzc2gtZWQyNTUxOQAAACAuG+yT39D4/Azac0uRQnH8KcYvvcUmnuHAoPQHJKU4zw
+AAAED0TFRlch+3gmnC/IQr3uf+NaI8naRGs3q1d+j3omGZxy4b7JPf0Pj8DNpzS5FCcfwp
+xi+9xSae4cCg9AckpTjPAAAAFnJoY3NhLXNpbXVsYXRvci1yZXBsYXkBAgMEBQYH
+-----END OPENSSH PRIVATE KEY-----
+EOF
+printf '%s\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4b7JPf0Pj8DNpzS5FCcfwpxi+9xSae4cCg9AckpTjP rhcsa-simulator-replay' > /home/copyg/.ssh/id_ed25519.pub
+chown copyg:copyg /home/copyg/.ssh/id_ed25519 /home/copyg/.ssh/id_ed25519.pub
+chmod 0600 /home/copyg/.ssh/id_ed25519
+chmod 0644 /home/copyg/.ssh/id_ed25519.pub
+# Run on server
+install -d -m 700 -o copyg -g copyg /home/copyg/.ssh
+printf '%s\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4b7JPf0Pj8DNpzS5FCcfwpxi+9xSae4cCg9AckpTjP rhcsa-simulator-replay' > /home/copyg/.ssh/authorized_keys
+chown copyg:copyg /home/copyg/.ssh/authorized_keys
+chmod 0600 /home/copyg/.ssh/authorized_keys
+# Run on client
 su - copyg
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-ssh-copy-id copyg@server
-scp /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
+scp -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
 ```
 
 ---

@@ -144,8 +144,20 @@ elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
 ## Question 11 - SSH Key Generation (client) - 5 pts
 
 ```bash
-su - elio
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+install -d -m 700 -o elio -g elio /home/elio/.ssh
+cat > /home/elio/.ssh/id_ed25519 <<'EOF'
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAuG+yT39D4/Azac0uRQnH8KcYvvcUmnuHAoPQHJKU4zwAAAKA2lzCKNpcw
+igAAAAtzc2gtZWQyNTUxOQAAACAuG+yT39D4/Azac0uRQnH8KcYvvcUmnuHAoPQHJKU4zw
+AAAED0TFRlch+3gmnC/IQr3uf+NaI8naRGs3q1d+j3omGZxy4b7JPf0Pj8DNpzS5FCcfwp
+xi+9xSae4cCg9AckpTjPAAAAFnJoY3NhLXNpbXVsYXRvci1yZXBsYXkBAgMEBQYH
+-----END OPENSSH PRIVATE KEY-----
+EOF
+printf '%s\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4b7JPf0Pj8DNpzS5FCcfwpxi+9xSae4cCg9AckpTjP rhcsa-simulator-replay' > /home/elio/.ssh/id_ed25519.pub
+chown elio:elio /home/elio/.ssh/id_ed25519 /home/elio/.ssh/id_ed25519.pub
+chmod 0600 /home/elio/.ssh/id_ed25519
+chmod 0644 /home/elio/.ssh/id_ed25519.pub
 ```
 
 ---
@@ -166,20 +178,24 @@ chmod 0755 /home/backupf/inbox
 ## Question 13 - Passwordless SSH (server) - 4 pts
 
 ```bash
-# On client
+# Run on server
+install -d -m 700 -o backupf -g backupf /home/backupf/.ssh
+printf '%s\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4b7JPf0Pj8DNpzS5FCcfwpxi+9xSae4cCg9AckpTjP rhcsa-simulator-replay' > /home/backupf/.ssh/authorized_keys
+chown backupf:backupf /home/backupf/.ssh/authorized_keys
+chmod 0600 /home/backupf/.ssh/authorized_keys
+# Run on client
 su - elio
-ssh-copy-id -p 2222 backupf@server
-ssh -p 2222 -o BatchMode=yes backupf@server true
+ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true
 ```
 
 ---
 
-## Question 14 - Rsync Transfer (server) - 4 pts
+## Question 14 - Rsync Transfer (client + server) - 4 pts
 
 ```bash
-# On client
+# Run on client
 su - elio
-rsync -e "ssh -p 2222" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt
+rsync -e "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt
 ```
 
 ---

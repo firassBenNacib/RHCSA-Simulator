@@ -275,12 +275,12 @@ def render_background_network_bounce(commands: list[str]) -> str:
     payload = base64.b64encode(("set -euo pipefail\n" + "\n".join(commands)).encode("utf-8")).decode("ascii")
     return "\n".join(
         [
-            "bounce=$(mktemp /tmp/codex-netbounce-XXXXXX.sh)",
-            "base64 -d > \"$bounce\" <<'__CODEX__'",
+            "bounce=$(mktemp /tmp/rhcsa-netbounce-XXXXXX.sh)",
+            "base64 -d > \"$bounce\" <<'__RHCSA__'",
             payload,
-            "__CODEX__",
+            "__RHCSA__",
             "chmod 700 \"$bounce\"",
-            "nohup bash \"$bounce\" >/tmp/codex-netbounce.log 2>&1 </dev/null &",
+            "nohup bash \"$bounce\" >/tmp/rhcsa-netbounce.log 2>&1 </dev/null &",
         ]
     )
 
@@ -514,6 +514,9 @@ if path == Path('/etc/ssh/sshd_config'):
     port_lines = [item for item in desired if item.split(None, 1)[0] == 'Port']
     if port_lines:
         existing = [line for line in existing if not line.lstrip().startswith('Port ')]
+        # Keep the Vagrant management channel reachable when a task adds an alternate SSH port.
+        if 'Port 22' not in port_lines:
+            port_lines.insert(0, 'Port 22')
         existing.extend(port_lines)
         desired = [item for item in desired if item.split(None, 1)[0] != 'Port']
 for item in desired:
@@ -561,7 +564,7 @@ PY"""
 
 
 def render_visudo(command: str, content: list[str], task_index: int) -> str:
-    target = f"/etc/sudoers.d/codex-task-{task_index:02d}"
+    target = f"/etc/sudoers.d/rhcsa-task-{task_index:02d}"
     match = re.search(r"-f\s+(\S+)", command)
     if match:
         target = match.group(1)
@@ -866,22 +869,22 @@ def translate_task(
 def run_remote_script(vm: str, user: str, script: str, timeout: int) -> subprocess.CompletedProcess[str]:
     payload_prefix = (
         "set -euo pipefail\n"
-        'codex_ssh_bin="$(mktemp -d /tmp/codex-ssh-bin-XXXXXX)"\n'
-        "trap 'rm -rf \"$codex_ssh_bin\"' EXIT\n"
-        "cat >\"$codex_ssh_bin/ssh\" <<'__CODEX_SSH__'\n"
+        'rhcsa_ssh_bin="$(mktemp -d /tmp/rhcsa-ssh-bin-XXXXXX)"\n'
+        "trap 'rm -rf \"$rhcsa_ssh_bin\"' EXIT\n"
+        "cat >\"$rhcsa_ssh_bin/ssh\" <<'__RHCSA_SSH__'\n"
         "#!/bin/bash\n"
-        "exec /usr/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \"$@\"\n"
-        "__CODEX_SSH__\n"
-        "cat >\"$codex_ssh_bin/scp\" <<'__CODEX_SCP__'\n"
+        "exec /usr/bin/ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \"$@\"\n"
+        "__RHCSA_SSH__\n"
+        "cat >\"$rhcsa_ssh_bin/scp\" <<'__RHCSA_SCP__'\n"
         "#!/bin/bash\n"
-        "exec /usr/bin/scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \"$@\"\n"
-        "__CODEX_SCP__\n"
-        "cat >\"$codex_ssh_bin/ssh-copy-id\" <<'__CODEX_SSH_COPY_ID__'\n"
+        "exec /usr/bin/scp -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \"$@\"\n"
+        "__RHCSA_SCP__\n"
+        "cat >\"$rhcsa_ssh_bin/ssh-copy-id\" <<'__RHCSA_SSH_COPY_ID__'\n"
         "#!/bin/bash\n"
-        "exec /usr/bin/ssh-copy-id -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \"$@\"\n"
-        "__CODEX_SSH_COPY_ID__\n"
-        "chmod 700 \"$codex_ssh_bin/ssh\" \"$codex_ssh_bin/scp\" \"$codex_ssh_bin/ssh-copy-id\"\n"
-        'export PATH="$codex_ssh_bin:$PATH"\n'
+        "exec /usr/bin/ssh-copy-id -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \"$@\"\n"
+        "__RHCSA_SSH_COPY_ID__\n"
+        "chmod 700 \"$rhcsa_ssh_bin/ssh\" \"$rhcsa_ssh_bin/scp\" \"$rhcsa_ssh_bin/ssh-copy-id\"\n"
+        'export PATH="$rhcsa_ssh_bin:$PATH"\n'
     )
     if user != "root" and "podman " in script:
         payload_prefix += (
@@ -897,10 +900,10 @@ def run_remote_script(vm: str, user: str, script: str, timeout: int) -> subproce
     payload_script = payload_prefix + script
     encoded = base64.b64encode(payload_script.encode("utf-8")).decode("ascii")
     remote_lines = [
-        "tmp=$(mktemp /tmp/codex-solution-XXXXXX.sh)",
-        "base64 -d > \"$tmp\" <<'__CODEX__'",
+        "tmp=$(mktemp /tmp/rhcsa-solution-XXXXXX.sh)",
+        "base64 -d > \"$tmp\" <<'__RHCSA__'",
         encoded,
-        "__CODEX__",
+        "__RHCSA__",
     ]
     if user == "root":
         remote_lines += [
@@ -1027,7 +1030,7 @@ def get_secured_identity_file(identity_path: str) -> str:
         return str(source)
 
     suffix = "".join(source.suffixes) or ".key"
-    target = Path(tempfile.gettempdir()) / f"codex-vagrant-{source.stem}{suffix}"
+    target = Path(tempfile.gettempdir()) / f"rhcsa-vagrant-{source.stem}{suffix}"
     shutil.copyfile(source, target)
     principal = os.environ.get("USERNAME", "")
     subprocess.run(
@@ -1210,7 +1213,7 @@ def clear_vagrant_process_locks() -> None:
 
 def rebuild_baseline(output: str, timeout_seconds: int) -> tuple[bool, str]:
     try:
-        destroy_proc = run_ps("destroy", timeout_seconds=timeout_seconds)
+        destroy_proc = run_ps("destroy", "-ForceHostCleanup", timeout_seconds=timeout_seconds)
         output += destroy_proc.stdout + destroy_proc.stderr
         if destroy_proc.returncode != 0:
             return False, output
@@ -1725,6 +1728,7 @@ def normalize_only_kind_shortcut(args: argparse.Namespace) -> None:
 
 
 def main() -> int:
+    os.environ["RHCSA_SKIP_RECOVERY_CONSOLE"] = "1"
     parser = argparse.ArgumentParser(
         description="Replay authored scenario solutions and verify progressive lab checks or final exam checks."
     )
@@ -1772,12 +1776,16 @@ def main() -> int:
         for index, scenario_id in enumerate(ids, start=1):
             print(f"[{index}/{len(ids)}] {scenario_id}")
             manifest = load_manifest(kind, scenario_id, args.track)
-            if args.audit_only:
-                ok, messages = audit_scenario(kind, scenario_id, manifest)
-            elif kind == "lab":
-                ok, messages = verify_lab(scenario_id, manifest, args.track, args.exec_timeout, args.start_timeout)
-            else:
-                ok, messages = verify_exam(scenario_id, manifest, args.track, args.exec_timeout, args.start_timeout)
+            try:
+                if args.audit_only:
+                    ok, messages = audit_scenario(kind, scenario_id, manifest)
+                elif kind == "lab":
+                    ok, messages = verify_lab(scenario_id, manifest, args.track, args.exec_timeout, args.start_timeout)
+                else:
+                    ok, messages = verify_exam(scenario_id, manifest, args.track, args.exec_timeout, args.start_timeout)
+            finally:
+                if not args.audit_only:
+                    run_ps("exit-run", timeout_seconds=60)
             if ok:
                 print("  ok")
                 for message in messages:
