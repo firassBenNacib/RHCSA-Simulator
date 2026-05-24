@@ -33,81 +33,81 @@ Configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (server) - 4 pts
-
-Create VG vgc10 and LV datac mounted at /mnt/datac10.
-
----
-
-## Question 04 - Allow TCP port 8102 permanently in firewalld and reload (server) - 4 pts
-
-Allow TCP port 8102 permanently in firewalld and reload.
-
----
-
-## Question 05 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
-
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
-
----
-
-## Question 06 - Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
-
-Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
-
----
-
-## Question 07 - Install org.rhcsa.Tools from examcflatpak, then remove it after verifica (server) - 5 pts
-
-Install org.rhcsa.Tools from examcflatpak, then remove it after verification.
-
----
-
-## Question 08 - Create group teamc10, create user userc10, set password cinder9, and add (server) - 5 pts
-
-Create group teamc10, create user userc10, set password cinder9, and add the user to teamc10.
-
----
-
-## Question 09 - Allow %teamc10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
-
-Allow %teamc10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
-
----
-
-## Question 10 - Set maximum password age for userc10 to 47 days and warning period to 7 (server) - 5 pts
-
-Set maximum password age for userc10 to 47 days and warning period to 7 days.
-
----
-
-## Question 11 - Create /usr/local/bin/c-who that prints the primary group for the suppli (server) - 5 pts
+## Question 03 - Create /usr/local/bin/c-who that prints the primary group for the suppli (server) - 5 pts
 
 Create /usr/local/bin/c-who that prints the primary group for the supplied user argument.
 
 ---
 
-## Question 12 - Write users whose shell ends with sh to /root/c-shell-users.txt (server) - 5 pts
+## Question 04 - Write users whose shell ends with sh to /root/c-shell-users.txt (server) - 5 pts
 
 Write users whose shell ends with sh to /root/c-shell-users.txt.
 
 ---
 
-## Question 13 - Create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 05 - Create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
 
 Create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fstab.
 
 ---
 
-## Question 14 - Create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (server) - 5 pts
+## Question 06 - Create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (server) - 5 pts
 
 Create /root/c-original, hard link /root/c-hard, and symlink /root/c-soft.
 
 ---
 
-## Question 15 - Create and enable examctimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 07 - Create and enable examctimer.timer that runs every 10 minutes (server) - 4 pts
 
 Create and enable examctimer.timer that runs every 10 minutes.
+
+---
+
+## Question 08 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (server) - 4 pts
+
+Create VG vgc10 and LV datac mounted at /mnt/datac10.
+
+---
+
+## Question 09 - Allow TCP port 8102 permanently in firewalld and reload (server) - 4 pts
+
+Allow TCP port 8102 permanently in firewalld and reload.
+
+---
+
+## Question 10 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+
+Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 11 - Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+
+Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+
+---
+
+## Question 12 - Install org.rhcsa.Tools from examcflatpak, then remove it after verifica (server) - 5 pts
+
+Install org.rhcsa.Tools from examcflatpak, then remove it after verification.
+
+---
+
+## Question 13 - Create group teamc10, create user userc10, set password cinder9, and add (server) - 5 pts
+
+Create group teamc10, create user userc10, set password cinder9, and add the user to teamc10.
+
+---
+
+## Question 14 - Allow %teamc10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+
+Allow %teamc10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+
+---
+
+## Question 15 - Set maximum password age for userc10 to 47 days and warning period to 7 (server) - 5 pts
+
+Set maximum password age for userc10 to 47 days and warning period to 7 days.
 
 ---
 
