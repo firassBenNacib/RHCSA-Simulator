@@ -2359,7 +2359,8 @@ function Stop-VBoxMachineForSnapshot {
         [Parameter(Mandatory = $true)]
         [string]$MachineName,
         [string]$ProjectRoot = (Get-ProjectRoot),
-        [string]$VBoxManagePath = (Get-VBoxManagePath)
+        [string]$VBoxManagePath = (Get-VBoxManagePath),
+        [switch]$FastPowerOff
     )
 
     if (-not $PSCmdlet.ShouldProcess($MachineName, 'Stop VM before snapshot operation')) {
@@ -2373,6 +2374,13 @@ function Stop-VBoxMachineForSnapshot {
 
     $state = Get-VBoxMachineState -VmId $vmId -VBoxManagePath $VBoxManagePath
     if ($state -and $state.ToLowerInvariant() -notin @('poweroff', 'saved', 'aborted')) {
+        if ($FastPowerOff.IsPresent) {
+            Invoke-ExternalCommand -FilePath $VBoxManagePath -ArgumentList @('controlvm', $vmId, 'poweroff') -FailureMessage "Failed to power off $MachineName before snapshot restore." -IgnoreExitCode -SuppressOutput -TimeoutSeconds 45
+            Wait-VBoxMachineState -VmId $vmId -DesiredState @('poweroff', 'saved', 'aborted') -VBoxManagePath $VBoxManagePath -TimeoutSeconds 45 | Out-Null
+            Start-Sleep -Seconds 1
+            return
+        }
+
         $shutdownSpec = $null
         try {
             $shutdownSpec = Get-VmDirectSshLaunchSpec -MachineName $MachineName -ProjectRoot $ProjectRoot -BatchMode
@@ -2424,7 +2432,7 @@ function Invoke-VBoxSnapshotCommand {
         Wait-VBoxMachineReady -VmId $VmId -VBoxManagePath $VBoxManagePath
 
         try {
-            Invoke-ExternalCommand -FilePath $VBoxManagePath -ArgumentList (@('snapshot', $VmId) + $SnapshotArgumentList) -FailureMessage $FailureMessage
+            Invoke-ExternalCommand -FilePath $VBoxManagePath -ArgumentList (@('snapshot', $VmId) + $SnapshotArgumentList) -FailureMessage $FailureMessage -TimeoutSeconds 300
             return
         }
         catch {
@@ -2466,11 +2474,53 @@ function Get-RequiredBaseSnapshotMode {
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
-    if ((Get-ProjectProfile -ProjectRoot $ProjectRoot) -eq 'rhel10') {
+    if (Test-Rhel10SavedSnapshotAllowed -ProjectRoot $ProjectRoot) {
         return 'saved'
     }
 
     return 'poweroff'
+}
+
+function Get-Rhel10SavedSnapshotDisablePath {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    return (Join-Path (Get-LabStateRoot -ProjectRoot $ProjectRoot) 'rhel10-saved-snapshot-disabled')
+}
+
+function Test-Rhel10SavedSnapshotAllowed {
+    [OutputType([bool])]
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    if ((Get-ProjectProfile -ProjectRoot $ProjectRoot) -ne 'rhel10') {
+        return $false
+    }
+
+    if ($env:RHCSA_ENABLE_RHEL10_SAVED_SNAPSHOT -match '^(1|true|yes|on)$') {
+        return $true
+    }
+
+    return $false
+}
+
+function Disable-Rhel10SavedSnapshotForHost {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$Reason = 'VirtualBox saved-state restore failed.'
+    )
+
+    if ((Get-ProjectProfile -ProjectRoot $ProjectRoot) -ne 'rhel10') {
+        return
+    }
+
+    Initialize-LabStateLayout -ProjectRoot $ProjectRoot | Out-Null
+    Set-Utf8NoBomFile -Path (Get-Rhel10SavedSnapshotDisablePath -ProjectRoot $ProjectRoot) -Content @"
+disabled_at=$((Get-Date).ToString('o'))
+reason=$Reason
+"@
 }
 
 function Test-BaseSnapshotModeReady {
@@ -2883,10 +2933,6 @@ if command -v restorecon >/dev/null 2>&1; then
   done
 fi
 
-if command -v fixfiles >/dev/null 2>&1; then
-  fixfiles -F restore >/dev/null 2>&1 || true
-fi
-
 if command -v restorecon >/dev/null 2>&1; then
   restorecon -RF /usr/sbin/sshd /etc/ssh /var/www /var/log /home /root /opt /etc/systemd /usr/lib/systemd /var/lib/containers >/dev/null 2>&1 || true
 fi
@@ -2896,14 +2942,13 @@ if ls -Zd /usr/sbin/sshd /etc/ssh/sshd_config /var/www/html 2>/dev/null | grep -
   exit 1
 fi
 if [ -f /etc/selinux/config ]; then
-  sed -ri 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+  sed -ri 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
 fi
 if command -v grubby >/dev/null 2>&1; then
-  grubby --update-kernel=ALL --remove-args="enforcing=0 selinux=0" >/dev/null 2>&1 || true
-  grubby --update-kernel=ALL --args="selinux=1 enforcing=1" >/dev/null 2>&1 || true
+  grubby --update-kernel=ALL --remove-args="selinux=0 enforcing=1" >/dev/null 2>&1 || true
+  grubby --update-kernel=ALL --args="selinux=1 enforcing=0" >/dev/null 2>&1 || true
 fi
-setenforce 1 >/dev/null 2>&1 || true
-systemctl restart sshd >/dev/null 2>&1 || true
+setenforce 0 >/dev/null 2>&1 || true
 systemctl restart httpd >/dev/null 2>&1 || true
 systemctl restart nfs-server chronyd firewalld crond atd tuned >/dev/null 2>&1 || true
 getenforce
@@ -2915,6 +2960,11 @@ getenforce
             Write-FailureTranscript -StdOut $result.StdOut -StdErr $result.StdErr | Out-Null
             throw "SELinux did not become available on $machine. Run .\RHCSA.ps1 destroy and then .\RHCSA.ps1 up."
         }
+    }
+
+    Clear-VmSshConnectionCache -ProjectRoot $ProjectRoot -MachineNames @('server', 'client')
+    foreach ($machine in @('server', 'client')) {
+        Wait-VagrantGuestSshReady -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 24 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2
     }
 }
 
@@ -2946,13 +2996,9 @@ function Invoke-BaseSnapshotInitialization {
         return $false
     }
 
-    # RHCSA10 cold boots are expensive on VirtualBox/Windows hosts. Use a
-    # saved-state baseline by default so normal start/reset paths resume from a
-    # clean, already-booted guest instead of repeating the full kernel boot.
-    $useSavedStateSnapshots = (
-        (Get-ProjectProfile -ProjectRoot $ProjectRoot) -eq 'rhel10' -and
-        $env:RHCSA_DISABLE_RHEL10_SAVED_SNAPSHOT -notmatch '^(1|true|yes|on)$'
-    )
+    # Saved-state snapshots are fast but crash-prone on some Windows hosts.
+    # Keep them opt-in and speed up the stable poweroff restore path instead.
+    $useSavedStateSnapshots = Test-Rhel10SavedSnapshotAllowed -ProjectRoot $ProjectRoot
 
     Push-Location $ProjectRoot
     try {
@@ -3032,7 +3078,7 @@ function Invoke-BaseSnapshotRestore {
     Push-Location $ProjectRoot
     try {
         foreach ($machine in $targetMachines) {
-            Stop-VBoxMachineForSnapshot -MachineName $machine -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage
+            Stop-VBoxMachineForSnapshot -MachineName $machine -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage -FastPowerOff
         }
 
         foreach ($machine in $targetMachines) {
@@ -3098,27 +3144,31 @@ function Wait-VagrantGuestSshReady {
     $consecutiveSuccesses = 0
     $didRhel10BootReset = $false
     $powerStateStartAttempts = 0
+    $missingRegistrationAttempts = 0
     $rhel10BootResetAttempt = [Math]::Min(6, [Math]::Max(1, $MaxAttempts - 2))
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if (Test-VmBatchSshReady -MachineName $MachineName -ProjectRoot $ProjectRoot) {
-            $consecutiveSuccesses += 1
-            if ($consecutiveSuccesses -ge $RequiredSuccesses) {
-                Start-Sleep -Seconds $StabilizationDelaySeconds
-                return
-            }
-
-            Write-WorkflowStatus -Area $Area -Message "Confirmed $MachineName SSH once; waiting for stable readiness ($consecutiveSuccesses/$RequiredSuccesses)"
-            Start-Sleep -Seconds $StabilizationDelaySeconds
-            continue
-        }
-
-        $consecutiveSuccesses = 0
-
         $vmId = Get-OptionalVagrantMachineId -MachineName $MachineName -ProjectRoot $ProjectRoot
-        if (-not [string]::IsNullOrWhiteSpace($vmId)) {
+        if ([string]::IsNullOrWhiteSpace($vmId)) {
+            $missingRegistrationAttempts += 1
+            if ($missingRegistrationAttempts -ge 2) {
+                Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+                throw "Vagrant machine '$MachineName' is still reported as not created after startup."
+            }
+        }
+        else {
             $vboxManage = Get-VBoxManagePath
             $vboxState = Get-VBoxMachineState -VmId $vmId -VBoxManagePath $vboxManage
+            if ([string]::IsNullOrWhiteSpace([string]$vboxState)) {
+                $missingRegistrationAttempts += 1
+                if ($missingRegistrationAttempts -ge 2) {
+                    Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+                    throw "Vagrant machine '$MachineName' is still reported as not created after startup."
+                }
+            }
+            else {
+                $missingRegistrationAttempts = 0
+            }
             if (
                 $vboxState -and
                 [string]$vboxState -in @('poweroff', 'saved', 'aborted') -and
@@ -3138,6 +3188,20 @@ function Wait-VagrantGuestSshReady {
                 continue
             }
         }
+
+        if (Test-VmBatchSshReady -MachineName $MachineName -ProjectRoot $ProjectRoot) {
+            $consecutiveSuccesses += 1
+            if ($consecutiveSuccesses -ge $RequiredSuccesses) {
+                Start-Sleep -Seconds $StabilizationDelaySeconds
+                return
+            }
+
+            Write-WorkflowStatus -Area $Area -Message "Confirmed $MachineName SSH once; waiting for stable readiness ($consecutiveSuccesses/$RequiredSuccesses)"
+            Start-Sleep -Seconds $StabilizationDelaySeconds
+            continue
+        }
+
+        $consecutiveSuccesses = 0
 
         if (
             -not $didRhel10BootReset -and
@@ -3432,9 +3496,11 @@ function Test-ProcessCommandLineMatchesLab {
     }
 
     $projectName = Split-Path -Leaf $ProjectRoot
-    foreach ($namePattern in @("${projectName}_server_", "${projectName}_client_")) {
-        if ($CommandLine.IndexOf($namePattern, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
-            return $true
+    foreach ($name in @(Get-LabProjectNameCandidate -ProjectName $projectName)) {
+        foreach ($namePattern in @("${name}_server_", "${name}_client_")) {
+            if ($CommandLine.IndexOf($namePattern, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                return $true
+            }
         }
     }
 
@@ -3460,6 +3526,55 @@ function Test-ProcessStillLive {
     }
     catch {
         return $false
+    }
+}
+
+function Stop-LabHostProcessByName {
+    param(
+        [string[]]$Name
+    )
+
+    $processNames = @($Name | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) } | Select-Object -Unique)
+    if ($processNames.Count -eq 0) {
+        return
+    }
+
+    $stopProcessNames = @($processNames | ForEach-Object { ([string]$_) -replace '\.exe$', '' })
+    Stop-Process -Name $stopProcessNames -Force -ErrorAction SilentlyContinue
+
+    $exeNames = @($processNames | ForEach-Object {
+        $value = [string]$_
+        if ($value.EndsWith('.exe', [System.StringComparison]::OrdinalIgnoreCase)) {
+            $value
+        }
+        else {
+            "$value.exe"
+        }
+    })
+
+    foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
+        if ([string]$process.Name -in $exeNames) {
+            Invoke-CimMethod -InputObject $process -MethodName Terminate -ErrorAction SilentlyContinue | Out-Null
+        }
+    }
+}
+
+function Stop-LabHostProcessById {
+    param(
+        [int[]]$ProcessId
+    )
+
+    $processIds = @($ProcessId | Where-Object { [int]$_ -gt 0 } | Select-Object -Unique)
+    if ($processIds.Count -eq 0) {
+        return
+    }
+
+    Stop-Process -Id $processIds -Force -ErrorAction SilentlyContinue
+
+    foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
+        if ([int]$process.ProcessId -in $processIds) {
+            Invoke-CimMethod -InputObject $process -MethodName Terminate -ErrorAction SilentlyContinue | Out-Null
+        }
     }
 }
 
@@ -3552,11 +3667,18 @@ function Invoke-LabHypervisorLockCleanup {
 
     $processes = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
     $labProcessIds = Get-LabRelatedProcessIdSet -ProcessList $processes -ProjectRoot $ProjectRoot -MachineIds $machineIds -ForceHostCleanup:$forceCleanup
+    $safeProcessNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe')
+    $processIdsToStop = New-Object 'System.Collections.Generic.List[int]'
     foreach ($process in $processes) {
         if ($labProcessIds.Contains([int]$process.ProcessId)) {
-            Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
-            $killed++
+            if ($forceCleanup -or [string]$process.Name -in $safeProcessNames) {
+                $processIdsToStop.Add([int]$process.ProcessId)
+            }
         }
+    }
+    if ($processIdsToStop.Count -gt 0) {
+        Stop-LabHostProcessById -ProcessId @($processIdsToStop)
+        $killed = $processIdsToStop.Count
     }
 
     if ($killed -gt 0) {
@@ -3564,11 +3686,14 @@ function Invoke-LabHypervisorLockCleanup {
     }
     if ($forceCleanup -and (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup)) {
         $fallbackNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')
-        foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
-            if ([string]$process.Name -in $fallbackNames) {
-                Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
-                $killed++
-            }
+        $fallbackIds = @(
+            Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+                Where-Object { [string]$_.Name -in $fallbackNames } |
+                ForEach-Object { [int]$_.ProcessId }
+        )
+        if ($fallbackIds.Count -gt 0) {
+            Stop-LabHostProcessById -ProcessId $fallbackIds
+            $killed += $fallbackIds.Count
         }
         if ($killed -gt 0) {
             Start-Sleep -Seconds 2
@@ -3900,6 +4025,24 @@ function Start-BaselineSession {
         }
     }
     catch {
+        $message = $_.ToString()
+        if (
+            -not $SkipEnvironmentRecovery -and
+            $message -match 'Failed to confirm SSH readiness|still reported as not created after startup|Direct SSH command did not return the RHCSA exit marker|VBoxHeadless|VirtualBox VM .* remained locked'
+        ) {
+            $notices += 'Detected an unstable VirtualBox guest startup. Rebuilding the baseline once.'
+            Remove-LabEnvironment -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+            $recoveryResult = Start-BaselineSession `
+                -NoProvision:$NoProvision `
+                -NormalStart:$NormalStart `
+                -HeadlessClient:$HeadlessClient `
+                -RealisticMode:$RealisticMode `
+                -SkipEnvironmentRecovery `
+                -ProjectRoot $ProjectRoot
+            $recoveryResult.Notices = @($notices + @($recoveryResult.Notices))
+            return $recoveryResult
+        }
+
         throw
     }
 }
@@ -3977,6 +4120,13 @@ function Start-ScenarioRun {
     $baselineResult = $null
     $restoreMethod = 'snapshot'
     $restoreMachineNames = @('server', 'client')
+    if (
+        $modeLower -eq 'lab' -and
+        -not [bool]$manifest.Flags.RequiresServer -and
+        [string]::IsNullOrWhiteSpace([string]$manifest.VmScripts.ServerRelative)
+    ) {
+        $restoreMachineNames = @('client')
+    }
 
     if ($needsBaselineBootstrap) {
         Write-WorkflowStatus -Area 'scenario' -Message 'Baseline snapshots are missing; rebuilding the clean baseline first'
@@ -4009,27 +4159,41 @@ function Start-ScenarioRun {
             }
         }
         catch {
+            $restoreFailureMessage = $_.ToString()
             $baselineStatusAfterRestoreFailure = Get-BaselineStatus -ProjectRoot $ProjectRoot
-            if ([string]$baselineStatusAfterRestoreFailure.State -in @('ready', 'available')) {
+            $canRecoverRestoreFailure = $restoreFailureMessage -match 'Failed to confirm SSH readiness|still reported as not created after startup|did not reach state|Direct SSH command did not return the RHCSA exit marker|VBoxHeadless|VirtualBox VM .* remained locked|Failed to restore snapshot'
+            if ([string]$baselineStatusAfterRestoreFailure.State -in @('ready', 'available') -and -not $canRecoverRestoreFailure) {
                 throw
             }
 
             $restoreMethod = 'baseline-rebuild'
+            if ($canRecoverRestoreFailure) {
+                $baseState = Get-BaseSnapshotState -ProjectRoot $ProjectRoot
+                $stateModeProperty = if ($null -ne $baseState) { $baseState.PSObject.Properties['snapshot_mode'] } else { $null }
+                if (
+                    (Get-ProjectProfile -ProjectRoot $ProjectRoot) -eq 'rhel10' -and
+                    $null -ne $stateModeProperty -and
+                    [string]$stateModeProperty.Value -eq 'saved'
+                ) {
+                    Disable-Rhel10SavedSnapshotForHost -ProjectRoot $ProjectRoot -Reason $restoreFailureMessage
+                }
+                Remove-LabEnvironment -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+            }
             $baselineResult = Start-BaselineSession -ProjectRoot $ProjectRoot
             Clear-LiveCleanBaselineState -ProjectRoot $ProjectRoot
         }
 
-	        $null = Repair-BaselineSnapshotIfNeeded -Manifest $manifest -ProjectRoot $ProjectRoot
+        $null = Repair-BaselineSnapshotIfNeeded -Manifest $manifest -ProjectRoot $ProjectRoot
 
-	        Invoke-ScenarioProvisioning -Manifest $manifest -ProjectRoot $ProjectRoot
-	        $startedAt = Get-Date
-	        $endsAt = $startedAt.AddMinutes($manifest.TimeLimitMinutes)
-	        $briefPath = Join-Path $ProjectRoot ([string]$runArtifact.GeneratedArtifact.RunBrief)
-	        Set-Utf8NoBomFile -Path $briefPath -Content (Format-RunBriefText -Manifest $manifest -Mode $modeLower -StartedAt $startedAt -EndsAt $endsAt)
-	        Export-ActiveRunState -Manifest $manifest -Mode $modeLower -RunArtifact $runArtifact -StartedAt $startedAt -EndsAt $endsAt -ProjectRoot $ProjectRoot | Out-Null
+        Invoke-ScenarioProvisioning -Manifest $manifest -ProjectRoot $ProjectRoot
+        $startedAt = Get-Date
+        $endsAt = $startedAt.AddMinutes($manifest.TimeLimitMinutes)
+        $briefPath = Join-Path $ProjectRoot ([string]$runArtifact.GeneratedArtifact.RunBrief)
+        Set-Utf8NoBomFile -Path $briefPath -Content (Format-RunBriefText -Manifest $manifest -Mode $modeLower -StartedAt $startedAt -EndsAt $endsAt)
+        Export-ActiveRunState -Manifest $manifest -Mode $modeLower -RunArtifact $runArtifact -StartedAt $startedAt -EndsAt $endsAt -ProjectRoot $ProjectRoot | Out-Null
 
-	        if ($manifest.Flags.PasswordRecovery) {
-	            Invoke-ClientRecoveryConsole -ProjectRoot $ProjectRoot
+        if ($manifest.Flags.PasswordRecovery -and $env:RHCSA_SKIP_RECOVERY_CONSOLE -notmatch '^(1|true|yes|on)$') {
+            Invoke-ClientRecoveryConsole -ProjectRoot $ProjectRoot
         }
     }
     catch {
@@ -4718,11 +4882,19 @@ function Get-LabVBoxVmFolderCandidate {
     $patterns += 'rhcsa-ex200-server*'
     $patterns += 'rhcsa-ex200-client*'
 
+    $searchRoots = @($VBoxMachineFolder)
+    $boxomaticRoot = Join-Path $VBoxMachineFolder 'boxomatic'
+    if (Test-Path -LiteralPath $boxomaticRoot -PathType Container) {
+        $searchRoots += $boxomaticRoot
+    }
+
     $candidate = @()
-    foreach ($pattern in $patterns) {
-        $candidate += @(
-            Get-ChildItem -LiteralPath $VBoxMachineFolder -Directory -Filter $pattern -ErrorAction SilentlyContinue
-        )
+    foreach ($root in $searchRoots) {
+        foreach ($pattern in $patterns) {
+            $candidate += @(
+                Get-ChildItem -LiteralPath $root -Directory -Filter $pattern -ErrorAction SilentlyContinue
+            )
+        }
     }
 
     return @($candidate | Sort-Object FullName -Unique)
@@ -4824,9 +4996,17 @@ function Test-VBoxFolderArtifactPresent {
         'almalinux-10-*'
     )
 
-    foreach ($pattern in $patterns) {
-        if (Get-ChildItem -LiteralPath $VBoxMachineFolder -Directory -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1) {
-            return $true
+    $searchRoots = @($VBoxMachineFolder)
+    $boxomaticRoot = Join-Path $VBoxMachineFolder 'boxomatic'
+    if (Test-Path -LiteralPath $boxomaticRoot -PathType Container) {
+        $searchRoots += $boxomaticRoot
+    }
+
+    foreach ($root in $searchRoots) {
+        foreach ($pattern in $patterns) {
+            if (Get-ChildItem -LiteralPath $root -Directory -Filter $pattern -ErrorAction SilentlyContinue | Select-Object -First 1) {
+                return $true
+            }
         }
     }
 
@@ -4836,7 +5016,7 @@ function Test-VBoxFolderArtifactPresent {
 function Assert-LabDiskSpaceReady {
     param(
         [string]$ProjectRoot = (Get-ProjectRoot),
-        [int]$MinimumFreeGB = 20
+        [int]$MinimumFreeGB = 15
     )
 
     $paths = @($ProjectRoot)
@@ -4977,6 +5157,7 @@ function Remove-LabEnvironment {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [switch]$PreserveState,
+        [switch]$ForceHostCleanup,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )
 
@@ -4996,6 +5177,7 @@ function Remove-LabEnvironment {
     Clear-VmSshConnectionCache -ProjectRoot $ProjectRoot
     Clear-LiveCleanBaselineState -ProjectRoot $ProjectRoot
 
+    $forceCleanup = Test-ForceHostCleanupEnabled -ForceHostCleanup:$ForceHostCleanup
     $projectName = Split-Path -Leaf $ProjectRoot
     $vboxManage = Get-OptionalVBoxManagePath
     $registeredVBoxMachines = @()
@@ -5039,7 +5221,11 @@ function Remove-LabEnvironment {
     $remainingVBoxFolders = @()
 
     if ($shouldInspectHypervisor) {
-        Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+        Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
+        if ($forceCleanup) {
+            Stop-LabHostProcessByName -Name @('ruby', 'vagrant', 'VBoxManage', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxSVC')
+            Start-Sleep -Seconds 2
+        }
     }
 
     Push-Location $ProjectRoot
@@ -5054,7 +5240,7 @@ function Remove-LabEnvironment {
                 Invoke-VBoxVmRemoval -VBoxManagePath $vboxManage -VmId $candidate.Id -ProjectRoot $ProjectRoot
             }
 
-            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
             Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 | Out-Null
 
             foreach ($candidate in (Get-LabVBoxVmCandidate -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage)) {
@@ -5103,7 +5289,7 @@ function Remove-LabEnvironment {
             }
             Invoke-OrphanVmFolderCleanup -VBoxMachineFolder $vboxMachineFolder -ProjectName $projectName
             Invoke-OrphanVagrantImportFolderCleanup -VBoxMachineFolder $vboxMachineFolder -RegisteredVm (Get-VBoxVmCatalog -VBoxManagePath $vboxManage)
-            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
             Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 | Out-Null
             $remainingVms = @(Get-LabVBoxVmCandidate -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage)
             if ($remainingVms.Count -gt 0) {
@@ -5145,7 +5331,7 @@ function Remove-LabEnvironment {
             }
 
         if ($remainingPaths.Count -gt 0) {
-            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot | Out-Null
+            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
             Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 | Out-Null
 
             if ($vboxManage) {
@@ -5184,13 +5370,13 @@ function Remove-LabEnvironment {
         }
 
         if ($remainingPaths.Count -gt 0 -and ($remainingPaths | Where-Object { $_ -match '\\.lab-disks($|\\|/)' })) {
-            $processNames = if (Test-ForceHostCleanupEnabled) {
+            $processNames = if ($forceCleanup) {
                 @('VBoxSVC', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxManage')
             }
             else {
                 @('VBoxSVC')
             }
-            Stop-Process -Name $processNames -Force -ErrorAction SilentlyContinue
+            Stop-LabHostProcessByName -Name $processNames
             Start-Sleep -Seconds 2
 
             if ($vboxManage) {

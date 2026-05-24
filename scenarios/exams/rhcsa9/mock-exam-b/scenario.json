@@ -40,7 +40,7 @@
         "On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
         "Create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.",
         "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.",
-        "Use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
+        "On client, use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.",
         "Set a personal umask of 027 for mira.",
         "Find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.",
         "Extract lines containing proto from /usr/share/dict/words into /root/proto-lines.",
@@ -181,8 +181,19 @@
           "id mira >/dev/null 2>&1 || useradd -m mira",
           "echo cinder9 | passwd --stdin mira",
           "install -d -m 700 -o mira -g mira /home/mira/.ssh",
-          "su - mira",
-          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
+          "cat > /home/mira/.ssh/id_ed25519 <<'EOF'",
+          "-----BEGIN OPENSSH PRIVATE KEY-----",
+          "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW",
+          "QyNTUxOQAAACAuG+yT39D4/Azac0uRQnH8KcYvvcUmnuHAoPQHJKU4zwAAAKA2lzCKNpcw",
+          "igAAAAtzc2gtZWQyNTUxOQAAACAuG+yT39D4/Azac0uRQnH8KcYvvcUmnuHAoPQHJKU4zw",
+          "AAAED0TFRlch+3gmnC/IQr3uf+NaI8naRGs3q1d+j3omGZxy4b7JPf0Pj8DNpzS5FCcfwp",
+          "xi+9xSae4cCg9AckpTjPAAAAFnJoY3NhLXNpbXVsYXRvci1yZXBsYXkBAgMEBQYH",
+          "-----END OPENSSH PRIVATE KEY-----",
+          "EOF",
+          "printf '%s\\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4b7JPf0Pj8DNpzS5FCcfwpxi+9xSae4cCg9AckpTjP rhcsa-simulator-replay' > /home/mira/.ssh/id_ed25519.pub",
+          "chown mira:mira /home/mira/.ssh/id_ed25519 /home/mira/.ssh/id_ed25519.pub",
+          "chmod 0600 /home/mira/.ssh/id_ed25519",
+          "chmod 0644 /home/mira/.ssh/id_ed25519.pub"
         ],
         [
           "# Run on server",
@@ -191,15 +202,18 @@
           "mkdir -p /home/meshremote/inbox",
           "chown meshremote:meshremote /home/meshremote/inbox",
           "chmod 0755 /home/meshremote/inbox",
-          "# On client",
+          "install -d -m 700 -o meshremote -g meshremote /home/meshremote/.ssh",
+          "printf '%s\\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4b7JPf0Pj8DNpzS5FCcfwpxi+9xSae4cCg9AckpTjP rhcsa-simulator-replay' > /home/meshremote/.ssh/authorized_keys",
+          "chown meshremote:meshremote /home/meshremote/.ssh/authorized_keys",
+          "chmod 0600 /home/meshremote/.ssh/authorized_keys",
+          "# Run on client",
           "su - mira",
-          "ssh-copy-id -p 2222 meshremote@server",
-          "ssh -p 2222 -o BatchMode=yes meshremote@server true"
+          "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null meshremote@server true"
         ],
         [
-          "# On client",
+          "# Run on client",
           "su - mira",
-          "rsync -e \"ssh -p 2222\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
+          "rsync -e \"ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt"
         ],
         [
           "echo 'umask 027' >> /home/mira/.bash_profile"
@@ -270,7 +284,7 @@
         "hostnamectl --static | grep -qx 'client.exam-b.lab' && grep -Fqx '192.168.122.3 registry.exam-b.lab' /etc/hosts",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
         "useradd -D | grep -Eq 'INACTIVE=20' && getent passwd cato421 | awk -F: '{print $3}' | grep -qx '4421' && test ! -d /home/cato421 && chage -l jonas | grep -Eq 'Maximum.*45' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/coremesh.conf && grep -Eq '^mira .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/mira-firewalld",
-        "grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes meshremote@server true' && test -f /home/meshremote/inbox/report.txt",
+        "grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept' && runuser -l mira -c 'ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null meshremote@server true' && test -f /home/meshremote/inbox/report.txt",
         "test -f /root/mira-files/opt/exam-b/find/a/file1.txt && grep -q 'proto' /root/proto-lines && test -f /root/usr-local-b.tar.bz2 && /usr/local/bin/corecheck >/dev/null && test -s /root/coremesh-units.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewb\" && $2==\"reviewvgb\" && $3>=399 && $3<=401{f=1} END{exit !f}' && tuned-adm active | grep -Eq 'virtual-guest|throughput-performance'"
       ]

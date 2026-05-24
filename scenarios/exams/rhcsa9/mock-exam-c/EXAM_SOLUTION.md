@@ -79,8 +79,10 @@ mount -a
 
 ```bash
 getent group infrac >/dev/null || groupadd infrac
-id talia >/dev/null 2>&1 || useradd -m -G infrac talia
-id ren >/dev/null 2>&1 || useradd -m -G infrac ren
+id talia >/dev/null 2>&1 || useradd -m talia
+id -nG talia | tr ' ' '\n' | grep -qx infrac || gpasswd -a talia infrac
+id ren >/dev/null 2>&1 || useradd -m ren
+id -nG ren | tr ' ' '\n' | grep -qx infrac || gpasswd -a ren infrac
 echo cinder9 | passwd --stdin talia
 echo cinder9 | passwd --stdin ren
 ```
