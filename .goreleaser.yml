@@ -51,8 +51,15 @@ snapshot:
 
 changelog:
   sort: asc
+  groups:
+    - title: Bug Fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 0
+    - title: Other Changes
+      order: 999
   filters:
     exclude:
+      - "^Merge pull request"
       - "^docs:"
       - "^test:"
       - "^ci:"
