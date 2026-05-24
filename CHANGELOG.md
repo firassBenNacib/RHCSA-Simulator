@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.16](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.15...v1.0.16) (2026-05-24)
+
+
+### Bug Fixes
+
+* land RHCSA10 exam ordering on main ([e82edcf](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e82edcfcd2749ae7a37180f1e447a8eba9b11aa3))
+* stabilize replay cleanup and rhcsa9 exams ([a31727a](https://github.com/firassBenNacib/RHCSA-Simulator/commit/a31727a69bc56661c285c469a7b77df5018f0c45))
+
 ## [1.0.15](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.14...v1.0.15) (2026-05-22)
 
 
