@@ -226,11 +226,6 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN1YdxBpNlzxDqfJyw/QKow1F+wvG9hXGoqiysfJOn5Y
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zRdK8jlqm8tehUc9c9WhQ==
 EOF
 
-  # Lab replay uses this public Vagrant test key only inside disposable VMs.
-  cat > /root/.ssh/runtime_generated_ed25519 <<'EOF'
-[runtime-generated-ssh-material]
-EOF
-  chmod 600 /root/.ssh/runtime_generated_ed25519
 }
 
 configure_selinux_boot_policy() {

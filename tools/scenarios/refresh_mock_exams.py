@@ -9,16 +9,6 @@ from scenario_solution_normalizer import normalize_command_list
 ROOT = Path(__file__).resolve().parents[2]
 EXAMS_DIR = ROOT / "scenarios" / "exams"
 POINTS = [5] * 12 + [4] * 10
-REPLAY_SSH_RUNTIME_KEY = [
-    "[runtime-generated-ssh-material]",
-    "[runtime-generated-ssh-material]",
-    "[runtime-generated-ssh-material]",
-    "[runtime-generated-ssh-material]",
-    "[runtime-generated-ssh-material]",
-    "[runtime-generated-ssh-material]",
-    "[runtime-generated-ssh-material]",
-]
-REPLAY_SSH_RUNTIME_PUBLIC_KEY = "[runtime-generated-ssh-public-key]"
 NO_PROMPT_SSH_OPTS = "-o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 
@@ -44,25 +34,19 @@ def block(title: str, task: str, commands: list[str]) -> tuple[str, str, list[st
     return (title, task.strip(), commands)
 
 
-def install_replay_private_key(user: str) -> list[str]:
+def generate_replay_key(user: str) -> list[str]:
     return [
         f"install -d -m 0700 -o {user} -g {user} /home/{user}/.ssh",
-        f"cat > /home/{user}/.ssh/id_ed25519 <<'EOF'",
-        *REPLAY_SSH_RUNTIME_KEY,
-        "EOF",
-        f"printf '%s\\n' '{REPLAY_SSH_RUNTIME_PUBLIC_KEY}' > /home/{user}/.ssh/id_ed25519.pub",
-        f"chown {user}:{user} /home/{user}/.ssh/id_ed25519 /home/{user}/.ssh/id_ed25519.pub",
+        f"test -f /home/{user}/.ssh/id_ed25519 || runuser -u {user} -- ssh-keygen -t ed25519 -N '' -f /home/{user}/.ssh/id_ed25519 -C {user}-exam-replay >/dev/null 2>&1",
         f"chmod 0600 /home/{user}/.ssh/id_ed25519",
         f"chmod 0644 /home/{user}/.ssh/id_ed25519.pub",
     ]
 
 
-def authorize_replay_key(user: str) -> list[str]:
+def install_replay_key_with_ssh_copy_id(source_user: str, dest_user: str, *, port: int = 2222) -> list[str]:
     return [
-        f"install -d -m 0700 -o {user} -g {user} /home/{user}/.ssh",
-        f"printf '%s\\n' '{REPLAY_SSH_RUNTIME_PUBLIC_KEY}' > /home/{user}/.ssh/authorized_keys",
-        f"chown {user}:{user} /home/{user}/.ssh/authorized_keys",
-        f"chmod 0600 /home/{user}/.ssh/authorized_keys",
+        f"su - {source_user}",
+        f"ssh-copy-id -i /home/{source_user}/.ssh/id_ed25519.pub -p {port} {dest_user}@server",
     ]
 
 
@@ -344,16 +328,16 @@ def main() -> int:
         block("SSH Key Generation", "Create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.", [
             "id mira >/dev/null 2>&1 || useradd mira",
             "echo cinder9 | passwd --stdin mira",
-            *install_replay_private_key("mira"),
+            *generate_replay_key("mira"),
         ]),
             block("Passwordless SSH", "On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.", [
                 "# Run on server",
                 "id meshremote >/dev/null 2>&1 || useradd meshremote",
                 "echo cinder9 | passwd --stdin meshremote",
                 "install -d -m 0755 -o meshremote -g meshremote /home/meshremote/inbox",
-                *authorize_replay_key("meshremote"),
                 "# Run on client",
-                f"runuser -l mira -c 'ssh -p 2222 {NO_PROMPT_SSH_OPTS} meshremote@server true'",
+                *install_replay_key_with_ssh_copy_id("mira", "meshremote"),
+                f"ssh -p 2222 {NO_PROMPT_SSH_OPTS} meshremote@server true",
             ]),
         block("Rsync Transfer", "On client, use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.", [
             "# Run on client",
@@ -943,7 +927,7 @@ def main() -> int:
                 "elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld",
             ]),
             block("SSH Key Generation", "As elio on client, generate an ED25519 SSH key pair with no passphrase.", [
-                *install_replay_private_key("elio"),
+                *generate_replay_key("elio"),
             ]),
             block("Remote Account", "Create user backupf on server with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.", [
                 "# Run on server",
@@ -952,10 +936,9 @@ def main() -> int:
                 "install -d -m 0755 -o backupf -g backupf /home/backupf/inbox",
             ]),
             block("Passwordless SSH", "Install elio's public key for backupf on server and verify passwordless SSH access on port 2222.", [
-                "# Run on server",
-                *authorize_replay_key("backupf"),
                 "# Run on client",
-                f"runuser -l elio -c 'ssh -p 2222 {NO_PROMPT_SSH_OPTS} backupf@server true'",
+                *install_replay_key_with_ssh_copy_id("elio", "backupf"),
+                f"ssh -p 2222 {NO_PROMPT_SSH_OPTS} backupf@server true",
             ]),
             block("Rsync Transfer", "On client, use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.", [
                 "# Run on client",
@@ -1076,11 +1059,10 @@ def main() -> int:
                 "install -d -m 0755 -o copyg -g copyg /home/copyg/inbox",
             ]),
             block("SSH Key And Secure Copy", "As copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.", [
-                *install_replay_private_key("copyg"),
-                "# Run on server",
-                *authorize_replay_key("copyg"),
+                *generate_replay_key("copyg"),
                 "# Run on client",
-                f"runuser -l copyg -c 'scp {NO_PROMPT_SSH_OPTS} /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt'",
+                *install_replay_key_with_ssh_copy_id("copyg", "copyg", port=22),
+                f"scp {NO_PROMPT_SSH_OPTS} /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt",
             ]),
             block("At Job", "Queue a one-time at job as user pavel that appends the message \"exam-g tick\" to /root/exam-g-at.log in 2 minutes.", [
                 "systemctl enable --now atd",
