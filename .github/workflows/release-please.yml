@@ -6,7 +6,6 @@ on:
       - main
       - master
     paths-ignore:
-      - "**/*.md"
       - "demo/**"
   workflow_dispatch:
 
