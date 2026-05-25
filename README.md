@@ -4,6 +4,7 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 
 ## Table of Contents
 
+* [Demo](#demo)
 * [Prerequisites](#prerequisites)
 * [Installation](#installation)
 * [Usage](#usage)
@@ -12,6 +13,10 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [Development](#development)
 * [License](#license)
 * [Author](#author)
+
+## Demo
+
+![RHCSA Simulator screencast](demo/demo.gif)
 
 ## Prerequisites
 
