@@ -11,7 +11,9 @@ Use the RHCSA 9 profile when training against the RHEL 9 objective set:
 .\RHCSA.ps1 up
 ```
 
-The profile uses `rhel-9.7-x86_64-dvd.iso` in the project root as the offline package source.
+The default validated offline package source is `rhel-9.7-x86_64-dvd.iso` in the project root. Newer RHEL 9 minor DVD ISOs may work, but package sets can differ.
+
+Download RHEL DVD ISOs from [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease). If Red Hat only lists a newer minor ISO, rename it to the default filename or set `RHCSA_ISO` to the downloaded filename or full path before running `.\RHCSA.ps1 up`.
 
 ## Catalog
 
