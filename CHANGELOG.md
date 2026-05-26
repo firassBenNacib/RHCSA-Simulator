@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.0.0...v2.0.1) (2026-05-26)
+
+
+### Bug Fixes
+
+* harden replay authentication setup ([dc52c5f](https://github.com/firassBenNacib/RHCSA-Simulator/commit/dc52c5fd848c8c09fab2110f7e96dcb3e13eae90))
+
 ## [2.0.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v1.0.15...v2.0.0) (2026-05-24)
 
 
