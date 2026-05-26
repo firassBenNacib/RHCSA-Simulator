@@ -1208,8 +1208,10 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             [
                 ["echo TRANSFER10 > /root/rhcsa10-transfer.txt"],
                 [
-                    "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/runtime_generated_ed25519 /root/rhcsa10-transfer.txt root@server:/root/rhcsa10-transfer.txt",
-                    "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/runtime_generated_ed25519 root@server 'cat /root/rhcsa10-transfer.txt'",
+                    "test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-transfer >/dev/null 2>&1",
+                    "ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server",
+                    "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/rhcsa10-transfer.txt root@server:/root/rhcsa10-transfer.txt",
+                    "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 root@server 'cat /root/rhcsa10-transfer.txt'",
                 ],
             ],
             points=[10, 20],

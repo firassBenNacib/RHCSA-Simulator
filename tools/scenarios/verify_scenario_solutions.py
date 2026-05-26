@@ -43,6 +43,12 @@ SSH_WORKING_IDENTITY: dict[str, str] = {}
 
 
 CONTROL_TOKENS = {"EOF", ":wq", ":x", "exit"}
+
+
+def user_home(user: str) -> str:
+    return "/root" if user == "root" else f"/home/{user}"
+
+
 COMMAND_PREFIXES = {
     "at",
     "blkid",
@@ -599,14 +605,15 @@ def render_ssh_copy_id(command: str, current_user: str) -> str | None:
     if len(tokens) < 2:
         return None
 
-    pubkey_path = f"/home/{current_user}/.ssh/id_ed25519.pub"
+    current_home = user_home(current_user)
+    pubkey_path = f"{current_home}/.ssh/id_ed25519.pub"
     port = "22"
     remote_spec: str | None = None
     i = 1
     while i < len(tokens):
         token = tokens[i]
         if token == "-i" and i + 1 < len(tokens):
-            pubkey_path = tokens[i + 1].replace("~", f"/home/{current_user}", 1)
+            pubkey_path = tokens[i + 1].replace("~", current_home, 1)
             i += 2
             continue
         if token == "-p" and i + 1 < len(tokens):
@@ -660,11 +667,16 @@ def execute_special_unit(unit: ExecutionUnit, timeout: int) -> subprocess.Comple
         return pubkey_proc
 
     pubkey = pubkey_proc.stdout.strip()
-    known_hosts_path = f"/home/{current_user}/.ssh/known_hosts"
+    current_home = user_home(current_user)
+    dest_home = user_home(dest_user)
+    current_ssh_dir = f"{current_home}/.ssh"
+    dest_ssh_dir = f"{dest_home}/.ssh"
+    dest_authorized_keys = f"{dest_ssh_dir}/authorized_keys"
+    known_hosts_path = f"{current_home}/.ssh/known_hosts"
     client_seed = "\n".join(
         [
             "set -euo pipefail",
-            f"install -d -m 700 /home/{current_user}/.ssh",
+            f"install -d -m 700 {shell_quote(current_ssh_dir)}",
             f"touch {shell_quote(known_hosts_path)}",
             f"ssh-keyscan -p {shell_quote(port)} -H {shell_quote(dest_host)} >> {shell_quote(known_hosts_path)} 2>/dev/null || true",
             f"chown {shell_quote(current_user)}:{shell_quote(current_user)} {shell_quote(known_hosts_path)}",
@@ -678,11 +690,11 @@ def execute_special_unit(unit: ExecutionUnit, timeout: int) -> subprocess.Comple
     server_script = "\n".join(
         [
             "set -euo pipefail",
-            f"install -d -m 700 -o {shell_quote(dest_user)} -g {shell_quote(dest_user)} /home/{dest_user}/.ssh",
-            f"touch /home/{dest_user}/.ssh/authorized_keys",
-            f"grep -Fqx -- {shell_quote(pubkey)} /home/{dest_user}/.ssh/authorized_keys || echo {shell_quote(pubkey)} >> /home/{dest_user}/.ssh/authorized_keys",
-            f"chown {shell_quote(dest_user)}:{shell_quote(dest_user)} /home/{dest_user}/.ssh/authorized_keys",
-            f"chmod 600 /home/{dest_user}/.ssh/authorized_keys",
+            f"install -d -m 700 -o {shell_quote(dest_user)} -g {shell_quote(dest_user)} {shell_quote(dest_ssh_dir)}",
+            f"touch {shell_quote(dest_authorized_keys)}",
+            f"grep -Fqx -- {shell_quote(pubkey)} {shell_quote(dest_authorized_keys)} || echo {shell_quote(pubkey)} >> {shell_quote(dest_authorized_keys)}",
+            f"chown {shell_quote(dest_user)}:{shell_quote(dest_user)} {shell_quote(dest_authorized_keys)}",
+            f"chmod 600 {shell_quote(dest_authorized_keys)}",
         ]
     )
     return run_remote_script(dest_vm, "root", server_script, timeout)

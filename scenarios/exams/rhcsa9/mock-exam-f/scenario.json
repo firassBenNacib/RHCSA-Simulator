@@ -171,17 +171,7 @@
         ],
         [
           "install -d -m 700 -o elio -g elio /home/elio/.ssh",
-          "cat > /home/elio/.ssh/id_ed25519 <<'EOF'",
-          "[runtime-generated-ssh-material]",
-          "[runtime-generated-ssh-material]",
-          "[runtime-generated-ssh-material]",
-          "[runtime-generated-ssh-material]",
-          "[runtime-generated-ssh-material]",
-          "[runtime-generated-ssh-material]",
-          "[runtime-generated-ssh-material]",
-          "EOF",
-          "printf '%s\\n' '[runtime-generated-ssh-public-key]' > /home/elio/.ssh/id_ed25519.pub",
-          "chown elio:elio /home/elio/.ssh/id_ed25519 /home/elio/.ssh/id_ed25519.pub",
+          "test -f /home/elio/.ssh/id_ed25519 || runuser -u elio -- ssh-keygen -t ed25519 -N '' -f /home/elio/.ssh/id_ed25519 -C elio-exam-replay >/dev/null 2>&1",
           "chmod 0600 /home/elio/.ssh/id_ed25519",
           "chmod 0644 /home/elio/.ssh/id_ed25519.pub"
         ],
@@ -194,13 +184,9 @@
           "chmod 0755 /home/backupf/inbox"
         ],
         [
-          "# Run on server",
-          "install -d -m 700 -o backupf -g backupf /home/backupf/.ssh",
-          "printf '%s\\n' '[runtime-generated-ssh-public-key]' > /home/backupf/.ssh/authorized_keys",
-          "chown backupf:backupf /home/backupf/.ssh/authorized_keys",
-          "chmod 0600 /home/backupf/.ssh/authorized_keys",
           "# Run on client",
           "su - elio",
+          "ssh-copy-id -i /home/elio/.ssh/id_ed25519.pub -p 2222 backupf@server",
           "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true"
         ],
         [
