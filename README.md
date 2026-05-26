@@ -18,6 +18,10 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 
 ![RHCSA Simulator screencast](demo/demo.gif)
 
+![PowerShell command interface](demo/rhcsa-cli.png)
+
+![Interactive terminal UI](demo/rhcsa-tui.png)
+
 ## Prerequisites
 
 * Windows 10 or 11
@@ -26,9 +30,12 @@ An interactive PowerShell project for running RHCSA practice labs and mock exams
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
 * hardware virtualization enabled in BIOS/UEFI
 * at least 20 GB free on the Windows drive before building a baseline
-* `rhel-9.7-x86_64-dvd.iso` in the project root for the validated RHCSA 9 profile
-* `rhel-10.1-x86_64-dvd.iso` if you use the RHCSA 10 profile
+* RHEL 9 DVD ISO in the project root for the RHCSA 9 profile. The default validated image is `rhel-9.7-x86_64-dvd.iso`; newer RHEL 9 minor DVD ISOs may work, but package sets can differ.
+* RHEL 10 DVD ISO in the project root for the RHCSA 10 profile. The default validated image is `rhel-10.1-x86_64-dvd.iso`; newer RHEL 10 minor DVD ISOs may work, but package sets can differ.
+* Download RHEL DVD ISOs from [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease).
 * [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
+
+If Red Hat only lists a newer minor ISO, either rename it to the default filename for that track or set `RHCSA_ISO` to the downloaded filename or full path before running `.\RHCSA.ps1 up`.
 
 ## Installation
 

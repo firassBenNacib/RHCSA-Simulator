@@ -11,7 +11,11 @@ Use the RHCSA 10 profile when training against the RHEL 10 objective set:
 .\RHCSA.ps1 up
 ```
 
-The profile uses `rhel-10.1-x86_64-dvd.iso` in the project root as the offline package source. The default Vagrant box is `boxomatic/almalinux-10`; advanced users can override it with `RHCSA_BOX` and `RHCSA_BOX_URL`.
+The default validated offline package source is `rhel-10.1-x86_64-dvd.iso` in the project root. Newer RHEL 10 minor DVD ISOs may work, but package sets can differ.
+
+Download RHEL DVD ISOs from [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease). If Red Hat only lists a newer minor ISO, rename it to the default filename or set `RHCSA_ISO` to the downloaded filename or full path before running `.\RHCSA.ps1 up`.
+
+The default Vagrant box is `boxomatic/almalinux-10`; advanced users can override it with `RHCSA_BOX` and `RHCSA_BOX_URL`.
 
 ## Catalog
 
