@@ -33,6 +33,10 @@ DEFAULT_ISO_BY_PROFILE = {
   "rhel9" => "rhel-9.7-x86_64-dvd.iso",
   "rhel10" => "rhel-10.1-x86_64-dvd.iso"
 }
+ISO_GLOB_BY_PROFILE = {
+  "rhel9" => "rhel-9.*-x86_64-dvd.iso",
+  "rhel10" => "rhel-10.*-x86_64-dvd.iso"
+}
 DEFAULT_BOX_BY_PROFILE = {
   "rhel9" => "generic/rocky9",
   "rhel10" => "boxomatic/almalinux-10"
@@ -89,14 +93,37 @@ if RHCSA_PROFILE == "rhel10" && !host_supports_x86_64_v3?
   raise "RHCSA_PROFILE=rhel10 requires an x86-64-v3 capable host CPU. Use RHCSA_PROFILE=rhel9 on older hosts."
 end
 
-ISO_NAME = ENV.fetch("RHCSA_ISO", DEFAULT_ISO_BY_PROFILE.fetch(RHCSA_PROFILE))
+def iso_version_key(path)
+  version = File.basename(path).match(/rhel-(\d+(?:\.\d+)+)-x86_64-dvd\.iso/i)&.[](1).to_s
+  version.split(".").map(&:to_i)
+end
+
+def resolve_iso_path(profile)
+  override = ENV.fetch("RHCSA_ISO", "").strip
+  unless override.empty?
+    override_path = File.expand_path(override, __dir__)
+    raise "Missing ISO: #{override_path}" unless File.file?(override_path)
+
+    return override_path
+  end
+
+  matches = Dir.glob(File.join(__dir__, ISO_GLOB_BY_PROFILE.fetch(profile))).select { |path| File.file?(path) }
+  selected = matches.sort_by { |path| iso_version_key(path) }.last
+  return selected unless selected.nil?
+
+  major = profile == "rhel10" ? "10" : "9"
+  expected = DEFAULT_ISO_BY_PROFILE.fetch(profile)
+  pattern = ISO_GLOB_BY_PROFILE.fetch(profile)
+  raise "Missing RHEL #{major} DVD ISO. Place #{expected} or any #{pattern} in #{__dir__}, or set RHCSA_ISO to a filename or full path."
+end
+
+ISO_PATH = resolve_iso_path(RHCSA_PROFILE)
+ISO_NAME = File.basename(ISO_PATH)
 BOX_NAME = ENV.fetch("RHCSA_BOX", DEFAULT_BOX_BY_PROFILE.fetch(RHCSA_PROFILE))
 BOX_URL = ENV.fetch("RHCSA_BOX_URL", DEFAULT_BOX_URL_BY_PROFILE.fetch(RHCSA_PROFILE, ""))
 BOX_VERSION = ENV.fetch("RHCSA_BOX_VERSION", "")
-ISO_PATH = File.expand_path(ISO_NAME, __dir__)
 DVD_CONTROLLER = DVD_CONTROLLER_BY_PROFILE.fetch(RHCSA_PROFILE)
 DVD_PORT = DVD_PORT_BY_PROFILE.fetch(RHCSA_PROFILE)
-raise "Missing ISO: #{ISO_PATH}" unless File.exist?(ISO_PATH)
 
 SSH_COMMAND_CANDIDATES = [
   File.join(ENV.fetch("SystemRoot", "C:/Windows"), "System32", "OpenSSH", "ssh.exe"),

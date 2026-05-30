@@ -1913,22 +1913,43 @@ function Invoke-BaselineGuestProvisioning {
         )
 
         $isoName = [string]$env:RHCSA_ISO
-        if ([string]::IsNullOrWhiteSpace($isoName)) {
-            $isoName = if ($ProjectProfile -eq 'rhel10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
+        if (-not [string]::IsNullOrWhiteSpace($isoName)) {
+            $isoPath = if ([System.IO.Path]::IsPathRooted($isoName)) {
+                $isoName
+            }
+            else {
+                Join-Path $ProjectRoot $isoName
+            }
+
+            if (-not (Test-Path $isoPath -PathType Leaf)) {
+                throw "Missing offline ISO: $isoPath"
+            }
+
+            return $isoPath
         }
 
-        $isoPath = if ([System.IO.Path]::IsPathRooted($isoName)) {
-            $isoName
-        }
-        else {
-            Join-Path $ProjectRoot $isoName
+        $major = if ($ProjectProfile -eq 'rhel10') { '10' } else { '9' }
+        $defaultIsoName = if ($ProjectProfile -eq 'rhel10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
+        $pattern = "rhel-$major.*-x86_64-dvd.iso"
+        $match = Get-ChildItem -Path $ProjectRoot -Filter $pattern -File -ErrorAction SilentlyContinue |
+            Sort-Object -Property @{
+                Expression = {
+                    if ($_.Name -match '^rhel-(\d+(?:\.\d+)+)-x86_64-dvd\.iso$') {
+                        [version]$Matches[1]
+                    }
+                    else {
+                        [version]'0.0'
+                    }
+                }
+                Descending = $true
+            } |
+            Select-Object -First 1
+
+        if ($null -ne $match) {
+            return $match.FullName
         }
 
-        if (-not (Test-Path $isoPath -PathType Leaf)) {
-            throw "Missing offline ISO: $isoPath"
-        }
-
-        return $isoPath
+        throw "Missing RHEL $major DVD ISO. Place $defaultIsoName or any $pattern in $ProjectRoot, or set RHCSA_ISO to a filename or full path."
     }
 
     function Mount-Rhcsa10ServerOfflineIso {
