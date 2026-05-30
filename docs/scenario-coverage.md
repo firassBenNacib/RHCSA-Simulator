@@ -1,41 +1,211 @@
 # Scenario Coverage Review
 
-This project uses original scenario wording. Public objectives may guide coverage gaps, but exam-dump or commercial-course wording must not be copied into the repository.
+This document summarizes the RHCSA Simulator scenario coverage, track separation, and validation status.
+
+The project uses original scenario wording. Public RHCSA objectives may guide coverage planning, but exam dumps, copied exam questions, and commercial-course text must not be copied into this repository.
 
 ## Current Scenario Tracks
 
-| Track | Scenarios | Runtime status |
-|---|---:|---|
-| RHCSA 9 | 56 | full local live replay verified |
-| RHCSA 10 | 56 | full local live replay verified |
+| Track | Labs | Mock exams | Total scenarios | Runtime status |
+|---|---:|---:|---:|---|
+| RHCSA 9 | 48 | 8 | 56 | full local live replay verified |
+| RHCSA 10 | 48 | 8 | 56 | full local live replay verified |
 
-RHCSA 9 scenarios live under `scenarios/labs/rhcsa9/` and `scenarios/exams/rhcsa9/` with `tracks: ["rhcsa9"]`. RHCSA 10-specific scenarios live under `scenarios/labs/rhcsa10/` and `scenarios/exams/rhcsa10/` with `tracks: ["rhcsa10"]` and `rhel_major: 10`.
+Scenario directories:
 
-## Topic Gap Findings
+```text
+scenarios/labs/rhcsa9/
+scenarios/labs/rhcsa10/
+scenarios/exams/rhcsa9/
+scenarios/exams/rhcsa10/
+```
 
-The RHCSA 9 set covers the expected core areas: boot recovery, DNF repositories, networking, users/groups, sudo, SELinux, firewalld, storage, NFS/autofs, cron/at, logs, tuned, SSH, archives, find/grep, and Podman/container tasks.
+RHCSA 9 scenarios use:
 
-The RHCSA 10 track is separate and covers the RHEL 10-specific additions without moving RHCSA 9 Podman/container content into the newer track:
+```json
+{
+  "tracks": ["rhcsa9"],
+  "rhel_major": 9
+}
+```
+
+RHCSA 10 scenarios use:
+
+```json
+{
+  "tracks": ["rhcsa10"],
+  "rhel_major": 10
+}
+```
+
+## Coverage Summary
+
+The simulator covers the main hands-on administration areas expected from RHCSA-style practice.
+
+## RHCSA 9 Coverage
+
+The RHCSA 9 track covers:
+
+- boot recovery
+- DNF repositories
+- networking
+- users and groups
+- sudo
+- SELinux
+- firewalld
+- storage
+- NFS and autofs
+- cron and at
+- logs
+- tuned
+- SSH
+- archives
+- find and grep
+- Podman/container tasks
+
+Podman and container administration remain part of the RHCSA 9 track.
+
+## RHCSA 10 Coverage
+
+The RHCSA 10 track is separate and covers RHEL 10-specific content without mixing it into RHCSA 9.
 
 | Topic | Current handling |
 |---|---|
 | Flatpak repository setup | covered in RHCSA 10 labs and exams |
 | Flatpak application lifecycle | covered in RHCSA 10 labs and exams |
 | systemd timer units | covered in RHCSA 10 labs and exams |
-| Podman/container administration | RHCSA 9 only |
-| Storage, users, networking, SELinux | covered with RHCSA 10-specific scenario IDs and metadata |
-| Client/server operations | both tracks include client-only, server-only, and client/server scenarios |
+| RPM repositories | covered in RHCSA 10 labs and exams |
+| NetworkManager | covered in RHCSA 10 labs and exams |
+| Storage | covered with RHCSA 10-specific scenarios |
+| Users and groups | covered with RHCSA 10-specific scenarios |
+| SELinux | covered with RHCSA 10-specific scenarios |
+| Client/server operations | covered in labs and mock exams |
+
+RHCSA 9 Podman/container scenarios should not be moved into RHCSA 10 unless they are deliberately tested and marked as compatible.
+
+## Track Separation Rules
+
+RHCSA 9 and RHCSA 10 tracks should stay separate by default.
+
+A scenario should only be marked as dual-track when:
+
+- it works on both baselines
+- package assumptions are valid on both tracks
+- checks pass on both tracks
+- live replay has been completed on both profiles
+
+Track separation prevents RHCSA 10-specific topics such as Flatpak and systemd timers from leaking into RHCSA 9 practice.
 
 ## Scenario Quality Guidelines
 
-- RHCSA 9 and RHCSA 10 tracks stay separate unless a scenario passes replay on both profiles.
-- Generated RHCSA 10 exams should remain varied so repeated topic blocks do not drift into near-identical exams.
-- Scenario wording should be original. Public objectives can guide coverage, but PDF or exam-dump text should not be copied.
-- Runtime scripts are useful when the baseline needs prepared files, users, repositories, or local services.
-- Scenario Markdown should be regenerated after editing `scenario.json`.
+Scenario content should be original and consistent.
 
-## Runtime Validation Notes
+Use these rules when adding or editing scenarios:
 
-Audit-only validation proves the scenario metadata, generated Markdown, and replay commands are structurally sound. Live replay is still the source of truth for VM behavior because it proves packages, repositories, storage devices, SELinux state, and SSH execution against the real baseline.
+- Keep scenario wording clear and task-oriented.
+- Keep RHCSA 9 and RHCSA 10 objectives separate.
+- Use runtime scripts when the baseline needs prepared files, users, repositories, services, or storage state.
+- Regenerate scenario Markdown after editing `scenario.json`.
+- Keep generated RHCSA 10 exams varied so repeated topic blocks do not become near-identical exams.
+- Do not copy wording from exam dumps, proprietary training material, or commercial courses.
 
-Both RHCSA 9 and RHCSA 10 have been verified with full local replay on the supported Windows + VirtualBox + ISO workflow. Re-run live replay after shared runtime, provisioning, or scenario generator changes.
+Allowed references:
+
+- public RHCSA objectives
+- official product documentation
+- original lab design
+- project validation results
+
+Not allowed:
+
+- exam dumps
+- copied exam questions
+- commercial-course text
+- proprietary training material
+
+## Runtime Validation
+
+Validation is split into two levels:
+
+| Validation type | Purpose |
+|---|---|
+| Audit-only validation | Checks scenario metadata, generated Markdown, and replay command structure |
+| Live replay validation | Proves the scenario works against the real VM baseline |
+
+Audit-only validation is useful for fast local checks:
+
+```powershell
+python host/verify_scenario_solutions.py --kind all --track all --audit-only
+```
+
+Track-specific audit checks:
+
+```powershell
+python host/verify_scenario_solutions.py --kind all --track RHCSA9 --audit-only
+python host/verify_scenario_solutions.py --kind all --track RHCSA10 --audit-only
+```
+
+Live replay is the source of truth for VM behavior because it validates:
+
+- package availability
+- repository setup
+- storage devices
+- SELinux state
+- services
+- networking
+- SSH execution
+- client/server interaction
+- scenario checks
+- scenario solutions
+
+## Live Replay Commands
+
+Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment.
+
+RHCSA 9:
+
+```powershell
+python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
+python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
+```
+
+RHCSA 10:
+
+```powershell
+python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
+python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
+```
+
+## When to Re-Run Validation
+
+Run audit-only validation after:
+
+- editing `scenario.json`
+- regenerating scenario Markdown
+- changing scenario metadata
+- changing scenario generators
+- editing checks or replay commands
+
+Run live replay after:
+
+- changing provisioning
+- changing VM baseline behavior
+- changing package assumptions
+- changing storage setup
+- changing networking setup
+- changing SELinux-related tasks
+- changing scenario solutions
+- changing shared runtime logic
+
+## Current Status
+
+Both RHCSA 9 and RHCSA 10 have been verified with full local replay on the supported Windows + VirtualBox + ISO workflow.
+
+GitHub-hosted CI keeps static and audit validation in place, but full live replay remains a local validation step because the simulator depends on VirtualBox and local RHEL ISO media.
+
+## Related Documentation
+
+- [Project organization](project-organization.md)
+- [RHCSA 9 track notes](rhcsa9-track.md)
+- [RHCSA 10 track notes](rhcsa10-track.md)
+- [Release process](release.md)

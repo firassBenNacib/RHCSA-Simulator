@@ -1,461 +1,402 @@
 # RHCSA Simulator
 
-An interactive PowerShell project for running RHCSA practice labs and mock exams with Vagrant, VirtualBox, SSH helpers, checks, and a terminal UI. The catalog contains separate RHCSA 9 and RHCSA 10 tracks so users can train against the right objective set without mixing Podman-era RHCSA 9 tasks with Flatpak and systemd timer RHCSA 10 tasks.
+[![CI](https://img.shields.io/github/actions/workflow/status/firassBenNacib/RHCSA-Simulator/ci.yml?branch=main&label=CI)](https://github.com/firassBenNacib/RHCSA-Simulator/actions)
+[![Security](https://img.shields.io/github/actions/workflow/status/firassBenNacib/RHCSA-Simulator/security.yml?branch=main&label=Security)](https://github.com/firassBenNacib/RHCSA-Simulator/actions)
+[![Release](https://img.shields.io/github/v/release/firassBenNacib/RHCSA-Simulator)](https://github.com/firassBenNacib/RHCSA-Simulator/releases)
+[![License](https://img.shields.io/github/license/firassBenNacib/RHCSA-Simulator)](./LICENSE)
+
+Interactive RHCSA 9/10 lab and mock exam simulator using PowerShell, Vagrant, VirtualBox, and a Go terminal UI.
 
 ## Table of Contents
 
-* [Demo](#demo)
-* [Prerequisites](#prerequisites)
-* [Installation](#installation)
-* [Usage](#usage)
-* [Commands](#commands)
-* [Options](#options)
-* [Development](#development)
-* [License](#license)
-* [Author](#author)
+- [About](#about)
+- [Features](#features)
+- [Demo](#demo)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Recommended Setup](#recommended-setup)
+- [RHCSA Profiles](#rhcsa-profiles)
+- [Commands](#commands)
+- [Common Examples](#common-examples)
+- [Terminal UI](#terminal-ui)
+- [Project Structure](#project-structure)
+- [Scenario Content](#scenario-content)
+- [Development](#development)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author](#author)
+
+## About
+
+RHCSA Simulator helps you practice Red Hat Certified System Administrator tasks in realistic local labs. It creates a client/server VM environment, provides RHCSA 9 and RHCSA 10 practice tracks, and includes automated checks, solutions, SSH helpers, mock exams, and an interactive terminal UI.
+
+The project is designed for hands-on Linux administration practice, not passive reading.
+
+## Features
+
+- RHCSA 9 and RHCSA 10 practice tracks
+- Local client/server VM lab environment
+- Labs and mock exams
+- Automated task checking
+- Solutions and hints
+- Offline repository support
+- SSH helpers
+- PowerShell CLI
+- Go-based terminal UI
+- Scenario validation tools
+- PowerShell completion support
+- Optional lab and exam timer
+- CI, security checks, and release automation
 
 ## Demo
 
-![RHCSA Simulator screencast](demo/demo.gif)
+![RHCSA Simulator demo](demo/demo.gif)
 
-![PowerShell command interface](demo/rhcsa-cli.png)
+## Requirements
 
-![Interactive terminal UI](demo/rhcsa-tui.png)
+- Windows 10 or 11
+- PowerShell 5.1 or newer
+- [Vagrant](https://developer.hashicorp.com/vagrant/install)
+- [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+- Hardware virtualization enabled in BIOS/UEFI
+- At least 20 GB of free disk space
+- RHEL x86_64 DVD ISO for the selected track:
+  - RHCSA 9 accepts `rhel-9.*-x86_64-dvd.iso`, such as `rhel-9.8-x86_64-dvd.iso`
+  - RHCSA 10 accepts `rhel-10.*-x86_64-dvd.iso`, such as `rhel-10.2-x86_64-dvd.iso`
+- Go 1.25+ only if you want to build the TUI from source
 
-## Prerequisites
+RHEL ISO downloads require a Red Hat account. Use the official [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease) page and choose the x86_64 DVD ISO, not the boot ISO.
 
-* Windows 10 or 11
-* PowerShell 5.1 or newer
-* [Vagrant](https://developer.hashicorp.com/vagrant/install) installed and on **PATH**
-* [VirtualBox](https://www.virtualbox.org/wiki/Downloads) installed and on **PATH**
-* hardware virtualization enabled in BIOS/UEFI
-* at least 20 GB free on the Windows drive before building a baseline
-* RHEL 9 DVD ISO in the project root for the RHCSA 9 profile. The default validated image is `rhel-9.7-x86_64-dvd.iso`; newer RHEL 9 minor DVD ISOs may work, but package sets can differ.
-* RHEL 10 DVD ISO in the project root for the RHCSA 10 profile. The default validated image is `rhel-10.1-x86_64-dvd.iso`; newer RHEL 10 minor DVD ISOs may work, but package sets can differ.
-* Download RHEL DVD ISOs from [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease).
-* [Go 1.25+](https://go.dev/dl/) installed and on **PATH** only if you want to build the TUI from source.
-
-If Red Hat only lists a newer minor ISO, either rename it to the default filename for that track or set `RHCSA_ISO` to the downloaded filename or full path before running `.\RHCSA.ps1 up`.
+If multiple same-major DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` to a filename or full path when you want to force a specific ISO.
 
 ## Installation
 
-Clone:
+Clone the repository:
 
 ```powershell
 git clone https://github.com/firassBenNacib/RHCSA-Simulator.git
 cd RHCSA-Simulator
 ```
 
-Install or refresh the prebuilt TUI binary from the latest GitHub Release. The installer downloads the Windows TUI archive, extracts `rhcsa-tui.exe` into `.build/`, and keeps the source tree clean:
+Download the prebuilt TUI binary:
 
 ```powershell
 irm https://raw.githubusercontent.com/firassBenNacib/RHCSA-Simulator/main/install.ps1 -OutFile install.ps1
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-If you trust the repository and want a one-line installer:
+Place your RHEL ISO in the project root.
 
-```powershell
-irm https://raw.githubusercontent.com/firassBenNacib/RHCSA-Simulator/main/install.ps1 | iex
+Example:
+
+```text
+RHCSA-Simulator/
+├── RHCSA.ps1
+├── rhel-9.8-x86_64-dvd.iso
+├── rhel-10.2-x86_64-dvd.iso
+└── ...
 ```
 
-Private forks can use the same installer by setting `GITHUB_TOKEN` before running it.
+## Quick Start
 
-## Usage
+![PowerShell command interface](demo/rhcsa-cli.png)
 
-The simulator uses two VMs:
-
-* server for the offline repository, NFS exports, and time source
-* client as the main RHCSA workstation
-
-Scenario source files live under:
-
-* `scenarios/labs/<track>/` (e.g. `scenarios/labs/rhcsa9/`, `scenarios/labs/rhcsa10/`)
-* `scenarios/exams/<track>/` (e.g. `scenarios/exams/rhcsa9/`, `scenarios/exams/rhcsa10/`)
-
-Only one run is active at a time.
-
-Generated runtime cache is written locally under `.lab-state/generated/`, is created on demand, and is not part of the repo.
-
-### Quick start
-
-**1) Build the baseline**
+Build the default RHCSA 9 baseline:
 
 ```powershell
 .\RHCSA.ps1 up
 ```
 
-Switch the project to RHCSA 10 when you want the RHEL 10-compatible baseline and RHCSA 10 catalog:
-
-```powershell
-.\RHCSA.ps1 profile RHCSA10
-.\RHCSA.ps1 up
-```
-
-Switch back to the default RHCSA 9 profile:
-
-```powershell
-.\RHCSA.ps1 profile RHCSA9
-```
-
-**2) List labs and exams**
+List available labs and exams:
 
 ```powershell
 .\RHCSA.ps1 list
 ```
 
-**3) Start a lab**
+Start a lab:
 
 ```powershell
 .\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab
 ```
 
-**4) Check your progress**
-
-```powershell
-.\RHCSA.ps1 check
-```
-
-`check` works for the active lab or exam. Exam checks report a check count and a check-weighted score.
-
-**5) Pause, resume, or exit a run**
-
-```powershell
-.\RHCSA.ps1 pause
-.\RHCSA.ps1 resume
-.\RHCSA.ps1 exit-run
-```
-
-`pause` saves VM state for fast resume. `down` powers VMs off. `exit-run` leaves the active lab or exam context without resetting VMs or undoing learner changes.
-
-**6) Open SSH**
+Open SSH to the client VM:
 
 ```powershell
 .\RHCSA.ps1 ssh
 ```
 
-SSH is available only while a lab or exam is active.
+Check your work:
 
-**7) Open the TUI**
+```powershell
+.\RHCSA.ps1 check
+```
+
+Open the interactive TUI:
 
 ```powershell
 .\RHCSA.ps1 tui
 ```
 
-### TUI usage
-
-There are two supported ways to use the TUI:
-
-**Recommended for users**
-
-Use the PowerShell entrypoint. It reuses `.build\rhcsa-tui.exe` when available and rebuilds only when source files changed:
+Pause or stop the lab:
 
 ```powershell
-.\RHCSA.ps1 tui
+.\RHCSA.ps1 pause
+.\RHCSA.ps1 down
 ```
 
-You can also double-click:
-
-```powershell
-.\rhcsa-tui.cmd
-```
-
-`rhcsa-tui.exe` is a terminal application, not a desktop GUI application. Double-clicking the executable directly can open and close a console too quickly to see. Use `rhcsa-tui.cmd` for double-click launches, or run the executable from a terminal:
-
-```powershell
-.\.build\rhcsa-tui.exe --project-root C:\path\to\RHCSA-Simulator
-.\.build\rhcsa-tui.exe --project-root C:\path\to\RHCSA-Simulator --track rhcsa10
-```
-
-The TUI finds `RHCSA.ps1` from:
-
-* `--project-root` if passed
-* `RHCSA_SIMULATOR_ROOT` if set
-* the current working directory
-* the directory that contains the TUI binary
-
-The TUI follows the project profile automatically. RHCSA 9 is the default when no profile file exists. Run `.\RHCSA.ps1 profile RHCSA10` to switch the project to RHCSA 10, then open `.\RHCSA.ps1 tui` normally. RHCSA 9 Podman/container labs are hidden in RHCSA 10 mode and RHCSA 10 Flatpak/systemd timer labs are hidden in RHCSA 9 mode. `-Track` still exists as a temporary override when you explicitly want a different catalog for one command.
-
-**Release binaries**
-
-GitHub Releases publish prebuilt Windows, Linux, and macOS TUI binaries with checksums through GoReleaser. Binaries are not committed to git; source lives under `cmd/rhcsa-tui`, shared packages live under `internal`, and generated binaries stay under `.build/` or local files ignored by git.
-
-**Keyboard summary**
-
-* `Enter` start the selected lab or exam
-* `Tab` move between the catalog and the detail pane
-* `←` / `→` switch between Labs and Exams from the catalog, or switch documents from the detail pane
-* `F1` or `1` open Tasks
-* `F2` or `2` open Hints for labs
-* `F3` or `3` or `"` open Checks
-* `F4` or `4` or `'` open Solutions
-* click `[COPY]` in Checks or Solutions to copy that visible check or solution section
-* `c` run checks for the active lab or exam
-* `r` reset the active run
-* `e` exit the active lab or exam context without changing VM state
-* `/` open search
-* `t` toggle the per-run timer display
-* `z` open SSH to `client`
-* `x` open SSH to `server`
-* `?` open help, then `Esc` or the top-right `X` closes it
-* `q` quit the TUI
-
-Mouse support uses modern SGR terminal mouse events. Windows Terminal, current PowerShell terminals, Linux terminals, and macOS Terminal/iTerm2 support this mode. If mouse clicks do not register in an older terminal, use the keyboard shortcuts above or run the TUI in a modern terminal emulator.
-
-**Build from source**
-
-```powershell
-go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
-.\rhcsa-tui.exe
-```
-
-### Optional commands
-
-**Destroy the simulator**
+Destroy the lab environment:
 
 ```powershell
 .\RHCSA.ps1 destroy
 ```
 
-**Power off or save VM state**
+## Recommended Setup
+
+Install PowerShell completion after installation:
 
 ```powershell
-.\RHCSA.ps1 pause
-.\RHCSA.ps1 down
-.\RHCSA.ps1 resume
+.\RHCSA.ps1 completion install
 ```
 
-**Refresh the clean baseline explicitly**
+This enables tab completion for supported commands and options.
+
+Enable the timer if you want exam-like practice during labs and mock exams:
 
 ```powershell
-.\RHCSA.ps1 up -Refresh
+.\RHCSA.ps1 timer on
 ```
 
-Plain `up` is non-interactive and automation-safe. If the baseline is already ready and VMs are running, it reports the current VM state instead of rebuilding. Use `up -Refresh` when you intentionally want to restore the clean baseline.
-
-**Start without provisioning**
-
-```powershell
-.\RHCSA.ps1 up -NoProvision
-```
-
-**Start an exam**
-
-```powershell
-.\RHCSA.ps1 start -Id mock-exam-a -Mode Exam
-```
-
-**Reset the active run**
-
-```powershell
-.\RHCSA.ps1 reset
-```
-
-**Exit the active run without resetting VMs**
-
-```powershell
-.\RHCSA.ps1 exit-run
-```
-
-**Set the default TUI timer mode**
+Check the timer setting:
 
 ```powershell
 .\RHCSA.ps1 timer status
-.\RHCSA.ps1 timer on
+```
+
+Disable the timer:
+
+```powershell
 .\RHCSA.ps1 timer off
 ```
 
-The timer is off by default. When enabled, the TUI shows the active run timer after a lab or exam starts. Pressing `t` in the TUI remains a per-run override.
+The timer is optional. It is useful when you want to train under time pressure.
 
-**Show status**
+## RHCSA Profiles
 
-```powershell
-.\RHCSA.ps1 status
-.\RHCSA.ps1 vms
-```
+RHCSA 9 is the default profile.
 
-**Show SSH config**
-
-```powershell
-.\RHCSA.ps1 ssh-config
-.\RHCSA.ps1 ssh-config server
-```
-
-**Download or rebuild the TUI**
-
-Use GitHub Releases for prebuilt binaries, or rebuild locally with:
-
-```powershell
-go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
-```
-
-The repository includes:
-
-* `.github/workflows/ci.yml` for Go tests/vet/build, Go coverage artifacts, Python syntax and unit tests, scenario audits, PowerShell parsing, PSScriptAnalyzer, Vagrantfile syntax, and whitespace checks.
-* `.github/workflows/security.yml` for Go vulnerability scans and dependency review on pull requests.
-* `.github/workflows/release-please.yml` for automated release PRs and semantic version tags from `main`.
-* `.github/workflows/release-tui.yml` for GoReleaser-built Windows, Linux, and macOS TUI archives with checksums and generated changelogs.
-* `.github/workflows/runtime-replay.yml` for manual self-hosted Windows replay against a local VirtualBox/RHEL ISO environment.
-* `.github/dependabot.yml` for weekly Go module, Python dependency, and GitHub Actions update PRs.
-* `.goreleaser.yml` for release packaging.
-* `Makefile` for repeatable local checks on Linux/macOS/WSL.
-
-### Platform profiles
-
-The project stores the active RHCSA version locally in `.rhcsa-profile.json`.
-
-RHCSA 9 is the default if that file does not exist:
+Show the current profile:
 
 ```powershell
 .\RHCSA.ps1 profile
-.\RHCSA.ps1 profile RHCSA9
 ```
 
-Switch to RHCSA 10 inside the project:
+Switch to RHCSA 10:
 
 ```powershell
 .\RHCSA.ps1 profile RHCSA10
 .\RHCSA.ps1 up
 ```
 
-The saved project profile controls:
-
-* which Vagrant baseline is used
-* which labs and exams the CLI lists by default
-* which catalog the TUI opens by default
-
-Advanced users can still override ISO or box selection with `RHCSA_ISO`, `RHCSA_BOX`, and `RHCSA_BOX_URL`, but normal usage should go through `.\RHCSA.ps1 profile RHCSA9|RHCSA10`.
-
-Both bundled tracks contain 48 labs and 8 mock exams. RHCSA 9 is the default validated baseline. RHCSA 10 uses a separate RHEL 10-compatible baseline and catalog so newer objectives do not leak into RHCSA 9 practice.
-
-The default RHCSA 10 box name is `boxomatic/almalinux-10`, which boots reliably on the supported Windows + VirtualBox workflow. You can still use another AlmaLinux, Rocky Linux, RHEL 10, or locally maintained RHEL-compatible box with `RHCSA_BOX` and, when needed, `RHCSA_BOX_URL`:
+Switch back to RHCSA 9:
 
 ```powershell
-$env:RHCSA_BOX = 'boxomatic/almalinux-10'
+.\RHCSA.ps1 profile RHCSA9
+.\RHCSA.ps1 up
 ```
 
-RHCSA 10 content includes Flatpak and systemd timer practice while RHCSA 9 keeps Podman/container practice. Some RHEL-compatible 10 boxes require x86-64-v3 CPU support. See [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track-specific notes.
+The active profile controls:
 
-### Scenario replay verification
-
-Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment:
-
-```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
-python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
-python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
-python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
-```
-
-For static manifest checks without replaying VMs:
-
-```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind all --track all --audit-only
-```
-
-### Host cleanup
-
-The simulator scopes cleanup to this project by default. It should not kill unrelated Vagrant or VirtualBox processes owned by other projects. If a host is stuck behind stale global Vagrant or VirtualBox locks, use the explicit last-resort switch:
-
-```powershell
-.\RHCSA.ps1 up -ForceHostCleanup
-.\RHCSA.ps1 destroy -ForceHostCleanup
-```
-
-You can also set `RHCSA_FORCE_HOST_CLEANUP=1` for one terminal session.
-
-### VirtualBox host issues
-
-`VBoxHeadless.exe` crashes are host VirtualBox failures, not lab check failures. If Windows shows a `VBoxHeadless.exe - Application Error` dialog, reboot Windows, update VirtualBox to the current stable release, confirm VT-x/AMD-V is enabled, and free disk space before rebuilding with `.\RHCSA.ps1 destroy` and `.\RHCSA.ps1 up`.
+- the selected lab baseline
+- the scenario catalog
+- the TUI track
+- the labs and mock exams shown by default
 
 ## Commands
 
-```text
-Usage: .\RHCSA.ps1 <command> [options]
+| Command | Description |
+|---|---|
+| `up` | Start or verify the clean baseline |
+| `list` | List labs and mock exams |
+| `start` | Start a lab or exam |
+| `check` | Run checks for the active run |
+| `ssh` | Open SSH to the active VM |
+| `tui` | Open the terminal UI |
+| `pause` | Save VM state |
+| `resume` | Resume saved VMs |
+| `down` | Power off VMs |
+| `reset` | Reset the active lab or exam |
+| `exit-run` | Exit the active scenario context |
+| `status` | Show current simulator status |
+| `vms` | Show VM state |
+| `repo` | Test the offline repository |
+| `profile` | Show or change RHCSA profile |
+| `timer` | Enable, disable, or show the lab/exam timer |
+| `completion` | Generate or install PowerShell tab completion |
+| `ssh-config` | Print SSH configuration |
+| `destroy` | Remove VMs and local lab state |
+| `help` | Show help |
 
-Commands
-  up          Start or verify the clean baseline
-  resume      Resume paused or powered-off VMs
-  pause       Save VM state for fast resume
-  down        Power off the simulator VMs
-  destroy     Destroy VMs and local simulator state
-  list        List labs and mock exams
-  start       Start a lab or exam run
-  exit-run    Exit the active lab or exam context
-  check       Run checks for the active lab or exam
-  reset       Reset the active run
-  status      Show baseline, VMs, and the active scenario
-  vms         Show VM state
-  repo        Run the offline repository self-test
-  ssh         Open SSH for the active run
-  ssh-config  Print SSH config for external clients
-  tui         Open the interactive TUI
-  profile     Show or change the project RHCSA version
-  timer       Show or change the default timer mode
-  completion  Generate or install PowerShell completion
-  help        Show help
+Show full help:
+
+```powershell
+.\RHCSA.ps1 help
 ```
 
-## Options
+## Common Examples
 
-**up**
+Start a specific lab:
 
-* -Profile <RHCSA9|RHCSA10>
-* -Refresh
-* -NoProvision
-* -NormalStart
-* -HeadlessClient
-* -RealisticMode
-* -ForceHostCleanup
+```powershell
+.\RHCSA.ps1 start -Id lab-01-networking-hostname -Mode Lab
+```
 
-**start**
+Start a mock exam:
 
-* -Id <scenario-id>
-* -Mode <Lab|Exam>
-* -Track <RHCSA9|RHCSA10|All>
+```powershell
+.\RHCSA.ps1 start -Id mock-exam-a -Mode Exam
+```
 
-**list**
+Run checks:
 
-* -Track <Auto|RHCSA9|RHCSA10|All>
+```powershell
+.\RHCSA.ps1 check
+```
 
-**tui**
+Reset the active run:
 
-* -Track <Auto|RHCSA9|RHCSA10|All>
+```powershell
+.\RHCSA.ps1 reset
+```
 
-**profile**
+Refresh the clean baseline:
 
-* profile
-* profile <RHCSA9|RHCSA10>
+```powershell
+.\RHCSA.ps1 up -Refresh
+```
 
-**check**
+Start without provisioning:
 
-* -Id <scenario-id> optional, but it must match the active lab or exam
+```powershell
+.\RHCSA.ps1 up -NoProvision
+```
 
-**timer**
+Install PowerShell completion:
 
-* timer status
-* timer on
-* timer off
+```powershell
+.\RHCSA.ps1 completion install
+```
 
-**ssh**
+Enable the lab and exam timer:
 
-* ssh [server|client]
+```powershell
+.\RHCSA.ps1 timer on
+```
 
-**ssh-config**
+Check timer status:
 
-* ssh-config [server|client]
+```powershell
+.\RHCSA.ps1 timer status
+```
+
+Disable the timer:
+
+```powershell
+.\RHCSA.ps1 timer off
+```
+
+Force host cleanup if Vagrant or VirtualBox locks are stuck:
+
+```powershell
+.\RHCSA.ps1 up -ForceHostCleanup
+```
+
+## Terminal UI
+
+![Interactive terminal UI](demo/rhcsa-tui.png)
+
+Open the TUI through the PowerShell entrypoint:
+
+```powershell
+.\RHCSA.ps1 tui
+```
+
+Or run the launcher:
+
+```powershell
+.\rhcsa-tui.cmd
+```
+
+Useful shortcuts:
+
+| Key | Action |
+|---|---|
+| `Enter` | Start selected lab or exam |
+| `Tab` | Switch panes |
+| `←` / `→` | Switch tabs or documents |
+| `F1` | Tasks |
+| `F2` | Hints |
+| `F3` | Checks |
+| `F4` | Solutions |
+| `c` | Run checks |
+| `r` | Reset active run |
+| `e` | Exit active run |
+| `/` | Search |
+| `t` | Toggle timer |
+| `z` | SSH to client |
+| `x` | SSH to server |
+| `?` | Help |
+| `q` | Quit |
+
+## Project Structure
+
+```text
+RHCSA-Simulator/
+├── RHCSA.ps1              # Main PowerShell CLI
+├── host/                  # Host orchestration and checks
+├── guest/                 # VM provisioning scripts
+├── cmd/rhcsa-tui/         # Go terminal UI
+├── internal/              # Shared Go packages
+├── scenarios/
+│   ├── labs/              # RHCSA labs
+│   └── exams/             # RHCSA mock exams
+├── tools/scenarios/       # Scenario tooling
+├── docs/                  # Project documentation
+├── demo/                  # Screenshots and demo assets
+└── .github/               # CI, security, and release workflows
+```
+
+## Scenario Content
+
+Scenario files are stored by mode and track:
+
+```text
+scenarios/labs/rhcsa9/
+scenarios/labs/rhcsa10/
+scenarios/exams/rhcsa9/
+scenarios/exams/rhcsa10/
+```
+
+Each track is kept separate so RHCSA 9 and RHCSA 10 objectives do not mix.
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for checks, local ignored files, and scenario rules. See [docs/project-organization.md](docs/project-organization.md) for the current structure, [docs/scenario-coverage.md](docs/scenario-coverage.md) for RHCSA 9/RHCSA 10 topic coverage, [docs/rhcsa9-track.md](docs/rhcsa9-track.md) and [docs/rhcsa10-track.md](docs/rhcsa10-track.md) for track notes, and [docs/release.md](docs/release.md) for release automation.
+Install the required development tools:
 
-Fast local checks:
+- Go
+- Python
+- PowerShell
+- Vagrant
+- VirtualBox
+
+Run local checks:
 
 ```bash
 make test
 ```
 
-Windows PowerShell equivalents:
+Windows equivalents:
 
 ```powershell
 go test ./...
@@ -465,14 +406,41 @@ python -m unittest discover tools/scenarios/tests
 python host/verify_scenario_solutions.py --kind all --track all --audit-only
 ```
 
-Core user entrypoints:
+Build the TUI from source:
 
 ```powershell
-.\RHCSA.ps1 tui
-python host/verify_scenario_solutions.py --kind all --audit-only
+go build -o rhcsa-tui.exe ./cmd/rhcsa-tui
+.\rhcsa-tui.exe
 ```
 
-The Go TUI source under `cmd/rhcsa-tui` and shared packages under `internal` must be committed. Built binaries stay ignored and are published through GitHub Releases.
+## Documentation
+
+Additional documentation:
+
+- [Project organization](docs/project-organization.md)
+- [Scenario coverage](docs/scenario-coverage.md)
+- [RHCSA 9 track notes](docs/rhcsa9-track.md)
+- [RHCSA 10 track notes](docs/rhcsa10-track.md)
+- [Release process](docs/release.md)
+- [Contributing guide](CONTRIBUTING.md)
+
+## Contributing
+
+Contributions are welcome.
+
+Before opening a pull request:
+
+```bash
+make test
+```
+
+For scenario changes, also run:
+
+```powershell
+python host/verify_scenario_solutions.py --kind all --track all --audit-only
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for coding rules, scenario rules, and the expected workflow.
 
 ## License
 

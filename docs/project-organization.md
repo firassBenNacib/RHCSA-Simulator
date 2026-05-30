@@ -1,59 +1,258 @@
 # Project Organization
 
-## Current Shape
+This document explains how the RHCSA Simulator repository is organized and where each major part of the project lives.
 
-The simulator has three public surfaces:
+## Main Entry Points
 
-* `RHCSA.ps1` for users.
-* `cmd/rhcsa-tui` for the terminal UI source.
-* `tools/scenarios` for scenario tooling commands.
+The project has three main public entry points:
 
-The implementation is intentionally split between PowerShell orchestration, Go TUI code, Python scenario tools, and guest shell provisioning. This is normal for a VM-based lab simulator, but large files should keep shrinking behind stable entrypoints.
+| Path | Purpose |
+|---|---|
+| `RHCSA.ps1` | Main PowerShell CLI used by learners |
+| `rhcsa-tui.cmd` | Windows launcher for the terminal UI |
+| `cmd/rhcsa-tui/` | Go source code for the terminal UI |
 
-## Scenario Directory Layout
+Most users should interact with the simulator through:
 
-Scenarios are organized into track-specific subdirectories:
-
+```powershell
+.\RHCSA.ps1 tui
 ```
+
+or through direct CLI commands such as:
+
+```powershell
+.\RHCSA.ps1 up
+.\RHCSA.ps1 list
+.\RHCSA.ps1 start
+.\RHCSA.ps1 check
+```
+
+## High-Level Architecture
+
+RHCSA Simulator is split across four main layers:
+
+| Layer | Technology | Responsibility |
+|---|---|---|
+| Host CLI | PowerShell | VM lifecycle, profiles, scenario runs, checks, SSH helpers |
+| Terminal UI | Go | Interactive lab and exam interface |
+| Scenario tooling | Python | Scenario generation, audits, and validation |
+| Guest provisioning | Bash | VM setup, repositories, services, and lab preparation |
+
+This split keeps the user-facing workflow simple while allowing each part of the simulator to use the right tool for its job.
+
+## Repository Layout
+
+```text
+RHCSA-Simulator/
+├── RHCSA.ps1              # Main PowerShell CLI
+├── rhcsa-tui.cmd          # Windows launcher for the TUI
+├── install.ps1            # Installer for the prebuilt TUI binary
+├── Vagrantfile            # VM definition
+├── host/                  # Host-side PowerShell runtime and validation logic
+├── guest/                 # Guest VM provisioning scripts
+├── cmd/rhcsa-tui/         # Go terminal UI source
+├── internal/              # Shared Go packages
+├── scenarios/             # Labs and mock exams
+├── tools/scenarios/       # Python scenario tools
+├── docs/                  # Project documentation
+├── demo/                  # Demo images and screencasts
+├── .github/               # CI, security, release, and dependency workflows
+├── Makefile               # Local development checks
+└── README.md              # Main user-facing documentation
+```
+
+## Scenario Layout
+
+Scenarios are organized by mode and RHCSA track:
+
+```text
 scenarios/
-  labs/
-    rhcsa9/     # 48 RHCSA 9 labs
-    rhcsa10/    # 48 RHCSA 10 labs
-  exams/
-    rhcsa9/     # 8 RHCSA 9 mock exams
-    rhcsa10/    # 8 RHCSA 10 mock exams
+├── labs/
+│   ├── rhcsa9/            # RHCSA 9 labs
+│   └── rhcsa10/           # RHCSA 10 labs
+└── exams/
+    ├── rhcsa9/            # RHCSA 9 mock exams
+    └── rhcsa10/           # RHCSA 10 mock exams
 ```
 
-Each scenario directory contains `scenario.json`, `LAB_TASKS.md`/`EXAM_TASKS.md`, `LAB_SOLUTION.md`/`EXAM_SOLUTION.md`, and any guest provisioning scripts. Scenario IDs are globally unique so all-track tooling can resolve one target unambiguously. Progress tracking still uses composite `track/id` keys so future same-name track variants can be handled deliberately.
+Each track contains:
 
-## PowerShell Modules
+| Track | Labs | Mock exams | Total scenarios |
+|---|---:|---:|---:|
+| RHCSA 9 | 48 | 8 | 56 |
+| RHCSA 10 | 48 | 8 | 56 |
 
-The PowerShell host code is split into focused `.psm1` modules under `host/modules/`:
+Each scenario directory normally contains:
+
+```text
+scenario.json
+LAB_TASKS.md or EXAM_TASKS.md
+LAB_SOLUTION.md or EXAM_SOLUTION.md
+optional provisioning scripts
+```
+
+Scenario IDs should stay globally unique so tooling can resolve scenarios without ambiguity.
+
+## Scenario Metadata
+
+Each scenario is described by a `scenario.json` file.
+
+RHCSA 9 scenarios should include:
+
+```json
+{
+  "tracks": ["rhcsa9"],
+  "rhel_major": 9
+}
+```
+
+RHCSA 10 scenarios should include:
+
+```json
+{
+  "tracks": ["rhcsa10"],
+  "rhel_major": 10
+}
+```
+
+Dual-track scenarios should only be marked as shared when they have been tested on both baselines.
+
+## PowerShell Runtime
+
+The main CLI is `RHCSA.ps1`.
+
+Most host-side behavior is implemented in PowerShell modules under:
+
+```text
+host/modules/
+```
+
+The main modules are:
 
 | Module | Responsibility |
 |---|---|
-| FileHelpers | File I/O, UTF-8 no-BOM writes |
-| UI | Console formatting, colors |
-| LabState | Active-run state, progress JSON |
-| Scenarios | Catalog loading, manifest parsing |
-| Toolchain | Vagrant/VirtualBox path resolution |
-| VMControl | VM lifecycle, SSH, interactive commands |
-| Checks | Lab and exam check execution and scoring |
+| `FileHelpers` | File I/O and UTF-8 no-BOM writes |
+| `UI` | Console output, formatting, and colors |
+| `LabState` | Active scenario state and progress files |
+| `Scenarios` | Scenario catalog loading and manifest parsing |
+| `Toolchain` | Vagrant and VirtualBox path resolution |
+| `VMControl` | VM lifecycle, SSH, and interactive commands |
+| `Checks` | Lab and exam check execution and scoring |
 
-## Project Layout Guidance
+`RHCSA.ps1` should stay as the stable user-facing entry point. Large behavior should live in modules instead of being added directly to the root script.
 
-`RHCSA.ps1` is the user-facing entrypoint. Most behavior lives in focused PowerShell modules under `host/modules/`, imported through `host/modules/RhcsaSimulator`.
+## Terminal UI
 
-Python scenario tooling lives in `tools/scenarios/`. The host runtime stays in PowerShell, while Python handles generation, audit, and replay helpers.
+The TUI source lives under:
 
-Go package tests are colocated with package source through standard `*_test.go` files. A top-level `tests/` directory is reserved for future end-to-end flows, fixtures, or black-box integration tests that span multiple packages.
+```text
+cmd/rhcsa-tui/
+```
 
-## Track Status
+Shared Go packages live under:
 
-RHCSA 9 remains the default stable track. RHCSA 10 stays separate so Flatpak, systemd timer, and RHEL 10 package assumptions do not leak into RHCSA 9 labs and exams.
+```text
+internal/
+```
 
-Both tracks contain 48 labs and 8 mock exams. Full live replay for RHCSA 9 and RHCSA 10 is verified locally against the Windows + VirtualBox + ISO workflow. CI keeps audit/static validation because GitHub-hosted runners cannot run the VirtualBox/RHEL ISO environment used by the simulator.
+Built binaries should not be committed to git. Release binaries are published through GitHub Releases and installed locally into ignored build/output paths.
 
-Track-specific notes live in `docs/rhcsa9-track.md` and `docs/rhcsa10-track.md`.
+The normal user entry point remains:
 
-Scenario text in this repository should be original. Public objectives can help identify coverage gaps, but exam dumps and proprietary course material are not acceptable source text.
+```powershell
+.\RHCSA.ps1 tui
+```
+
+## Scenario Tooling
+
+Python scenario tools live under:
+
+```text
+tools/scenarios/
+```
+
+These tools are used for scenario generation, audits, and validation.
+
+Host-side replay and verification helpers live under:
+
+```text
+host/
+```
+
+Use audit-only validation for fast local checks:
+
+```powershell
+python host/verify_scenario_solutions.py --kind all --track all --audit-only
+```
+
+Live replay should be used after changes that affect provisioning, checks, runtime behavior, or scenario solutions.
+
+## Runtime State
+
+Generated runtime data should stay outside source-controlled content.
+
+Local runtime state is written under ignored paths such as:
+
+```text
+.lab-state/
+.build/
+```
+
+These files are created locally and should not be committed.
+
+The repository should not contain:
+
+```text
+RHEL ISO files
+VM images
+generated binaries
+local lab state
+temporary Vagrant state
+```
+
+## RHCSA Tracks
+
+RHCSA 9 is the default stable track.
+
+RHCSA 10 is kept separate so RHEL 10-specific objectives and assumptions do not leak into RHCSA 9 labs.
+
+Key differences:
+
+| Area | RHCSA 9 | RHCSA 10 |
+|---|---|---|
+| Default profile | Yes | No |
+| Containers | Podman-focused tasks | Not mixed into RHCSA 9 content |
+| Flatpak | Not part of RHCSA 9 track | Included |
+| systemd timers | Limited/general systemd usage | Included as RHCSA 10 content |
+| Baseline | RHEL 9-compatible | RHEL 10-compatible |
+
+Track-specific notes live in:
+
+```text
+docs/rhcsa9-track.md
+docs/rhcsa10-track.md
+```
+
+## Validation Strategy
+
+GitHub-hosted CI can run static and audit checks, but it cannot fully reproduce the local VirtualBox and RHEL ISO environment.
+
+Therefore, validation is split into two levels:
+
+| Validation type | Purpose |
+|---|---|
+| CI/static validation | Syntax, unit tests, scenario metadata, audit checks |
+| Local live replay | Full VM-based validation against the real lab baseline |
+
+Live replay is the source of truth for behavior involving:
+
+```text
+packages
+repositories
+storage devices
+SELinux state
+services
+networking
+SSH execution
+client/server interaction
+```
