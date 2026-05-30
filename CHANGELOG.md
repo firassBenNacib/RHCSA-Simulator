@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.0.1...v2.1.0) (2026-05-31)
+
+
+### Features
+
+* detect current same-major RHEL 9 and RHEL 10 DVD ISO filenames automatically ([00cc7dc](https://github.com/firassBenNacib/RHCSA-Simulator/commit/00cc7dc0f00e39cb8c8ebc144d6ac6c35e28e885))
+
+
+### Documentation
+
+* add README showcase screenshots and refresh user documentation ([7242597](https://github.com/firassBenNacib/RHCSA-Simulator/commit/72425975229f046cfa6f4876ff6a65b0f573028d))
+
 ## [2.0.1](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.0.0...v2.0.1) (2026-05-26)
 
 
