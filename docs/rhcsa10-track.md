@@ -11,11 +11,22 @@ Use the RHCSA 10 profile when training against the RHEL 10 objective set:
 .\RHCSA.ps1 up
 ```
 
-The default validated offline package source is `rhel-10.1-x86_64-dvd.iso` in the project root. Newer RHEL 10 minor DVD ISOs may work, but package sets can differ.
+Place an x86_64 RHEL 10 DVD ISO in the project root. The simulator accepts same-major DVD ISO filenames that match `rhel-10.*-x86_64-dvd.iso`, such as `rhel-10.2-x86_64-dvd.iso`.
 
-Download RHEL DVD ISOs from [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease). If Red Hat only lists a newer minor ISO, rename it to the default filename or set `RHCSA_ISO` to the downloaded filename or full path before running `.\RHCSA.ps1 up`.
+RHEL ISO downloads require a Red Hat account. Use the official Red Hat Developer downloads page and choose the x86_64 DVD ISO, not the boot ISO:
 
-The default Vagrant box is `boxomatic/almalinux-10`; advanced users can override it with `RHCSA_BOX` and `RHCSA_BOX_URL`.
+```text
+https://developers.redhat.com/products/rhel/download#downloadsbyrelease
+```
+
+If multiple RHEL 10 DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` when you want to force a specific ISO:
+
+```powershell
+$env:RHCSA_ISO = "C:\path\to\rhel-10.2-x86_64-dvd.iso"
+.\RHCSA.ps1 up
+```
+
+The default Vagrant box is `boxomatic/almalinux-10`. Advanced users can override it with `RHCSA_BOX` and `RHCSA_BOX_URL`.
 
 ## Catalog
 
@@ -26,9 +37,27 @@ scenarios/labs/rhcsa10/
 scenarios/exams/rhcsa10/
 ```
 
-Coverage includes RPM repositories, Flatpak remotes and application lifecycle, systemd timers, NetworkManager, storage, SELinux, users and groups, sudo, SSH, logs, services, scheduling, and boot recovery.
+Coverage includes:
 
-The mock exams are client/server exams. Individual questions may target client, server, or both systems, but each exam requires both VMs.
+- RPM repositories
+- Flatpak remotes
+- Flatpak application lifecycle
+- systemd timers
+- NetworkManager
+- storage
+- SELinux
+- users and groups
+- sudo
+- SSH
+- logs
+- services
+- scheduling
+- boot recovery
+- client/server administration
+
+RHCSA 10 keeps RHEL 10-specific topics in this track. RHCSA 9 Podman/container tasks should not be moved into RHCSA 10 unless they are deliberately tested and marked as compatible.
+
+The mock exams are client/server exams. Individual questions may target the client VM, the server VM, or both systems, but each exam requires both VMs.
 
 ## Verification
 
@@ -45,6 +74,18 @@ For a fast metadata-only check:
 python3.13.exe .\host\verify_scenario_solutions.py --kind all --track RHCSA10 --audit-only
 ```
 
+Live replay is the source of truth after changes to:
+
+- provisioning
+- checks
+- scenario setup
+- scenario solutions
+- package assumptions
+- storage behavior
+- networking behavior
+- Flatpak behavior
+- systemd timer behavior
+
 ## Authoring
 
 RHCSA 10 scenarios should use:
@@ -56,4 +97,14 @@ RHCSA 10 scenarios should use:
 }
 ```
 
-Regenerate RHCSA 10 scenarios from `tools/scenarios/generate_rhcsa10_scenarios.py`. Generated manifests should be changed through the generator so future regeneration stays reproducible.
+Use RHCSA 10-specific scenario IDs and keep the wording original.
+
+Regenerate RHCSA 10 scenarios from:
+
+```text
+tools/scenarios/generate_rhcsa10_scenarios.py
+```
+
+Generated manifests should be changed through the generator when possible so future regeneration stays reproducible.
+
+A scenario should only be marked as dual-track when it has been tested and verified on both RHCSA 9 and RHCSA 10 baselines.
