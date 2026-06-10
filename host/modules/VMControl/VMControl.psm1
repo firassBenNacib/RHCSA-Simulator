@@ -111,6 +111,71 @@ function Get-VagrantUpTimeoutSeconds {
     return 300
 }
 
+function Get-RhcsaOfflineIsoPath {
+    param(
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [Alias('Profile')]
+        [string]$ProjectProfile = (Get-ProjectProfile -ProjectRoot $ProjectRoot),
+        [switch]$Required
+    )
+
+    $profileKey = ([string]$ProjectProfile).ToLowerInvariant()
+    if ($profileKey -eq 'rhcsa10') {
+        $profileKey = 'rhel10'
+    }
+    elseif ($profileKey -eq 'rhcsa9') {
+        $profileKey = 'rhel9'
+    }
+
+    $major = if ($profileKey -eq 'rhel10') { '10' } else { '9' }
+    $defaultIsoName = if ($major -eq '10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
+    $pattern = "rhel-$major.*-x86_64-dvd.iso"
+
+    $override = [string]$env:RHCSA_ISO
+    if (-not [string]::IsNullOrWhiteSpace($override)) {
+        $overridePath = if ([System.IO.Path]::IsPathRooted($override)) {
+            $override
+        }
+        else {
+            Join-Path $ProjectRoot $override
+        }
+
+        if (Test-Path $overridePath -PathType Leaf) {
+            return (Resolve-Path -LiteralPath $overridePath).ProviderPath
+        }
+
+        if ($Required) {
+            throw "Missing offline ISO: $overridePath"
+        }
+
+        return $null
+    }
+
+    $match = Get-ChildItem -Path $ProjectRoot -Filter $pattern -File -ErrorAction SilentlyContinue |
+        Sort-Object -Property @{
+            Expression = {
+                if ($_.Name -match '^rhel-(\d+(?:\.\d+)+)-x86_64-dvd\.iso$') {
+                    [version]$Matches[1]
+                }
+                else {
+                    [version]'0.0'
+                }
+            }
+            Descending = $true
+        } |
+        Select-Object -First 1
+
+    if ($null -ne $match) {
+        return $match.FullName
+    }
+
+    if ($Required) {
+        throw "Missing RHEL $major DVD ISO. Download the x86_64 DVD ISO from https://developers.redhat.com/products/rhel/download#downloadsbyrelease, place $defaultIsoName or any $pattern in $ProjectRoot, or set RHCSA_ISO to a filename or full path."
+    }
+
+    return $null
+}
+
 function ConvertTo-CompactWorkflowMessage {
     param(
         [AllowEmptyString()]
@@ -1912,44 +1977,7 @@ function Invoke-BaselineGuestProvisioning {
             [string]$ProjectProfile
         )
 
-        $isoName = [string]$env:RHCSA_ISO
-        if (-not [string]::IsNullOrWhiteSpace($isoName)) {
-            $isoPath = if ([System.IO.Path]::IsPathRooted($isoName)) {
-                $isoName
-            }
-            else {
-                Join-Path $ProjectRoot $isoName
-            }
-
-            if (-not (Test-Path $isoPath -PathType Leaf)) {
-                throw "Missing offline ISO: $isoPath"
-            }
-
-            return $isoPath
-        }
-
-        $major = if ($ProjectProfile -eq 'rhel10') { '10' } else { '9' }
-        $defaultIsoName = if ($ProjectProfile -eq 'rhel10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
-        $pattern = "rhel-$major.*-x86_64-dvd.iso"
-        $match = Get-ChildItem -Path $ProjectRoot -Filter $pattern -File -ErrorAction SilentlyContinue |
-            Sort-Object -Property @{
-                Expression = {
-                    if ($_.Name -match '^rhel-(\d+(?:\.\d+)+)-x86_64-dvd\.iso$') {
-                        [version]$Matches[1]
-                    }
-                    else {
-                        [version]'0.0'
-                    }
-                }
-                Descending = $true
-            } |
-            Select-Object -First 1
-
-        if ($null -ne $match) {
-            return $match.FullName
-        }
-
-        throw "Missing RHEL $major DVD ISO. Place $defaultIsoName or any $pattern in $ProjectRoot, or set RHCSA_ISO to a filename or full path."
+        return Get-RhcsaOfflineIsoPath -ProjectRoot $ProjectRoot -Profile $ProjectProfile -Required
     }
 
     function Mount-Rhcsa10ServerOfflineIso {
@@ -3891,6 +3919,7 @@ function Start-BaselineSession {
         }
     }
 
+    Get-RhcsaOfflineIsoPath -ProjectRoot $ProjectRoot -Profile (Get-ProjectProfile -ProjectRoot $ProjectRoot) -Required | Out-Null
     Assert-LabDiskSpaceReady -ProjectRoot $ProjectRoot
 
     if (-not $SkipEnvironmentRecovery -and [string]$baselineStatus.State -eq 'incomplete') {

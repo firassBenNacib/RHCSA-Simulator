@@ -98,11 +98,22 @@ def iso_version_key(path)
   version.split(".").map(&:to_i)
 end
 
-def resolve_iso_path(profile)
+def command_requires_iso?
+  !(ARGV.map(&:to_s) & %w[up reload provision]).empty?
+end
+
+def missing_iso_message(profile)
+  major = profile == "rhel10" ? "10" : "9"
+  expected = DEFAULT_ISO_BY_PROFILE.fetch(profile)
+  pattern = ISO_GLOB_BY_PROFILE.fetch(profile)
+  "Missing RHEL #{major} DVD ISO. Download the x86_64 DVD ISO from https://developers.redhat.com/products/rhel/download#downloadsbyrelease, place #{expected} or any #{pattern} in #{__dir__}, or set RHCSA_ISO to a filename or full path."
+end
+
+def resolve_iso_path(profile, required:)
   override = ENV.fetch("RHCSA_ISO", "").strip
   unless override.empty?
     override_path = File.expand_path(override, __dir__)
-    raise "Missing ISO: #{override_path}" unless File.file?(override_path)
+    raise "Missing ISO: #{override_path}" if required && !File.file?(override_path)
 
     return override_path
   end
@@ -111,14 +122,14 @@ def resolve_iso_path(profile)
   selected = matches.sort_by { |path| iso_version_key(path) }.last
   return selected unless selected.nil?
 
-  major = profile == "rhel10" ? "10" : "9"
-  expected = DEFAULT_ISO_BY_PROFILE.fetch(profile)
-  pattern = ISO_GLOB_BY_PROFILE.fetch(profile)
-  raise "Missing RHEL #{major} DVD ISO. Place #{expected} or any #{pattern} in #{__dir__}, or set RHCSA_ISO to a filename or full path."
+  raise missing_iso_message(profile) if required
+
+  File.expand_path(DEFAULT_ISO_BY_PROFILE.fetch(profile), __dir__)
 end
 
-ISO_PATH = resolve_iso_path(RHCSA_PROFILE)
+ISO_PATH = resolve_iso_path(RHCSA_PROFILE, required: command_requires_iso?)
 ISO_NAME = File.basename(ISO_PATH)
+ISO_MEDIUM = File.file?(ISO_PATH) ? ISO_PATH : "emptydrive"
 BOX_NAME = ENV.fetch("RHCSA_BOX", DEFAULT_BOX_BY_PROFILE.fetch(RHCSA_PROFILE))
 BOX_URL = ENV.fetch("RHCSA_BOX_URL", DEFAULT_BOX_URL_BY_PROFILE.fetch(RHCSA_PROFILE, ""))
 BOX_VERSION = ENV.fetch("RHCSA_BOX_VERSION", "")
@@ -244,7 +255,7 @@ Vagrant.configure("2") do |config|
         "--port", DVD_PORT,
         "--device", "0",
         "--type", "dvddrive",
-        "--medium", ISO_PATH
+        "--medium", ISO_MEDIUM
       ]
     end
 
