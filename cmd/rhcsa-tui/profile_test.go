@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestResolveTrackPreferenceDefaultsToRHCSA9(t *testing.T) {
+func TestResolveTrackPreferenceDefaultsToRHCSA10(t *testing.T) {
 	t.Setenv("RHCSA_TRACK", "")
 	t.Setenv("RHCSA_PROFILE", "")
 
@@ -15,8 +15,8 @@ func TestResolveTrackPreferenceDefaultsToRHCSA9(t *testing.T) {
 	if err != nil {
 		t.Fatalf("resolveTrackPreference returned error: %v", err)
 	}
-	if track != "rhcsa9" {
-		t.Fatalf("expected rhcsa9, got %q", track)
+	if track != "rhcsa10" {
+		t.Fatalf("expected rhcsa10, got %q", track)
 	}
 }
 

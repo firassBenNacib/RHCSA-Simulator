@@ -52,8 +52,8 @@ param(
 
 $value = ([string]$ProjectProfile).Trim().ToLowerInvariant() -replace '[-_]', ''
 switch ($value) {
-{ $_ -in @('', '9', 'rhel9', 'rhcsa9', 'ex2009') } { return 'rhel9' }
-{ $_ -in @('10', 'rhel10', 'rhcsa10', 'ex20010') } { return 'rhel10' }
+{ $_ -in @('', '10', 'rhel10', 'rhcsa10', 'ex20010') } { return 'rhel10' }
+{ $_ -in @('9', 'rhel9', 'rhcsa9', 'ex2009') } { return 'rhel9' }
 default { throw "Unsupported project profile '$ProjectProfile'. Use RHCSA9 or RHCSA10." }
 }
 }
@@ -67,7 +67,8 @@ param(
 
 switch (ConvertTo-ProjectProfile -Profile $ProjectProfile) {
 'rhel10' { return 'rhcsa10' }
-default { return 'rhcsa9' }
+'rhel9' { return 'rhcsa9' }
+default { return 'rhcsa10' }
 }
 }
 
@@ -78,7 +79,7 @@ param(
 
 $data = Get-ProjectProfileData -ProjectRoot $ProjectRoot
 if ($null -eq $data) {
-return 'rhel9'
+return 'rhel10'
 }
 
 $profileValue = ''
@@ -301,7 +302,7 @@ param(
 )
 
 $data = Get-ProjectProfileData -ProjectRoot $ProjectRoot
-$profileName = 'rhel9'
+$profileName = 'rhel10'
 if ($null -ne $data) {
 if ($null -ne $data.PSObject.Properties['profile']) {
 $profileName = [string]$data.profile

@@ -35,7 +35,7 @@ func resolveTrackPreference(requested, root string) (string, error) {
 		return projectProfileToTrack(value), nil
 	}
 
-	return "rhcsa9", nil
+	return "rhcsa10", nil
 }
 
 func loadProjectTrack(root string) (string, error) {
@@ -87,7 +87,7 @@ func loadProjectTimerDefault(root string) bool {
 func projectProfileToTrack(value string) string {
 	track, ok := projectProfileToTrackStrict(value)
 	if !ok {
-		return "rhcsa9"
+		return "rhcsa10"
 	}
 	return track
 }
@@ -108,10 +108,10 @@ func normalizeProjectProfileValue(value string) string {
 	normalized = strings.ReplaceAll(normalized, "-", "")
 	normalized = strings.ReplaceAll(normalized, "_", "")
 	switch normalized {
-	case "", "9", "rhel9", "rhcsa9", "ex2009":
-		return "rhel9"
-	case "10", "rhel10", "rhcsa10", "ex20010":
+	case "", "10", "rhel10", "rhcsa10", "ex20010":
 		return "rhel10"
+	case "9", "rhel9", "rhcsa9", "ex2009":
+		return "rhel9"
 	default:
 		return ""
 	}

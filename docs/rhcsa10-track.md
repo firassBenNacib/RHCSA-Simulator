@@ -1,6 +1,6 @@
 # RHCSA 10 Track
 
-RHCSA 10 is a separate simulator track. It uses a RHEL 10-compatible baseline and keeps newer objectives out of the RHCSA 9 catalog.
+RHCSA 10 is the default simulator track for new checkouts. It uses a RHEL 10-compatible baseline and keeps newer objectives out of the RHCSA 9 catalog.
 
 ## Runtime
 

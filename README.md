@@ -103,7 +103,7 @@ RHCSA-Simulator/
 
 ![PowerShell command interface](demo/rhcsa-cli.png)
 
-Build the default RHCSA 9 baseline:
+Build the default RHCSA 10 baseline:
 
 ```powershell
 .\RHCSA.ps1 up
@@ -184,7 +184,7 @@ The timer is optional. It is useful when you want to train under time pressure.
 
 ## RHCSA Profiles
 
-RHCSA 9 is the default profile.
+RHCSA 10 is the default profile for new checkouts. RHCSA 9 remains available for RHEL 9 practice.
 
 Show the current profile:
 
@@ -192,14 +192,14 @@ Show the current profile:
 .\RHCSA.ps1 profile
 ```
 
-Switch to RHCSA 10:
+Use RHCSA 10:
 
 ```powershell
 .\RHCSA.ps1 profile RHCSA10
 .\RHCSA.ps1 up
 ```
 
-Switch back to RHCSA 9:
+Switch to RHCSA 9:
 
 ```powershell
 .\RHCSA.ps1 profile RHCSA9
