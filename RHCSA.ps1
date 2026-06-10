@@ -358,6 +358,8 @@ Format-ResumeOutput -ResumeResult (Resume-LabEnvironment -ProjectRoot $projectRo
 break
 }
 
+Get-RhcsaOfflineIsoPath -ProjectRoot $projectRoot -Profile $effectiveProfile -Required | Out-Null
+
 Write-Output ''
 Get-RhcsaAsciiBanner | Write-Output
 Write-Output ''

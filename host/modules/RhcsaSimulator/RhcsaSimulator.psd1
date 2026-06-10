@@ -63,6 +63,7 @@
         'Get-ProjectTimerDefault'
         'Get-ProjectTrackFromProfile'
         'Get-RequiredProperty'
+        'Get-RhcsaOfflineIsoPath'
         'Get-RhcsaSimulatorRuntimeOption'
         'Get-RhcsaTuiBinaryPath'
         'Get-RhcsaTuiSourceFile'

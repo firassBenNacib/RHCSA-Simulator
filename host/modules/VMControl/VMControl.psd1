@@ -19,6 +19,7 @@ FunctionsToExport = @(
     'Get-LabMachineIdList'
     'Get-LabVBoxVmCandidate'
     'Get-OptionalVagrantMachineId'
+    'Get-RhcsaOfflineIsoPath'
     'Get-ScenarioStatus'
     'Get-SshExecutablePath'
     'Get-VBoxHardDiskCatalog'
