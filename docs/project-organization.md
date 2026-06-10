@@ -212,15 +212,16 @@ temporary Vagrant state
 
 ## RHCSA Tracks
 
-RHCSA 9 is the default stable track.
+RHCSA 10 is the default track for new checkouts because the current EX200 exam is based on RHEL 10.
 
 RHCSA 10 is kept separate so RHEL 10-specific objectives and assumptions do not leak into RHCSA 9 labs.
+RHCSA 9 remains available as an explicit RHEL 9 practice profile.
 
 Key differences:
 
 | Area | RHCSA 9 | RHCSA 10 |
 |---|---|---|
-| Default profile | Yes | No |
+| Default profile | No | Yes |
 | Containers | Podman-focused tasks | Not mixed into RHCSA 9 content |
 | Flatpak | Not part of RHCSA 9 track | Included |
 | systemd timers | Limited/general systemd usage | Included as RHCSA 10 content |

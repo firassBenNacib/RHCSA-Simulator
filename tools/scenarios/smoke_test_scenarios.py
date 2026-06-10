@@ -244,14 +244,14 @@ def project_default_track() -> str:
     try:
         data = json.loads(profile_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return "rhcsa9"
+        return "rhcsa10"
 
-    raw_track = str(data.get("track") or data.get("profile") or "rhcsa9")
+    raw_track = str(data.get("track") or data.get("profile") or "rhcsa10")
     try:
         normalized = normalize_track(raw_track)
     except SystemExit:
-        return "rhcsa9"
-    return "rhcsa9" if normalized == "all" else normalized
+        return "rhcsa10"
+    return "rhcsa10" if normalized == "all" else normalized
 
 
 def get_baseline_status() -> str | None:

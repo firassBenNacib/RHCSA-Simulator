@@ -235,7 +235,7 @@ func preferredTrack(active string, tracks []string) string {
 			return track
 		}
 	}
-	return "rhcsa9"
+	return "rhcsa10"
 }
 
 func (m model) progressKey(id string, tracks []string) string {

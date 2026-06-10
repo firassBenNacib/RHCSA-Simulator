@@ -313,7 +313,7 @@ param(
 [object[]]$ScenarioCatalog,
 [ValidateSet('all', 'labs', 'exams')]
 [string]$Filter = 'all',
-[string]$Track = 'RHCSA9'
+[string]$Track = 'RHCSA10'
 )
 
 $scenarioList = @($ScenarioCatalog)
@@ -456,8 +456,8 @@ param(
 [object]$BaselineStatus,
 [AllowNull()]
 [object]$ScenarioStatus = $null,
-[string]$ProjectProfile = 'rhel9',
-[string]$ScenarioTrack = 'rhcsa9'
+[string]$ProjectProfile = 'rhel10',
+[string]$ScenarioTrack = 'rhcsa10'
 )
 
 $vmSummary = @($BaselineStatus.MachineStatus | ForEach-Object { '{0} {1}' -f $_.Name, $_.StateHuman }) -join ' | '

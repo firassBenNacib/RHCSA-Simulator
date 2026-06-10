@@ -4106,7 +4106,7 @@ function Start-ScenarioRun {
         [ValidateSet('Lab', 'Exam')]
         [string]$Mode,
         [ValidateSet('RHCSA9', 'RHCSA10', 'All', 'rhcsa9', 'rhcsa10', 'all')]
-        [string]$Track = 'RHCSA9',
+        [string]$Track = 'RHCSA10',
         [switch]$ForceRestart,
         [string]$ProjectRoot = (Get-ProjectRoot)
     )

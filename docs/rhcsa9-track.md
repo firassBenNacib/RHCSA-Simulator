@@ -1,6 +1,6 @@
 # RHCSA 9 Track
 
-RHCSA 9 is the default simulator track. It keeps the original lab and mock exam set stable on a RHEL 9-compatible baseline.
+RHCSA 9 is the legacy RHEL 9 practice track. It keeps the original lab and mock exam set stable on a RHEL 9-compatible baseline.
 
 ## Runtime
 

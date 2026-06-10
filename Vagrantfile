@@ -6,10 +6,10 @@ PROJECT_PROFILE_PATH = File.join(__dir__, ".rhcsa-profile.json")
 def normalize_project_profile(value)
   normalized = value.to_s.strip.downcase.gsub(/[-_]/, "")
   case normalized
-  when "", "9", "rhel9", "rhcsa9", "ex2009"
-    "rhel9"
-  when "10", "rhel10", "rhcsa10", "ex20010"
+  when "", "10", "rhel10", "rhcsa10", "ex20010"
     "rhel10"
+  when "9", "rhel9", "rhcsa9", "ex2009"
+    "rhel9"
   else
     raise "Unsupported project profile '#{value}'. Use RHCSA9 or RHCSA10."
   end
@@ -28,7 +28,7 @@ rescue JSON::ParserError => e
 end
 
 PROJECT_PROFILE = load_project_profile(PROJECT_PROFILE_PATH)
-RHCSA_PROFILE = (PROJECT_PROFILE || ENV.fetch("RHCSA_PROFILE", "rhel9")).downcase
+RHCSA_PROFILE = (PROJECT_PROFILE || ENV.fetch("RHCSA_PROFILE", "rhel10")).downcase
 DEFAULT_ISO_BY_PROFILE = {
   "rhel9" => "rhel-9.7-x86_64-dvd.iso",
   "rhel10" => "rhel-10.1-x86_64-dvd.iso"

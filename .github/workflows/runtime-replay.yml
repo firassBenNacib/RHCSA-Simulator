@@ -6,7 +6,7 @@ on:
       track:
         description: Scenario track to replay
         required: true
-        default: rhcsa9
+        default: rhcsa10
         type: choice
         options:
           - rhcsa9

@@ -64,7 +64,7 @@ return ,$tracks
 function Test-ScenarioTrackMatch {
 param(
 [string[]]$ScenarioTracks = @('rhcsa9'),
-[string]$Track = 'rhcsa9'
+[string]$Track = 'rhcsa10'
 )
 
 $normalized = ConvertTo-ScenarioTrack -Track $Track
@@ -494,7 +494,7 @@ Checks = $examChecks
 function Get-ScenarioCatalog {
 param(
 [string]$ProjectRoot = (Get-ProjectRoot),
-[string]$Track = 'rhcsa9'
+[string]$Track = 'rhcsa10'
 )
 
 $scenariosRoot = Join-Path $ProjectRoot 'scenarios'
@@ -515,7 +515,7 @@ param(
 [Parameter(Mandatory = $true)]
 [string]$ScenarioId,
 [string]$ProjectRoot = (Get-ProjectRoot),
-[string]$Track = 'rhcsa9'
+[string]$Track = 'rhcsa10'
 )
 
 $matchingManifest = @(Get-ScenarioCatalog -ProjectRoot $ProjectRoot -Track $Track | Where-Object { $_.Id -eq $ScenarioId })
@@ -755,7 +755,7 @@ param(
 [Parameter(Mandatory = $true)]
 [string]$ScenarioId,
 [string]$ProjectRoot = (Get-ProjectRoot),
-[string]$Track = 'rhcsa9'
+[string]$Track = 'rhcsa10'
 )
 
 $manifest = Get-ScenarioManifest -ScenarioId $ScenarioId -ProjectRoot $ProjectRoot -Track $Track
