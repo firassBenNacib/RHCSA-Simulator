@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.0...v2.1.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* harden RHCSA10 exam checks ([#54](https://github.com/firassBenNacib/RHCSA-Simulator/issues/54)) ([dda8e4d](https://github.com/firassBenNacib/RHCSA-Simulator/commit/dda8e4d79742565b9b8c02b26b8305ad08eb1b18))
+
 ## [2.1.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.0.1...v2.1.0) (2026-05-31)
 
 
