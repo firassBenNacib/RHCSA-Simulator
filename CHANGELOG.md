@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.1...v2.1.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* accept stable LVM fstab sources ([#56](https://github.com/firassBenNacib/RHCSA-Simulator/issues/56)) ([d429299](https://github.com/firassBenNacib/RHCSA-Simulator/commit/d429299f8ddbac3896e0ab493843edb50094801d))
+
 ## [2.1.1](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.0...v2.1.1) (2026-06-11)
 
 
