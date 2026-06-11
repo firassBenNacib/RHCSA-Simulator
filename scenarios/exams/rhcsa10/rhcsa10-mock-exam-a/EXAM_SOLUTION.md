@@ -263,7 +263,7 @@ chmod 3770 /srv/opsa10
 
 ---
 
-## Question 21 - configure persistent systemd journal storage with a valid [Journal] Stor (server) - 4 pts
+## Question 21 - configure systemd-journald so logs are stored persistently across reboot (server) - 4 pts
 
 ```bash
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d

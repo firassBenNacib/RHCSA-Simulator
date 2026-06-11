@@ -163,9 +163,9 @@ On client, create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 
 
 ---
 
-## Question 21 - configure persistent systemd journal storage with a valid [Journal] Stor (server) - 4 pts
+## Question 21 - configure systemd-journald so logs are stored persistently across reboot (server) - 4 pts
 
-On server, configure persistent systemd journal storage with a valid [Journal] Storage=persistent configuration, create /var/log/journal, and restart systemd-journald.
+On server, configure systemd-journald so logs are stored persistently across reboots and restart systemd-journald.
 
 ---
 

@@ -1571,11 +1571,10 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     for index, task in enumerate(tasks):
         if "persistent systemd journal storage" not in str(task).lower():
             continue
-        if "journald.conf" in str(task):
+        if any(token in str(task) for token in ("journald.conf", "[Journal]", "Storage=persistent")):
             tasks[index] = (
-                "On server, configure persistent systemd journal storage with a valid "
-                "[Journal] Storage=persistent configuration, create /var/log/journal, "
-                "and restart systemd-journald."
+                "On server, configure systemd-journald so logs are stored persistently across "
+                "reboots and restart systemd-journald."
             )
         if index < len(commands):
             commands[index] = list(JOURNALD_PERSISTENT_COMMANDS)

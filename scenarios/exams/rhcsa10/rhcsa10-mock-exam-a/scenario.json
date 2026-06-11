@@ -48,7 +48,7 @@
         "On client, create the file /var/www/html/a.html and restore its default SELinux context so the type is httpd_sys_content_t.",
         "On client, persistently enable the SELinux boolean httpd_can_network_connect.",
         "On client, create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (setgid + sticky + rwx for owner and group).",
-        "On server, configure persistent systemd journal storage with a valid [Journal] Storage=persistent configuration, create /var/log/journal, and restart systemd-journald.",
+        "On server, configure systemd-journald so logs are stored persistently across reboots and restart systemd-journald.",
         "On client, configure the server (192.168.122.3) as the only chrony time source.\nRemove all other pool/server lines.\nEnable and start chronyd."
       ],
       "task_titles": [
@@ -72,7 +72,7 @@
         "create the file /var/www/html/a.html and restore its default SELinux con",
         "persistently enable the SELinux boolean httpd_can_network_connect",
         "create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se",
-        "configure persistent systemd journal storage with a valid [Journal] Stor",
+        "configure systemd-journald so logs are stored persistently across reboot",
         "configure the server (192.168.122.3) as the only chrony time source"
       ],
       "task_points": [

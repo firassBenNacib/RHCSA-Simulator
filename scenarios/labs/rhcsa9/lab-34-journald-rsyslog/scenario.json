@@ -24,7 +24,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure journald on client so logs are stored persistently across reboots using a valid [Journal] Storage=persistent configuration.",
+        "Configure journald on client so logs are stored persistently across reboots.",
         "Create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
         "Ensure the rsyslog service is active after your changes."
       ],
