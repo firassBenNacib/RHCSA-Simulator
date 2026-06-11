@@ -33,7 +33,7 @@
         "(client) Configure the connection \"System eth1\" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.",
         "(client) Add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.",
         "(client) Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "(client) Add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote, verify it is listed, then remove it.",
+        "On client, add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.",
         "(server) Set the server login message in /etc/motd to Authorized exam-g server.",
         "(client) Create group devg10. Create users grant10 and hazel10 with devg10 as a supplementary group and passwords set to cinder9.",
         "(client) Create directory /srv/devg10 owned by root:devg10 with permissions 1770 (setgid and sticky bit, no world access).",
@@ -63,8 +63,8 @@
         "hostnamectl --static | grep -qx clientg.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverg\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.66/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "grep -q 'audit_backlog_limit=8192' /proc/cmdline || grubby --info=DEFAULT | grep -q 'audit_backlog_limit=8192'",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examgflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && ! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examgflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "ssh server bash -lc 'set -euo pipefail; grep -qx '\"'\"'Authorized exam-g server'\"'\"' /etc/motd'",
         "getent group devg10 >/dev/null && id -nG grant10 | tr ' ' '\\n' | grep -qx devg10 && id -nG hazel10 | tr ' ' '\\n' | grep -qx devg10",
         "test -d /srv/devg10 && stat -c '%a' /srv/devg10 | grep -qx 1770 && stat -c '%G' /srv/devg10 | grep -qx devg10 && stat -c '%U' /srv/devg10 | grep -qx root",
@@ -80,7 +80,7 @@
         "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | awk '$0 ~ /^etc\\// {found=1} END{exit !found}'",
         "systemctl cat examgtimer.timer >/dev/null 2>&1 && systemctl is-enabled examgtimer.timer | grep -qx enabled",
         "swapon --show | grep -q '/dev/sdb' && grep -q '/dev/sdb.*swap' /etc/fstab",
-        "lvs /dev/vgg10/datag >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag10 | grep -qx /mnt/datag10 && grep -q '/dev/vgg10/datag.*/mnt/datag10' /etc/fstab"
+        "lvs /dev/vgg10/datag >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag10 | grep -qx /mnt/datag10 && grep -Eq '^/dev/vgg10/datag[[:space:]]+/mnt/datag10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on.",
@@ -94,7 +94,7 @@
         "(client) Configure the connection \"System eth1\" with static IPv4: addres",
         "(client) Add the kernel boot argument audit_backlog_limit=8192 to the de",
         "(client) Create enabled BaseOS and AppStream repository definitions usin",
-        "(client) Add a system-level Flatpak remote named examgflatpak pointing t",
+        "add a system-level Flatpak remote named examgflatpak pointing to file://",
         "(server) Set the server login message in /etc/motd to Authorized exam-g ",
         "(client) Create group devg10. Create users grant10 and hazel10 with devg",
         "(client) Create directory /srv/devg10 owned by root:devg10 with permissi",
@@ -163,8 +163,7 @@
         [
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo",
           "flatpak install --system -y examgflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
+          "flatpak list --system --app"
         ],
         [
           "# On server:",

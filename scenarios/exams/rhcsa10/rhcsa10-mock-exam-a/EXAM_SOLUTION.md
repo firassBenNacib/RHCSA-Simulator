@@ -107,7 +107,6 @@ EOF
 flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo
 flatpak install --system -y examaflatpak org.rhcsa.Tools
 flatpak list --system --app
-flatpak uninstall --system -y org.rhcsa.Tools
 ```
 
 ---

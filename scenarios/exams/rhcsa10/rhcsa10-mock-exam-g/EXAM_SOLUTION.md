@@ -81,13 +81,12 @@ EOF
 
 ---
 
-## Question 06 - (client) Add a system-level Flatpak remote named examgflatpak pointing t (client) - 5 pts
+## Question 06 - add a system-level Flatpak remote named examgflatpak pointing to file:// (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo
 flatpak install --system -y examgflatpak org.rhcsa.Tools
 flatpak list --system --app
-flatpak uninstall --system -y org.rhcsa.Tools
 ```
 
 ---

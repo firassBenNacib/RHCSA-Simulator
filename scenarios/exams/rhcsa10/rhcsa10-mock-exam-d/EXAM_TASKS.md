@@ -87,9 +87,9 @@ Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/flatpak/
 
 ---
 
-## Question 12 - Install org.rhcsa.Tools from examdflatpak, then remove it after verifica (server) - 5 pts
+## Question 12 - Ensure org.rhcsa.Tools is not installed after configuring examdflatpak (server) - 5 pts
 
-Install org.rhcsa.Tools from examdflatpak, then remove it after verification.
+Ensure org.rhcsa.Tools is not installed after configuring examdflatpak.
 
 ---
 

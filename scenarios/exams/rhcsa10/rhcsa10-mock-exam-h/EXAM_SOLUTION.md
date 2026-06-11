@@ -48,12 +48,10 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file://
 
 ---
 
-## Question 04 - Install org.rhcsa.Tools from examhflatpak, then remove it after verifica (server) - 5 pts
+## Question 04 - Ensure org.rhcsa.Tools is not installed after configuring examhflatpak (server) - 5 pts
 
 ```bash
-flatpak install --system -y examhflatpak org.rhcsa.Tools
-flatpak list --system --app
-flatpak uninstall --system -y org.rhcsa.Tools
+flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 ```
 
 ---

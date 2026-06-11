@@ -630,6 +630,57 @@ def _ssh_server_check(command: str) -> str:
     return f"ssh server bash -lc 'set -euo pipefail; {escaped}'"
 
 
+STRICT_REPO_CHECK = (
+    "awk '"
+    "function flush(){"
+    "if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;"
+    "if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1"
+    "}"
+    "function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}"
+    "/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}"
+    "/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}"
+    "/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}"
+    "/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}"
+    "END{flush(); exit !(base && app)}"
+    "' /etc/yum.repos.d/*.repo"
+)
+SELINUX_HTTPD_BOOLEAN_CHECK = (
+    "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && "
+    "semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'"
+)
+
+
+def _flatpak_remote_check(remote: str) -> str:
+    return (
+        "flatpak remotes --system --columns=name,url 2>/dev/null | "
+        f"awk '$1 == \"{remote}\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" "
+        "{found=1} END {exit !found}'"
+    )
+
+
+def _flatpak_installed_check() -> str:
+    return "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
+
+
+def _flatpak_absent_check() -> str:
+    return "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
+
+
+def _lvm_mount_check(letter: str) -> str:
+    return (
+        f"lvs /dev/vg{letter}10/data{letter} >/dev/null 2>&1 && "
+        f"findmnt -no TARGET /mnt/data{letter}10 | grep -qx /mnt/data{letter}10 && "
+        f"grep -Eq '^/dev/vg{letter}10/data{letter}[[:space:]]+/mnt/data{letter}10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab"
+    )
+
+
+def _nfs_mount_check(mountpoint: str) -> str:
+    return (
+        f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx 'server:/exports/direct {mountpoint}' && "
+        f"grep -Eq '^server:/exports/direct[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab"
+    )
+
+
 def _reorder_parallel(values: list[Any], order: list[int]) -> list[Any]:
     if len(values) != len(order):
         return values
@@ -1324,11 +1375,12 @@ def _exam_seed_from_id(exam_id: str) -> int:
 
 
 def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, Any]:
-    """Fix RHCSA10 exam tasks/checks that depended on old Vagrant NIC names."""
+    """Apply RHCSA10 exam compatibility and grading hardening fixes."""
     updated = dict(block)
     tasks = list(updated.get("tasks", []))
     checks = list(updated.get("checks", []))
     commands = [list(command_group) for command_group in updated.get("solution_commands", [])]
+    letter = chr(ord("a") + _exam_seed_from_id(exam_id))
 
     if exam_id == "rhcsa10-mock-exam-g":
         for index, task in enumerate(tasks):
@@ -1393,6 +1445,11 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         for field_name in ("hints", "solution_outline"):
             values = [str(value) for value in updated.get(field_name, [])]
             updated[field_name] = [value.replace("NFS and package tasks", "server-side and package tasks") for value in values]
+
+    for index, task in enumerate(tasks):
+        task_text = str(task)
+        if exam_id == "rhcsa10-mock-exam-b" and task_text.startswith("Set hostname to clientb.exam10.lab"):
+            tasks[index] = f"On client, {task_text[0].lower()}{task_text[1:]}"
 
     for index, task in enumerate(tasks):
         task_text = str(task)
@@ -1471,30 +1528,93 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
             check_command = "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf"
             checks[index] = _ssh_server_check(check_command) if re.search(r"\bon server\b|\(server\)", str(tasks[index]), re.I) else check_command
 
+    flatpak_installed_exams = {"rhcsa10-mock-exam-a", "rhcsa10-mock-exam-c", "rhcsa10-mock-exam-g"}
     for index, task in enumerate(tasks):
         if index >= len(checks):
             continue
-        task_text = str(task).lower()
-        if "on server, create the same baseos and appstream repository definitions" in task_text:
-            checks[index] = _ssh_server_check(
-                "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && "
-                "grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d"
-            )
+        task_text = str(task)
+        task_lower = task_text.lower()
 
-    exam_task_orders = {
-        "rhcsa10-mock-exam-c": [0, 1, 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21],
-        "rhcsa10-mock-exam-d": [0, 1, 17, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21],
-        "rhcsa10-mock-exam-e": [0, 1, 14, 15, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21],
-        "rhcsa10-mock-exam-f": [0, 1, 21, 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20],
-        "rhcsa10-mock-exam-h": [0, 1, 17, 21, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20],
-    }
-    order = exam_task_orders.get(exam_id)
-    if order and sorted(order) == list(range(len(tasks))):
-        tasks = _reorder_parallel(tasks, order)
-        checks = _reorder_parallel(checks, order)
-        commands = _reorder_parallel(commands, order)
-        if len(updated.get("task_points", [])) == len(order):
-            updated["task_points"] = _reorder_parallel(list(updated["task_points"]), order)
+        if "baseos" in task_lower and "appstream" in task_lower and "repo" in task_lower:
+            checks[index] = _ssh_server_check(STRICT_REPO_CHECK) if re.search(r"\bon server\b|\(server\)", task_text, re.I) else STRICT_REPO_CHECK
+
+        if "httpd_can_network_connect" in task_text:
+            checks[index] = SELINUX_HTTPD_BOOLEAN_CHECK
+
+        lvm_vg_match = re.search(r"\bvg([a-h])10\b", task_lower)
+        lvm_lv_match = re.search(r"\bdata([a-h])\b", task_lower)
+        if lvm_vg_match and lvm_lv_match and "mount" in task_lower and lvm_vg_match.group(1) == lvm_lv_match.group(1):
+            checks[index] = _lvm_mount_check(lvm_vg_match.group(1))
+
+        nfs_match = re.search(r"mount\s+server:/exports/direct\s+at\s+(/mnt/[a-z0-9._/-]+)\s+persistently", task_lower)
+        if nfs_match:
+            checks[index] = _nfs_mount_check(nfs_match.group(1).rstrip("."))
+
+        if re.search(r"Install\s+org\.rhcsa\.Tools\s+from\s+that\b", task_text, re.I) and exam_id in flatpak_installed_exams:
+            remote = f"exam{letter}flatpak"
+            add_prefix = "(client) Add" if task_text.lstrip().startswith("(client)") else "On client, add"
+            tasks[index] = (
+                f"{add_prefix} a system-level Flatpak remote named {remote} pointing to "
+                "file:///opt/rhcsa/flatpak/repo with GPG verification disabled. "
+                "Install org.rhcsa.Tools from that remote and leave it installed."
+            )
+            checks[index] = f"{_flatpak_remote_check(remote)} && {_flatpak_installed_check()}"
+            if index < len(commands):
+                commands[index] = [
+                    f"flatpak remote-add --system --if-not-exists --no-gpg-verify {remote} file:///opt/rhcsa/flatpak/repo",
+                    f"flatpak install --system -y {remote} org.rhcsa.Tools",
+                    "flatpak list --system --app",
+                ]
+            continue
+
+        combined_flatpak_match = re.search(r"remote named\s+([a-z0-9_-]+)\b", task_text, re.I)
+        if combined_flatpak_match and "org.rhcsa.Tools" in task_text and "flatpak" in task_lower:
+            remote = combined_flatpak_match.group(1)
+            add_prefix = "(client) Add" if task_text.lstrip().startswith("(client)") else "On client, add"
+            configure_prefix = "(client) Configure" if task_text.lstrip().startswith("(client)") else "On client, configure"
+            if exam_id in flatpak_installed_exams:
+                tasks[index] = (
+                    f"{add_prefix} a system-level Flatpak remote named {remote} pointing to "
+                    "file:///opt/rhcsa/flatpak/repo with GPG verification disabled. "
+                    "Install org.rhcsa.Tools from that remote and leave it installed."
+                )
+                checks[index] = f"{_flatpak_remote_check(remote)} && {_flatpak_installed_check()}"
+                if index < len(commands):
+                    commands[index] = [
+                        f"flatpak remote-add --system --if-not-exists --no-gpg-verify {remote} file:///opt/rhcsa/flatpak/repo",
+                        f"flatpak install --system -y {remote} org.rhcsa.Tools",
+                        "flatpak list --system --app",
+                    ]
+            else:
+                tasks[index] = (
+                    f"{configure_prefix} a system-level Flatpak remote named {remote} pointing to "
+                    "file:///opt/rhcsa/flatpak/repo with GPG verification disabled, and ensure org.rhcsa.Tools is not installed."
+                )
+                checks[index] = f"{_flatpak_remote_check(remote)} && {_flatpak_absent_check()}"
+                if index < len(commands):
+                    commands[index] = [
+                        f"flatpak remote-add --system --if-not-exists --no-gpg-verify {remote} file:///opt/rhcsa/flatpak/repo",
+                        "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true",
+                    ]
+
+        split_flatpak_match = re.search(r"Install\s+org\.rhcsa\.Tools\s+from\s+(?!that\b)([a-z0-9_-]+)", task_text, re.I)
+        if split_flatpak_match:
+            remote = split_flatpak_match.group(1)
+            if exam_id in flatpak_installed_exams:
+                tasks[index] = f"Install org.rhcsa.Tools from {remote} and leave it installed."
+                checks[index] = _flatpak_installed_check()
+                if index < len(commands):
+                    commands[index] = [
+                        f"flatpak install --system -y {remote} org.rhcsa.Tools",
+                        "flatpak list --system --app",
+                    ]
+            else:
+                tasks[index] = f"Ensure org.rhcsa.Tools is not installed after configuring {remote}."
+                checks[index] = _flatpak_absent_check()
+                if index < len(commands):
+                    commands[index] = [
+                        "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true",
+                    ]
 
     task_points = list(updated.get("task_points", []))
     tasks, checks, commands, task_points = _order_flatpak_prerequisites(tasks, checks, commands, task_points)

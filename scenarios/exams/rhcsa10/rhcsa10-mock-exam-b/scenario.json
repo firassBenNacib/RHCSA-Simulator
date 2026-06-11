@@ -30,11 +30,11 @@
   "content": {
     "exam": {
       "tasks": [
-        "Set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168.122.3.",
+        "On client, set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from exambflatpak, then remove it after verification.",
+        "Ensure org.rhcsa.Tools is not installed after configuring exambflatpak.",
         "Create group teamb10, create user userb10, set password cinder9, and add the user to teamb10.",
         "Allow %teamb10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
         "Set maximum password age for userb10 to 46 days and warning period to 7 days.",
@@ -61,7 +61,7 @@
       "checks": [
         "hostnamectl --static | grep -qx clientb.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverb\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.61/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"exambflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group teamb10 >/dev/null && id -nG userb10 | tr ' ' '\\n' | grep -qx teamb10",
@@ -72,13 +72,13 @@
         "test -f /root/b-etc.tar.gz && tar -tzf /root/b-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
         "test \"$(stat -c %i /root/b-original)\" = \"$(stat -c %i /root/b-hard)\" && test -L /root/b-soft",
         "systemctl cat exambtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled exambtimer.timer | grep -qx enabled",
-        "lvs /dev/vgb10/datab >/dev/null && findmnt -no TARGET /mnt/datab10 | grep -qx /mnt/datab10",
+        "lvs /dev/vgb10/datab >/dev/null 2>&1 && findmnt -no TARGET /mnt/datab10 | grep -qx /mnt/datab10 && grep -Eq '^/dev/vgb10/datab[[:space:]]+/mnt/datab10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
         "ls -Z /var/www/html/b.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "tuned-adm active | grep -q throughput-performance",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "crontab -l -u userb10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log'",
-        "findmnt -no SOURCE,TARGET /mnt/bdirect | grep -qx 'server:/exports/direct /mnt/bdirect'",
+        "findmnt -no SOURCE,TARGET /mnt/bdirect | grep -qx 'server:/exports/direct /mnt/bdirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/bdirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
         "systemctl get-default | grep -qx multi-user.target",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
       ],
@@ -86,11 +86,11 @@
         "Work through each question independently and verify before moving on."
       ],
       "task_titles": [
-        "Set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168",
+        "set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.1",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from exambflatpak, then remove it after verifica",
+        "Ensure org.rhcsa.Tools is not installed after configuring exambflatpak",
         "Create group teamb10, create user userb10, set password cinder9, and add",
         "Allow %teamb10 to run /usr/bin/systemctl without a password by using a s",
         "Set maximum password age for userb10 to 46 days and warning period to 7 ",
@@ -162,9 +162,7 @@
           "flatpak remote-add --system --if-not-exists --no-gpg-verify exambflatpak file:///opt/rhcsa/flatpak/repo"
         ],
         [
-          "flatpak install --system -y exambflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
+          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
         ],
         [
           "groupadd teamb10",

@@ -166,6 +166,47 @@ def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Fi
         findings.append(Finding(path, "solution edits /etc/sudoers directly without task requiring it"))
 
 
+def audit_rhcsa10_exam_strictness(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario) or "exam" not in scenario.get("content", {}):
+        return
+
+    exam = scenario["content"]["exam"]
+    for index, (task, check) in enumerate(zip(exam.get("tasks", []), exam.get("checks", [])), start=1):
+        task_text = str(task)
+        check_text = str(check)
+        task_lower = task_text.lower()
+        check_lower = check_text.lower()
+        label = f"exam task {index}"
+
+        if "baseos" in task_lower and "appstream" in task_lower and "repo" in task_lower:
+            missing = [token for token in ("baseurl", "enabled", "gpgcheck") if token not in check_lower]
+            if missing:
+                findings.append(Finding(path, f"{label} repository check is missing {', '.join(missing)} validation"))
+            if re.search(r"\bon server\b|\(server\)", task_text, re.I) and not check_text.lstrip().startswith("ssh server "):
+                findings.append(Finding(path, f"{label} repository check must run on server"))
+
+        if "httpd_can_network_connect" in task_text:
+            if "getsebool" not in check_lower or "semanage boolean -l -c" not in check_lower:
+                findings.append(Finding(path, f"{label} SELinux boolean check must validate runtime and persistent state"))
+
+        is_lvm_mount = (
+            re.search(r"\bvg[a-h]10\b", task_lower)
+            and re.search(r"\bdata[a-h]\b", task_lower)
+            and "mount" in task_lower
+        )
+        is_nfs_direct_mount = "mount server:/exports/direct" in task_lower and "persist" in task_lower
+        if (is_lvm_mount or is_nfs_direct_mount) and "/etc/fstab" not in check_lower:
+            findings.append(Finding(path, f"{label} persistent mount check must validate /etc/fstab"))
+
+        if "flatpak" in task_lower and "org.rhcsa.tools" in task_lower:
+            if "install" in task_lower and "remove" in task_lower:
+                findings.append(Finding(path, f"{label} Flatpak install/remove wording is not provable from final state"))
+            if "leave it installed" in task_lower and "flatpak list" not in check_lower:
+                findings.append(Finding(path, f"{label} Flatpak installed final state is not checked"))
+            if "not installed" in task_lower and "! flatpak list" not in check_lower:
+                findings.append(Finding(path, f"{label} Flatpak absent final state is not checked"))
+
+
 def scenario_tracks(scenario: dict[str, Any]) -> list[str]:
     tracks = scenario.get("tracks") or ["rhcsa9"]
     if not isinstance(tracks, list):
@@ -215,6 +256,7 @@ def main() -> int:
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa10_exam_strictness(path, scenario, findings)
 
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]
     if len(server_labs) < 12:
