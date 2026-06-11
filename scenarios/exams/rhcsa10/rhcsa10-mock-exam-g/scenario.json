@@ -80,7 +80,7 @@
         "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | awk '$0 ~ /^etc\\// {found=1} END{exit !found}'",
         "systemctl cat examgtimer.timer >/dev/null 2>&1 && systemctl is-enabled examgtimer.timer | grep -qx enabled",
         "swapon --show | grep -q '/dev/sdb' && grep -q '/dev/sdb.*swap' /etc/fstab",
-        "lvs /dev/vgg10/datag >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag10 | grep -qx /mnt/datag10 && grep -Eq '^/dev/vgg10/datag[[:space:]]+/mnt/datag10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab"
+        "lv_path=/dev/vgg10/datag; mapper_path=/dev/mapper/vgg10-datag; mountpoint=/mnt/datag10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on.",

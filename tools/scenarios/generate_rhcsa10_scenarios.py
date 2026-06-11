@@ -668,9 +668,16 @@ def _flatpak_absent_check() -> str:
 
 def _lvm_mount_check(letter: str) -> str:
     return (
-        f"lvs /dev/vg{letter}10/data{letter} >/dev/null 2>&1 && "
-        f"findmnt -no TARGET /mnt/data{letter}10 | grep -qx /mnt/data{letter}10 && "
-        f"grep -Eq '^/dev/vg{letter}10/data{letter}[[:space:]]+/mnt/data{letter}10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab"
+        f"lv_path=/dev/vg{letter}10/data{letter}; "
+        f"mapper_path=/dev/mapper/vg{letter}10-data{letter}; "
+        f"mountpoint=/mnt/data{letter}10; "
+        'lv_uuid="$(blkid -s UUID -o value "$lv_path")"; '
+        'lvs "$lv_path" >/dev/null 2>&1 && '
+        'findmnt -no TARGET "$mountpoint" | grep -qx "$mountpoint" && '
+        'awk -v dev="$lv_path" -v mapper="$mapper_path" -v uuid="$lv_uuid" -v target="$mountpoint" '
+        '\'$1 !~ /^#/ && $2 == target && $3 == "xfs" && '
+        '($1 == dev || $1 == mapper || $1 == "UUID=" uuid || $1 == "/dev/disk/by-uuid/" uuid) '
+        "{found=1} END {exit !found}' /etc/fstab"
     )
 
 

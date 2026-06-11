@@ -72,7 +72,7 @@
         "test -f /root/e-etc.tar.gz && tar -tzf /root/e-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
         "test \"$(stat -c %i /root/e-original)\" = \"$(stat -c %i /root/e-hard)\" && test -L /root/e-soft",
         "systemctl cat exametimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled exametimer.timer | grep -qx enabled",
-        "lvs /dev/vge10/datae >/dev/null 2>&1 && findmnt -no TARGET /mnt/datae10 | grep -qx /mnt/datae10 && grep -Eq '^/dev/vge10/datae[[:space:]]+/mnt/datae10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
+        "lv_path=/dev/vge10/datae; mapper_path=/dev/mapper/vge10-datae; mountpoint=/mnt/datae10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "firewall-cmd --permanent --query-port=8104/tcp && firewall-cmd --query-port=8104/tcp",
         "ls -Z /var/www/html/e.html | grep -q httpd_sys_content_t",
         "tuned-adm active | grep -q throughput-performance",
