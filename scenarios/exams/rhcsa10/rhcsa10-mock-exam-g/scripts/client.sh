@@ -67,7 +67,8 @@ tuned-adm profile balanced >/dev/null 2>&1 || true
 
 # --- Journal: remove persistent config ---
 rm -rf /var/log/journal
-sed -i 's/^Storage=persistent/Storage=auto/' /etc/systemd/journald.conf >/dev/null 2>&1 || true
+rm -f /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf /etc/systemd/journald.conf.d/persistent.conf
+sed -i '/^[[:space:]]*Storage[[:space:]]*=.*persistent/d' /etc/systemd/journald.conf >/dev/null 2>&1 || true
 
 # --- Chrony: disable and strip config ---
 systemctl disable --now chronyd >/dev/null 2>&1 || true

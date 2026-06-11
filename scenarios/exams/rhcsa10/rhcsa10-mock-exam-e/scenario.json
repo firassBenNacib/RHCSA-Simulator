@@ -80,7 +80,7 @@
         "findmnt -no SOURCE,TARGET /mnt/edirect | grep -qx 'server:/exports/direct /mnt/edirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/edirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
         "systemctl get-default | grep -qx multi-user.target",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf"
+        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -259,10 +259,10 @@
           "dnf remove -y tcpdump"
         ],
         [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald"
+          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+          "systemctl restart systemd-journald",
+          "journalctl --flush"
         ]
       ]
     }

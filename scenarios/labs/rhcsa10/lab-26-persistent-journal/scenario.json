@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "On server, configure persistent systemd journals.",
-        "On server, restart systemd-journald."
+        "On server, configure persistent systemd journal storage.",
+        "On server, restart systemd-journald and flush current journal data to persistent storage."
       ],
       "hints": [
         "Create /var/log/journal.",
@@ -29,14 +29,14 @@
       ],
       "checks": [
         "# server test -d /var/log/journal",
-        "# server grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf && systemctl is-active systemd-journald | grep -qx active"
+        "# server files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "configure persistent systemd journals",
-        "restart systemd-journald"
+        "configure persistent systemd journal storage",
+        "restart systemd-journald and flush current journal data to persistent st"
       ],
       "task_points": [
         10,
@@ -44,13 +44,12 @@
       ],
       "solution_commands": [
         [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf"
+          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF"
         ],
         [
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
           "systemctl restart systemd-journald",
-          "journalctl --disk-usage"
+          "journalctl --flush"
         ]
       ]
     }
