@@ -79,7 +79,7 @@
         "test -s /root/g-data-lines && grep -q 'data' /root/g-data-lines",
         "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | awk '$0 ~ /^etc\\// {found=1} END{exit !found}'",
         "systemctl cat examgtimer.timer >/dev/null 2>&1 && systemctl is-enabled examgtimer.timer | grep -qx enabled",
-        "swapon --show | grep -q '/dev/sdb' && grep -q '/dev/sdb.*swap' /etc/fstab",
+        "swap_uuid=\"$(blkid -s UUID -o value /dev/sdb1)\"; test -n \"$swap_uuid\" && swapon --show=NAME --noheadings | grep -qx /dev/sdb1 && awk -v dev=\"/dev/sdb1\" -v uuid=\"$swap_uuid\" '$1 !~ /^#/ && $2 == \"swap\" && $3 == \"swap\" && ($1 == dev || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "lv_path=/dev/vgg10/datag; mapper_path=/dev/mapper/vgg10-datag; mountpoint=/mnt/datag10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
       ],
       "solution_outline": [
@@ -233,11 +233,13 @@
           "systemctl enable --now examgtimer.timer"
         ],
         [
-          "parted /dev/sdb mklabel msdos",
-          "parted /dev/sdb mkpart primary linux-swap 1MiB 500MiB",
+          "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB",
+          "partprobe /dev/sdb || true",
+          "udevadm settle",
           "mkswap /dev/sdb1",
-          "echo '/dev/sdb1 swap swap defaults 0 0' >> /etc/fstab",
-          "swapon -a"
+          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+          "swapon /dev/sdb1"
         ],
         [
           "pvcreate /dev/sdc",

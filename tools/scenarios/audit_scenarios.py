@@ -207,6 +207,27 @@ def audit_rhcsa10_exam_strictness(path: Path, scenario: dict[str, Any], findings
                 findings.append(Finding(path, f"{label} Flatpak absent final state is not checked"))
 
 
+def audit_rhcsa10_swap_persistence(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario):
+        return
+
+    content = scenario.get("content", {})
+    for mode in ("lab", "exam"):
+        block = content.get(mode)
+        if not isinstance(block, dict):
+            continue
+        for index, (task, check) in enumerate(zip(block.get("tasks", []), block.get("checks", [])), start=1):
+            task_text = str(task).lower()
+            check_text = str(check).lower()
+            if "swap" not in task_text or "persist" not in task_text:
+                continue
+            label = f"{mode} task {index}"
+            if "/etc/fstab" not in check_text:
+                findings.append(Finding(path, f"{label} swap persistence check must validate /etc/fstab"))
+            if "uuid" not in check_text and "/dev/disk/by-uuid" not in check_text:
+                findings.append(Finding(path, f"{label} swap persistence check must accept UUID-based fstab entries"))
+
+
 def scenario_tracks(scenario: dict[str, Any]) -> list[str]:
     tracks = scenario.get("tracks") or ["rhcsa9"]
     if not isinstance(tracks, list):
@@ -249,6 +270,7 @@ def main() -> int:
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa10_swap_persistence(path, scenario, findings)
 
     for path in sorted(SCENARIOS_DIR.glob("exams/*/*/scenario.json")):
         scenario = load_json(path)
@@ -256,6 +278,7 @@ def main() -> int:
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_rhcsa10_exam_strictness(path, scenario, findings)
 
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]

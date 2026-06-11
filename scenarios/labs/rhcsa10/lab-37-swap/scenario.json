@@ -31,7 +31,7 @@
       "checks": [
         "blkid /dev/sdb1 | grep -q 'TYPE=\"swap\"'",
         "swapon --show=NAME --noheadings | grep -qx /dev/sdb1",
-        "grep -Eq '^/dev/sdb1[[:space:]]+swap[[:space:]]+swap[[:space:]]+defaults' /etc/fstab"
+        "swap_uuid=\"$(blkid -s UUID -o value /dev/sdb1)\"; test -n \"$swap_uuid\" && swapon --show=NAME --noheadings | grep -qx /dev/sdb1 && awk -v dev=\"/dev/sdb1\" -v uuid=\"$swap_uuid\" '$1 !~ /^#/ && $2 == \"swap\" && $3 == \"swap\" && ($1 == dev || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -55,7 +55,8 @@
           "swapon /dev/sdb1"
         ],
         [
-          "echo '/dev/sdb1 swap swap defaults 0 0' >> /etc/fstab"
+          "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ]
       ]
     }
