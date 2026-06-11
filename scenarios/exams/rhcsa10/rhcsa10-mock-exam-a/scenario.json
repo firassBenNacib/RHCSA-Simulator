@@ -120,7 +120,7 @@
         "test -f /root/a-etc.tar.gz && tar -tzf /root/a-etc.tar.gz | grep -q 'etc/hosts' && tar -tzf /root/a-etc.tar.gz | grep -q 'etc/fstab'",
         "test -f /root/a-original && test \"$(stat -c %i /root/a-original)\" = \"$(stat -c %i /root/a-hard)\" && test -L /root/a-soft && readlink /root/a-soft | grep -q a-original",
         "systemctl cat examatimer.timer >/dev/null 2>&1 && systemctl cat examatimer.timer | grep -q 'OnCalendar=.*0/10' && systemctl is-enabled examatimer.timer | grep -qx enabled",
-        "lvs /dev/vga10/dataa >/dev/null 2>&1 && findmnt -no TARGET /mnt/dataa10 | grep -qx /mnt/dataa10 && grep -Eq '^/dev/vga10/dataa[[:space:]]+/mnt/dataa10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
+        "lv_path=/dev/vga10/dataa; mapper_path=/dev/mapper/vga10-dataa; mountpoint=/mnt/dataa10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "firewall-cmd --permanent --query-port=8100/tcp && firewall-cmd --query-port=8100/tcp",
         "test -f /var/www/html/a.html && ls -Z /var/www/html/a.html | grep -q httpd_sys_content_t",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
