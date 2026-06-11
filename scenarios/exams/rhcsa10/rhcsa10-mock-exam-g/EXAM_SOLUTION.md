@@ -247,11 +247,13 @@ systemctl enable --now examgtimer.timer
 ## Question 21 - (client) Create a 500 MiB swap partition on /dev/sdb, format it as swap, (client) - 4 pts
 
 ```bash
-parted /dev/sdb mklabel msdos
-parted /dev/sdb mkpart primary linux-swap 1MiB 500MiB
+parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB
+partprobe /dev/sdb || true
+udevadm settle
 mkswap /dev/sdb1
-echo '/dev/sdb1 swap swap defaults 0 0' >> /etc/fstab
-swapon -a
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+swapon /dev/sdb1
 ```
 
 ---

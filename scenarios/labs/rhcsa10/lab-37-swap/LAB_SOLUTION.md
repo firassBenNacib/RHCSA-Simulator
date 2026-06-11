@@ -39,5 +39,6 @@ swapon /dev/sdb1
 ## Task 03 - Make the swap persistent across reboots (client) - 10 pts
 
 ```bash
-echo '/dev/sdb1 swap swap defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/sdb1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 ```

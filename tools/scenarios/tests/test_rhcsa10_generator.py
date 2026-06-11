@@ -7,7 +7,7 @@ from pathlib import Path
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOL_ROOT))
 
-from generate_rhcsa10_scenarios import JOURNALD_PERSISTENT_CHECK, _lvm_mount_check  # noqa: E402
+from generate_rhcsa10_scenarios import JOURNALD_PERSISTENT_CHECK, _lvm_mount_check, _swap_persistence_check  # noqa: E402
 
 
 class Rhcsa10GeneratorTests(unittest.TestCase):
@@ -19,6 +19,16 @@ class Rhcsa10GeneratorTests(unittest.TestCase):
         self.assertIn('$1 == "UUID=" uuid', check)
         self.assertIn('$1 == "/dev/disk/by-uuid/" uuid', check)
         self.assertIn("$3 == \"xfs\"", check)
+
+    def test_swap_check_accepts_uuid_and_simulator_device_path(self) -> None:
+        check = _swap_persistence_check()
+
+        self.assertIn("/etc/fstab", check)
+        self.assertIn("swapon --show=NAME", check)
+        self.assertIn("$1 == dev", check)
+        self.assertIn('$1 == "UUID=" uuid', check)
+        self.assertIn('$1 == "/dev/disk/by-uuid/" uuid', check)
+        self.assertIn('$2 == "swap"', check)
 
     def test_journald_check_requires_journal_section(self) -> None:
         check = JOURNALD_PERSISTENT_CHECK
