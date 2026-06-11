@@ -111,10 +111,13 @@ setsebool -P httpd_can_network_connect on
 ## Question 08 - Configure persistent systemd journal storage (server) - 4 pts
 
 ```bash
-mkdir -p /var/log/journal
-install -D -m 0644 /dev/null /etc/systemd/journald.conf
-grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
 systemctl restart systemd-journald
+journalctl --flush
 ```
 
 ---

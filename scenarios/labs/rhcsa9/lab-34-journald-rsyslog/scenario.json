@@ -29,11 +29,11 @@
         "Ensure the rsyslog service is active after your changes."
       ],
       "hints": [
-        "Persistent journald storage requires the correct directory.",
+        "Persistent journald storage requires the correct directory and a valid [Journal] configuration section.",
         "Reload or restart the affected logging services after you update their configuration."
       ],
       "checks": [
-        "test -d /var/log/journal && grep -Eq '^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*$' /etc/systemd/journald.conf",
+        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
         "grep -Eq '^[[:space:]]*authpriv\\.warning[[:space:]]+/var/log/auth34\\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf",
         "systemctl is-active rsyslog | grep -qx active && : > /var/log/auth34.log && logger -p authpriv.warning 'lab34 probe' && sleep 3 && grep -Fq 'lab34 probe' /var/log/auth34.log"
       ],
@@ -52,10 +52,10 @@
       ],
       "solution_commands": [
         [
-          "mkdir -p /var/log/journal",
-          "vim /etc/systemd/journald.conf",
-          "# Set: Storage=persistent",
-          "systemctl restart systemd-journald"
+          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+          "systemctl restart systemd-journald",
+          "journalctl --flush"
         ],
         [
           "vim /etc/rsyslog.d/10-auth34.conf",

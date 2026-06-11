@@ -48,7 +48,7 @@
         "On client, create the file /var/www/html/a.html and restore its default SELinux context so the type is httpd_sys_content_t.",
         "On client, persistently enable the SELinux boolean httpd_can_network_connect.",
         "On client, create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (setgid + sticky + rwx for owner and group).",
-        "On server, configure persistent systemd journal storage by setting Storage=persistent in journald.conf, create the /var/log/journal directory, and restart systemd-journald.",
+        "On server, configure systemd-journald so logs are stored persistently across reboots and restart systemd-journald.",
         "On client, configure the server (192.168.122.3) as the only chrony time source.\nRemove all other pool/server lines.\nEnable and start chronyd."
       ],
       "task_titles": [
@@ -72,7 +72,7 @@
         "create the file /var/www/html/a.html and restore its default SELinux con",
         "persistently enable the SELinux boolean httpd_can_network_connect",
         "create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se",
-        "configure persistent systemd journal storage by setting Storage=persiste",
+        "configure systemd-journald so logs are stored persistently across reboot",
         "configure the server (192.168.122.3) as the only chrony time source"
       ],
       "task_points": [
@@ -125,7 +125,7 @@
         "test -f /var/www/html/a.html && ls -Z /var/www/html/a.html | grep -q httpd_sys_content_t",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "stat -c '%G:%a' /srv/opsa10 | grep -qx opsa10:3770",
-        "ssh server bash -lc 'set -euo pipefail; test -d /var/log/journal && grep -Eq '\"'\"'^Storage=persistent$'\"'\"' /etc/systemd/journald.conf'",
+        "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
         "grep -Eq '^server[[:space:]]+server[[:space:]]+iburst' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled"
       ],
       "solution_outline": [
@@ -277,10 +277,10 @@
           "chmod 3770 /srv/opsa10"
         ],
         [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald"
+          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+          "systemctl restart systemd-journald",
+          "journalctl --flush"
         ],
         [
           "dnf install -y chrony",

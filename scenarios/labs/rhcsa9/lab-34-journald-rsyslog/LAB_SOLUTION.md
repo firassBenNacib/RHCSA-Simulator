@@ -22,10 +22,13 @@ Configure persistent journal storage and a custom rsyslog drop-in for authentica
 ## Task 01 - Configure journald on client so logs are stored (client) - 10 pts
 
 ```bash
-mkdir -p /var/log/journal
-vim /etc/systemd/journald.conf
-# Set: Storage=persistent
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
 systemctl restart systemd-journald
+journalctl --flush
 ```
 
 ---
