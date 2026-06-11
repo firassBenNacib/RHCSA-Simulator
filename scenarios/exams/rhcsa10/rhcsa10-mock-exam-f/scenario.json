@@ -65,7 +65,7 @@
         "tuned-adm active | grep -q throughput-performance",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examfflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
+        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
         "grep -ERq '^%teamf10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "getent group teamf10 >/dev/null && id -nG userf10 | tr ' ' '\\n' | grep -qx teamf10",
         "crontab -l -u userf10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log'",
@@ -161,10 +161,10 @@
           "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
         ],
         [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald"
+          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+          "systemctl restart systemd-journald",
+          "journalctl --flush"
         ],
         [
           "echo '%teamf10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamf10",

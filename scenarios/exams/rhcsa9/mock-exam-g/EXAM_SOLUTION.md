@@ -196,6 +196,7 @@ cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
 Storage=persistent
 EOF
 systemctl restart systemd-journald
+journalctl --flush
 ```
 
 ---

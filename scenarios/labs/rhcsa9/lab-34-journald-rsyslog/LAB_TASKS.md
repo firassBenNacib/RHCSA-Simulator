@@ -21,7 +21,7 @@ Configure persistent journal storage and a custom rsyslog drop-in for authentica
 
 ## Task 01 - Configure journald on client so logs are stored (client) - 10 pts
 
-Configure journald on client so logs are stored persistently across reboots.
+Configure journald on client so logs are stored persistently across reboots using a valid [Journal] Storage=persistent configuration.
 
 ---
 
