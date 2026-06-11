@@ -7,12 +7,12 @@ from pathlib import Path
 TOOL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOL_ROOT))
 
-from generate_rhcsa10_scenarios import (
+from generate_rhcsa10_scenarios import (  # noqa: E402
     JOURNALD_PERSISTENT_CHECK,
     _lvm_mount_check,
     _prefix_client_task,
     _swap_persistence_check,
-)  # noqa: E402
+)
 
 
 class Rhcsa10GeneratorTests(unittest.TestCase):
