@@ -76,7 +76,7 @@
         "chage -l userc10 | grep -Eq 'Maximum.*47'",
         "ls -Z /var/www/html/c.html | grep -q httpd_sys_content_t",
         "tuned-adm active | grep -q throughput-performance",
-        "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
+        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
         "crontab -l -u userc10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log'",
         "findmnt -no SOURCE,TARGET /mnt/cdirect | grep -qx 'server:/exports/direct /mnt/cdirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/cdirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
         "grep -Eq '^/remotec[[:space:]]+/etc/auto.remotec' /etc/auto.master.d/c.autofs && systemctl is-enabled autofs | grep -qx enabled",
@@ -242,10 +242,10 @@
           "tuned-adm profile throughput-performance"
         ],
         [
-          "mkdir -p /var/log/journal",
-          "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-          "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-          "systemctl restart systemd-journald"
+          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+          "systemctl restart systemd-journald",
+          "journalctl --flush"
         ],
         [
           "echo '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log' | crontab -u userc10 -"

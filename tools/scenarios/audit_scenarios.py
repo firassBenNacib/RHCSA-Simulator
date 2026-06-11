@@ -232,6 +232,46 @@ def audit_rhcsa10_exam_roles(path: Path, scenario: dict[str, Any], findings: lis
             findings.append(Finding(path, f"{label} server hostname task must be explicitly targeted to server"))
 
 
+def audit_rhcsa10_swap_persistence(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario):
+        return
+
+    content = scenario.get("content", {})
+    for mode in ("lab", "exam"):
+        block = content.get(mode)
+        if not isinstance(block, dict):
+            continue
+        for index, (task, check) in enumerate(zip(block.get("tasks", []), block.get("checks", [])), start=1):
+            task_text = str(task).lower()
+            check_text = str(check).lower()
+            if "swap" not in task_text or "persist" not in task_text:
+                continue
+            label = f"{mode} task {index}"
+            if "/etc/fstab" not in check_text:
+                findings.append(Finding(path, f"{label} swap persistence check must validate /etc/fstab"))
+            if "uuid" not in check_text and "/dev/disk/by-uuid" not in check_text:
+                findings.append(Finding(path, f"{label} swap persistence check must accept UUID-based fstab entries"))
+
+
+def audit_persistent_journald(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    content = scenario.get("content", {})
+    for mode in ("lab", "exam"):
+        block = content.get(mode)
+        if not isinstance(block, dict):
+            continue
+        tasks_text = "\n".join(flatten_strings(block.get("tasks", [])))
+        if not re.search(r"\bpersistent\b[\s\S]{0,80}\bjournal|\bjournal[\s\S]{0,80}\bpersistent\b", tasks_text, re.I):
+            continue
+        checks_text = "\n".join(flatten_strings(block.get("checks", [])))
+        label = f"{mode} persistent journald"
+        if "/var/log/journal" not in checks_text:
+            findings.append(Finding(path, f"{label} check must validate /var/log/journal"))
+        if "Storage" not in checks_text or "Journal" not in checks_text:
+            findings.append(Finding(path, f"{label} check must validate Storage=persistent inside a [Journal] section"))
+        if re.search(r"grep\b[^\n]*Storage=persistent[^\n]*/etc/systemd/journald\.conf", checks_text):
+            findings.append(Finding(path, f"{label} check uses a bare Storage=persistent grep instead of [Journal] parsing"))
+
+
 def scenario_tracks(scenario: dict[str, Any]) -> list[str]:
     tracks = scenario.get("tracks") or ["rhcsa9"]
     if not isinstance(tracks, list):
@@ -274,6 +314,8 @@ def main() -> int:
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa10_swap_persistence(path, scenario, findings)
+        audit_persistent_journald(path, scenario, findings)
 
     for path in sorted(SCENARIOS_DIR.glob("exams/*/*/scenario.json")):
         scenario = load_json(path)
@@ -282,6 +324,8 @@ def main() -> int:
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
         audit_rhcsa10_exam_roles(path, scenario, findings)
+        audit_rhcsa10_swap_persistence(path, scenario, findings)
+        audit_persistent_journald(path, scenario, findings)
         audit_rhcsa10_exam_strictness(path, scenario, findings)
 
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]

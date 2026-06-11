@@ -237,7 +237,8 @@ tuned-adm profile balanced >/dev/null 2>&1 || true
 
     scripts["lab-26-persistent-journal"] = h + """
 rm -rf /var/log/journal
-sed -i 's/^Storage=persistent/Storage=auto/' /etc/systemd/journald.conf >/dev/null 2>&1 || true
+rm -f /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf /etc/systemd/journald.conf.d/persistent.conf
+sed -i '/^[[:space:]]*Storage[[:space:]]*=.*persistent/d' /etc/systemd/journald.conf >/dev/null 2>&1 || true
 systemctl restart systemd-journald >/dev/null 2>&1 || true
 """
 
@@ -282,8 +283,12 @@ sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
 """
 
     scripts["lab-37-swap"] = h + """
+swap_uuid="$(blkid -s UUID -o value /dev/sdb1 2>/dev/null || true)"
 swapoff /dev/sdb1 2>/dev/null || true
-sed -i '\\#/dev/sdb1#d' /etc/fstab
+if [ -n "$swap_uuid" ]; then
+  sed -i "\\#^UUID=$swap_uuid[[:space:]]#d;\\#^/dev/disk/by-uuid/$swap_uuid[[:space:]]#d" /etc/fstab
+fi
+sed -i '\\#^/dev/sdb1[[:space:]]#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
 """
@@ -379,7 +384,8 @@ rm -f /run/rhcsa10-sleep.pid
     scripts["lab-26-persistent-journal"] = h + """
 systemctl restart systemd-journald >/dev/null 2>&1 || true
 rm -rf /var/log/journal
-sed -i '/^Storage=/d' /etc/systemd/journald.conf 2>/dev/null || true
+rm -f /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf /etc/systemd/journald.conf.d/persistent.conf
+sed -i '/^[[:space:]]*Storage[[:space:]]*=.*persistent/d' /etc/systemd/journald.conf 2>/dev/null || true
 """
 
     scripts["lab-28-chrony-client"] = h + """
@@ -517,7 +523,8 @@ tuned-adm profile balanced >/dev/null 2>&1 || true
 
 # --- Journal: remove persistent config ---
 rm -rf /var/log/journal
-sed -i 's/^Storage=persistent/Storage=auto/' /etc/systemd/journald.conf >/dev/null 2>&1 || true
+rm -f /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf /etc/systemd/journald.conf.d/persistent.conf
+sed -i '/^[[:space:]]*Storage[[:space:]]*=.*persistent/d' /etc/systemd/journald.conf >/dev/null 2>&1 || true
 
 # --- Chrony: disable and strip config ---
 systemctl disable --now chronyd >/dev/null 2>&1 || true
@@ -648,6 +655,26 @@ SELINUX_HTTPD_BOOLEAN_CHECK = (
     "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && "
     "semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'"
 )
+JOURNALD_PERSISTENT_CHECK = (
+    "files=\"\"; "
+    "test -d /var/log/journal && "
+    "systemctl is-active systemd-journald | grep -qx active && "
+    "files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); "
+    "test -n \"$files\" && "
+    "awk '"
+    "FNR == 1 {in_journal=0} "
+    "/^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} "
+    "/^[[:space:]]*\\[/ {in_journal=0} "
+    "in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} "
+    "END {exit !found}"
+    "' $files"
+)
+JOURNALD_PERSISTENT_COMMANDS = [
+    "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+    "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+    "systemctl restart systemd-journald",
+    "journalctl --flush",
+]
 
 
 def _flatpak_remote_check(remote: str) -> str:
@@ -677,6 +704,18 @@ def _lvm_mount_check(letter: str) -> str:
         'awk -v dev="$lv_path" -v mapper="$mapper_path" -v uuid="$lv_uuid" -v target="$mountpoint" '
         '\'$1 !~ /^#/ && $2 == target && $3 == "xfs" && '
         '($1 == dev || $1 == mapper || $1 == "UUID=" uuid || $1 == "/dev/disk/by-uuid/" uuid) '
+        "{found=1} END {exit !found}' /etc/fstab"
+    )
+
+
+def _swap_persistence_check(device: str = "/dev/sdb1") -> str:
+    return (
+        f"swap_uuid=\"$(blkid -s UUID -o value {device})\"; "
+        'test -n "$swap_uuid" && '
+        f"swapon --show=NAME --noheadings | grep -qx {device} && "
+        f"awk -v dev=\"{device}\" -v uuid=\"$swap_uuid\" "
+        '\'$1 !~ /^#/ && $2 == "swap" && $3 == "swap" && '
+        '($1 == dev || $1 == "UUID=" uuid || $1 == "/dev/disk/by-uuid/" uuid) '
         "{found=1} END {exit !found}' /etc/fstab"
     )
 
@@ -1102,10 +1141,34 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
 
     if lab_id in {
         "lab-24-process-priority",
-        "lab-26-persistent-journal",
         "lab-31-systemd-timer",
     }:
         return _retarget_lab_to_server(block)
+
+    if lab_id == "lab-26-persistent-journal":
+        return _retarget_lab_to_server(
+            _replace_lab_progression(
+                block,
+                [
+                    "On server, configure persistent systemd journal storage.",
+                    "On server, restart systemd-journald and flush current journal data to persistent storage.",
+                ],
+                [
+                    "test -d /var/log/journal",
+                    JOURNALD_PERSISTENT_CHECK,
+                ],
+                [
+                    [
+                        "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+                        "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+                    ],
+                    [
+                        "systemctl restart systemd-journald",
+                        "journalctl --flush",
+                    ],
+                ],
+            )
+        )
 
     if lab_id == "lab-34-grub-argument":
         return _replace_lab_progression(
@@ -1136,8 +1199,16 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         checks = list(block.get("checks", []))
         checks[0] = "blkid /dev/sdb1 | grep -q 'TYPE=\"swap\"'"
         checks[1] = "swapon --show=NAME --noheadings | grep -qx /dev/sdb1"
+        checks[2] = _swap_persistence_check()
+        commands = [list(command_group) for command_group in block.get("solution_commands", [])]
+        if len(commands) >= 3:
+            commands[2] = [
+                "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+                "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+            ]
         updated = dict(block)
         updated["checks"] = checks
+        updated["solution_commands"] = commands
         return updated
 
     if lab_id == "lab-38-lvm-create":
@@ -1546,16 +1617,15 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     for index, task in enumerate(tasks):
         if "persistent systemd journal storage" not in str(task).lower():
             continue
+        if any(token in str(task) for token in ("journald.conf", "[Journal]", "Storage=persistent")):
+            tasks[index] = (
+                "On server, configure systemd-journald so logs are stored persistently across "
+                "reboots and restart systemd-journald."
+            )
         if index < len(commands):
-            commands[index] = [
-                "mkdir -p /var/log/journal",
-                "install -D -m 0644 /dev/null /etc/systemd/journald.conf",
-                "grep -q '^Storage=' /etc/systemd/journald.conf && sed -i 's/^Storage=.*/Storage=persistent/' /etc/systemd/journald.conf || echo 'Storage=persistent' >> /etc/systemd/journald.conf",
-                "systemctl restart systemd-journald",
-            ]
+            commands[index] = list(JOURNALD_PERSISTENT_COMMANDS)
         if index < len(checks):
-            check_command = "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf"
-            checks[index] = _ssh_server_check(check_command) if re.search(r"\bon server\b|\(server\)", str(tasks[index]), re.I) else check_command
+            checks[index] = _ssh_server_check(JOURNALD_PERSISTENT_CHECK) if re.search(r"\bon server\b|\(server\)", str(tasks[index]), re.I) else JOURNALD_PERSISTENT_CHECK
 
     flatpak_installed_exams = {"rhcsa10-mock-exam-a", "rhcsa10-mock-exam-c", "rhcsa10-mock-exam-g"}
     for index, task in enumerate(tasks):
@@ -1578,6 +1648,19 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         nfs_match = re.search(r"mount\s+server:/exports/direct\s+at\s+(/mnt/[a-z0-9._/-]+)\s+persistently", task_lower)
         if nfs_match:
             checks[index] = _nfs_mount_check(nfs_match.group(1).rstrip("."))
+
+        if "swap" in task_lower and "/dev/sdb" in task_lower and "persist" in task_lower:
+            checks[index] = _swap_persistence_check()
+            if index < len(commands):
+                commands[index] = [
+                    "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB",
+                    "partprobe /dev/sdb || true",
+                    "udevadm settle",
+                    "mkswap /dev/sdb1",
+                    "uuid=$(blkid -s UUID -o value /dev/sdb1)",
+                    "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+                    "swapon /dev/sdb1",
+                ]
 
         if re.search(r"Install\s+org\.rhcsa\.Tools\s+from\s+that\b", task_text, re.I) and exam_id in flatpak_installed_exams:
             remote = f"exam{letter}flatpak"
