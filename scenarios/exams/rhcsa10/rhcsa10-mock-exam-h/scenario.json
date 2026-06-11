@@ -32,7 +32,7 @@
         "Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from examhflatpak, then remove it after verification.",
+        "Ensure org.rhcsa.Tools is not installed after configuring examhflatpak.",
         "Create and enable examhtimer.timer that runs every 10 minutes.",
         "Create group teamh10, create user userh10, set password cinder9, and add the user to teamh10.",
         "Set maximum password age for userh10 to 52 days and warning period to 7 days.",
@@ -65,18 +65,18 @@
         "systemctl cat examhtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examhtimer.timer | grep -qx enabled",
         "getent group teamh10 >/dev/null && id -nG userh10 | tr ' ' '\\n' | grep -qx teamh10",
         "chage -l userh10 | grep -Eq 'Maximum.*52'",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "test -s /root/h-shell-users.txt && grep -q '^root$' /root/h-shell-users.txt",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "test \"$(stat -c %i /root/h-original)\" = \"$(stat -c %i /root/h-hard)\" && test -L /root/h-soft",
         "crontab -l -u userh10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log'",
-        "lvs /dev/vgh10/datah >/dev/null && findmnt -no TARGET /mnt/datah10 | grep -qx /mnt/datah10",
+        "lvs /dev/vgh10/datah >/dev/null 2>&1 && findmnt -no TARGET /mnt/datah10 | grep -qx /mnt/datah10 && grep -Eq '^/dev/vgh10/datah[[:space:]]+/mnt/datah10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
         "systemctl get-default | grep -qx multi-user.target",
         "tuned-adm active | grep -q throughput-performance",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
         "firewall-cmd --permanent --query-port=8107/tcp && firewall-cmd --query-port=8107/tcp",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
         "grep -ERq '^%teamh10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "test -x /usr/local/bin/h-who && /usr/local/bin/h-who root | grep -qx root",
         "test -f /root/h-etc.tar.gz && tar -tzf /root/h-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'"
@@ -88,7 +88,7 @@
         "Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.1",
         "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from examhflatpak, then remove it after verifica",
+        "Ensure org.rhcsa.Tools is not installed after configuring examhflatpak",
         "Create and enable examhtimer.timer that runs every 10 minutes",
         "Create group teamh10, create user userh10, set password cinder9, and add",
         "Set maximum password age for userh10 to 52 days and warning period to 7 ",
@@ -146,9 +146,7 @@
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo"
         ],
         [
-          "flatpak install --system -y examhflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
+          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
         ],
         [
           "cat > /usr/local/sbin/examhtimer.sh <<'EOF'",

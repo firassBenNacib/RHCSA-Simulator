@@ -41,7 +41,7 @@
         "Allow TCP port 8102 permanently in firewalld and reload.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from examcflatpak, then remove it after verification.",
+        "Install org.rhcsa.Tools from examcflatpak and leave it installed.",
         "Create group teamc10, create user userc10, set password cinder9, and add the user to teamc10.",
         "Allow %teamc10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
         "Set maximum password age for userc10 to 47 days and warning period to 7 days.",
@@ -66,11 +66,11 @@
         "test -f /root/c-etc.tar.gz && tar -tzf /root/c-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
         "test \"$(stat -c %i /root/c-original)\" = \"$(stat -c %i /root/c-hard)\" && test -L /root/c-soft",
         "systemctl cat examctimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examctimer.timer | grep -qx enabled",
-        "lvs /dev/vgc10/datac >/dev/null && findmnt -no TARGET /mnt/datac10 | grep -qx /mnt/datac10",
+        "lvs /dev/vgc10/datac >/dev/null 2>&1 && findmnt -no TARGET /mnt/datac10 | grep -qx /mnt/datac10 && grep -Eq '^/dev/vgc10/datac[[:space:]]+/mnt/datac10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
         "firewall-cmd --permanent --query-port=8102/tcp && firewall-cmd --query-port=8102/tcp",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examcflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group teamc10 >/dev/null && id -nG userc10 | tr ' ' '\\n' | grep -qx teamc10",
         "grep -ERq '^%teamc10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "chage -l userc10 | grep -Eq 'Maximum.*47'",
@@ -78,7 +78,7 @@
         "tuned-adm active | grep -q throughput-performance",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "crontab -l -u userc10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log'",
-        "findmnt -no SOURCE,TARGET /mnt/cdirect | grep -qx 'server:/exports/direct /mnt/cdirect'",
+        "findmnt -no SOURCE,TARGET /mnt/cdirect | grep -qx 'server:/exports/direct /mnt/cdirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/cdirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
         "grep -Eq '^/remotec[[:space:]]+/etc/auto.remotec' /etc/auto.master.d/c.autofs && systemctl is-enabled autofs | grep -qx enabled",
         "systemctl get-default | grep -qx multi-user.target"
       ],
@@ -97,7 +97,7 @@
         "Allow TCP port 8102 permanently in firewalld and reload",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from examcflatpak, then remove it after verifica",
+        "Install org.rhcsa.Tools from examcflatpak and leave it installed",
         "Create group teamc10, create user userc10, set password cinder9, and add",
         "Allow %teamc10 to run /usr/bin/systemctl without a password by using a s",
         "Set maximum password age for userc10 to 47 days and warning period to 7 ",
@@ -217,8 +217,7 @@
         ],
         [
           "flatpak install --system -y examcflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
+          "flatpak list --system --app"
         ],
         [
           "groupadd teamc10",

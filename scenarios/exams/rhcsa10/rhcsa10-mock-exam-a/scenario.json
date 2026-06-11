@@ -34,7 +34,7 @@
         "Configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time GRUB edit.",
         "Create enabled BaseOS and AppStream repository definitions on client using:\n\nBaseOS: http://server/repo/BaseOS/\nAppStream: http://server/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
         "On server, create the same BaseOS and AppStream repository definitions:\n\nBaseOS: http://server/repo/BaseOS/\nAppStream: http://server/repo/AppStream/\ngpgcheck: disabled\nRepositories: enabled",
-        "On client, add a system-level Flatpak remote named examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.\nThen install org.rhcsa.Tools from that remote, verify it appears in the installed list, and remove it.",
+        "On client, add a system-level Flatpak remote named examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.",
         "Create group opsa10 on client.\nCreate users anna10 and atlas10 with opsa10 as a supplementary group.\nSet passwords for both users to cinder9.",
         "On client, allow members of %opsa10 to run /usr/bin/systemctl without a password prompt.\nUse a sudoers drop-in file.",
         "On client, set the maximum password age for anna10 to 45 days and the password warning period to 7 days.",
@@ -109,9 +109,9 @@
         "hostnamectl --static | grep -qx clienta.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servera\\.exam10\\.lab' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v d=\"$private_dev\" '$2 == d {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.60/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-        "ssh server bash -lc 'set -euo pipefail; grep -ERq '\"'\"'^baseurl=http://server/repo/BaseOS/?$'\"'\"' /etc/yum.repos.d && grep -ERq '\"'\"'^baseurl=http://server/repo/AppStream/?$'\"'\"' /etc/yum.repos.d'",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examaflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && ! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
+        "ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examaflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group opsa10 >/dev/null && id -nG anna10 | tr ' ' '\\n' | grep -qx opsa10 && id -nG atlas10 | tr ' ' '\\n' | grep -qx opsa10",
         "grep -ERq '^%opsa10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "chage -l anna10 | grep -Eq 'Maximum.*45' && chage -l anna10 | grep -Eq 'warning.*7'",
@@ -120,10 +120,10 @@
         "test -f /root/a-etc.tar.gz && tar -tzf /root/a-etc.tar.gz | grep -q 'etc/hosts' && tar -tzf /root/a-etc.tar.gz | grep -q 'etc/fstab'",
         "test -f /root/a-original && test \"$(stat -c %i /root/a-original)\" = \"$(stat -c %i /root/a-hard)\" && test -L /root/a-soft && readlink /root/a-soft | grep -q a-original",
         "systemctl cat examatimer.timer >/dev/null 2>&1 && systemctl cat examatimer.timer | grep -q 'OnCalendar=.*0/10' && systemctl is-enabled examatimer.timer | grep -qx enabled",
-        "lvs /dev/vga10/dataa >/dev/null 2>&1 && findmnt -no TARGET /mnt/dataa10 | grep -qx /mnt/dataa10 && grep -q '/mnt/dataa10' /etc/fstab",
+        "lvs /dev/vga10/dataa >/dev/null 2>&1 && findmnt -no TARGET /mnt/dataa10 | grep -qx /mnt/dataa10 && grep -Eq '^/dev/vga10/dataa[[:space:]]+/mnt/dataa10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
         "firewall-cmd --permanent --query-port=8100/tcp && firewall-cmd --query-port=8100/tcp",
         "test -f /var/www/html/a.html && ls -Z /var/www/html/a.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "stat -c '%G:%a' /srv/opsa10 | grep -qx opsa10:3770",
         "ssh server bash -lc 'set -euo pipefail; test -d /var/log/journal && grep -Eq '\"'\"'^Storage=persistent$'\"'\"' /etc/systemd/journald.conf'",
         "grep -Eq '^server[[:space:]]+server[[:space:]]+iburst' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled"
@@ -187,8 +187,7 @@
         [
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo",
           "flatpak install --system -y examaflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
+          "flatpak list --system --app"
         ],
         [
           "groupadd opsa10",

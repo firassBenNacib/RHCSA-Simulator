@@ -41,7 +41,7 @@
         "Use server as the only chrony source and enable chronyd.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Install org.rhcsa.Tools from examdflatpak, then remove it after verification.",
+        "Ensure org.rhcsa.Tools is not installed after configuring examdflatpak.",
         "Create group teamd10, create user userd10, set password cinder9, and add the user to teamd10.",
         "Allow %teamd10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
         "Set maximum password age for userd10 to 48 days and warning period to 7 days.",
@@ -63,12 +63,12 @@
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.63/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "test \"$(stat -c %i /root/d-original)\" = \"$(stat -c %i /root/d-hard)\" && test -L /root/d-soft",
         "systemctl cat examdtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examdtimer.timer | grep -qx enabled",
-        "lvs /dev/vgd10/datad >/dev/null && findmnt -no TARGET /mnt/datad10 | grep -qx /mnt/datad10",
+        "lvs /dev/vgd10/datad >/dev/null 2>&1 && findmnt -no TARGET /mnt/datad10 | grep -qx /mnt/datad10 && grep -Eq '^/dev/vgd10/datad[[:space:]]+/mnt/datad10[[:space:]]+xfs([[:space:]]|$)' /etc/fstab",
         "ls -Z /var/www/html/d.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "test -d /var/log/journal && grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
-        "grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examdflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group teamd10 >/dev/null && id -nG userd10 | tr ' ' '\\n' | grep -qx teamd10",
@@ -97,7 +97,7 @@
         "Use server as the only chrony source and enable chronyd",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/",
-        "Install org.rhcsa.Tools from examdflatpak, then remove it after verifica",
+        "Ensure org.rhcsa.Tools is not installed after configuring examdflatpak",
         "Create group teamd10, create user userd10, set password cinder9, and add",
         "Allow %teamd10 to run /usr/bin/systemctl without a password by using a s",
         "Set maximum password age for userd10 to 48 days and warning period to 7 ",
@@ -216,9 +216,7 @@
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examdflatpak file:///opt/rhcsa/flatpak/repo"
         ],
         [
-          "flatpak install --system -y examdflatpak org.rhcsa.Tools",
-          "flatpak list --system --app",
-          "flatpak uninstall --system -y org.rhcsa.Tools"
+          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
         ],
         [
           "groupadd teamd10",
