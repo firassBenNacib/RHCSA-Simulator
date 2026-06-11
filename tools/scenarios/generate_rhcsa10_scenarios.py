@@ -742,6 +742,17 @@ def _move_parallel_item(values: list[Any], source_index: int, target_index: int)
     return moved
 
 
+def _has_explicit_target(task_text: str) -> bool:
+    return bool(re.search(r"^\s*\((client|server)\)(?=\s|$)|\bon\s+(client|server)\b", task_text, re.I))
+
+
+def _prefix_client_task(task_text: str) -> str:
+    if _has_explicit_target(task_text):
+        return task_text
+    stripped = str(task_text).strip()
+    return f"On client, {stripped[0].lower()}{stripped[1:]}" if stripped else str(task_text)
+
+
 def _order_user_prerequisites(
     tasks: list[str],
     checks: list[str],
@@ -1527,7 +1538,18 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     for index, task in enumerate(tasks):
         task_text = str(task)
         if exam_id == "rhcsa10-mock-exam-b" and task_text.startswith("Set hostname to clientb.exam10.lab"):
-            tasks[index] = f"On client, {task_text[0].lower()}{task_text[1:]}"
+            tasks[index] = _prefix_client_task(task_text)
+
+        if exam_id == "rhcsa10-mock-exam-c":
+            tasks[index] = _prefix_client_task(str(tasks[index]))
+            task_text = str(tasks[index])
+
+        if re.search(r"^Set hostname to client[a-h]\.exam10\.lab\b", task_text, re.I):
+            tasks[index] = _prefix_client_task(task_text)
+            task_text = str(tasks[index])
+
+        if "server:/exports/direct" in task_text or "server:/exports/autofs" in task_text:
+            tasks[index] = _prefix_client_task(task_text)
 
     for index, task in enumerate(tasks):
         task_text = str(task)
@@ -1711,6 +1733,17 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     tasks, checks, commands, task_points = _order_user_prerequisites(tasks, checks, commands, task_points)
     if task_points:
         updated["task_points"] = task_points
+
+    for index, task in enumerate(tasks):
+        task_text = str(task)
+        if exam_id == "rhcsa10-mock-exam-c":
+            tasks[index] = _prefix_client_task(task_text)
+            task_text = str(tasks[index])
+        if re.search(r"^Set hostname to client[a-h]\.exam10\.lab\b", task_text, re.I):
+            tasks[index] = _prefix_client_task(task_text)
+            task_text = str(tasks[index])
+        if "server:/exports/direct" in task_text or "server:/exports/autofs" in task_text:
+            tasks[index] = _prefix_client_task(task_text)
 
     updated["tasks"] = tasks
     updated["checks"] = checks

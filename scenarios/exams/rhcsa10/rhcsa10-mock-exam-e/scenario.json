@@ -30,7 +30,7 @@
   "content": {
     "exam": {
       "tasks": [
-        "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
+        "On client, set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
@@ -48,7 +48,7 @@
         "Create /var/www/html/e.html and restore its default SELinux context.",
         "Activate the throughput-performance tuned profile.",
         "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10.log every 15 minutes.",
-        "Mount server:/exports/direct at /mnt/edirect persistently.",
+        "On client, mount server:/exports/direct at /mnt/edirect persistently.",
         "Set the default target to multi-user.target without rebooting.",
         "Install lsof and ensure tcpdump is removed.",
         "Configure persistent systemd journal storage."
@@ -86,7 +86,7 @@
         "Work through each question independently and verify before moving on."
       ],
       "task_titles": [
-        "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168",
+        "set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.1",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/",
@@ -104,7 +104,7 @@
         "Create /var/www/html/e.html and restore its default SELinux context",
         "Activate the throughput-performance tuned profile",
         "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10",
-        "Mount server:/exports/direct at /mnt/edirect persistently",
+        "mount server:/exports/direct at /mnt/edirect persistently",
         "Set the default target to multi-user.target without rebooting",
         "Install lsof and ensure tcpdump is removed",
         "Configure persistent systemd journal storage"
