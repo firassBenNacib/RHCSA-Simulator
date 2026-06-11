@@ -135,9 +135,9 @@ Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10.log eve
 
 ---
 
-## Question 20 - Mount server:/exports/direct at /mnt/bdirect persistently (client) - 4 pts
+## Question 20 - mount server:/exports/direct at /mnt/bdirect persistently (client) - 4 pts
 
-- **Mount server:** /exports/direct at /mnt/bdirect persistently.
+On client, mount server:/exports/direct at /mnt/bdirect persistently.
 
 ---
 

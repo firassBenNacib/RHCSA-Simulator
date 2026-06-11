@@ -21,7 +21,7 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168 (server) - 5 pts
+## Question 01 - set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168 (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clientc.exam10.lab
@@ -30,7 +30,7 @@ echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.1 (server) - 5 pts
+## Question 02 - configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.1 (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create /usr/local/bin/c-who that prints the primary group for the suppli (server) - 5 pts
+## Question 03 - create /usr/local/bin/c-who that prints the primary group for the suppli (client) - 5 pts
 
 ```bash
 cat > /usr/local/bin/c-who <<'EOF'
@@ -53,7 +53,7 @@ chmod +x /usr/local/bin/c-who
 
 ---
 
-## Question 04 - Write users whose shell ends with sh to /root/c-shell-users.txt (server) - 5 pts
+## Question 04 - write users whose shell ends with sh to /root/c-shell-users.txt (client) - 5 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/c-shell-users.txt
@@ -61,7 +61,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/c-shell-users.txt
 
 ---
 
-## Question 05 - Create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (server) - 5 pts
+## Question 05 - create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
 
 ```bash
 tar -czf /root/c-etc.tar.gz /etc/hosts /etc/fstab
@@ -70,7 +70,7 @@ tar -tzf /root/c-etc.tar.gz
 
 ---
 
-## Question 06 - Create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (server) - 5 pts
+## Question 06 - create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (client) - 5 pts
 
 ```bash
 echo link > /root/c-original
@@ -80,7 +80,7 @@ ln -s /root/c-original /root/c-soft
 
 ---
 
-## Question 07 - Create and enable examctimer.timer that runs every 10 minutes (server) - 4 pts
+## Question 07 - create and enable examctimer.timer that runs every 10 minutes (client) - 4 pts
 
 ```bash
 cat > /usr/local/sbin/examctimer.sh <<'EOF'
@@ -106,7 +106,7 @@ systemctl enable --now examctimer.timer
 
 ---
 
-## Question 08 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (server) - 4 pts
+## Question 08 - create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -120,7 +120,7 @@ mount -a
 
 ---
 
-## Question 09 - Allow TCP port 8102 permanently in firewalld and reload (server) - 4 pts
+## Question 09 - allow TCP port 8102 permanently in firewalld and reload (client) - 4 pts
 
 ```bash
 firewall-cmd --permanent --add-port=8102/tcp
@@ -129,7 +129,7 @@ firewall-cmd --reload
 
 ---
 
-## Question 10 - Create enabled BaseOS and AppStream repository definitions using http:// (server) - 5 pts
+## Question 10 - create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -149,7 +149,7 @@ EOF
 
 ---
 
-## Question 11 - Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (server) - 5 pts
+## Question 11 - create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file:///opt/rhcsa/flatpak/repo
@@ -157,7 +157,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file://
 
 ---
 
-## Question 12 - Install org.rhcsa.Tools from examcflatpak and leave it installed (server) - 5 pts
+## Question 12 - install org.rhcsa.Tools from examcflatpak and leave it installed (client) - 5 pts
 
 ```bash
 flatpak install --system -y examcflatpak org.rhcsa.Tools
@@ -166,7 +166,7 @@ flatpak list --system --app
 
 ---
 
-## Question 13 - Create group teamc10, create user userc10, set password cinder9, and add (server) - 5 pts
+## Question 13 - create group teamc10, create user userc10, set password cinder9, and add (client) - 5 pts
 
 ```bash
 groupadd teamc10
@@ -177,7 +177,7 @@ passwd userc10
 
 ---
 
-## Question 14 - Allow %teamc10 to run /usr/bin/systemctl without a password by using a s (server) - 5 pts
+## Question 14 - allow %teamc10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
 
 ```bash
 echo '%teamc10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamc10
@@ -186,7 +186,7 @@ chmod 440 /etc/sudoers.d/teamc10
 
 ---
 
-## Question 15 - Set maximum password age for userc10 to 47 days and warning period to 7 (server) - 5 pts
+## Question 15 - set maximum password age for userc10 to 47 days and warning period to 7 (client) - 5 pts
 
 ```bash
 chage -M 47 -W 7 userc10
@@ -194,7 +194,7 @@ chage -M 47 -W 7 userc10
 
 ---
 
-## Question 16 - Create /var/www/html/c.html and restore its default SELinux context (server) - 4 pts
+## Question 16 - create /var/www/html/c.html and restore its default SELinux context (client) - 4 pts
 
 ```bash
 echo c > /var/www/html/c.html
@@ -204,7 +204,7 @@ restorecon -v /var/www/html/c.html
 
 ---
 
-## Question 17 - Activate the throughput-performance tuned profile (server) - 4 pts
+## Question 17 - activate the throughput-performance tuned profile (client) - 4 pts
 
 ```bash
 systemctl enable --now tuned
@@ -213,7 +213,7 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Question 18 - Configure persistent systemd journal storage (server) - 4 pts
+## Question 18 - configure persistent systemd journal storage (client) - 4 pts
 
 ```bash
 mkdir -p /var/log/journal
@@ -224,7 +224,7 @@ systemctl restart systemd-journald
 
 ---
 
-## Question 19 - Create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10 (server) - 4 pts
+## Question 19 - create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10 (client) - 4 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log' | crontab -u userc10 -
@@ -232,7 +232,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log' | crontab -u userc10
 
 ---
 
-## Question 20 - Mount server:/exports/direct at /mnt/cdirect persistently (server) - 4 pts
+## Question 20 - mount server:/exports/direct at /mnt/cdirect persistently (client) - 4 pts
 
 ```bash
 mkdir -p /mnt/cdirect
@@ -242,7 +242,7 @@ mount -a
 
 ---
 
-## Question 21 - Configure autofs so /remotec/projects mounts server:/exports/autofs/proj (server) - 4 pts
+## Question 21 - configure autofs so /remotec/projects mounts server:/exports/autofs/proj (client) - 4 pts
 
 ```bash
 mkdir -p /remotec
@@ -253,7 +253,7 @@ systemctl enable --now autofs
 
 ---
 
-## Question 22 - Set the default target to multi-user.target without rebooting (server) - 4 pts
+## Question 22 - set the default target to multi-user.target without rebooting (client) - 4 pts
 
 ```bash
 systemctl set-default multi-user.target

@@ -207,6 +207,31 @@ def audit_rhcsa10_exam_strictness(path: Path, scenario: dict[str, Any], findings
                 findings.append(Finding(path, f"{label} Flatpak absent final state is not checked"))
 
 
+def _explicit_client_target(task_text: str) -> bool:
+    return bool(re.search(r"^\s*\(client\)(?=\s|$)|\bon\s+client\b", task_text, re.I))
+
+
+def _explicit_server_target(task_text: str) -> bool:
+    return bool(re.search(r"^\s*\(server\)(?=\s|$)|\bon\s+server\b", task_text, re.I))
+
+
+def audit_rhcsa10_exam_roles(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario) or "exam" not in scenario.get("content", {}):
+        return
+
+    exam = scenario["content"]["exam"]
+    for index, task in enumerate(exam.get("tasks", []), start=1):
+        task_text = str(task)
+        task_lower = task_text.lower()
+        label = f"exam task {index}"
+        if re.search(r"\bhostname\b[^.]*\bclient[a-h]\.exam10\.lab\b", task_lower) and not _explicit_client_target(task_text):
+            findings.append(Finding(path, f"{label} client hostname task must be explicitly targeted to client"))
+        if "server:/exports/" in task_lower and not _explicit_client_target(task_text):
+            findings.append(Finding(path, f"{label} NFS client mount task must be explicitly targeted to client"))
+        if re.search(r"\bhostname\b[^.]*\bserver[a-h]\.exam10\.lab\b", task_lower) and not _explicit_server_target(task_text):
+            findings.append(Finding(path, f"{label} server hostname task must be explicitly targeted to server"))
+
+
 def scenario_tracks(scenario: dict[str, Any]) -> list[str]:
     tracks = scenario.get("tracks") or ["rhcsa9"]
     if not isinstance(tracks, list):
@@ -256,6 +281,7 @@ def main() -> int:
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa10_exam_roles(path, scenario, findings)
         audit_rhcsa10_exam_strictness(path, scenario, findings)
 
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]

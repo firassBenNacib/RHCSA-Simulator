@@ -230,7 +230,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log' | crontab -u userb10
 
 ---
 
-## Question 20 - Mount server:/exports/direct at /mnt/bdirect persistently (client) - 4 pts
+## Question 20 - mount server:/exports/direct at /mnt/bdirect persistently (client) - 4 pts
 
 ```bash
 mkdir -p /mnt/bdirect
