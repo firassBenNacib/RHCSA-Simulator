@@ -33,15 +33,15 @@ Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 03 - set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168 (server) - 5 pts
 
-Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.4.
 
 ---
 
-## Question 04 - Ensure org.rhcsa.Tools is not installed after configuring examhflatpak (client) - 5 pts
+## Question 04 - create /var/tmp/examh-client.txt containing HCLIENT (client) - 5 pts
 
-Ensure org.rhcsa.Tools is not installed after configuring examhflatpak.
+On client, create /var/tmp/examh-client.txt containing HCLIENT.
 
 ---
 
@@ -75,9 +75,9 @@ Write users whose shell ends with sh to /root/h-shell-users.txt.
 
 ---
 
-## Question 10 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 10 - configure persistent systemd journal storage (server) - 4 pts
 
-Configure persistent systemd journal storage.
+On server, configure persistent systemd journal storage.
 
 ---
 
@@ -105,9 +105,9 @@ Set the default target to multi-user.target without rebooting.
 
 ---
 
-## Question 15 - Activate the throughput-performance tuned profile (client) - 4 pts
+## Question 15 - route local6 log messages to /var/log/examh-local6.log and write a test (server) - 4 pts
 
-Activate the throughput-performance tuned profile.
+On server, route local6 log messages to /var/log/examh-local6.log and write a test message.
 
 ---
 
@@ -123,9 +123,9 @@ Use server as the only chrony source and enable chronyd.
 
 ---
 
-## Question 18 - Allow TCP port 8107 permanently in firewalld and reload (client) - 4 pts
+## Question 18 - allow TCP port 2208 permanently in firewalld and reload the firewall (server) - 4 pts
 
-Allow TCP port 8107 permanently in firewalld and reload.
+On server, allow TCP port 2208 permanently in firewalld and reload the firewall.
 
 ---
 

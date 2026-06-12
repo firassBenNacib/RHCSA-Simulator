@@ -40,20 +40,26 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create /var/www/html/f.html and restore its default SELinux context (client) - 4 pts
+## Question 03 - copy regular files owned by root from /opt/exam-f/find to /root/examf-ro (client) - 4 pts
 
 ```bash
-echo f > /var/www/html/f.html
-chcon -t user_tmp_t /var/www/html/f.html
-restorecon -v /var/www/html/f.html
+mkdir -p /root/examf-rootfiles
+find /opt/exam-f/find -type f -user root -exec cp --parents -t /root/examf-rootfiles {} +
+find /root/examf-rootfiles -type f -print
 ```
 
 ---
 
-## Question 04 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 4 pts
 
 ```bash
-setsebool -P httpd_can_network_connect on
+parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB
+partprobe /dev/sdc || true
+udevadm settle
+mkswap /dev/sdc1
+uuid=$(blkid -s UUID -o value /dev/sdc1)
+echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+swapon /dev/sdc1
 ```
 
 ---
@@ -242,10 +248,28 @@ chage -M 50 -W 7 userf10
 
 ---
 
-## Question 20 - Write users whose shell ends with sh to /root/f-shell-users.txt (client) - 5 pts
+## Question 20 - create and enable examf-cleanup.service so it writes F-CLEANUP to /var/l (client) - 5 pts
 
 ```bash
-awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/f-shell-users.txt
+cat > /usr/local/sbin/examf-cleanup.sh <<'EOF'
+#!/bin/bash
+echo F-CLEANUP >> /var/log/examf-cleanup.log
+EOF
+chmod +x /usr/local/sbin/examf-cleanup.sh
+cat > /etc/systemd/system/examf-cleanup.service <<'EOF'
+[Unit]
+Description=Exam F cleanup marker
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/examf-cleanup.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable --now examf-cleanup.service
 ```
 
 ---

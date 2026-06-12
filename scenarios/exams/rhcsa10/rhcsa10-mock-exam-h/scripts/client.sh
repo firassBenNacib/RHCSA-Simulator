@@ -20,6 +20,9 @@ userdel -r userh10 >/dev/null 2>&1 || true
 groupdel teamh10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamh10-systemctl
 
+# --- Exam H client marker cleanup ---
+rm -f /var/tmp/examh-client.txt
+
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true

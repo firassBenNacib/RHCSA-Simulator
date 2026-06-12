@@ -31,22 +31,22 @@
       "tasks": [
         "On client, set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Ensure org.rhcsa.Tools is not installed after configuring examhflatpak.",
+        "On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.4.",
+        "On client, create /var/tmp/examh-client.txt containing HCLIENT.",
         "Create and enable examhtimer.timer that runs every 10 minutes.",
         "Create group teamh10, create user userh10, set password cinder9, and add the user to teamh10.",
         "Set maximum password age for userh10 to 52 days and warning period to 7 days.",
         "Persistently enable httpd_can_network_connect.",
         "Write users whose shell ends with sh to /root/h-shell-users.txt.",
-        "Configure persistent systemd journal storage.",
+        "On server, configure persistent systemd journal storage.",
         "Create /root/h-original, hard link /root/h-hard, and symlink /root/h-soft.",
         "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.",
         "Create VG vgh10 and LV datah mounted at /mnt/datah10.",
         "Set the default target to multi-user.target without rebooting.",
-        "Activate the throughput-performance tuned profile.",
+        "On server, route local6 log messages to /var/log/examh-local6.log and write a test message.",
         "Install lsof and ensure tcpdump is removed.",
         "Use server as the only chrony source and enable chronyd.",
-        "Allow TCP port 8107 permanently in firewalld and reload.",
+        "On server, allow TCP port 2208 permanently in firewalld and reload the firewall.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Allow %teamh10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
         "Create /usr/local/bin/h-who that prints the primary group for the supplied user argument.",
@@ -60,22 +60,22 @@
       "checks": [
         "hostnamectl --static | grep -qx clienth.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverh\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.67/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examhflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "hostnamectl --static | grep -qx serverh.exam10.lab && grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts",
+        "grep -Fxq HCLIENT /var/tmp/examh-client.txt",
         "systemctl cat examhtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examhtimer.timer | grep -qx enabled",
         "getent group teamh10 >/dev/null && id -nG userh10 | tr ' ' '\\n' | grep -qx teamh10",
         "chage -l userh10 | grep -Eq 'Maximum.*52'",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "test -s /root/h-shell-users.txt && grep -q '^root$' /root/h-shell-users.txt",
-        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
+        "test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f | grep -q . && find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f -exec awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' {} +",
         "test \"$(stat -c %i /root/h-original)\" = \"$(stat -c %i /root/h-hard)\" && test -L /root/h-soft",
         "crontab -l -u userh10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log'",
         "lv_path=/dev/vgh10/datah; mapper_path=/dev/mapper/vgh10-datah; mountpoint=/mnt/datah10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "systemctl get-default | grep -qx multi-user.target",
-        "tuned-adm active | grep -q throughput-performance",
+        "grep -Eq '^local6\\.\\*[[:space:]]+/var/log/examh-local6\\.log$' /etc/rsyslog.d/examh-local6.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq 'exam-h local6' /var/log/examh-local6.log",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
-        "firewall-cmd --permanent --query-port=8107/tcp && firewall-cmd --query-port=8107/tcp",
+        "firewall-cmd --permanent --query-port=2208/tcp && firewall-cmd --query-port=2208/tcp",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
         "grep -ERq '^%teamh10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "test -x /usr/local/bin/h-who && /usr/local/bin/h-who root | grep -qx root",
@@ -87,22 +87,22 @@
       "task_titles": [
         "set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.1",
-        "Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/",
-        "Ensure org.rhcsa.Tools is not installed after configuring examhflatpak",
+        "set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168",
+        "create /var/tmp/examh-client.txt containing HCLIENT",
         "Create and enable examhtimer.timer that runs every 10 minutes",
         "Create group teamh10, create user userh10, set password cinder9, and add",
         "Set maximum password age for userh10 to 52 days and warning period to 7 ",
         "Persistently enable httpd_can_network_connect",
         "Write users whose shell ends with sh to /root/h-shell-users.txt",
-        "Configure persistent systemd journal storage",
+        "configure persistent systemd journal storage",
         "Create /root/h-original, hard link /root/h-hard, and symlink /root/h-sof",
         "Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10",
         "Create VG vgh10 and LV datah mounted at /mnt/datah10",
         "Set the default target to multi-user.target without rebooting",
-        "Activate the throughput-performance tuned profile",
+        "route local6 log messages to /var/log/examh-local6.log and write a test ",
         "Install lsof and ensure tcpdump is removed",
         "Use server as the only chrony source and enable chronyd",
-        "Allow TCP port 8107 permanently in firewalld and reload",
+        "allow TCP port 2208 permanently in firewalld and reload the firewall",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Allow %teamh10 to run /usr/bin/systemctl without a password by using a s",
         "Create /usr/local/bin/h-who that prints the primary group for the suppli",
@@ -143,10 +143,12 @@
           "nmcli connection up \"System eth1\""
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo"
+          "# On server:",
+          "hostnamectl set-hostname serverh.exam10.lab",
+          "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 clienth.exam10.lab' >> /etc/hosts"
         ],
         [
-          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
+          "echo HCLIENT > /var/tmp/examh-client.txt"
         ],
         [
           "cat > /usr/local/sbin/examhtimer.sh <<'EOF'",
@@ -185,6 +187,7 @@
           "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt"
         ],
         [
+          "# On server:",
           "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
           "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
           "systemctl restart systemd-journald",
@@ -212,8 +215,12 @@
           "systemctl get-default"
         ],
         [
-          "systemctl enable --now tuned",
-          "tuned-adm profile throughput-performance"
+          "# On server:",
+          "cat > /etc/rsyslog.d/examh-local6.conf <<'EOF'\nlocal6.* /var/log/examh-local6.log\nEOF",
+          "systemctl enable --now rsyslog",
+          "systemctl restart rsyslog",
+          "logger -p local6.info 'exam-h local6'",
+          "sleep 1"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
@@ -227,8 +234,10 @@
           "systemctl enable --now chronyd"
         ],
         [
-          "firewall-cmd --permanent --add-port=8107/tcp",
-          "firewall-cmd --reload"
+          "# On server:",
+          "firewall-cmd --permanent --add-port=2208/tcp",
+          "firewall-cmd --reload",
+          "firewall-cmd --query-port=2208/tcp"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",

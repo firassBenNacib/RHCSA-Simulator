@@ -31,8 +31,8 @@
       "tasks": [
         "On client, set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "Create /var/www/html/f.html and restore its default SELinux context.",
-        "Persistently enable httpd_can_network_connect.",
+        "On client, copy regular files owned by root from /opt/exam-f/find to /root/examf-rootfiles while preserving paths.",
+        "On client, create a 500 MiB swap partition on /dev/sdc and make it active and persistent.",
         "Activate the throughput-performance tuned profile.",
         "Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
         "Ensure org.rhcsa.Tools is not installed after configuring examfflatpak.",
@@ -48,7 +48,7 @@
         "Allow TCP port 8105 permanently in firewalld and reload.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
         "Set maximum password age for userf10 to 50 days and warning period to 7 days.",
-        "Write users whose shell ends with sh to /root/f-shell-users.txt.",
+        "On client, create and enable examf-cleanup.service so it writes F-CLEANUP to /var/log/examf-cleanup.log when started.",
         "Create /root/f-original, hard link /root/f-hard, and symlink /root/f-soft.",
         "Create VG vgf10 and LV dataf mounted at /mnt/dataf10."
       ],
@@ -60,8 +60,8 @@
       "checks": [
         "hostnamectl --static | grep -qx clientf.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverf\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.65/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "ls -Z /var/www/html/f.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
+        "test -f /root/examf-rootfiles/opt/exam-f/find/a/root.conf && ! test -e /root/examf-rootfiles/opt/exam-f/find/b/user.conf",
+        "swap_uuid=\"$(blkid -s UUID -o value /dev/sdc1)\"; test -n \"$swap_uuid\" && swapon --show=NAME --noheadings | grep -qx /dev/sdc1 && awk -v dev=\"/dev/sdc1\" -v uuid=\"$swap_uuid\" '$1 !~ /^#/ && $2 == \"swap\" && $3 == \"swap\" && ($1 == dev || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "tuned-adm active | grep -q throughput-performance",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examfflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
@@ -77,7 +77,7 @@
         "firewall-cmd --permanent --query-port=8105/tcp && firewall-cmd --query-port=8105/tcp",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
         "chage -l userf10 | grep -Eq 'Maximum.*50'",
-        "test -s /root/f-shell-users.txt && grep -q '^root$' /root/f-shell-users.txt",
+        "systemctl is-enabled examf-cleanup.service | grep -qx enabled && systemctl is-active examf-cleanup.service | grep -qx active && grep -Fxq F-CLEANUP /var/log/examf-cleanup.log",
         "test \"$(stat -c %i /root/f-original)\" = \"$(stat -c %i /root/f-hard)\" && test -L /root/f-soft",
         "lv_path=/dev/vgf10/dataf; mapper_path=/dev/mapper/vgf10-dataf; mountpoint=/mnt/dataf10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
       ],
@@ -87,8 +87,8 @@
       "task_titles": [
         "set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.1",
-        "Create /var/www/html/f.html and restore its default SELinux context",
-        "Persistently enable httpd_can_network_connect",
+        "copy regular files owned by root from /opt/exam-f/find to /root/examf-ro",
+        "create a 500 MiB swap partition on /dev/sdc and make it active and persi",
         "Activate the throughput-performance tuned profile",
         "Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/",
         "Ensure org.rhcsa.Tools is not installed after configuring examfflatpak",
@@ -104,7 +104,7 @@
         "Allow TCP port 8105 permanently in firewalld and reload",
         "Create enabled BaseOS and AppStream repository definitions using http://",
         "Set maximum password age for userf10 to 50 days and warning period to 7 ",
-        "Write users whose shell ends with sh to /root/f-shell-users.txt",
+        "create and enable examf-cleanup.service so it writes F-CLEANUP to /var/l",
         "Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof",
         "Create VG vgf10 and LV dataf mounted at /mnt/dataf10"
       ],
@@ -143,12 +143,18 @@
           "nmcli connection up \"System eth1\""
         ],
         [
-          "echo f > /var/www/html/f.html",
-          "chcon -t user_tmp_t /var/www/html/f.html",
-          "restorecon -v /var/www/html/f.html"
+          "mkdir -p /root/examf-rootfiles",
+          "find /opt/exam-f/find -type f -user root -exec cp --parents -t /root/examf-rootfiles {} +",
+          "find /root/examf-rootfiles -type f -print"
         ],
         [
-          "setsebool -P httpd_can_network_connect on"
+          "parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB",
+          "partprobe /dev/sdc || true",
+          "udevadm settle",
+          "mkswap /dev/sdc1",
+          "uuid=$(blkid -s UUID -o value /dev/sdc1)",
+          "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+          "swapon /dev/sdc1"
         ],
         [
           "systemctl enable --now tuned",
@@ -245,7 +251,11 @@
           "chage -M 50 -W 7 userf10"
         ],
         [
-          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/f-shell-users.txt"
+          "cat > /usr/local/sbin/examf-cleanup.sh <<'EOF'\n#!/bin/bash\necho F-CLEANUP >> /var/log/examf-cleanup.log\nEOF",
+          "chmod +x /usr/local/sbin/examf-cleanup.sh",
+          "cat > /etc/systemd/system/examf-cleanup.service <<'EOF'\n[Unit]\nDescription=Exam F cleanup marker\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStart=/usr/local/sbin/examf-cleanup.sh\n\n[Install]\nWantedBy=multi-user.target\nEOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now examf-cleanup.service"
         ],
         [
           "echo link > /root/f-original",

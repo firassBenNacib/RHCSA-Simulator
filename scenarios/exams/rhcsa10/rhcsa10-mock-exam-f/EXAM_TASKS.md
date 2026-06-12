@@ -33,15 +33,15 @@ Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - Create /var/www/html/f.html and restore its default SELinux context (client) - 4 pts
+## Question 03 - copy regular files owned by root from /opt/exam-f/find to /root/examf-ro (client) - 4 pts
 
-Create /var/www/html/f.html and restore its default SELinux context.
+On client, copy regular files owned by root from /opt/exam-f/find to /root/examf-rootfiles while preserving paths.
 
 ---
 
-## Question 04 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 4 pts
 
-Persistently enable httpd_can_network_connect.
+On client, create a 500 MiB swap partition on /dev/sdc and make it active and persistent.
 
 ---
 
@@ -135,9 +135,9 @@ Set maximum password age for userf10 to 50 days and warning period to 7 days.
 
 ---
 
-## Question 20 - Write users whose shell ends with sh to /root/f-shell-users.txt (client) - 5 pts
+## Question 20 - create and enable examf-cleanup.service so it writes F-CLEANUP to /var/l (client) - 5 pts
 
-Write users whose shell ends with sh to /root/f-shell-users.txt.
+On client, create and enable examf-cleanup.service so it writes F-CLEANUP to /var/log/examf-cleanup.log when started.
 
 ---
 
