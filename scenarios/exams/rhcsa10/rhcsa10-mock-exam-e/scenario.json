@@ -1,7 +1,7 @@
 {
   "id": "rhcsa10-mock-exam-e",
   "title": "RHCSA 10 Mock Exam E",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, NFS, documentation, package administration, users, scheduling, and logging.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
@@ -33,8 +33,8 @@
         "On client, set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Ensure org.rhcsa.Tools is not installed after configuring exameflatpak.",
+        "On client, create a labeled XFS filesystem on /dev/sdc1 and mount it persistently at /mnt/exame-label.",
+        "On client, add audit_backlog_limit=8192 to all installed kernel entries.",
         "Create group teame10, create user usere10, set password cinder9, and add the user to teame10.",
         "Allow %teame10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
         "Set maximum password age for usere10 to 49 days and warning period to 7 days.",
@@ -49,7 +49,7 @@
         "Activate the throughput-performance tuned profile.",
         "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10.log every 15 minutes.",
         "On client, mount server:/exports/direct at /mnt/edirect persistently.",
-        "Set the default target to multi-user.target without rebooting.",
+        "On client, save the first useradd help usage line to /root/e-useradd-help.txt.",
         "Install lsof and ensure tcpdump is removed.",
         "Configure persistent systemd journal storage."
       ],
@@ -62,8 +62,8 @@
         "hostnamectl --static | grep -qx cliente.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servere\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.64/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"exameflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "findmnt -no TARGET /mnt/exame-label | grep -qx /mnt/exame-label && blkid -s LABEL -o value /dev/sdc1 | grep -qx EXAME10 && awk '$1 == \"LABEL=EXAME10\" && $2 == \"/mnt/exame-label\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",
+        "grubby --info=ALL | awk -F= '$1 == \"args\" {count++; if ($0 !~ /(^|[[:space:]\"])audit_backlog_limit=8192([[:space:]\"]|$)/) missing=1} END {exit !(count > 0 && missing == 0)}'",
         "getent group teame10 >/dev/null && id -nG usere10 | tr ' ' '\\n' | grep -qx teame10",
         "grep -ERq '^%teame10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "chage -l usere10 | grep -Eq 'Maximum.*49'",
@@ -78,7 +78,7 @@
         "tuned-adm active | grep -q throughput-performance",
         "crontab -l -u usere10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/usere10/exam10.log'",
         "findmnt -no SOURCE,TARGET /mnt/edirect | grep -qx 'server:/exports/direct /mnt/edirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/edirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
-        "systemctl get-default | grep -qx multi-user.target",
+        "grep -Eiq '^Usage:[[:space:]]+useradd\\b' /root/e-useradd-help.txt",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
         "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files"
       ],
@@ -89,8 +89,8 @@
         "set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.1",
         "Create enabled BaseOS and AppStream repository definitions using http://",
-        "Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/",
-        "Ensure org.rhcsa.Tools is not installed after configuring exameflatpak",
+        "create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a",
+        "add audit_backlog_limit=8192 to all installed kernel entries",
         "Create group teame10, create user usere10, set password cinder9, and add",
         "Allow %teame10 to run /usr/bin/systemctl without a password by using a s",
         "Set maximum password age for usere10 to 49 days and warning period to 7 ",
@@ -105,7 +105,7 @@
         "Activate the throughput-performance tuned profile",
         "Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10",
         "mount server:/exports/direct at /mnt/edirect persistently",
-        "Set the default target to multi-user.target without rebooting",
+        "save the first useradd help usage line to /root/e-useradd-help.txt",
         "Install lsof and ensure tcpdump is removed",
         "Configure persistent systemd journal storage"
       ],
@@ -159,10 +159,18 @@
           "EOF"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify exameflatpak file:///opt/rhcsa/flatpak/repo"
+          "parted -s /dev/sdc -- mklabel gpt mkpart primary xfs 1MiB 513MiB",
+          "partprobe /dev/sdc || true",
+          "udevadm settle",
+          "mkfs.xfs -f -L EXAME10 /dev/sdc1",
+          "mkdir -p /mnt/exame-label",
+          "sed -i '\\#/mnt/exame-label#d' /etc/fstab",
+          "echo 'LABEL=EXAME10 /mnt/exame-label xfs defaults 0 0' >> /etc/fstab",
+          "mount -a"
         ],
         [
-          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
+          "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'",
+          "grubby --info=ALL | grep audit_backlog_limit"
         ],
         [
           "groupadd teame10",
@@ -249,8 +257,8 @@
           "mount -a"
         ],
         [
-          "systemctl set-default multi-user.target",
-          "systemctl get-default"
+          "useradd --help | sed -n '1p' > /root/e-useradd-help.txt",
+          "test -s /root/e-useradd-help.txt"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",

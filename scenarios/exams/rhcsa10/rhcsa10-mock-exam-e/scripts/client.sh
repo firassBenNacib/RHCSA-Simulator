@@ -20,6 +20,18 @@ userdel -r usere10 >/dev/null 2>&1 || true
 groupdel teame10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teame10-systemctl
 
+# --- Exam E label filesystem cleanup ---
+umount /mnt/exame-label >/dev/null 2>&1 || true
+sed -i '\#/mnt/exame-label#d' /etc/fstab
+for dev in /dev/sdc[0-9]* /dev/sdc; do
+    [ -e "$dev" ] || continue
+    wipefs -a "$dev" >/dev/null 2>&1 || true
+done
+sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+partprobe /dev/sdc >/dev/null 2>&1 || true
+rm -rf /mnt/exame-label
+rm -f /root/e-useradd-help.txt
+
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true

@@ -470,9 +470,9 @@ def _exam_scripts(seed: int) -> tuple[str, str]:
     group = f"team{letter}10"
     remote = f"exam{letter}flatpak"
     timer = f"exam{letter}timer"
-    exam_g_client_reset = ""
+    exam_extra_client_reset = ""
     if letter == "g":
-        exam_g_client_reset = """
+        exam_extra_client_reset += """
 # --- Exam G find dataset and users ---
 userdel -r grant10 >/dev/null 2>&1 || true
 userdel -r hazel10 >/dev/null 2>&1 || true
@@ -495,6 +495,31 @@ metadata
 kernel
 EOFWORDS
 """
+    if letter == "d":
+        exam_extra_client_reset += """
+# --- Exam D service and logging cleanup ---
+systemctl disable --now examd-heartbeat.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/examd-heartbeat.service /usr/local/sbin/examd-heartbeat.sh /var/log/examd-heartbeat.log
+rm -f /etc/rsyslog.d/examd-local5.conf /var/log/examd-local5.log
+systemctl daemon-reload >/dev/null 2>&1 || true
+firewall-cmd --permanent --remove-service=http >/dev/null 2>&1 || true
+firewall-cmd --remove-service=http >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+"""
+    if letter == "e":
+        exam_extra_client_reset += """
+# --- Exam E label filesystem cleanup ---
+umount /mnt/exame-label >/dev/null 2>&1 || true
+sed -i '\\#/mnt/exame-label#d' /etc/fstab
+for dev in /dev/sdc[0-9]* /dev/sdc; do
+    [ -e "$dev" ] || continue
+    wipefs -a "$dev" >/dev/null 2>&1 || true
+done
+sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+partprobe /dev/sdc >/dev/null 2>&1 || true
+rm -rf /mnt/exame-label
+rm -f /root/e-useradd-help.txt
+"""
 
     client = CLIENT_SCRIPT_HEADER + f"""
 # --- Reset hostname and network ---
@@ -514,7 +539,7 @@ flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 userdel -r {user} >/dev/null 2>&1 || true
 groupdel {group} >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/{group}-systemctl
-{exam_g_client_reset}
+{exam_extra_client_reset}
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true
@@ -742,6 +767,132 @@ def _nfs_mount_check(mountpoint: str) -> str:
         f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx 'server:/exports/direct {mountpoint}' && "
         f"grep -Eq '^server:/exports/direct[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab"
     )
+
+
+def _replace_exam_step(
+    tasks: list[Any],
+    checks: list[str],
+    commands: list[list[str]],
+    index: int,
+    task: str,
+    check: str,
+    command_group: list[str],
+) -> None:
+    if index < len(tasks):
+        tasks[index] = task
+    if index < len(checks):
+        checks[index] = check
+    if index < len(commands):
+        commands[index] = command_group
+
+
+def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[str], commands: list[list[str]]) -> None:
+    """Vary selected RHCSA10 exams beyond the base generated exam skeleton."""
+    if exam_id == "rhcsa10-mock-exam-d":
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            10,
+            "On client, create and enable a custom systemd service named examd-heartbeat.service.",
+            (
+                "systemctl is-enabled examd-heartbeat.service | grep -qx enabled && "
+                "systemctl is-active examd-heartbeat.service | grep -qx active && "
+                "grep -Fxq 'exam-d heartbeat' /var/log/examd-heartbeat.log"
+            ),
+            [
+                "cat > /usr/local/sbin/examd-heartbeat.sh <<'EOF'\n#!/bin/bash\necho 'exam-d heartbeat' >> /var/log/examd-heartbeat.log\nEOF",
+                "chmod +x /usr/local/sbin/examd-heartbeat.sh",
+                "cat > /etc/systemd/system/examd-heartbeat.service <<'EOF'\n[Unit]\nDescription=Exam D heartbeat\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStart=/usr/local/sbin/examd-heartbeat.sh\n\n[Install]\nWantedBy=multi-user.target\nEOF",
+                "systemctl daemon-reload",
+                "systemctl enable --now examd-heartbeat.service",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            11,
+            "On client, route local5 log messages to /var/log/examd-local5.log and write a test message.",
+            (
+                "grep -Eq '^local5\\.\\*[[:space:]]+/var/log/examd-local5\\.log$' /etc/rsyslog.d/examd-local5.conf && "
+                "systemctl is-active rsyslog | grep -qx active && "
+                "grep -Fq 'exam-d local5' /var/log/examd-local5.log"
+            ),
+            [
+                "cat > /etc/rsyslog.d/examd-local5.conf <<'EOF'\nlocal5.* /var/log/examd-local5.log\nEOF",
+                "systemctl enable --now rsyslog",
+                "systemctl restart rsyslog",
+                "logger -p local5.info 'exam-d local5'",
+                "sleep 1",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            20,
+            "On client, allow the http service permanently in firewalld and reload the firewall.",
+            "firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http",
+            [
+                "firewall-cmd --permanent --add-service=http",
+                "firewall-cmd --reload",
+                "firewall-cmd --query-service=http",
+            ],
+        )
+
+    if exam_id == "rhcsa10-mock-exam-e":
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            3,
+            "On client, create a labeled XFS filesystem on /dev/sdc1 and mount it persistently at /mnt/exame-label.",
+            (
+                "findmnt -no TARGET /mnt/exame-label | grep -qx /mnt/exame-label && "
+                "blkid -s LABEL -o value /dev/sdc1 | grep -qx EXAME10 && "
+                "awk '$1 == \"LABEL=EXAME10\" && $2 == \"/mnt/exame-label\" && $3 == \"xfs\" "
+                "{found=1} END {exit !found}' /etc/fstab"
+            ),
+            [
+                "parted -s /dev/sdc -- mklabel gpt mkpart primary xfs 1MiB 513MiB",
+                "partprobe /dev/sdc || true",
+                "udevadm settle",
+                "mkfs.xfs -f -L EXAME10 /dev/sdc1",
+                "mkdir -p /mnt/exame-label",
+                "sed -i '\\#/mnt/exame-label#d' /etc/fstab",
+                "echo 'LABEL=EXAME10 /mnt/exame-label xfs defaults 0 0' >> /etc/fstab",
+                "mount -a",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            4,
+            "On client, add audit_backlog_limit=8192 to all installed kernel entries.",
+            (
+                "grubby --info=ALL | awk -F= '$1 == \"args\" {count++; "
+                "if ($0 !~ /(^|[[:space:]\"])audit_backlog_limit=8192([[:space:]\"]|$)/) missing=1} "
+                "END {exit !(count > 0 && missing == 0)}'"
+            ),
+            [
+                "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'",
+                "grubby --info=ALL | grep audit_backlog_limit",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            19,
+            "On client, save the first useradd help usage line to /root/e-useradd-help.txt.",
+            "grep -Eiq '^Usage:[[:space:]]+useradd\\b' /root/e-useradd-help.txt",
+            [
+                "useradd --help | sed -n '1p' > /root/e-useradd-help.txt",
+                "test -s /root/e-useradd-help.txt",
+            ],
+        )
 
 
 def _reorder_parallel(values: list[Any], order: list[int]) -> list[Any]:
@@ -1751,6 +1902,8 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
     if task_points:
         updated["task_points"] = task_points
 
+    _apply_rhcsa10_exam_diversity(exam_id, tasks, checks, commands)
+
     for index, task in enumerate(tasks):
         task_text = str(task)
         if exam_id == "rhcsa10-mock-exam-c":
@@ -1780,6 +1933,16 @@ def _update_exam_manifest(manifest_path: Path) -> None:
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["exam"]
     manifest.setdefault("content", {})["exam"] = _repair_exam_progression(str(manifest["id"]), exam_block)
+    if str(manifest["id"]) == "rhcsa10-mock-exam-d":
+        manifest["description"] = (
+            "Service and logging focus: custom systemd service, rsyslog routing, firewall service access, "
+            "SELinux, journald, chrony, storage, users, and package administration."
+        )
+    if str(manifest["id"]) == "rhcsa10-mock-exam-e":
+        manifest["description"] = (
+            "Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, NFS, "
+            "documentation, package administration, users, scheduling, and logging."
+        )
     if str(manifest["id"]) == "rhcsa10-mock-exam-g":
         manifest["description"] = (
             "Recovery + server administration focus: root password recovery, server-side login policy, "

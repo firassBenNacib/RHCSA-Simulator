@@ -20,6 +20,15 @@ userdel -r userd10 >/dev/null 2>&1 || true
 groupdel teamd10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamd10-systemctl
 
+# --- Exam D service and logging cleanup ---
+systemctl disable --now examd-heartbeat.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/examd-heartbeat.service /usr/local/sbin/examd-heartbeat.sh /var/log/examd-heartbeat.log
+rm -f /etc/rsyslog.d/examd-local5.conf /var/log/examd-local5.log
+systemctl daemon-reload >/dev/null 2>&1 || true
+firewall-cmd --permanent --remove-service=http >/dev/null 2>&1 || true
+firewall-cmd --remove-service=http >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true

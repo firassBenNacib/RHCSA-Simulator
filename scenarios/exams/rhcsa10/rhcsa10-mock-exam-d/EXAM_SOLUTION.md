@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Service and logging focus: custom systemd service, rsyslog routing, firewall service access, SELinux, journald, chrony, storage, users, and package administration.
 
 ### Systems
 - client
@@ -152,18 +152,42 @@ EOF
 
 ---
 
-## Question 11 - Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 11 - create and enable a custom systemd service named examd-heartbeat.service (client) - 5 pts
 
 ```bash
-flatpak remote-add --system --if-not-exists --no-gpg-verify examdflatpak file:///opt/rhcsa/flatpak/repo
+cat > /usr/local/sbin/examd-heartbeat.sh <<'EOF'
+#!/bin/bash
+echo 'exam-d heartbeat' >> /var/log/examd-heartbeat.log
+EOF
+chmod +x /usr/local/sbin/examd-heartbeat.sh
+cat > /etc/systemd/system/examd-heartbeat.service <<'EOF'
+[Unit]
+Description=Exam D heartbeat
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/examd-heartbeat.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable --now examd-heartbeat.service
 ```
 
 ---
 
-## Question 12 - Ensure org.rhcsa.Tools is not installed after configuring examdflatpak (client) - 5 pts
+## Question 12 - route local5 log messages to /var/log/examd-local5.log and write a test (client) - 5 pts
 
 ```bash
-flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
+cat > /etc/rsyslog.d/examd-local5.conf <<'EOF'
+local5.* /var/log/examd-local5.log
+EOF
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local5.info 'exam-d local5'
+sleep 1
 ```
 
 ---
@@ -245,11 +269,12 @@ systemctl enable --now autofs
 
 ---
 
-## Question 21 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 21 - allow the http service permanently in firewalld and reload the firewall (client) - 4 pts
 
 ```bash
-systemctl set-default multi-user.target
-systemctl get-default
+firewall-cmd --permanent --add-service=http
+firewall-cmd --reload
+firewall-cmd --query-service=http
 ```
 
 ---
