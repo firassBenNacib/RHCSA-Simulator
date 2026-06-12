@@ -1,5 +1,9 @@
 # RHCSA Simulator
 
+<p align="center">
+  <img src="demo/rhcsa-simulator-logo.png" alt="RHCSA Simulator" width="720">
+</p>
+
 [![CI](https://img.shields.io/github/actions/workflow/status/firassBenNacib/RHCSA-Simulator/ci.yml?branch=main&label=CI)](https://github.com/firassBenNacib/RHCSA-Simulator/actions)
 [![Security](https://img.shields.io/github/actions/workflow/status/firassBenNacib/RHCSA-Simulator/security.yml?branch=main&label=Security)](https://github.com/firassBenNacib/RHCSA-Simulator/actions)
 [![Release](https://img.shields.io/github/v/release/firassBenNacib/RHCSA-Simulator)](https://github.com/firassBenNacib/RHCSA-Simulator/releases)
