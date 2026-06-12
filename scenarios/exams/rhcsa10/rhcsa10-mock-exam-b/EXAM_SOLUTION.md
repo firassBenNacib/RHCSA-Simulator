@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Software and permissions focus: offline package installation, shared directories, default ACLs, fixed user identity, storage, NFS, journald, and systemd administration.
 
 ### Systems
 - client
@@ -60,18 +60,36 @@ EOF
 
 ---
 
-## Question 04 - Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 04 - install the tree package from the configured offline repositories (client) - 5 pts
 
 ```bash
-flatpak remote-add --system --if-not-exists --no-gpg-verify exambflatpak file:///opt/rhcsa/flatpak/repo
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+dnf install -y tree
+rpm -q tree
 ```
 
 ---
 
-## Question 05 - Ensure org.rhcsa.Tools is not installed after configuring exambflatpak (client) - 5 pts
+## Question 05 - create /srv/teamb10 as a shared directory for group teamb10 (client) - 5 pts
 
 ```bash
-flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
+getent group teamb10 >/dev/null || groupadd teamb10
+mkdir -p /srv/teamb10
+chown root:teamb10 /srv/teamb10
+chmod 3770 /srv/teamb10
 ```
 
 ---
@@ -79,19 +97,19 @@ flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 ## Question 06 - Create group teamb10, create user userb10, set password cinder9, and add (client) - 5 pts
 
 ```bash
-groupadd teamb10
-useradd -G teamb10 userb10
-passwd userb10
-# enter: cinder9
+getent group teamb10 >/dev/null || groupadd teamb10
+id userb10 >/dev/null 2>&1 || useradd userb10
+gpasswd -a userb10 teamb10
+echo 'userb10:cinder9' | chpasswd
 ```
 
 ---
 
-## Question 07 - Allow %teamb10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 07 - create user auditorb10 with UID 6102 and shell /sbin/nologin (client) - 5 pts
 
 ```bash
-echo '%teamb10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamb10
-chmod 440 /etc/sudoers.d/teamb10
+id auditorb10 >/dev/null 2>&1 || useradd -u 6102 -s /sbin/nologin auditorb10
+usermod -u 6102 -s /sbin/nologin auditorb10
 ```
 
 ---
@@ -225,10 +243,11 @@ journalctl --flush
 
 ---
 
-## Question 19 - Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10 (client) - 4 pts
+## Question 19 - set a default ACL on /srv/teamb10 that gives group teamb10 full access t (client) - 4 pts
 
 ```bash
-echo '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log' | crontab -u userb10 -
+setfacl -m g:teamb10:rwx,d:g:teamb10:rwx /srv/teamb10
+getfacl -p /srv/teamb10
 ```
 
 ---

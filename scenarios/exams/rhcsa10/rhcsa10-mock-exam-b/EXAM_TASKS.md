@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Software and permissions focus: offline package installation, shared directories, default ACLs, fixed user identity, storage, NFS, journald, and systemd administration.
 
 ### Systems
 - client
@@ -39,15 +39,15 @@ Create enabled BaseOS and AppStream repository definitions using http://server/r
 
 ---
 
-## Question 04 - Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 04 - install the tree package from the configured offline repositories (client) - 5 pts
 
-Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+On client, install the tree package from the configured offline repositories.
 
 ---
 
-## Question 05 - Ensure org.rhcsa.Tools is not installed after configuring exambflatpak (client) - 5 pts
+## Question 05 - create /srv/teamb10 as a shared directory for group teamb10 (client) - 5 pts
 
-Ensure org.rhcsa.Tools is not installed after configuring exambflatpak.
+On client, create /srv/teamb10 as a shared directory for group teamb10.
 
 ---
 
@@ -57,9 +57,9 @@ Create group teamb10, create user userb10, set password cinder9, and add the use
 
 ---
 
-## Question 07 - Allow %teamb10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 07 - create user auditorb10 with UID 6102 and shell /sbin/nologin (client) - 5 pts
 
-Allow %teamb10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+On client, create user auditorb10 with UID 6102 and shell /sbin/nologin.
 
 ---
 
@@ -129,9 +129,9 @@ Configure persistent systemd journal storage.
 
 ---
 
-## Question 19 - Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10 (client) - 4 pts
+## Question 19 - set a default ACL on /srv/teamb10 that gives group teamb10 full access t (client) - 4 pts
 
-Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10.log every 15 minutes.
+On client, set a default ACL on /srv/teamb10 that gives group teamb10 full access to new files.
 
 ---
 

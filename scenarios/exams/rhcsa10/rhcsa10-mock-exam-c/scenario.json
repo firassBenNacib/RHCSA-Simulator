@@ -1,7 +1,7 @@
 {
   "id": "rhcsa10-mock-exam-c",
   "title": "RHCSA 10 Mock Exam C",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "Web service and network focus: httpd service setup, custom service port, SELinux port labeling, firewalld, Flatpak, client storage, NFS, autofs, users, and scheduling.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
@@ -32,9 +32,9 @@
       "tasks": [
         "On client, set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168.122.3.",
         "On client, configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "On client, create /usr/local/bin/c-who that prints the primary group for the supplied user argument.",
-        "On client, write users whose shell ends with sh to /root/c-shell-users.txt.",
-        "On client, create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fstab.",
+        "On client, publish a web page /var/www/html/examc.html containing EXAMC and enable httpd.",
+        "On client, configure httpd to listen on TCP port 8102 and make the port usable by the web service.",
+        "On client, set the login message to RHCSA10-C authorized access only.",
         "On client, create /root/c-original, hard link /root/c-hard, and symlink /root/c-soft.",
         "On client, create and enable examctimer.timer that runs every 10 minutes.",
         "On client, create VG vgc10 and LV datac mounted at /mnt/datac10.",
@@ -61,9 +61,9 @@
       "checks": [
         "hostnamectl --static | grep -qx clientc.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverc\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.62/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "test -x /usr/local/bin/c-who && /usr/local/bin/c-who root | grep -qx root",
-        "test -s /root/c-shell-users.txt && grep -q '^root$' /root/c-shell-users.txt",
-        "test -f /root/c-etc.tar.gz && tar -tzf /root/c-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
+        "test \"$(cat /var/www/html/examc.html 2>/dev/null)\" = EXAMC && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active",
+        "grep -Eq '^Listen[[:space:]]+8102$' /etc/httpd/conf.d/examc-port.conf && semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8102([, ]|$)/ {found=1} END {exit !found}'",
+        "grep -Fxq 'RHCSA10-C authorized access only' /etc/motd",
         "test \"$(stat -c %i /root/c-original)\" = \"$(stat -c %i /root/c-hard)\" && test -L /root/c-soft",
         "systemctl cat examctimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examctimer.timer | grep -qx enabled",
         "lv_path=/dev/vgc10/datac; mapper_path=/dev/mapper/vgc10-datac; mountpoint=/mnt/datac10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
@@ -88,9 +88,9 @@
       "task_titles": [
         "set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168",
         "configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.1",
-        "create /usr/local/bin/c-who that prints the primary group for the suppli",
-        "write users whose shell ends with sh to /root/c-shell-users.txt",
-        "create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs",
+        "publish a web page /var/www/html/examc.html containing EXAMC and enable ",
+        "configure httpd to listen on TCP port 8102 and make the port usable by t",
+        "set the login message to RHCSA10-C authorized access only",
         "create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof",
         "create and enable examctimer.timer that runs every 10 minutes",
         "create VG vgc10 and LV datac mounted at /mnt/datac10",
@@ -144,19 +144,18 @@
           "nmcli connection up \"System eth1\""
         ],
         [
-          "cat > /usr/local/bin/c-who <<'EOF'",
-          "#!/bin/bash",
-          "test -n \"${1:-}\" || exit 2",
-          "id -gn \"$1\"",
-          "EOF",
-          "chmod +x /usr/local/bin/c-who"
+          "mkdir -p /var/www/html",
+          "echo EXAMC > /var/www/html/examc.html",
+          "restorecon -v /var/www/html/examc.html || true",
+          "systemctl enable --now httpd"
         ],
         [
-          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/c-shell-users.txt"
+          "cat > /etc/httpd/conf.d/examc-port.conf <<'EOF'\nListen 8102\nEOF",
+          "semanage port -a -t http_port_t -p tcp 8102 2>/dev/null || semanage port -m -t http_port_t -p tcp 8102",
+          "systemctl restart httpd"
         ],
         [
-          "tar -czf /root/c-etc.tar.gz /etc/hosts /etc/fstab",
-          "tar -tzf /root/c-etc.tar.gz"
+          "echo 'RHCSA10-C authorized access only' > /etc/motd"
         ],
         [
           "echo link > /root/c-original",
