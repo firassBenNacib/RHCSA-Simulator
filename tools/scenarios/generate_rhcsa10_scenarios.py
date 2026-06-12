@@ -871,7 +871,11 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
             commands,
             4,
             "On client, add audit_backlog_limit=8192 to all installed kernel entries.",
-            "grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
+            (
+                "grubby --info=ALL | awk -F= '$1 == \"args\" {count++; "
+                "if ($0 !~ /(^|[[:space:]\"])audit_backlog_limit=8192([[:space:]\"]|$)/) missing=1} "
+                "END {exit !(count > 0 && missing == 0)}'"
+            ),
             [
                 "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'",
                 "grubby --info=ALL | grep audit_backlog_limit",
