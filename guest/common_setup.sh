@@ -6,6 +6,12 @@ BOOTSTRAP_ISO_MOUNT="/mnt/rhcsa-bootstrap-iso"
 RHCSA_PROFILE="${RHCSA_PROFILE:-rhel9}"
 DNF_ARGS=()
 DNF_INSTALL_ARGS=(--setopt=keepcache=0 --setopt=install_weak_deps=False)
+if [[ "$RHCSA_PROFILE" == "rhel10" ]]; then
+  # Treat the attached RHEL 10 DVD as authoritative during bootstrap. Compatible
+  # base boxes can include older SELinux companion packages that must be replaced
+  # before RHEL 10.2+ packages such as nfs-utils can be installed.
+  DNF_INSTALL_ARGS+=(--nobest --allowerasing --setopt=protected_packages=)
+fi
 BASE_PACKAGES=(
   openssh-server
   openssh-clients
