@@ -471,6 +471,7 @@ def _exam_scripts(seed: int) -> tuple[str, str]:
     remote = f"exam{letter}flatpak"
     timer = f"exam{letter}timer"
     exam_extra_client_reset = ""
+    exam_extra_server_reset = "\n"
     if letter == "g":
         exam_extra_client_reset += """
 # --- Exam G find dataset and users ---
@@ -533,6 +534,43 @@ sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
 partprobe /dev/sdc >/dev/null 2>&1 || true
 rm -rf /mnt/exame-label
 rm -f /root/e-useradd-help.txt
+"""
+    if letter == "f":
+        exam_extra_client_reset += """
+# --- Exam F storage and service cleanup ---
+swapoff /dev/sdc1 >/dev/null 2>&1 || true
+sed -i '/[[:space:]]swap[[:space:]]/d' /etc/fstab
+for dev in /dev/sdc[0-9]* /dev/sdc; do
+    [ -e "$dev" ] || continue
+    wipefs -a "$dev" >/dev/null 2>&1 || true
+done
+sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+partprobe /dev/sdc >/dev/null 2>&1 || true
+systemctl disable --now examf-cleanup.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/examf-cleanup.service /usr/local/sbin/examf-cleanup.sh /var/log/examf-cleanup.log
+systemctl daemon-reload >/dev/null 2>&1 || true
+rm -rf /opt/exam-f/find /root/examf-rootfiles
+mkdir -p /opt/exam-f/find/a /opt/exam-f/find/b
+echo FROOT > /opt/exam-f/find/a/root.conf
+echo FUSER > /opt/exam-f/find/b/user.conf
+chown root:root /opt/exam-f/find/a/root.conf
+chown nobody:nobody /opt/exam-f/find/b/user.conf
+"""
+    if letter == "h":
+        exam_extra_client_reset += """
+# --- Exam H client marker cleanup ---
+rm -f /var/tmp/examh-client.txt
+"""
+        exam_extra_server_reset += """
+# --- Exam H server role cleanup ---
+hostnamectl set-hostname server
+rhcsa_remove_matching_lines 'clienth.exam10.lab' /etc/hosts
+rm -f /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf /etc/systemd/journald.conf.d/persistent.conf
+rm -rf /var/log/journal
+rm -f /etc/rsyslog.d/examh-local6.conf /var/log/examh-local6.log
+firewall-cmd --permanent --remove-port=2208/tcp >/dev/null 2>&1 || true
+firewall-cmd --remove-port=2208/tcp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
 """
 
     client = CLIENT_SCRIPT_HEADER + f"""
@@ -629,8 +667,7 @@ rm -f /root/{letter}-original /root/{letter}-hard /root/{letter}-soft
 # --- Reset repos on server ---
 mkdir -p /root/.repo-backup-server-exam-{letter}
 rhcsa_reset_repo_directory /root/.repo-backup-server-exam-{letter}
-
-# --- NFS exports ---
+{exam_extra_server_reset}# --- NFS exports ---
 mkdir -p /exports/direct
 echo 'exam {letter} direct' > /exports/direct/welcome.txt
 chown -R nobody:nobody /exports/direct
@@ -1022,6 +1059,146 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
             [
                 "useradd --help | sed -n '1p' > /root/e-useradd-help.txt",
                 "test -s /root/e-useradd-help.txt",
+            ],
+        )
+
+    if exam_id == "rhcsa10-mock-exam-f":
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            2,
+            "On client, copy regular files owned by root from /opt/exam-f/find to /root/examf-rootfiles while preserving paths.",
+            (
+                "test -f /root/examf-rootfiles/opt/exam-f/find/a/root.conf && "
+                "! test -e /root/examf-rootfiles/opt/exam-f/find/b/user.conf"
+            ),
+            [
+                "mkdir -p /root/examf-rootfiles",
+                "find /opt/exam-f/find -type f -user root -exec cp --parents -t /root/examf-rootfiles {} +",
+                "find /root/examf-rootfiles -type f -print",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            3,
+            "On client, create a 500 MiB swap partition on /dev/sdc and make it active and persistent.",
+            _swap_persistence_check("/dev/sdc1"),
+            [
+                "parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB",
+                "partprobe /dev/sdc || true",
+                "udevadm settle",
+                "mkswap /dev/sdc1",
+                "uuid=$(blkid -s UUID -o value /dev/sdc1)",
+                "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
+                "swapon /dev/sdc1",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            19,
+            "On client, create and enable examf-cleanup.service so it writes F-CLEANUP to /var/log/examf-cleanup.log when started.",
+            (
+                "systemctl is-enabled examf-cleanup.service | grep -qx enabled && "
+                "systemctl is-active examf-cleanup.service | grep -qx active && "
+                "grep -Fxq F-CLEANUP /var/log/examf-cleanup.log"
+            ),
+            [
+                "cat > /usr/local/sbin/examf-cleanup.sh <<'EOF'\n#!/bin/bash\necho F-CLEANUP >> /var/log/examf-cleanup.log\nEOF",
+                "chmod +x /usr/local/sbin/examf-cleanup.sh",
+                "cat > /etc/systemd/system/examf-cleanup.service <<'EOF'\n[Unit]\nDescription=Exam F cleanup marker\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStart=/usr/local/sbin/examf-cleanup.sh\n\n[Install]\nWantedBy=multi-user.target\nEOF",
+                "systemctl daemon-reload",
+                "systemctl enable --now examf-cleanup.service",
+            ],
+        )
+
+    if exam_id == "rhcsa10-mock-exam-h":
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            2,
+            "On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.4.",
+            (
+                "hostnamectl --static | grep -qx serverh.exam10.lab && "
+                "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts"
+            ),
+            [
+                "# On server:",
+                "hostnamectl set-hostname serverh.exam10.lab",
+                "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 clienth.exam10.lab' >> /etc/hosts",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            3,
+            "On client, create /var/tmp/examh-client.txt containing HCLIENT.",
+            "grep -Fxq HCLIENT /var/tmp/examh-client.txt",
+            [
+                "echo HCLIENT > /var/tmp/examh-client.txt",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            9,
+            "On server, configure persistent systemd journal storage.",
+            (
+                "test -d /var/log/journal && "
+                "systemctl is-active systemd-journald | grep -qx active && "
+                "find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f | grep -q . && "
+                "find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f -exec awk '"
+                "FNR == 1 {in_journal=0} "
+                "/^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} "
+                "/^[[:space:]]*\\[/ {in_journal=0} "
+                "in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} "
+                "END {exit !found}"
+                "' {} +"
+            ),
+            [
+                "# On server:",
+                *JOURNALD_PERSISTENT_COMMANDS,
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            14,
+            "On server, route local6 log messages to /var/log/examh-local6.log and write a test message.",
+            (
+                "grep -Eq '^local6\\.\\*[[:space:]]+/var/log/examh-local6\\.log$' /etc/rsyslog.d/examh-local6.conf && "
+                "systemctl is-active rsyslog | grep -qx active && "
+                "grep -Fq 'exam-h local6' /var/log/examh-local6.log"
+            ),
+            [
+                "# On server:",
+                "cat > /etc/rsyslog.d/examh-local6.conf <<'EOF'\nlocal6.* /var/log/examh-local6.log\nEOF",
+                "systemctl enable --now rsyslog",
+                "systemctl restart rsyslog",
+                "logger -p local6.info 'exam-h local6'",
+                "sleep 1",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            17,
+            "On server, allow TCP port 2208 permanently in firewalld and reload the firewall.",
+            "firewall-cmd --permanent --query-port=2208/tcp && firewall-cmd --query-port=2208/tcp",
+            [
+                "# On server:",
+                "firewall-cmd --permanent --add-port=2208/tcp",
+                "firewall-cmd --reload",
+                "firewall-cmd --query-port=2208/tcp",
             ],
         )
 

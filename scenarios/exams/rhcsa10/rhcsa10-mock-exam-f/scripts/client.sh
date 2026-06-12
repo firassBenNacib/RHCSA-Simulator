@@ -20,6 +20,25 @@ userdel -r userf10 >/dev/null 2>&1 || true
 groupdel teamf10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamf10-systemctl
 
+# --- Exam F storage and service cleanup ---
+swapoff /dev/sdc1 >/dev/null 2>&1 || true
+sed -i '/[[:space:]]swap[[:space:]]/d' /etc/fstab
+for dev in /dev/sdc[0-9]* /dev/sdc; do
+    [ -e "$dev" ] || continue
+    wipefs -a "$dev" >/dev/null 2>&1 || true
+done
+sgdisk --zap-all /dev/sdc >/dev/null 2>&1 || true
+partprobe /dev/sdc >/dev/null 2>&1 || true
+systemctl disable --now examf-cleanup.service >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/examf-cleanup.service /usr/local/sbin/examf-cleanup.sh /var/log/examf-cleanup.log
+systemctl daemon-reload >/dev/null 2>&1 || true
+rm -rf /opt/exam-f/find /root/examf-rootfiles
+mkdir -p /opt/exam-f/find/a /opt/exam-f/find/b
+echo FROOT > /opt/exam-f/find/a/root.conf
+echo FUSER > /opt/exam-f/find/b/user.conf
+chown root:root /opt/exam-f/find/a/root.conf
+chown nobody:nobody /opt/exam-f/find/b/user.conf
+
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true

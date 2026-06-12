@@ -40,18 +40,20 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create system Flatpak remote examhflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 03 - set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168 (server) - 5 pts
 
 ```bash
-flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo
+# On server:
+hostnamectl set-hostname serverh.exam10.lab
+grep -Eq '^192\.168\.122\.4[[:space:]]+clienth\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clienth.exam10.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 04 - Ensure org.rhcsa.Tools is not installed after configuring examhflatpak (client) - 5 pts
+## Question 04 - create /var/tmp/examh-client.txt containing HCLIENT (client) - 5 pts
 
 ```bash
-flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
+echo HCLIENT > /var/tmp/examh-client.txt
 ```
 
 ---
@@ -117,9 +119,10 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt
 
 ---
 
-## Question 10 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 10 - configure persistent systemd journal storage (server) - 4 pts
 
 ```bash
+# On server:
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
 [Journal]
@@ -172,11 +175,17 @@ systemctl get-default
 
 ---
 
-## Question 15 - Activate the throughput-performance tuned profile (client) - 4 pts
+## Question 15 - route local6 log messages to /var/log/examh-local6.log and write a test (server) - 4 pts
 
 ```bash
-systemctl enable --now tuned
-tuned-adm profile throughput-performance
+# On server:
+cat > /etc/rsyslog.d/examh-local6.conf <<'EOF'
+local6.* /var/log/examh-local6.log
+EOF
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local6.info 'exam-h local6'
+sleep 1
 ```
 
 ---
@@ -214,11 +223,13 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 18 - Allow TCP port 8107 permanently in firewalld and reload (client) - 4 pts
+## Question 18 - allow TCP port 2208 permanently in firewalld and reload the firewall (server) - 4 pts
 
 ```bash
-firewall-cmd --permanent --add-port=8107/tcp
+# On server:
+firewall-cmd --permanent --add-port=2208/tcp
 firewall-cmd --reload
+firewall-cmd --query-port=2208/tcp
 ```
 
 ---
