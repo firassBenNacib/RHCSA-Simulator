@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Service and logging focus: custom systemd service, rsyslog routing, firewall service access, SELinux, journald, chrony, storage, users, and package administration.
 
 ### Systems
 - client
@@ -81,15 +81,15 @@ Create enabled BaseOS and AppStream repository definitions using http://server/r
 
 ---
 
-## Question 11 - Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 11 - create and enable a custom systemd service named examd-heartbeat.service (client) - 5 pts
 
-Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+On client, create and enable a custom systemd service named examd-heartbeat.service.
 
 ---
 
-## Question 12 - Ensure org.rhcsa.Tools is not installed after configuring examdflatpak (client) - 5 pts
+## Question 12 - route local5 log messages to /var/log/examd-local5.log and write a test (client) - 5 pts
 
-Ensure org.rhcsa.Tools is not installed after configuring examdflatpak.
+On client, route local5 log messages to /var/log/examd-local5.log and write a test message.
 
 ---
 
@@ -141,9 +141,9 @@ On client, configure autofs so /remoted/projects mounts server:/exports/autofs/p
 
 ---
 
-## Question 21 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 21 - allow the http service permanently in firewalld and reload the firewall (client) - 4 pts
 
-Set the default target to multi-user.target without rebooting.
+On client, allow the http service permanently in firewalld and reload the firewall.
 
 ---
 

@@ -20,6 +20,7 @@ BASE_PACKAGES=(
   policycoreutils-python-utils
   chrony
   cronie
+  rsyslog
   at
   tuned
   vim-enhanced

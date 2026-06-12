@@ -1,7 +1,7 @@
 {
   "id": "rhcsa10-mock-exam-d",
   "title": "RHCSA 10 Mock Exam D",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "Service and logging focus: custom systemd service, rsyslog routing, firewall service access, SELinux, journald, chrony, storage, users, and package administration.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
@@ -40,8 +40,8 @@
         "Configure persistent systemd journal storage.",
         "Use server as the only chrony source and enable chronyd.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Ensure org.rhcsa.Tools is not installed after configuring examdflatpak.",
+        "On client, create and enable a custom systemd service named examd-heartbeat.service.",
+        "On client, route local5 log messages to /var/log/examd-local5.log and write a test message.",
         "Create group teamd10, create user userd10, set password cinder9, and add the user to teamd10.",
         "Allow %teamd10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
         "Set maximum password age for userd10 to 48 days and warning period to 7 days.",
@@ -50,7 +50,7 @@
         "Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fstab.",
         "Create a cron job for userd10 that writes EXAM10 to /home/userd10/exam10.log every 15 minutes.",
         "On client, configure autofs so /remoted/projects mounts server:/exports/autofs/projects.",
-        "Set the default target to multi-user.target without rebooting.",
+        "On client, allow the http service permanently in firewalld and reload the firewall.",
         "Install lsof and ensure tcpdump is removed."
       ],
       "hints": [
@@ -69,8 +69,8 @@
         "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examdflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "systemctl is-enabled examd-heartbeat.service | grep -qx enabled && systemctl is-active examd-heartbeat.service | grep -qx active && grep -Fxq 'exam-d heartbeat' /var/log/examd-heartbeat.log",
+        "grep -Eq '^local5\\.\\*[[:space:]]+/var/log/examd-local5\\.log$' /etc/rsyslog.d/examd-local5.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq 'exam-d local5' /var/log/examd-local5.log",
         "getent group teamd10 >/dev/null && id -nG userd10 | tr ' ' '\\n' | grep -qx teamd10",
         "grep -ERq '^%teamd10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "chage -l userd10 | grep -Eq 'Maximum.*48'",
@@ -79,7 +79,7 @@
         "test -f /root/d-etc.tar.gz && tar -tzf /root/d-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
         "crontab -l -u userd10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log'",
         "grep -Eq '^/remoted[[:space:]]+/etc/auto.remoted' /etc/auto.master.d/d.autofs && systemctl is-enabled autofs | grep -qx enabled",
-        "systemctl get-default | grep -qx multi-user.target",
+        "firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
       ],
       "solution_outline": [
@@ -96,8 +96,8 @@
         "Configure persistent systemd journal storage",
         "Use server as the only chrony source and enable chronyd",
         "Create enabled BaseOS and AppStream repository definitions using http://",
-        "Create system Flatpak remote examdflatpak pointing to file:///opt/rhcsa/",
-        "Ensure org.rhcsa.Tools is not installed after configuring examdflatpak",
+        "create and enable a custom systemd service named examd-heartbeat.service",
+        "route local5 log messages to /var/log/examd-local5.log and write a test ",
         "Create group teamd10, create user userd10, set password cinder9, and add",
         "Allow %teamd10 to run /usr/bin/systemctl without a password by using a s",
         "Set maximum password age for userd10 to 48 days and warning period to 7 ",
@@ -106,7 +106,7 @@
         "Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fs",
         "Create a cron job for userd10 that writes EXAM10 to /home/userd10/exam10",
         "configure autofs so /remoted/projects mounts server:/exports/autofs/proj",
-        "Set the default target to multi-user.target without rebooting",
+        "allow the http service permanently in firewalld and reload the firewall",
         "Install lsof and ensure tcpdump is removed"
       ],
       "task_points": [
@@ -213,10 +213,18 @@
           "EOF"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify examdflatpak file:///opt/rhcsa/flatpak/repo"
+          "cat > /usr/local/sbin/examd-heartbeat.sh <<'EOF'\n#!/bin/bash\necho 'exam-d heartbeat' >> /var/log/examd-heartbeat.log\nEOF",
+          "chmod +x /usr/local/sbin/examd-heartbeat.sh",
+          "cat > /etc/systemd/system/examd-heartbeat.service <<'EOF'\n[Unit]\nDescription=Exam D heartbeat\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStart=/usr/local/sbin/examd-heartbeat.sh\n\n[Install]\nWantedBy=multi-user.target\nEOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now examd-heartbeat.service"
         ],
         [
-          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
+          "cat > /etc/rsyslog.d/examd-local5.conf <<'EOF'\nlocal5.* /var/log/examd-local5.log\nEOF",
+          "systemctl enable --now rsyslog",
+          "systemctl restart rsyslog",
+          "logger -p local5.info 'exam-d local5'",
+          "sleep 1"
         ],
         [
           "groupadd teamd10",
@@ -256,8 +264,9 @@
           "systemctl enable --now autofs"
         ],
         [
-          "systemctl set-default multi-user.target",
-          "systemctl get-default"
+          "firewall-cmd --permanent --add-service=http",
+          "firewall-cmd --reload",
+          "firewall-cmd --query-service=http"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",

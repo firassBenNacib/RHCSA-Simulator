@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, NFS, documentation, package administration, users, scheduling, and logging.
 
 ### Systems
 - client
@@ -60,18 +60,26 @@ EOF
 
 ---
 
-## Question 04 - Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 04 - create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a (client) - 5 pts
 
 ```bash
-flatpak remote-add --system --if-not-exists --no-gpg-verify exameflatpak file:///opt/rhcsa/flatpak/repo
+parted -s /dev/sdc -- mklabel gpt mkpart primary xfs 1MiB 513MiB
+partprobe /dev/sdc || true
+udevadm settle
+mkfs.xfs -f -L EXAME10 /dev/sdc1
+mkdir -p /mnt/exame-label
+sed -i '\#/mnt/exame-label#d' /etc/fstab
+echo 'LABEL=EXAME10 /mnt/exame-label xfs defaults 0 0' >> /etc/fstab
+mount -a
 ```
 
 ---
 
-## Question 05 - Ensure org.rhcsa.Tools is not installed after configuring exameflatpak (client) - 5 pts
+## Question 05 - add audit_backlog_limit=8192 to all installed kernel entries (client) - 5 pts
 
 ```bash
-flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
+grubby --update-kernel=ALL --args='audit_backlog_limit=8192'
+grubby --info=ALL | grep audit_backlog_limit
 ```
 
 ---
@@ -230,11 +238,11 @@ mount -a
 
 ---
 
-## Question 20 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 20 - save the first useradd help usage line to /root/e-useradd-help.txt (client) - 4 pts
 
 ```bash
-systemctl set-default multi-user.target
-systemctl get-default
+useradd --help | sed -n '1p' > /root/e-useradd-help.txt
+test -s /root/e-useradd-help.txt
 ```
 
 ---

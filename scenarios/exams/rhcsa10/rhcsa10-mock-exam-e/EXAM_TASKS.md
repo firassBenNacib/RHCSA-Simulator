@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, NFS, documentation, package administration, users, scheduling, and logging.
 
 ### Systems
 - client
@@ -39,15 +39,15 @@ Create enabled BaseOS and AppStream repository definitions using http://server/r
 
 ---
 
-## Question 04 - Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 04 - create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a (client) - 5 pts
 
-Create system Flatpak remote exameflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
+On client, create a labeled XFS filesystem on /dev/sdc1 and mount it persistently at /mnt/exame-label.
 
 ---
 
-## Question 05 - Ensure org.rhcsa.Tools is not installed after configuring exameflatpak (client) - 5 pts
+## Question 05 - add audit_backlog_limit=8192 to all installed kernel entries (client) - 5 pts
 
-Ensure org.rhcsa.Tools is not installed after configuring exameflatpak.
+On client, add audit_backlog_limit=8192 to all installed kernel entries.
 
 ---
 
@@ -135,9 +135,9 @@ On client, mount server:/exports/direct at /mnt/edirect persistently.
 
 ---
 
-## Question 20 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 20 - save the first useradd help usage line to /root/e-useradd-help.txt (client) - 4 pts
 
-Set the default target to multi-user.target without rebooting.
+On client, save the first useradd help usage line to /root/e-useradd-help.txt.
 
 ---
 
