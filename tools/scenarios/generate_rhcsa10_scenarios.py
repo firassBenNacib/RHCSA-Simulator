@@ -897,7 +897,9 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
             (
                 "grep -Eq '^Listen[[:space:]]+8102$' /etc/httpd/conf.d/examc-port.conf && "
                 "semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && "
-                "$0 ~ /(^|[ ,])8102([, ]|$)/ {found=1} END {exit !found}'"
+                "$0 ~ /(^|[ ,])8102([, ]|$)/ {found=1} END {exit !found}' && "
+                "systemctl is-active httpd | grep -qx active && "
+                "ss -ltn | awk '$4 ~ /(^|:)8102$/ {found=1} END {exit !found}'"
             ),
             [
                 "cat > /etc/httpd/conf.d/examc-port.conf <<'EOF'\nListen 8102\nEOF",
