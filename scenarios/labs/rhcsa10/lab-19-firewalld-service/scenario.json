@@ -16,31 +16,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Ensure firewalld is enabled and running.",
-        "Permanently allow the https service in the public zone.",
-        "Reload firewalld and verify the service is allowed."
+        "On server, ensure firewalld is enabled and running.",
+        "On server, permanently allow the https service in the public zone.",
+        "On server, reload firewalld and verify the service is allowed."
       ],
       "hints": [
         "Use --permanent for persistent rules.",
         "Reload after changing permanent configuration."
       ],
       "checks": [
-        "systemctl is-enabled firewalld | grep -qx enabled && systemctl is-active firewalld | grep -qx active",
-        "firewall-cmd --permanent --zone=public --query-service=https",
-        "firewall-cmd --zone=public --query-service=https"
+        "# server systemctl is-enabled firewalld | grep -qx enabled && systemctl is-active firewalld | grep -qx active",
+        "# server firewall-cmd --permanent --zone=public --query-service=https",
+        "# server firewall-cmd --zone=public --query-service=https"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Ensure firewalld is enabled and running",
-        "Permanently allow the https service in the public zone",
-        "Reload firewalld and verify the service is allowed"
+        "ensure firewalld is enabled and running",
+        "permanently allow the https service in the public zone",
+        "reload firewalld and verify the service is allowed"
       ],
       "task_points": [
         10,
@@ -63,5 +63,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

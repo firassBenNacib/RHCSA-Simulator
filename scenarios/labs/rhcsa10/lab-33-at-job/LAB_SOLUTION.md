@@ -12,14 +12,14 @@
 Schedule one-time tasks with at.
 
 ### Systems
-- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create user at10 and set password cinder9 (client) - 10 pts
+## Task 01 - create user at10 and set password cinder9 (server) - 10 pts
 
 ```bash
 useradd at10
@@ -29,7 +29,7 @@ passwd at10
 
 ---
 
-## Task 02 - Enable and start atd (client) - 10 pts
+## Task 02 - enable and start atd (server) - 10 pts
 
 ```bash
 systemctl enable --now atd
@@ -37,7 +37,7 @@ systemctl enable --now atd
 
 ---
 
-## Task 03 - As at10, schedule a job that appends AT10 to /home/at10/at10.log two min (client) - 10 pts
+## Task 03 - as at10, schedule a job that appends AT10 to /home/at10/at10.log two min (server) - 10 pts
 
 ```bash
 su - at10

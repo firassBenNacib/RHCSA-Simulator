@@ -46,5 +46,6 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": null,
+  "scope": "client"
 }

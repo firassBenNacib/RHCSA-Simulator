@@ -15,28 +15,28 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Enable the httpd_can_network_connect SELinux boolean immediately.",
-        "Make the httpd_can_network_connect SELinux boolean persistent."
+        "On server, enable the httpd_can_network_connect SELinux boolean immediately.",
+        "On server, make the httpd_can_network_connect SELinux boolean persistent."
       ],
       "hints": [
         "Use setsebool -P.",
         "Use getsebool for verification."
       ],
       "checks": [
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-        "semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'"
+        "# server getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+        "# server semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Enable the httpd_can_network_connect SELinux boolean immediately",
-        "Make the httpd_can_network_connect SELinux boolean persistent"
+        "enable the httpd_can_network_connect SELinux boolean immediately",
+        "make the httpd_can_network_connect SELinux boolean persistent"
       ],
       "task_points": [
         10,
@@ -55,5 +55,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

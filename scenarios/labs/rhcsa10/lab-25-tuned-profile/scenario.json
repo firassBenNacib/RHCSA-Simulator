@@ -15,28 +15,28 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Ensure tuned is enabled and running.",
-        "Activate the throughput-performance tuned profile."
+        "On server, ensure tuned is enabled and running.",
+        "On server, activate the throughput-performance tuned profile."
       ],
       "hints": [
         "Use tuned-adm profile.",
         "Use tuned-adm active to verify."
       ],
       "checks": [
-        "systemctl is-enabled tuned | grep -qx enabled && systemctl is-active tuned | grep -qx active",
-        "(tuned-adm active | grep -q throughput-performance) && (tuned-adm active >/dev/null)"
+        "# server systemctl is-enabled tuned | grep -qx enabled && systemctl is-active tuned | grep -qx active",
+        "# server (tuned-adm active | grep -q throughput-performance) && (tuned-adm active >/dev/null)"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Ensure tuned is enabled and running",
-        "Activate the throughput-performance tuned profile"
+        "ensure tuned is enabled and running",
+        "activate the throughput-performance tuned profile"
       ],
       "task_points": [
         10,
@@ -55,5 +55,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

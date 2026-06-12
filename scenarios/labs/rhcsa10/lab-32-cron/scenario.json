@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create user cron10 and set password cinder9.",
-        "Configure a cron job for cron10 that writes CRON10 to /home/cron10/cron10.log every 5 minutes.",
-        "Ensure crond is enabled and running."
+        "On server, create user cron10 and set password cinder9.",
+        "On server, configure a cron job for cron10 that writes CRON10 to /home/cron10/cron10.log every 5 minutes.",
+        "On server, ensure crond is enabled and running."
       ],
       "hints": [
         "Use crontab -u cron10 -e.",
         "Use */5 for every five minutes."
       ],
       "checks": [
-        "getent passwd cron10 >/dev/null",
-        "crontab -l -u cron10 2>/dev/null | grep -Fqx '*/5 * * * * echo CRON10 >> /home/cron10/cron10.log'",
-        "systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
+        "# server getent passwd cron10 >/dev/null",
+        "# server crontab -l -u cron10 2>/dev/null | grep -Fqx '*/5 * * * * echo CRON10 >> /home/cron10/cron10.log'",
+        "# server systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create user cron10 and set password cinder9",
-        "Configure a cron job for cron10 that writes CRON10 to /home/cron10/cron1",
-        "Ensure crond is enabled and running"
+        "create user cron10 and set password cinder9",
+        "configure a cron job for cron10 that writes CRON10 to /home/cron10/cron1",
+        "ensure crond is enabled and running"
       ],
       "task_points": [
         10,
@@ -63,5 +63,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

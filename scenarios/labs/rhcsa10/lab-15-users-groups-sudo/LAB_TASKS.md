@@ -33,4 +33,4 @@ Create user relay10, set the password to cinder9, and make ops10 the user's supp
 
 ## Task 03 - Allow members of ops10 to run /usr/bin/systemctl with sudo without a pas (client) - 10 pts
 
-Allow members of ops10 to run /usr/bin/systemctl with sudo without a password by using a sudoers drop-in.
+Allow members of ops10 to run /usr/bin/systemctl with sudo without a password.
