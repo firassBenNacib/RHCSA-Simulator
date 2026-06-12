@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 03 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -56,6 +56,22 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
+# On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
@@ -95,24 +111,30 @@ passwd usere10
 
 ---
 
-## Question 07 - Allow %teame10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 07 - create group servere10 and user srve10 with password cinder9, then add t (server) - 5 pts
 
 ```bash
-echo '%teame10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teame10
-chmod 440 /etc/sudoers.d/teame10
+# On server:
+getent group servere10 >/dev/null || groupadd servere10
+id srve10 >/dev/null 2>&1 || useradd srve10
+gpasswd -a srve10 servere10
+echo 'srve10:cinder9' | chpasswd
 ```
 
 ---
 
-## Question 08 - Set maximum password age for usere10 to 49 days and warning period to 7 (client) - 5 pts
+## Question 08 - allow members of servere10 to run /usr/bin/systemctl with sudo without a (server) - 5 pts
 
 ```bash
-chage -M 49 -W 7 usere10
+# On server:
+getent group servere10 >/dev/null || groupadd servere10
+echo '%servere10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/servere10-systemctl
+chmod 0440 /etc/sudoers.d/servere10-systemctl
 ```
 
 ---
 
-## Question 09 - Create /usr/local/bin/e-who that prints the primary group for the suppli (client) - 5 pts
+## Question 09 - Create /usr/local/bin/e-who that prints the primary group for the suppli (client) - 4 pts
 
 ```bash
 cat > /usr/local/bin/e-who <<'EOF'
@@ -125,7 +147,7 @@ chmod +x /usr/local/bin/e-who
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/e-shell-users.txt (client) - 5 pts
+## Question 10 - Write users whose shell ends with sh to /root/e-shell-users.txt (client) - 4 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/e-shell-users.txt
@@ -133,7 +155,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/e-shell-users.txt
 
 ---
 
-## Question 11 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 11 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
 
 ```bash
 tar -czf /root/e-etc.tar.gz /etc/hosts /etc/fstab
@@ -142,7 +164,7 @@ tar -tzf /root/e-etc.tar.gz
 
 ---
 
-## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (client) - 5 pts
+## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (client) - 4 pts
 
 ```bash
 echo link > /root/e-original
@@ -152,28 +174,36 @@ ln -s /root/e-original /root/e-soft
 
 ---
 
-## Question 13 - Create and enable exametimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 13 - create and enable serveretimer.timer so it appends SERVER-E to /var/log/ (server) - 4 pts
 
 ```bash
-cat > /usr/local/sbin/exametimer.sh <<'EOF'
+# On server:
+cat > /usr/local/sbin/serveretimer.sh <<'EOF'
 #!/bin/bash
-echo exametimer >> /var/log/exametimer.log
+echo SERVER-E >> /var/log/serveretimer.log
 EOF
-chmod +x /usr/local/sbin/exametimer.sh
-cat > /etc/systemd/system/exametimer.service <<'EOF'
+chmod +x /usr/local/sbin/serveretimer.sh
+cat > /etc/systemd/system/serveretimer.service <<'EOF'
+[Unit]
+Description=Server E timer job
+
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/exametimer.sh
+ExecStart=/usr/local/sbin/serveretimer.sh
 EOF
-cat > /etc/systemd/system/exametimer.timer <<'EOF'
+cat > /etc/systemd/system/serveretimer.timer <<'EOF'
+[Unit]
+Description=Run server E timer job
+
 [Timer]
-OnCalendar=*:0/10
+OnCalendar=*:/10
 Persistent=true
+
 [Install]
 WantedBy=timers.target
 EOF
 systemctl daemon-reload
-systemctl enable --now exametimer.timer
+systemctl enable --now serveretimer.timer
 ```
 
 ---
@@ -192,21 +222,33 @@ mount -a
 
 ---
 
-## Question 15 - Allow TCP port 8104 permanently in firewalld and reload (client) - 4 pts
+## Question 15 - publish /var/www/html/server-e.html containing RHCSA10-E and serve httpd (server) - 4 pts
 
 ```bash
-firewall-cmd --permanent --add-port=8104/tcp
+# On server:
+mkdir -p /var/www/html
+echo RHCSA10-E > /var/www/html/server-e.html
+restorecon -v /var/www/html/server-e.html || true
+cat > /etc/httpd/conf.d/exam-e-port.conf <<'EOF'
+Listen 8204
+EOF
+semanage port -a -t http_port_t -p tcp 8204 2>/dev/null || semanage port -m -t http_port_t -p tcp 8204
+firewall-cmd --permanent --add-port=8204/tcp
 firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
 ```
 
 ---
 
-## Question 16 - Create /var/www/html/e.html and restore its default SELinux context (client) - 4 pts
+## Question 16 - create /srv/servere10 owned by root:servere10 with mode 2770 (server) - 4 pts
 
 ```bash
-echo e > /var/www/html/e.html
-chcon -t user_tmp_t /var/www/html/e.html
-restorecon -v /var/www/html/e.html
+# On server:
+getent group servere10 >/dev/null || groupadd servere10
+mkdir -p /srv/servere10
+chown root:servere10 /srv/servere10
+chmod 2770 /srv/servere10
 ```
 
 ---
@@ -220,29 +262,51 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Question 18 - Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10 (client) - 4 pts
+## Question 18 - route local5 log messages to /var/log/server-e-local5.log and write a te (server) - 4 pts
 
 ```bash
-echo '*/15 * * * * echo EXAM10 >> /home/usere10/exam10.log' | crontab -u usere10 -
+# On server:
+cat > /etc/rsyslog.d/server-e-local5.conf <<'EOF'
+local5.* /var/log/server-e-local5.log
+EOF
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local5.info 'server-e-local5'
+sleep 1
 ```
 
 ---
 
-## Question 19 - mount server:/exports/direct at /mnt/edirect persistently (client) - 4 pts
+## Question 19 - export /exports/exam-e to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
 ```bash
-mkdir -p /mnt/edirect
-echo 'server:/exports/direct /mnt/edirect nfs defaults,_netdev 0 0' >> /etc/fstab
+# On server:
+mkdir -p /exports/exam-e
+echo 'exam e export' > /exports/exam-e/README
+cat > /etc/exports.d/exam-e-integrated.exports <<'EOF'
+/exports/exam-e 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/eprojects
+grep -Eq '^server:/exports/exam-e[[:space:]]+/mnt/eprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-e /mnt/eprojects nfs defaults,_netdev 0 0' >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 20 - save the first useradd help usage line to /root/e-useradd-help.txt (client) - 4 pts
+## Question 20 - create /root/exam-e-report.txt containing REPORT-E and copy it to server (client) - 4 pts
 
 ```bash
-useradd --help | sed -n '1p' > /root/e-useradd-help.txt
-test -s /root/e-useradd-help.txt
+echo REPORT-E > /root/exam-e-report.txt
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-e-report.txt root@server:/root/exam-e-report.txt
 ```
 
 ---
@@ -270,9 +334,10 @@ dnf remove -y tcpdump
 
 ---
 
-## Question 22 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 22 - enable persistent systemd journal storage (server) - 4 pts
 
 ```bash
+# On server:
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
 [Journal]
@@ -280,4 +345,13 @@ Storage=persistent
 EOF
 systemctl restart systemd-journald
 journalctl --flush
+```
+
+---
+
+## Question 23 - add a hosts entry for servere.exam10.lab and save the output of http://s (client) - 4 pts
+
+```bash
+grep -Eq '^192\.168\.122\.3[[:space:]]+servere\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts
+curl -s http://servere.exam10.lab:8204/server-e.html > /root/server-e-web-check.txt
 ```

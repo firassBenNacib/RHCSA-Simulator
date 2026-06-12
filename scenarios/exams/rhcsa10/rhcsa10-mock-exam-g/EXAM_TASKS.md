@@ -45,9 +45,9 @@ Recovery + server administration focus: root password recovery, server-side logi
 
 ---
 
-## Question 05 - (client) Create enabled BaseOS and AppStream repository definitions usin (client) - 5 pts
+## Question 05 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
-(client) Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
@@ -69,25 +69,25 @@ On client, add a system-level Flatpak remote named examgflatpak pointing to file
 
 ---
 
-## Question 09 - (client) Create directory /srv/devg10 owned by root:devg10 with permissi (client) - 5 pts
+## Question 09 - (client) Create directory /srv/devg10 owned by root:devg10 with permissi (client) - 4 pts
 
 (client) Create directory /srv/devg10 owned by root:devg10 with permissions 1770 (setgid and sticky bit, no world access).
 
 ---
 
-## Question 10 - (client) Create user noaccess70 with no home directory and login shell / (client) - 5 pts
+## Question 10 - (client) Create user noaccess70 with no home directory and login shell / (client) - 4 pts
 
 (client) Create user noaccess70 with no home directory and login shell /sbin/nologin.
 
 ---
 
-## Question 11 - (client) Set password aging for grant10: maximum 35 days, minimum 5 days (client) - 5 pts
+## Question 11 - (client) Set password aging for grant10: maximum 35 days, minimum 5 days (client) - 4 pts
 
 (client) Set password aging for grant10: maximum 35 days, minimum 5 days, warning 7 days. Add umask 0077 to /home/grant10/.bashrc.
 
 ---
 
-## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 5 pts
+## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 4 pts
 
 (client) Create user copy10 with UID 5010 and password cinder9 on the client. Also create user copy10 with the same UID 5010 and password cinder9 on the server.
 
@@ -95,7 +95,7 @@ On client, add a system-level Flatpak remote named examgflatpak pointing to file
 
 ## Question 13 - (client) As copy10, generate an SSH key pair (no passphrase) and distrib (client) - 4 pts
 
-(client) As copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then use scp to copy /etc/hostname from the server to /home/copy10/server-hostname on the client.
+(client) As copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then copy /etc/hostname from the server to /home/copy10/server-hostname on the client.
 
 ---
 
@@ -111,33 +111,33 @@ On client, add a system-level Flatpak remote named examgflatpak pointing to file
 
 ---
 
-## Question 16 - (client) Run the command "sleep 600" in the background, then renice that (client) - 4 pts
+## Question 16 - route local5 log messages to /var/log/server-g-local5.log and write a te (server) - 4 pts
 
-(client) Run the command "sleep 600" in the background, then renice that process to priority 15.
-
----
-
-## Question 17 - (client) Find all files under /opt/exam-g/find owned by user grant10 tha (client) - 4 pts
-
-(client) Find all files under /opt/exam-g/find owned by user grant10 that were modified in the last day. Write the list to /root/grant-files (one path per line).
+On server, route local5 log messages to /var/log/server-g-local5.log and write a test message.
 
 ---
 
-## Question 18 - (client) Extract all lines containing the string "data" from /usr/share/ (client) - 4 pts
+## Question 17 - create /srv/serverg10 owned by root:serverg10 with mode 2770 (server) - 4 pts
 
-(client) Extract all lines containing the string "data" from /usr/share/dict/words and write them to /root/g-data-lines.
-
----
-
-## Question 19 - (client) Create a gzip-compressed tar archive /root/g-etc.tar.gz contain (client) - 4 pts
-
-(client) Create a gzip-compressed tar archive /root/g-etc.tar.gz containing the entire /etc directory.
+On server, create /srv/serverg10 owned by root:serverg10 with mode 2770.
 
 ---
 
-## Question 20 - (client) Create a systemd timer examgtimer.timer that triggers its compa (client) - 4 pts
+## Question 18 - create group serverg10 and user srvg10 with password cinder9, then add t (server) - 4 pts
 
-(client) Create a systemd timer examgtimer.timer that triggers its companion service every 12 minutes. Enable the timer persistently.
+On server, create group serverg10 and user srvg10 with password cinder9, then add the user to serverg10.
+
+---
+
+## Question 19 - publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd (server) - 4 pts
+
+On server, publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd on TCP port 8206.
+
+---
+
+## Question 20 - create and enable servergtimer.timer so it appends SERVER-G to /var/log/ (server) - 4 pts
+
+On server, create and enable servergtimer.timer so it appends SERVER-G to /var/log/servergtimer.log every 12 minutes.
 
 ---
 
@@ -150,3 +150,9 @@ On client, add a system-level Flatpak remote named examgflatpak pointing to file
 ## Question 22 - (client) Create physical volume on /dev/sdc, volume group vgg10, logical (client) - 4 pts
 
 (client) Create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10.
+
+---
+
+## Question 23 - export /exports/exam-g to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+
+On server, export /exports/exam-g to the 192.168.122.0/24 network. On client, mount server:/exports/exam-g persistently at /mnt/gprojects.

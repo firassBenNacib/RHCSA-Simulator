@@ -61,7 +61,7 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 
 ---
 
-## Question 05 - (client) Create enabled BaseOS and AppStream repository definitions usin (client) - 5 pts
+## Question 05 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -77,6 +77,22 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
+# On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
@@ -112,7 +128,7 @@ echo 'hazel10:cinder9' | chpasswd
 
 ---
 
-## Question 09 - (client) Create directory /srv/devg10 owned by root:devg10 with permissi (client) - 5 pts
+## Question 09 - (client) Create directory /srv/devg10 owned by root:devg10 with permissi (client) - 4 pts
 
 ```bash
 mkdir -p /srv/devg10
@@ -122,7 +138,7 @@ chmod 1770 /srv/devg10
 
 ---
 
-## Question 10 - (client) Create user noaccess70 with no home directory and login shell / (client) - 5 pts
+## Question 10 - (client) Create user noaccess70 with no home directory and login shell / (client) - 4 pts
 
 ```bash
 useradd -M -s /sbin/nologin noaccess70
@@ -130,7 +146,7 @@ useradd -M -s /sbin/nologin noaccess70
 
 ---
 
-## Question 11 - (client) Set password aging for grant10: maximum 35 days, minimum 5 days (client) - 5 pts
+## Question 11 - (client) Set password aging for grant10: maximum 35 days, minimum 5 days (client) - 4 pts
 
 ```bash
 chage -M 35 -m 5 -W 7 grant10
@@ -139,7 +155,7 @@ echo 'umask 0077' >> /home/grant10/.bashrc
 
 ---
 
-## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 5 pts
+## Question 12 - (client) Create user copy10 with UID 5010 and password cinder9 on the cl (client) - 4 pts
 
 ```bash
 id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10
@@ -186,60 +202,94 @@ journalctl --flush
 
 ---
 
-## Question 16 - (client) Run the command "sleep 600" in the background, then renice that (client) - 4 pts
+## Question 16 - route local5 log messages to /var/log/server-g-local5.log and write a te (server) - 4 pts
 
 ```bash
-nohup nice -n 15 sleep 600 >/dev/null 2>&1 &
-```
-
----
-
-## Question 17 - (client) Find all files under /opt/exam-g/find owned by user grant10 tha (client) - 4 pts
-
-```bash
-find /opt/exam-g/find -user grant10 -mtime -1 -type f > /root/grant-files
-```
-
----
-
-## Question 18 - (client) Extract all lines containing the string "data" from /usr/share/ (client) - 4 pts
-
-```bash
-grep 'data' /usr/share/dict/words > /root/g-data-lines
-```
-
----
-
-## Question 19 - (client) Create a gzip-compressed tar archive /root/g-etc.tar.gz contain (client) - 4 pts
-
-```bash
-tar -czf /root/g-etc.tar.gz /etc
-```
-
----
-
-## Question 20 - (client) Create a systemd timer examgtimer.timer that triggers its compa (client) - 4 pts
-
-```bash
-cat > /usr/local/sbin/examgtimer.sh <<'EOF'
-#!/bin/bash
-echo examgtimer >> /var/log/examgtimer.log
+# On server:
+cat > /etc/rsyslog.d/server-g-local5.conf <<'EOF'
+local5.* /var/log/server-g-local5.log
 EOF
-chmod +x /usr/local/sbin/examgtimer.sh
-cat > /etc/systemd/system/examgtimer.service <<'EOF'
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local5.info 'server-g-local5'
+sleep 1
+```
+
+---
+
+## Question 17 - create /srv/serverg10 owned by root:serverg10 with mode 2770 (server) - 4 pts
+
+```bash
+# On server:
+getent group serverg10 >/dev/null || groupadd serverg10
+mkdir -p /srv/serverg10
+chown root:serverg10 /srv/serverg10
+chmod 2770 /srv/serverg10
+```
+
+---
+
+## Question 18 - create group serverg10 and user srvg10 with password cinder9, then add t (server) - 4 pts
+
+```bash
+# On server:
+getent group serverg10 >/dev/null || groupadd serverg10
+id srvg10 >/dev/null 2>&1 || useradd srvg10
+gpasswd -a srvg10 serverg10
+echo 'srvg10:cinder9' | chpasswd
+```
+
+---
+
+## Question 19 - publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/www/html
+echo RHCSA10-G > /var/www/html/server-g.html
+restorecon -v /var/www/html/server-g.html || true
+cat > /etc/httpd/conf.d/exam-g-port.conf <<'EOF'
+Listen 8206
+EOF
+semanage port -a -t http_port_t -p tcp 8206 2>/dev/null || semanage port -m -t http_port_t -p tcp 8206
+firewall-cmd --permanent --add-port=8206/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
+```
+
+---
+
+## Question 20 - create and enable servergtimer.timer so it appends SERVER-G to /var/log/ (server) - 4 pts
+
+```bash
+# On server:
+cat > /usr/local/sbin/servergtimer.sh <<'EOF'
+#!/bin/bash
+echo SERVER-G >> /var/log/servergtimer.log
+EOF
+chmod +x /usr/local/sbin/servergtimer.sh
+cat > /etc/systemd/system/servergtimer.service <<'EOF'
+[Unit]
+Description=Server G timer job
+
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/examgtimer.sh
+ExecStart=/usr/local/sbin/servergtimer.sh
 EOF
-cat > /etc/systemd/system/examgtimer.timer <<'EOF'
+cat > /etc/systemd/system/servergtimer.timer <<'EOF'
+[Unit]
+Description=Run server G timer job
+
 [Timer]
-OnCalendar=*:0/12
+OnCalendar=*:/12
 Persistent=true
+
 [Install]
 WantedBy=timers.target
 EOF
 systemctl daemon-reload
-systemctl enable --now examgtimer.timer
+systemctl enable --now servergtimer.timer
 ```
 
 ---
@@ -267,5 +317,28 @@ lvcreate -L 300M -n datag vgg10
 mkfs.xfs /dev/vgg10/datag
 mkdir -p /mnt/datag10
 echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 23 - export /exports/exam-g to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /exports/exam-g
+echo 'exam g export' > /exports/exam-g/README
+cat > /etc/exports.d/exam-g-integrated.exports <<'EOF'
+/exports/exam-g 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/gprojects
+grep -Eq '^server:/exports/exam-g[[:space:]]+/mnt/gprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-g /mnt/gprojects nfs defaults,_netdev 0 0' >> /etc/fstab
 mount -a
 ```

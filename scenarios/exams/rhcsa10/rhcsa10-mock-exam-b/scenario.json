@@ -32,25 +32,25 @@
       "tasks": [
         "On client, set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
         "On client, install the tree package from the configured offline repositories.",
         "On client, create /srv/teamb10 as a shared directory for group teamb10.",
         "Create group teamb10, create user userb10, set password cinder9, and add the user to teamb10.",
         "On client, create user auditorb10 with UID 6102 and shell /sbin/nologin.",
         "Set maximum password age for userb10 to 46 days and warning period to 7 days.",
         "Create /usr/local/bin/b-who that prints the primary group for the supplied user argument.",
-        "Write users whose shell ends with sh to /root/b-shell-users.txt.",
+        "On client, create /root/exam-b-report.txt containing REPORT-B and copy it to server:/root/exam-b-report.txt.",
         "Create gzip archive /root/b-etc.tar.gz containing /etc/hosts and /etc/fstab.",
         "Create /root/b-original, hard link /root/b-hard, and symlink /root/b-soft.",
-        "Create and enable exambtimer.timer that runs every 10 minutes.",
+        "On server, create and enable serverbtimer.timer so it appends SERVER-B to /var/log/serverbtimer.log every 10 minutes.",
         "Create VG vgb10 and LV datab mounted at /mnt/datab10.",
-        "Create /var/www/html/b.html and restore its default SELinux context.",
-        "Persistently enable httpd_can_network_connect.",
-        "Activate the throughput-performance tuned profile.",
-        "Configure persistent systemd journal storage.",
-        "On client, set a default ACL on /srv/teamb10 that gives group teamb10 full access to new files.",
-        "On client, mount server:/exports/direct at /mnt/bdirect persistently.",
-        "Set the default target to multi-user.target without rebooting.",
+        "On server, publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd on TCP port 8201.",
+        "On server, create group serverb10 and user srvb10 with password cinder9, then add the user to serverb10.",
+        "On server, allow members of serverb10 to run /usr/bin/systemctl with sudo without a password.",
+        "On server, enable persistent systemd journal storage.",
+        "On server, route local5 log messages to /var/log/server-b-local5.log and write a test message.",
+        "On server, export /exports/exam-b to the 192.168.122.0/24 network. On client, mount server:/exports/exam-b persistently at /mnt/bprojects.",
+        "On server, set the default boot target to multi-user.target without rebooting.",
         "Install lsof and ensure tcpdump is removed."
       ],
       "hints": [
@@ -61,25 +61,25 @@
       "checks": [
         "hostnamectl --static | grep -qx clientb.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverb\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.61/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
         "command -v tree >/dev/null && rpm -q tree >/dev/null",
         "getent group teamb10 >/dev/null && stat -c '%U:%G:%a' /srv/teamb10 | grep -qx root:teamb10:3770",
         "getent group teamb10 >/dev/null && id -nG userb10 | tr ' ' '\\n' | grep -qx teamb10",
         "id -u auditorb10 | grep -qx 6102 && getent passwd auditorb10 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l userb10 | grep -Eq 'Maximum.*46'",
         "test -x /usr/local/bin/b-who && /usr/local/bin/b-who root | grep -qx root",
-        "test -s /root/b-shell-users.txt && grep -q '^root$' /root/b-shell-users.txt",
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq REPORT-B /root/exam-b-report.txt'",
         "test -f /root/b-etc.tar.gz && tar -tzf /root/b-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
         "test \"$(stat -c %i /root/b-original)\" = \"$(stat -c %i /root/b-hard)\" && test -L /root/b-soft",
-        "systemctl cat exambtimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled exambtimer.timer | grep -qx enabled",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverbtimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/10$'\"'\"' /etc/systemd/system/serverbtimer.timer && grep -Fxq '\"'\"'echo SERVER-B >> /var/log/serverbtimer.log'\"'\"' /usr/local/sbin/serverbtimer.sh'",
         "lv_path=/dev/vgb10/datab; mapper_path=/dev/mapper/vgb10-datab; mountpoint=/mnt/datab10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
-        "ls -Z /var/www/html/b.html | grep -q httpd_sys_content_t",
-        "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
-        "tuned-adm active | grep -q throughput-performance",
-        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
-        "getfacl -p /srv/teamb10 | grep -Eq '^default:group:teamb10:rwx$'",
-        "findmnt -no SOURCE,TARGET /mnt/bdirect | grep -qx 'server:/exports/direct /mnt/bdirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/bdirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
-        "systemctl get-default | grep -qx multi-user.target",
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-B /var/www/html/server-b.html && grep -Eq '\"'\"'^Listen[[:space:]]+8201$'\"'\"' /etc/httpd/conf.d/exam-b-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8201([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8201/tcp && firewall-cmd --query-port=8201/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
+        "ssh server bash -lc 'set -euo pipefail; getent group serverb10 >/dev/null && id -nG srvb10 | tr '\"'\"' '\"'\"' '\"'\"'\\n'\"'\"' | grep -qx serverb10'",
+        "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^%serverb10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$'\"'\"' /etc/sudoers.d/serverb10-systemctl && visudo -cf /etc/sudoers.d/serverb10-systemctl >/dev/null'",
+        "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
+        "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^local5\\.\\*[[:space:]]+/var/log/server-b-local5\\.log$'\"'\"' /etc/rsyslog.d/server-b-local5.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq '\"'\"'server-b-local5'\"'\"' /var/log/server-b-local5.log'",
+        "findmnt -no SOURCE,TARGET /mnt/bprojects | grep -qx 'server:/exports/exam-b /mnt/bprojects' && grep -Eq '^server:/exports/exam-b[[:space:]]+/mnt/bprojects[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && ssh server bash -lc 'set -euo pipefail; grep -Eq \"^/exports/exam-b[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/exam-b-integrated.exports && systemctl is-active nfs-server | grep -qx active'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl get-default | grep -qx multi-user.target'",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
       ],
       "solution_outline": [
@@ -88,25 +88,25 @@
       "task_titles": [
         "set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.1",
-        "Create enabled BaseOS and AppStream repository definitions using http://",
+        "On client and server, create enabled BaseOS and AppStream repository def",
         "install the tree package from the configured offline repositories",
         "create /srv/teamb10 as a shared directory for group teamb10",
         "Create group teamb10, create user userb10, set password cinder9, and add",
         "create user auditorb10 with UID 6102 and shell /sbin/nologin",
         "Set maximum password age for userb10 to 46 days and warning period to 7 ",
         "Create /usr/local/bin/b-who that prints the primary group for the suppli",
-        "Write users whose shell ends with sh to /root/b-shell-users.txt",
+        "create /root/exam-b-report.txt containing REPORT-B and copy it to server",
         "Create gzip archive /root/b-etc.tar.gz containing /etc/hosts and /etc/fs",
         "Create /root/b-original, hard link /root/b-hard, and symlink /root/b-sof",
-        "Create and enable exambtimer.timer that runs every 10 minutes",
+        "create and enable serverbtimer.timer so it appends SERVER-B to /var/log/",
         "Create VG vgb10 and LV datab mounted at /mnt/datab10",
-        "Create /var/www/html/b.html and restore its default SELinux context",
-        "Persistently enable httpd_can_network_connect",
-        "Activate the throughput-performance tuned profile",
-        "Configure persistent systemd journal storage",
-        "set a default ACL on /srv/teamb10 that gives group teamb10 full access t",
-        "mount server:/exports/direct at /mnt/bdirect persistently",
-        "Set the default target to multi-user.target without rebooting",
+        "publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd",
+        "create group serverb10 and user srvb10 with password cinder9, then add t",
+        "allow members of serverb10 to run /usr/bin/systemctl with sudo without a",
+        "enable persistent systemd journal storage",
+        "route local5 log messages to /var/log/server-b-local5.log and write a te",
+        "export /exports/exam-b to the 192.168.122.0/24 network. On client, mount",
+        "set the default boot target to multi-user.target without rebooting",
         "Install lsof and ensure tcpdump is removed"
       ],
       "task_points": [
@@ -144,19 +144,11 @@
           "nmcli connection up \"System eth1\""
         ],
         [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
-          "[rhcsa10-exam-baseos]",
-          "name=RHCSA10 Exam BaseOS",
-          "baseurl=http://server/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[rhcsa10-exam-appstream]",
-          "name=RHCSA10 Exam AppStream",
-          "baseurl=http://server/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          "EOF"
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "# On server:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all"
         ],
         [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
@@ -192,7 +184,10 @@
           "chmod +x /usr/local/bin/b-who"
         ],
         [
-          "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/b-shell-users.txt"
+          "echo REPORT-B > /root/exam-b-report.txt",
+          "test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1",
+          "ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server",
+          "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-b-report.txt root@server:/root/exam-b-report.txt"
         ],
         [
           "tar -czf /root/b-etc.tar.gz /etc/hosts /etc/fstab",
@@ -204,25 +199,13 @@
           "ln -s /root/b-original /root/b-soft"
         ],
         [
-          "cat > /usr/local/sbin/exambtimer.sh <<'EOF'",
-          "#!/bin/bash",
-          "echo exambtimer >> /var/log/exambtimer.log",
-          "EOF",
-          "chmod +x /usr/local/sbin/exambtimer.sh",
-          "cat > /etc/systemd/system/exambtimer.service <<'EOF'",
-          "[Service]",
-          "Type=oneshot",
-          "ExecStart=/usr/local/sbin/exambtimer.sh",
-          "EOF",
-          "cat > /etc/systemd/system/exambtimer.timer <<'EOF'",
-          "[Timer]",
-          "OnCalendar=*:0/10",
-          "Persistent=true",
-          "[Install]",
-          "WantedBy=timers.target",
-          "EOF",
+          "# On server:",
+          "cat > /usr/local/sbin/serverbtimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-B >> /var/log/serverbtimer.log\nEOF",
+          "chmod +x /usr/local/sbin/serverbtimer.sh",
+          "cat > /etc/systemd/system/serverbtimer.service <<'EOF'\n[Unit]\nDescription=Server B timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serverbtimer.sh\nEOF",
+          "cat > /etc/systemd/system/serverbtimer.timer <<'EOF'\n[Unit]\nDescription=Run server B timer job\n\n[Timer]\nOnCalendar=*:/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
-          "systemctl enable --now exambtimer.timer"
+          "systemctl enable --now serverbtimer.timer"
         ],
         [
           "pvcreate /dev/sdb",
@@ -234,33 +217,63 @@
           "mount -a"
         ],
         [
-          "echo b > /var/www/html/b.html",
-          "chcon -t user_tmp_t /var/www/html/b.html",
-          "restorecon -v /var/www/html/b.html"
+          "# On server:",
+          "mkdir -p /var/www/html",
+          "echo RHCSA10-B > /var/www/html/server-b.html",
+          "restorecon -v /var/www/html/server-b.html || true",
+          "cat > /etc/httpd/conf.d/exam-b-port.conf <<'EOF'\nListen 8201\nEOF",
+          "semanage port -a -t http_port_t -p tcp 8201 2>/dev/null || semanage port -m -t http_port_t -p tcp 8201",
+          "firewall-cmd --permanent --add-port=8201/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd",
+          "systemctl restart httpd"
         ],
         [
-          "setsebool -P httpd_can_network_connect on"
+          "# On server:",
+          "getent group serverb10 >/dev/null || groupadd serverb10",
+          "id srvb10 >/dev/null 2>&1 || useradd srvb10",
+          "gpasswd -a srvb10 serverb10",
+          "echo 'srvb10:cinder9' | chpasswd"
         ],
         [
-          "systemctl enable --now tuned",
-          "tuned-adm profile throughput-performance"
+          "# On server:",
+          "getent group serverb10 >/dev/null || groupadd serverb10",
+          "echo '%serverb10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/serverb10-systemctl",
+          "chmod 0440 /etc/sudoers.d/serverb10-systemctl"
         ],
         [
+          "# On server:",
           "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
           "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
           "systemctl restart systemd-journald",
           "journalctl --flush"
         ],
         [
-          "setfacl -m g:teamb10:rwx,d:g:teamb10:rwx /srv/teamb10",
-          "getfacl -p /srv/teamb10"
+          "# On server:",
+          "cat > /etc/rsyslog.d/server-b-local5.conf <<'EOF'\nlocal5.* /var/log/server-b-local5.log\nEOF",
+          "systemctl enable --now rsyslog",
+          "systemctl restart rsyslog",
+          "logger -p local5.info 'server-b-local5'",
+          "sleep 1"
         ],
         [
-          "mkdir -p /mnt/bdirect",
-          "echo 'server:/exports/direct /mnt/bdirect nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "# On server:",
+          "mkdir -p /exports/exam-b",
+          "echo 'exam b export' > /exports/exam-b/README",
+          "cat > /etc/exports.d/exam-b-integrated.exports <<'EOF'\n/exports/exam-b 192.168.122.0/24(rw,sync,no_root_squash)\nEOF",
+          "systemctl enable --now nfs-server",
+          "firewall-cmd --permanent --add-service=nfs",
+          "firewall-cmd --permanent --add-service=mountd",
+          "firewall-cmd --permanent --add-service=rpc-bind",
+          "firewall-cmd --reload",
+          "exportfs -arv",
+          "# On client:",
+          "mkdir -p /mnt/bprojects",
+          "grep -Eq '^server:/exports/exam-b[[:space:]]+/mnt/bprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-b /mnt/bprojects nfs defaults,_netdev 0 0' >> /etc/fstab",
           "mount -a"
         ],
         [
+          "# On server:",
           "systemctl set-default multi-user.target",
           "systemctl get-default"
         ],
@@ -270,7 +283,36 @@
           "dnf install -y lsof",
           "dnf remove -y tcpdump"
         ]
-      ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "both",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "both",
+        "client",
+        "client",
+        "server",
+        "client",
+        "server",
+        "server",
+        "server",
+        "server",
+        "server",
+        "both",
+        "server",
+        "client"
+      ],
+      "target_balance": {
+        "client_only": 12,
+        "server_only": 7,
+        "client_server": 3
+      }
     }
   },
   "vm_scripts": {

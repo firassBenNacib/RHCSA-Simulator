@@ -40,17 +40,18 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - copy regular files owned by root from /opt/exam-f/find to /root/examf-ro (client) - 4 pts
+## Question 03 - create /root/exam-f-report.txt containing REPORT-F and copy it to server (client) - 5 pts
 
 ```bash
-mkdir -p /root/examf-rootfiles
-find /opt/exam-f/find -type f -user root -exec cp --parents -t /root/examf-rootfiles {} +
-find /root/examf-rootfiles -type f -print
+echo REPORT-F > /root/exam-f-report.txt
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-f-report.txt root@server:/root/exam-f-report.txt
 ```
 
 ---
 
-## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 4 pts
+## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 5 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB
@@ -64,7 +65,7 @@ swapon /dev/sdc1
 
 ---
 
-## Question 05 - Activate the throughput-performance tuned profile (client) - 4 pts
+## Question 05 - Activate the throughput-performance tuned profile (client) - 5 pts
 
 ```bash
 systemctl enable --now tuned
@@ -89,9 +90,10 @@ flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 
 ---
 
-## Question 08 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 08 - enable persistent systemd journal storage (server) - 5 pts
 
 ```bash
+# On server:
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
 [Journal]
@@ -103,7 +105,7 @@ journalctl --flush
 
 ---
 
-## Question 09 - Allow %teamf10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 09 - Allow %teamf10 to run /usr/bin/systemctl without a password (client) - 5 pts
 
 ```bash
 echo '%teamf10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamf10
@@ -123,7 +125,7 @@ passwd userf10
 
 ---
 
-## Question 11 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (client) - 4 pts
+## Question 11 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (client) - 5 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log' | crontab -u userf10 -
@@ -144,16 +146,17 @@ chmod +x /usr/local/bin/f-who
 
 ---
 
-## Question 13 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 13 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
+# On server:
 systemctl set-default multi-user.target
 systemctl get-default
 ```
 
 ---
 
-## Question 14 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 14 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
 
 ```bash
 tar -czf /root/f-etc.tar.gz /etc/hosts /etc/fstab
@@ -162,7 +165,83 @@ tar -tzf /root/f-etc.tar.gz
 
 ---
 
-## Question 15 - Install lsof and ensure tcpdump is removed (client) - 4 pts
+## Question 15 - export /exports/exam-f to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /exports/exam-f
+echo 'exam f export' > /exports/exam-f/README
+cat > /etc/exports.d/exam-f-integrated.exports <<'EOF'
+/exports/exam-f 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/fprojects
+grep -Eq '^server:/exports/exam-f[[:space:]]+/mnt/fprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-f /mnt/fprojects nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 16 - create and enable serverftimer.timer so it appends SERVER-F to /var/log/ (server) - 4 pts
+
+```bash
+# On server:
+cat > /usr/local/sbin/serverftimer.sh <<'EOF'
+#!/bin/bash
+echo SERVER-F >> /var/log/serverftimer.log
+EOF
+chmod +x /usr/local/sbin/serverftimer.sh
+cat > /etc/systemd/system/serverftimer.service <<'EOF'
+[Unit]
+Description=Server F timer job
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/serverftimer.sh
+EOF
+cat > /etc/systemd/system/serverftimer.timer <<'EOF'
+[Unit]
+Description=Run server F timer job
+
+[Timer]
+OnCalendar=*:/10
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now serverftimer.timer
+```
+
+---
+
+## Question 17 - publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/www/html
+echo RHCSA10-F > /var/www/html/server-f.html
+restorecon -v /var/www/html/server-f.html || true
+cat > /etc/httpd/conf.d/exam-f-port.conf <<'EOF'
+Listen 8205
+EOF
+semanage port -a -t http_port_t -p tcp 8205 2>/dev/null || semanage port -m -t http_port_t -p tcp 8205
+firewall-cmd --permanent --add-port=8205/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
+```
+
+---
+
+## Question 18 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -179,50 +258,7 @@ enabled=1
 gpgcheck=0
 EOF
 dnf clean all
-dnf install -y lsof
-dnf remove -y tcpdump
-```
-
----
-
-## Question 16 - Create and enable examftimer.timer that runs every 10 minutes (client) - 4 pts
-
-```bash
-cat > /usr/local/sbin/examftimer.sh <<'EOF'
-#!/bin/bash
-echo examftimer >> /var/log/examftimer.log
-EOF
-chmod +x /usr/local/sbin/examftimer.sh
-cat > /etc/systemd/system/examftimer.service <<'EOF'
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/examftimer.sh
-EOF
-cat > /etc/systemd/system/examftimer.timer <<'EOF'
-[Timer]
-OnCalendar=*:0/10
-Persistent=true
-[Install]
-WantedBy=timers.target
-EOF
-systemctl daemon-reload
-systemctl enable --now examftimer.timer
-```
-
----
-
-## Question 17 - Allow TCP port 8105 permanently in firewalld and reload (client) - 4 pts
-
-```bash
-firewall-cmd --permanent --add-port=8105/tcp
-firewall-cmd --reload
-```
-
----
-
-## Question 18 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
-
-```bash
+# On server:
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
 [rhcsa10-exam-baseos]
 name=RHCSA10 Exam BaseOS
@@ -236,11 +272,12 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
 ```
 
 ---
 
-## Question 19 - Set maximum password age for userf10 to 50 days and warning period to 7 (client) - 5 pts
+## Question 19 - Set maximum password age for userf10 to 50 days and warning period to 7 (client) - 4 pts
 
 ```bash
 chage -M 50 -W 7 userf10
@@ -248,50 +285,39 @@ chage -M 50 -W 7 userf10
 
 ---
 
-## Question 20 - create and enable examf-cleanup.service so it writes F-CLEANUP to /var/l (client) - 5 pts
+## Question 20 - route local6 log messages to /var/log/server-f-local6.log and write a te (server) - 4 pts
 
 ```bash
-cat > /usr/local/sbin/examf-cleanup.sh <<'EOF'
-#!/bin/bash
-echo F-CLEANUP >> /var/log/examf-cleanup.log
+# On server:
+cat > /etc/rsyslog.d/server-f-local6.conf <<'EOF'
+local6.* /var/log/server-f-local6.log
 EOF
-chmod +x /usr/local/sbin/examf-cleanup.sh
-cat > /etc/systemd/system/examf-cleanup.service <<'EOF'
-[Unit]
-Description=Exam F cleanup marker
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/sbin/examf-cleanup.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl daemon-reload
-systemctl enable --now examf-cleanup.service
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local6.info 'server-f-local6'
+sleep 1
 ```
 
 ---
 
-## Question 21 - Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof (client) - 5 pts
+## Question 21 - create /srv/serverf10 owned by root:serverf10 with mode 2770 (server) - 4 pts
 
 ```bash
-echo link > /root/f-original
-ln /root/f-original /root/f-hard
-ln -s /root/f-original /root/f-soft
+# On server:
+getent group serverf10 >/dev/null || groupadd serverf10
+mkdir -p /srv/serverf10
+chown root:serverf10 /srv/serverf10
+chmod 2770 /srv/serverf10
 ```
 
 ---
 
-## Question 22 - Create VG vgf10 and LV dataf mounted at /mnt/dataf10 (client) - 4 pts
+## Question 22 - create group serverf10 and user srvf10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
-pvcreate /dev/sdb
-vgcreate vgf10 /dev/sdb
-lvcreate -L 384M -n dataf vgf10
-mkfs.xfs -f /dev/vgf10/dataf
-mkdir -p /mnt/dataf10
-echo '/dev/vgf10/dataf /mnt/dataf10 xfs defaults 0 0' >> /etc/fstab
-mount -a
+# On server:
+getent group serverf10 >/dev/null || groupadd serverf10
+id srvf10 >/dev/null 2>&1 || useradd srvf10
+gpasswd -a srvf10 serverf10
+echo 'srvf10:cinder9' | chpasswd
 ```

@@ -63,25 +63,29 @@ systemctl restart httpd
 
 ---
 
-## Question 05 - set the login message to RHCSA10-C authorized access only (client) - 5 pts
+## Question 05 - set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168 (server) - 5 pts
 
 ```bash
-echo 'RHCSA10-C authorized access only' > /etc/motd
+# On server:
+hostnamectl set-hostname serverc.exam10.lab
+grep -Eq '^192\.168\.122\.4[[:space:]]+clientc\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clientc.exam10.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 06 - create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (client) - 5 pts
+## Question 06 - create /srv/serverc10 owned by root:serverc10 with mode 2770 (server) - 5 pts
 
 ```bash
-echo link > /root/c-original
-ln /root/c-original /root/c-hard
-ln -s /root/c-original /root/c-soft
+# On server:
+getent group serverc10 >/dev/null || groupadd serverc10
+mkdir -p /srv/serverc10
+chown root:serverc10 /srv/serverc10
+chmod 2770 /srv/serverc10
 ```
 
 ---
 
-## Question 07 - create and enable examctimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 07 - create and enable examctimer.timer that runs every 10 minutes (client) - 5 pts
 
 ```bash
 cat > /usr/local/sbin/examctimer.sh <<'EOF'
@@ -107,7 +111,7 @@ systemctl enable --now examctimer.timer
 
 ---
 
-## Question 08 - create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 4 pts
+## Question 08 - create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 5 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -130,7 +134,7 @@ firewall-cmd --reload
 
 ---
 
-## Question 10 - create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 10 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -146,11 +150,27 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
+# On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 11 - create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 11 - create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (client) - 4 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file:///opt/rhcsa/flatpak/repo
@@ -158,7 +178,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file://
 
 ---
 
-## Question 12 - install org.rhcsa.Tools from examcflatpak and leave it installed (client) - 5 pts
+## Question 12 - install org.rhcsa.Tools from examcflatpak and leave it installed (client) - 4 pts
 
 ```bash
 flatpak install --system -y examcflatpak org.rhcsa.Tools
@@ -167,7 +187,7 @@ flatpak list --system --app
 
 ---
 
-## Question 13 - create group teamc10, create user userc10, set password cinder9, and add (client) - 5 pts
+## Question 13 - create group teamc10, create user userc10, set password cinder9, and add (client) - 4 pts
 
 ```bash
 groupadd teamc10
@@ -178,7 +198,7 @@ passwd userc10
 
 ---
 
-## Question 14 - allow %teamc10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 14 - allow %teamc10 to run /usr/bin/systemctl without a password (client) - 4 pts
 
 ```bash
 echo '%teamc10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamc10
@@ -187,10 +207,13 @@ chmod 440 /etc/sudoers.d/teamc10
 
 ---
 
-## Question 15 - set maximum password age for userc10 to 47 days and warning period to 7 (client) - 5 pts
+## Question 15 - allow members of serverc10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
-chage -M 47 -W 7 userc10
+# On server:
+getent group serverc10 >/dev/null || groupadd serverc10
+echo '%serverc10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/serverc10-systemctl
+chmod 0440 /etc/sudoers.d/serverc10-systemctl
 ```
 
 ---
@@ -205,18 +228,29 @@ restorecon -v /var/www/html/c.html
 
 ---
 
-## Question 17 - activate the throughput-performance tuned profile (client) - 4 pts
+## Question 17 - publish /var/www/html/server-c.html containing RHCSA10-C and serve httpd (server) - 4 pts
 
 ```bash
-systemctl enable --now tuned
-tuned-adm profile throughput-performance
+# On server:
+mkdir -p /var/www/html
+echo RHCSA10-C > /var/www/html/server-c.html
+restorecon -v /var/www/html/server-c.html || true
+cat > /etc/httpd/conf.d/exam-c-port.conf <<'EOF'
+Listen 8202
+EOF
+semanage port -a -t http_port_t -p tcp 8202 2>/dev/null || semanage port -m -t http_port_t -p tcp 8202
+firewall-cmd --permanent --add-port=8202/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
 ```
 
 ---
 
-## Question 18 - configure persistent systemd journal storage (client) - 4 pts
+## Question 18 - enable persistent systemd journal storage (server) - 4 pts
 
 ```bash
+# On server:
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
 [Journal]
@@ -228,38 +262,92 @@ journalctl --flush
 
 ---
 
-## Question 19 - create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10 (client) - 4 pts
+## Question 19 - create and enable serverctimer.timer so it appends SERVER-C to /var/log/ (server) - 4 pts
 
 ```bash
-echo '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log' | crontab -u userc10 -
+# On server:
+cat > /usr/local/sbin/serverctimer.sh <<'EOF'
+#!/bin/bash
+echo SERVER-C >> /var/log/serverctimer.log
+EOF
+chmod +x /usr/local/sbin/serverctimer.sh
+cat > /etc/systemd/system/serverctimer.service <<'EOF'
+[Unit]
+Description=Server C timer job
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/serverctimer.sh
+EOF
+cat > /etc/systemd/system/serverctimer.timer <<'EOF'
+[Unit]
+Description=Run server C timer job
+
+[Timer]
+OnCalendar=*:/5
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now serverctimer.timer
 ```
 
 ---
 
-## Question 20 - mount server:/exports/direct at /mnt/cdirect persistently (client) - 4 pts
+## Question 20 - export /exports/exam-c to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
 ```bash
-mkdir -p /mnt/cdirect
-echo 'server:/exports/direct /mnt/cdirect nfs defaults,_netdev 0 0' >> /etc/fstab
+# On server:
+mkdir -p /exports/exam-c
+echo 'exam c export' > /exports/exam-c/README
+cat > /etc/exports.d/exam-c-integrated.exports <<'EOF'
+/exports/exam-c 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/cprojects
+grep -Eq '^server:/exports/exam-c[[:space:]]+/mnt/cprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-c /mnt/cprojects nfs defaults,_netdev 0 0' >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 21 - configure autofs so /remotec/projects mounts server:/exports/autofs/proj (client) - 4 pts
+## Question 21 - add a hosts entry for serverc.exam10.lab and save the output of http://s (client) - 4 pts
 
 ```bash
-mkdir -p /remotec
-echo '/remotec /etc/auto.remotec' > /etc/auto.master.d/c.autofs
-echo 'projects -ro server:/exports/autofs/projects' > /etc/auto.remotec
-systemctl enable --now autofs
+grep -Eq '^192\.168\.122\.3[[:space:]]+serverc\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts
+curl -s http://serverc.exam10.lab:8202/server-c.html > /root/server-c-web-check.txt
 ```
 
 ---
 
-## Question 22 - set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 22 - route local6 log messages to /var/log/server-c-local6.log and write a te (server) - 4 pts
 
 ```bash
-systemctl set-default multi-user.target
-systemctl get-default
+# On server:
+cat > /etc/rsyslog.d/server-c-local6.conf <<'EOF'
+local6.* /var/log/server-c-local6.log
+EOF
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local6.info 'server-c-local6'
+sleep 1
+```
+
+---
+
+## Question 23 - create /root/exam-c-report.txt containing REPORT-C and copy it to server (client) - 4 pts
+
+```bash
+echo REPORT-C > /root/exam-c-report.txt
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-c-report.txt root@server:/root/exam-c-report.txt
 ```

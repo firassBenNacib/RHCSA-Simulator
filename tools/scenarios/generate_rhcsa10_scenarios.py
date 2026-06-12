@@ -837,6 +837,361 @@ def _replace_exam_step(
         commands[index] = command_group
 
 
+def _insert_exam_step(
+    tasks: list[Any],
+    checks: list[str],
+    commands: list[list[str]],
+    index: int,
+    task: str,
+    check: str,
+    command_group: list[str],
+) -> None:
+    tasks.insert(index, task)
+    checks.insert(index, check)
+    commands.insert(index, command_group)
+
+
+def _server_repo_commands() -> list[str]:
+    return [
+        "# On server:",
+        "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n"
+        "[rhcsa10-exam-baseos]\n"
+        "name=RHCSA10 Exam BaseOS\n"
+        "baseurl=http://server/repo/BaseOS/\n"
+        "enabled=1\n"
+        "gpgcheck=0\n"
+        "\n"
+        "[rhcsa10-exam-appstream]\n"
+        "name=RHCSA10 Exam AppStream\n"
+        "baseurl=http://server/repo/AppStream/\n"
+        "enabled=1\n"
+        "gpgcheck=0\n"
+        "EOF",
+        "dnf clean all",
+    ]
+
+
+def _client_repo_commands() -> list[str]:
+    return [
+        "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n"
+        "[rhcsa10-exam-baseos]\n"
+        "name=RHCSA10 Exam BaseOS\n"
+        "baseurl=http://server/repo/BaseOS/\n"
+        "enabled=1\n"
+        "gpgcheck=0\n"
+        "\n"
+        "[rhcsa10-exam-appstream]\n"
+        "name=RHCSA10 Exam AppStream\n"
+        "baseurl=http://server/repo/AppStream/\n"
+        "enabled=1\n"
+        "gpgcheck=0\n"
+        "EOF",
+        "dnf clean all",
+    ]
+
+
+def _both_repo_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        "On client and server, create enabled BaseOS and AppStream repository definitions using "
+        "http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        f"{STRICT_REPO_CHECK} && {_ssh_server_check(STRICT_REPO_CHECK)}",
+        [*_client_repo_commands(), *_server_repo_commands()],
+    )
+
+
+def _server_hostname_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        f"On server, set hostname to server{letter}.exam10.lab and map client{letter}.exam10.lab to 192.168.122.4.",
+        _ssh_server_check(
+            f"hostnamectl --static | grep -qx server{letter}.exam10.lab && "
+            f"awk '$1 == \"192.168.122.4\" {{for (i = 2; i <= NF; i++) if ($i == \"client{letter}.exam10.lab\") found = 1}} END {{exit !found}}' /etc/hosts"
+        ),
+        [
+            "# On server:",
+            f"hostnamectl set-hostname server{letter}.exam10.lab",
+            f"grep -Eq '^192\\.168\\.122\\.4[[:space:]]+client{letter}\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 client{letter}.exam10.lab' >> /etc/hosts",
+        ],
+    )
+
+
+def _server_user_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        f"On server, create group server{letter}10 and user srv{letter}10 with password cinder9, then add the user to server{letter}10.",
+        _ssh_server_check(
+            f"getent group server{letter}10 >/dev/null && id -nG srv{letter}10 | tr ' ' '\\n' | grep -qx server{letter}10"
+        ),
+        [
+            "# On server:",
+            f"getent group server{letter}10 >/dev/null || groupadd server{letter}10",
+            f"id srv{letter}10 >/dev/null 2>&1 || useradd srv{letter}10",
+            f"gpasswd -a srv{letter}10 server{letter}10",
+            f"echo 'srv{letter}10:cinder9' | chpasswd",
+        ],
+    )
+
+
+def _server_sudo_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        f"On server, allow members of server{letter}10 to run /usr/bin/systemctl with sudo without a password.",
+        _ssh_server_check(
+            f"grep -Eq '^%server{letter}10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' "
+            f"/etc/sudoers.d/server{letter}10-systemctl && visudo -cf /etc/sudoers.d/server{letter}10-systemctl >/dev/null"
+        ),
+        [
+            "# On server:",
+            f"getent group server{letter}10 >/dev/null || groupadd server{letter}10",
+            f"echo '%server{letter}10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/server{letter}10-systemctl",
+            f"chmod 0440 /etc/sudoers.d/server{letter}10-systemctl",
+        ],
+    )
+
+
+def _server_http_step(letter: str, port: int) -> tuple[str, str, list[str]]:
+    return (
+        f"On server, publish /var/www/html/server-{letter}.html containing RHCSA10-{letter.upper()} and serve httpd on TCP port {port}.",
+        _ssh_server_check(
+            f"grep -Fxq RHCSA10-{letter.upper()} /var/www/html/server-{letter}.html && "
+            f"grep -Eq '^Listen[[:space:]]+{port}$' /etc/httpd/conf.d/exam-{letter}-port.conf && "
+            f"semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,]){port}([, ]|$)/ {{found=1}} END {{exit !found}}' && "
+            f"firewall-cmd --permanent --query-port={port}/tcp && firewall-cmd --query-port={port}/tcp && "
+            "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"
+        ),
+        [
+            "# On server:",
+            "mkdir -p /var/www/html",
+            f"echo RHCSA10-{letter.upper()} > /var/www/html/server-{letter}.html",
+            f"restorecon -v /var/www/html/server-{letter}.html || true",
+            f"cat > /etc/httpd/conf.d/exam-{letter}-port.conf <<'EOF'\nListen {port}\nEOF",
+            f"semanage port -a -t http_port_t -p tcp {port} 2>/dev/null || semanage port -m -t http_port_t -p tcp {port}",
+            f"firewall-cmd --permanent --add-port={port}/tcp",
+            "firewall-cmd --reload",
+            "systemctl enable --now httpd",
+            "systemctl restart httpd",
+        ],
+    )
+
+
+def _server_journald_step() -> tuple[str, str, list[str]]:
+    return (
+        "On server, enable persistent systemd journal storage.",
+        _ssh_server_check(JOURNALD_PERSISTENT_CHECK),
+        ["# On server:", *JOURNALD_PERSISTENT_COMMANDS],
+    )
+
+
+def _server_selinux_boolean_step() -> tuple[str, str, list[str]]:
+    return (
+        "On server, persistently enable the SELinux boolean httpd_can_network_connect.",
+        _ssh_server_check(SELINUX_HTTPD_BOOLEAN_CHECK),
+        [
+            "# On server:",
+            "setsebool -P httpd_can_network_connect on",
+            "getsebool httpd_can_network_connect",
+        ],
+    )
+
+
+def _server_timer_step(letter: str, minutes: int = 10) -> tuple[str, str, list[str]]:
+    timer = f"server{letter}timer"
+    return (
+        f"On server, create and enable {timer}.timer so it appends SERVER-{letter.upper()} to /var/log/{timer}.log every {minutes} minutes.",
+        _ssh_server_check(
+            f"systemctl is-enabled {timer}.timer | grep -qx enabled && "
+            f"grep -Eq '^OnCalendar=\\*:\\*/{minutes}$' /etc/systemd/system/{timer}.timer && "
+            f"grep -Fxq 'echo SERVER-{letter.upper()} >> /var/log/{timer}.log' /usr/local/sbin/{timer}.sh"
+        ),
+        [
+            "# On server:",
+            f"cat > /usr/local/sbin/{timer}.sh <<'EOF'\n#!/bin/bash\necho SERVER-{letter.upper()} >> /var/log/{timer}.log\nEOF",
+            f"chmod +x /usr/local/sbin/{timer}.sh",
+            f"cat > /etc/systemd/system/{timer}.service <<'EOF'\n[Unit]\nDescription=Server {letter.upper()} timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/{timer}.sh\nEOF",
+            f"cat > /etc/systemd/system/{timer}.timer <<'EOF'\n[Unit]\nDescription=Run server {letter.upper()} timer job\n\n[Timer]\nOnCalendar=*:/{minutes}\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+            "systemctl daemon-reload",
+            f"systemctl enable --now {timer}.timer",
+        ],
+    )
+
+
+def _server_rsyslog_step(letter: str, facility: str = "local5") -> tuple[str, str, list[str]]:
+    return (
+        f"On server, route {facility} log messages to /var/log/server-{letter}-{facility}.log and write a test message.",
+        _ssh_server_check(
+            f"grep -Eq '^{facility}\\.\\*[[:space:]]+/var/log/server-{letter}-{facility}\\.log$' "
+            f"/etc/rsyslog.d/server-{letter}-{facility}.conf && "
+            "systemctl is-active rsyslog | grep -qx active && "
+            f"grep -Fq 'server-{letter}-{facility}' /var/log/server-{letter}-{facility}.log"
+        ),
+        [
+            "# On server:",
+            f"cat > /etc/rsyslog.d/server-{letter}-{facility}.conf <<'EOF'\n{facility}.* /var/log/server-{letter}-{facility}.log\nEOF",
+            "systemctl enable --now rsyslog",
+            "systemctl restart rsyslog",
+            f"logger -p {facility}.info 'server-{letter}-{facility}'",
+            "sleep 1",
+        ],
+    )
+
+
+def _server_default_target_step() -> tuple[str, str, list[str]]:
+    return (
+        "On server, set the default boot target to multi-user.target without rebooting.",
+        _ssh_server_check("systemctl get-default | grep -qx multi-user.target"),
+        [
+            "# On server:",
+            "systemctl set-default multi-user.target",
+            "systemctl get-default",
+        ],
+    )
+
+
+def _server_shared_dir_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        f"On server, create /srv/server{letter}10 owned by root:server{letter}10 with mode 2770.",
+        _ssh_server_check(
+            f"getent group server{letter}10 >/dev/null && stat -c '%U:%G:%a' /srv/server{letter}10 | grep -qx root:server{letter}10:2770"
+        ),
+        [
+            "# On server:",
+            f"getent group server{letter}10 >/dev/null || groupadd server{letter}10",
+            f"mkdir -p /srv/server{letter}10",
+            f"chown root:server{letter}10 /srv/server{letter}10",
+            f"chmod 2770 /srv/server{letter}10",
+        ],
+    )
+
+
+def _both_nfs_step(letter: str) -> tuple[str, str, list[str]]:
+    export_path = f"/exports/exam-{letter}"
+    mountpoint = f"/mnt/{letter}projects"
+    source = f"server:{export_path}"
+    return (
+        f"On server, export {export_path} to the 192.168.122.0/24 network. On client, mount {source} persistently at {mountpoint}.",
+        (
+            f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx '{source} {mountpoint}' && "
+            f"grep -Eq '^{source}[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && "
+            f"{_ssh_server_check(f'grep -Eq \"^{export_path}[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/exam-{letter}-integrated.exports && systemctl is-active nfs-server | grep -qx active')}"
+        ),
+        [
+            "# On server:",
+            f"mkdir -p {export_path}",
+            f"echo 'exam {letter} export' > {export_path}/README",
+            f"cat > /etc/exports.d/exam-{letter}-integrated.exports <<'EOF'\n{export_path} 192.168.122.0/24(rw,sync,no_root_squash)\nEOF",
+            "systemctl enable --now nfs-server",
+            "firewall-cmd --permanent --add-service=nfs",
+            "firewall-cmd --permanent --add-service=mountd",
+            "firewall-cmd --permanent --add-service=rpc-bind",
+            "firewall-cmd --reload",
+            "exportfs -arv",
+            "# On client:",
+            f"mkdir -p {mountpoint}",
+            f"grep -Eq '^{source}[[:space:]]+{mountpoint}[[:space:]]+nfs' /etc/fstab || echo '{source} {mountpoint} nfs defaults,_netdev 0 0' >> /etc/fstab",
+            "mount -a",
+        ],
+    )
+
+
+def _both_scp_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        f"On client, create /root/exam-{letter}-report.txt containing REPORT-{letter.upper()} and copy it to server:/root/exam-{letter}-report.txt.",
+        _ssh_server_check(f"grep -Fxq REPORT-{letter.upper()} /root/exam-{letter}-report.txt"),
+        [
+            f"echo REPORT-{letter.upper()} > /root/exam-{letter}-report.txt",
+            "test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1",
+            "ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server",
+            f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-{letter}-report.txt root@server:/root/exam-{letter}-report.txt",
+        ],
+    )
+
+
+def _both_chrony_step(letter: str) -> tuple[str, str, list[str]]:
+    return (
+        "On server, make chronyd available as the lab time source. On client, configure chronyd to use server as its only time source.",
+        (
+            "grep -Eq '^server[[:space:]]+server[[:space:]]+iburst' /etc/chrony.conf && "
+            "systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active && "
+            f"{_ssh_server_check('systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active')}"
+        ),
+        [
+            "# On server:",
+            "systemctl enable --now chronyd",
+            "firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true",
+            "firewall-cmd --reload >/dev/null 2>&1 || true",
+            "# On client:",
+            "cat > /etc/chrony.conf <<'EOF'\nserver server iburst\nmakestep 1.0 3\nEOF",
+            "systemctl enable --now chronyd",
+        ],
+    )
+
+
+def _both_web_verify_step(letter: str, port: int) -> tuple[str, str, list[str]]:
+    return (
+        f"On client, add a hosts entry for server{letter}.exam10.lab and save the output of http://server{letter}.exam10.lab:{port}/server-{letter}.html to /root/server-{letter}-web-check.txt.",
+        f"grep -Fxq RHCSA10-{letter.upper()} /root/server-{letter}-web-check.txt",
+        [
+            f"grep -Eq '^192\\.168\\.122\\.3[[:space:]]+server{letter}\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.3 server{letter}.exam10.lab' >> /etc/hosts",
+            f"curl -s http://server{letter}.exam10.lab:{port}/server-{letter}.html > /root/server-{letter}-web-check.txt",
+        ],
+    )
+
+
+def _exam_points(task_count: int) -> list[int]:
+    if task_count == 23:
+        return [5 for _ in range(8)] + [4 for _ in range(15)]
+    if task_count == 22:
+        return [5 for _ in range(12)] + [4 for _ in range(10)]
+    raise ValueError(f"Unsupported RHCSA10 exam task count {task_count}")
+
+
+def _task_target(task: Any, command_group: list[str]) -> str:
+    text = str(task).lower()
+    markers = [str(command).strip().lower() for command in command_group if str(command).strip().startswith("#")]
+    has_server_marker = any(marker.startswith("# on server") or "run on server" in marker for marker in markers)
+    has_client_marker = any(marker.startswith("# on client") or "run on client" in marker for marker in markers)
+    explicit_server = bool(re.search(r"^\s*\(server\)|\bon server\b", text))
+    explicit_client = bool(re.search(r"^\s*\(client\)|\bon client\b", text))
+    integrated = bool(
+        re.search(r"\bon client and server\b|\bon server and client\b|both client and server", text)
+        or "server:/" in text
+        or re.search(r"\bcopy\b.*\bserver:", text)
+        or re.search(r"\bssh\b.*\bserver\b", text)
+        or re.search(r"\bhttp://server[a-h]?\.exam10\.lab", text)
+    )
+    if integrated or (has_server_marker and (has_client_marker or explicit_client)):
+        return "both"
+    if has_server_marker or explicit_server:
+        return "server"
+    return "client"
+
+
+def _apply_target_metadata(block: dict[str, Any]) -> None:
+    targets = [
+        _task_target(task, commands)
+        for task, commands in zip(block.get("tasks", []), block.get("solution_commands", []))
+    ]
+    block["task_targets"] = targets
+    block["target_balance"] = {
+        "client_only": targets.count("client"),
+        "server_only": targets.count("server"),
+        "client_server": targets.count("both"),
+    }
+
+
+def _clean_exam_task_wording(task: Any) -> str:
+    text = str(task)
+    text = text.replace(" by using a sudoers drop-in", "")
+    text = text.replace(" by using a sudoers drop-in file", "")
+    text = text.replace("Use a sudoers drop-in file.", "")
+    text = text.replace("Then use scp to copy", "Then copy")
+    text = text.replace("configure chronyd to use server as its only time source", "configure chronyd with server as its only time source")
+    text = re.sub(
+        r"using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled",
+        "with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks",
+        text,
+    )
+    text = re.sub(r"\busing (/dev/[a-z0-9]+)\b", r"from \1", text)
+    return re.sub(r"[ \t]+\n", "\n", text).strip()
+
+
 def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[str], commands: list[list[str]]) -> None:
     """Vary selected RHCSA10 exams beyond the base generated exam skeleton."""
     if exam_id == "rhcsa10-mock-exam-b":
@@ -1201,6 +1556,143 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
                 "firewall-cmd --query-port=2208/tcp",
             ],
         )
+
+
+def _replace_step_from_factory(
+    tasks: list[Any],
+    checks: list[str],
+    commands: list[list[str]],
+    index: int,
+    step: tuple[str, str, list[str]],
+) -> None:
+    task, check, command_group = step
+    _replace_exam_step(tasks, checks, commands, index, task, check, command_group)
+
+
+def _insert_step_from_factory(
+    tasks: list[Any],
+    checks: list[str],
+    commands: list[list[str]],
+    index: int,
+    step: tuple[str, str, list[str]],
+) -> None:
+    task, check, command_group = step
+    existing_indexes = [existing_index for existing_index, existing_task in enumerate(tasks) if existing_task == task]
+    if existing_indexes:
+        keep_index = existing_indexes[0]
+        tasks[keep_index] = task
+        checks[keep_index] = check
+        commands[keep_index] = command_group
+        for duplicate_index in reversed(existing_indexes[1:]):
+            del tasks[duplicate_index]
+            del checks[duplicate_index]
+            del commands[duplicate_index]
+        return
+    _insert_exam_step(tasks, checks, commands, index, task, check, command_group)
+
+
+def _apply_rhcsa10_exam_target_balance(
+    exam_id: str,
+    tasks: list[Any],
+    checks: list[str],
+    commands: list[list[str]],
+) -> None:
+    letter = chr(ord("a") + _exam_seed_from_id(exam_id))
+    server_web_port = 8200 + _exam_seed_from_id(exam_id)
+
+    if exam_id == "rhcsa10-mock-exam-a":
+        _replace_step_from_factory(tasks, checks, commands, 4, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 5, _server_hostname_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 12, _both_scp_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 13, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 14, _server_timer_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 16, _server_user_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 17, _server_shared_dir_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 18, _server_selinux_boolean_step())
+        _replace_step_from_factory(tasks, checks, commands, 20, _server_journald_step())
+        _replace_step_from_factory(tasks, checks, commands, 21, _both_chrony_step(letter))
+        _insert_step_from_factory(tasks, checks, commands, len(tasks), _both_nfs_step(letter))
+
+    if exam_id == "rhcsa10-mock-exam-b":
+        _replace_step_from_factory(tasks, checks, commands, 2, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 9, _both_scp_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 12, _server_timer_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 14, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 15, _server_user_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 16, _server_sudo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 17, _server_journald_step())
+        _replace_step_from_factory(tasks, checks, commands, 18, _server_rsyslog_step(letter, "local5"))
+        _replace_step_from_factory(tasks, checks, commands, 19, _both_nfs_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 20, _server_default_target_step())
+
+    if exam_id == "rhcsa10-mock-exam-c":
+        _replace_step_from_factory(tasks, checks, commands, 4, _server_hostname_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 5, _server_shared_dir_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 9, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 14, _server_sudo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 16, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 17, _server_journald_step())
+        _replace_step_from_factory(tasks, checks, commands, 18, _server_timer_step(letter, 5))
+        _replace_step_from_factory(tasks, checks, commands, 19, _both_nfs_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 20, _both_web_verify_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 21, _server_rsyslog_step(letter, "local6"))
+        _insert_step_from_factory(tasks, checks, commands, len(tasks), _both_scp_step(letter))
+
+    if exam_id == "rhcsa10-mock-exam-d":
+        _replace_step_from_factory(tasks, checks, commands, 3, _server_timer_step(letter, 10))
+        _replace_step_from_factory(tasks, checks, commands, 7, _server_journald_step())
+        _replace_step_from_factory(tasks, checks, commands, 8, _both_chrony_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 9, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 10, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 11, _server_rsyslog_step(letter, "local5"))
+        _replace_step_from_factory(tasks, checks, commands, 13, _server_sudo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 14, _server_user_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 17, _both_scp_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 19, _both_nfs_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 20, _server_default_target_step())
+
+    if exam_id == "rhcsa10-mock-exam-e":
+        _replace_step_from_factory(tasks, checks, commands, 2, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 6, _server_user_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 7, _server_sudo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 12, _server_timer_step(letter, 10))
+        _replace_step_from_factory(tasks, checks, commands, 14, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 15, _server_shared_dir_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 17, _server_rsyslog_step(letter, "local5"))
+        _replace_step_from_factory(tasks, checks, commands, 18, _both_nfs_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 19, _both_scp_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 21, _server_journald_step())
+        _insert_step_from_factory(tasks, checks, commands, len(tasks), _both_web_verify_step(letter, server_web_port))
+
+    if exam_id == "rhcsa10-mock-exam-f":
+        _replace_step_from_factory(tasks, checks, commands, 2, _both_scp_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 7, _server_journald_step())
+        _replace_step_from_factory(tasks, checks, commands, 12, _server_default_target_step())
+        _replace_step_from_factory(tasks, checks, commands, 14, _both_nfs_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 15, _server_timer_step(letter, 10))
+        _replace_step_from_factory(tasks, checks, commands, 16, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 17, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 19, _server_rsyslog_step(letter, "local6"))
+        _replace_step_from_factory(tasks, checks, commands, 20, _server_shared_dir_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 21, _server_user_step(letter))
+
+    if exam_id == "rhcsa10-mock-exam-g":
+        _replace_step_from_factory(tasks, checks, commands, 4, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 15, _server_rsyslog_step(letter, "local5"))
+        _replace_step_from_factory(tasks, checks, commands, 16, _server_shared_dir_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 17, _server_user_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 18, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 19, _server_timer_step(letter, 12))
+        _insert_step_from_factory(tasks, checks, commands, len(tasks), _both_nfs_step(letter))
+
+    if exam_id == "rhcsa10-mock-exam-h":
+        _replace_step_from_factory(tasks, checks, commands, 3, _both_scp_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 4, _server_timer_step(letter, 10))
+        _replace_step_from_factory(tasks, checks, commands, 10, _server_shared_dir_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 16, _both_chrony_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 17, _server_http_step(letter, server_web_port))
+        _replace_step_from_factory(tasks, checks, commands, 18, _both_repo_step(letter))
+        _replace_step_from_factory(tasks, checks, commands, 20, _server_sudo_step(letter))
 
 
 def _reorder_parallel(values: list[Any], order: list[int]) -> list[Any]:
@@ -2211,6 +2703,7 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         updated["task_points"] = task_points
 
     _apply_rhcsa10_exam_diversity(exam_id, tasks, checks, commands)
+    _apply_rhcsa10_exam_target_balance(exam_id, tasks, checks, commands)
 
     for index, task in enumerate(tasks):
         task_text = str(task)
@@ -2223,10 +2716,13 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         if "server:/exports/direct" in task_text or "server:/exports/autofs" in task_text:
             tasks[index] = _prefix_client_task(task_text)
 
+    tasks = [_clean_exam_task_wording(task) for task in tasks]
     updated["tasks"] = tasks
     updated["checks"] = checks
     updated["solution_commands"] = commands
     updated["task_titles"] = [task_title(task) for task in tasks]
+    updated["task_points"] = _exam_points(len(tasks))
+    _apply_target_metadata(updated)
     return updated
 
 
