@@ -57,25 +57,15 @@ Configure the bootloader on client so every installed kernel boots with the kern
 
 ---
 
-## Question 05 - Create enabled BaseOS and AppStream repository definitions on client usi (client) - 5 pts
+## Question 05 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
-Create enabled BaseOS and AppStream repository definitions on client using:
-
-- **BaseOS:** http://server/repo/BaseOS/
-- **AppStream:** http://server/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
-## Question 06 - create the same BaseOS and AppStream repository definitions: (server) - 5 pts
+## Question 06 - set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168 (server) - 5 pts
 
-On server, create the same BaseOS and AppStream repository definitions:
-
-- **BaseOS:** http://server/repo/BaseOS/
-- **AppStream:** http://server/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+On server, set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168.122.4.
 
 ---
 
@@ -91,69 +81,69 @@ Create group opsa10 on client. Create users anna10 and atlas10 with opsa10 as a 
 
 ---
 
-## Question 09 - allow members of %opsa10 to run /usr/bin/systemctl without a password pr (client) - 5 pts
+## Question 09 - allow members of %opsa10 to run /usr/bin/systemctl without a password pr (client) - 4 pts
 
-On client, allow members of %opsa10 to run /usr/bin/systemctl without a password prompt. Use a sudoers drop-in file.
+On client, allow members of %opsa10 to run /usr/bin/systemctl without a password prompt.
 
 ---
 
-## Question 10 - set the maximum password age for anna10 to 45 days and the password warn (client) - 5 pts
+## Question 10 - set the maximum password age for anna10 to 45 days and the password warn (client) - 4 pts
 
 On client, set the maximum password age for anna10 to 45 days and the password warning period to 7 days.
 
 ---
 
-## Question 11 - Create an executable script /usr/local/bin/a-who on client that accepts (client) - 5 pts
+## Question 11 - Create an executable script /usr/local/bin/a-who on client that accepts (client) - 4 pts
 
 Create an executable script /usr/local/bin/a-who on client that accepts a username as its first argument and prints that user's primary group name.
 
 ---
 
-## Question 12 - write all usernames whose login shell ends with sh to /root/a-shell-user (client) - 5 pts
+## Question 12 - write all usernames whose login shell ends with sh to /root/a-shell-user (client) - 4 pts
 
 On client, write all usernames whose login shell ends with sh to /root/a-shell-users.txt, one per line, sorted alphabetically.
 
 ---
 
-## Question 13 - create a gzip-compressed tar archive /root/a-etc.tar.gz containing /etc/ (client) - 4 pts
+## Question 13 - create /root/exam-a-report.txt containing REPORT-A and copy it to server (client) - 4 pts
 
-On client, create a gzip-compressed tar archive /root/a-etc.tar.gz containing /etc/hosts and /etc/fstab.
-
----
-
-## Question 14 - create a regular file /root/a-original with some content (client) - 4 pts
-
-On client, create a regular file /root/a-original with some content. Create a hard link /root/a-hard pointing to the same inode. Create a symbolic link /root/a-soft pointing to /root/a-original.
+On client, create /root/exam-a-report.txt containing REPORT-A and copy it to server:/root/exam-a-report.txt.
 
 ---
 
-## Question 15 - create a systemd timer unit examatimer.timer that triggers an associated (client) - 4 pts
+## Question 14 - publish /var/www/html/server-a.html containing RHCSA10-A and serve httpd (server) - 4 pts
 
-On client, create a systemd timer unit examatimer.timer that triggers an associated examatimer.service every 10 minutes. The service should run a one-shot script. Enable the timer so it starts at boot.
-
----
-
-## Question 16 - create volume group vga10 using /dev/sdb (client) - 4 pts
-
-On client, create volume group vga10 using /dev/sdb. Create logical volume dataa of at least 384 MiB inside vga10. Format it with XFS and mount it persistently at /mnt/dataa10.
+On server, publish /var/www/html/server-a.html containing RHCSA10-A and serve httpd on TCP port 8200.
 
 ---
 
-## Question 17 - permanently allow TCP port 8100 through the firewall and reload firewall (client) - 4 pts
+## Question 15 - create and enable serveratimer.timer so it appends SERVER-A to /var/log/ (server) - 4 pts
 
-On client, permanently allow TCP port 8100 through the firewall and reload firewalld so the rule takes effect at runtime.
-
----
-
-## Question 18 - create the file /var/www/html/a.html and restore its default SELinux con (client) - 4 pts
-
-On client, create the file /var/www/html/a.html and restore its default SELinux context so the type is httpd_sys_content_t.
+On server, create and enable serveratimer.timer so it appends SERVER-A to /var/log/serveratimer.log every 10 minutes.
 
 ---
 
-## Question 19 - persistently enable the SELinux boolean httpd_can_network_connect (client) - 4 pts
+## Question 16 - create volume group vga10 from /dev/sdb (client) - 4 pts
 
-On client, persistently enable the SELinux boolean httpd_can_network_connect.
+On client, create volume group vga10 from /dev/sdb. Create logical volume dataa of at least 384 MiB inside vga10. Format it with XFS and mount it persistently at /mnt/dataa10.
+
+---
+
+## Question 17 - create group servera10 and user srva10 with password cinder9, then add t (server) - 4 pts
+
+On server, create group servera10 and user srva10 with password cinder9, then add the user to servera10.
+
+---
+
+## Question 18 - create /srv/servera10 owned by root:servera10 with mode 2770 (server) - 4 pts
+
+On server, create /srv/servera10 owned by root:servera10 with mode 2770.
+
+---
+
+## Question 19 - persistently enable the SELinux boolean httpd_can_network_connect (server) - 4 pts
+
+On server, persistently enable the SELinux boolean httpd_can_network_connect.
 
 ---
 
@@ -163,12 +153,18 @@ On client, create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 
 
 ---
 
-## Question 21 - configure systemd-journald so logs are stored persistently across reboot (server) - 4 pts
+## Question 21 - enable persistent systemd journal storage (server) - 4 pts
 
-On server, configure systemd-journald so logs are stored persistently across reboots and restart systemd-journald.
+On server, enable persistent systemd journal storage.
 
 ---
 
-## Question 22 - configure the server (192.168.122.3) as the only chrony time source (client) - 4 pts
+## Question 22 - make chronyd available as the lab time source. On client, configure chro (client + server) - 4 pts
 
-On client, configure the server (192.168.122.3) as the only chrony time source. Remove all other pool/server lines. Enable and start chronyd.
+On server, make chronyd available as the lab time source. On client, configure chronyd with server as its only time source.
+
+---
+
+## Question 23 - export /exports/exam-a to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+
+On server, export /exports/exam-a to the 192.168.122.0/24 network. On client, mount server:/exports/exam-a persistently at /mnt/aprojects.

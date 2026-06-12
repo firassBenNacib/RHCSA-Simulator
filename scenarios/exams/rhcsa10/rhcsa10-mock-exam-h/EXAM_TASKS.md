@@ -39,15 +39,15 @@ On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.
 
 ---
 
-## Question 04 - create /var/tmp/examh-client.txt containing HCLIENT (client) - 5 pts
+## Question 04 - create /root/exam-h-report.txt containing REPORT-H and copy it to server (client) - 5 pts
 
-On client, create /var/tmp/examh-client.txt containing HCLIENT.
+On client, create /root/exam-h-report.txt containing REPORT-H and copy it to server:/root/exam-h-report.txt.
 
 ---
 
-## Question 05 - Create and enable examhtimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 05 - create and enable serverhtimer.timer so it appends SERVER-H to /var/log/ (server) - 5 pts
 
-Create and enable examhtimer.timer that runs every 10 minutes.
+On server, create and enable serverhtimer.timer so it appends SERVER-H to /var/log/serverhtimer.log every 10 minutes.
 
 ---
 
@@ -63,7 +63,7 @@ Set maximum password age for userh10 to 52 days and warning period to 7 days.
 
 ---
 
-## Question 08 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 08 - Persistently enable httpd_can_network_connect (client) - 5 pts
 
 Persistently enable httpd_can_network_connect.
 
@@ -75,19 +75,19 @@ Write users whose shell ends with sh to /root/h-shell-users.txt.
 
 ---
 
-## Question 10 - configure persistent systemd journal storage (server) - 4 pts
+## Question 10 - configure persistent systemd journal storage (server) - 5 pts
 
 On server, configure persistent systemd journal storage.
 
 ---
 
-## Question 11 - Create /root/h-original, hard link /root/h-hard, and symlink /root/h-sof (client) - 5 pts
+## Question 11 - create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 5 pts
 
-Create /root/h-original, hard link /root/h-hard, and symlink /root/h-soft.
+On server, create /srv/serverh10 owned by root:serverh10 with mode 2770.
 
 ---
 
-## Question 12 - Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10 (client) - 4 pts
+## Question 12 - Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10 (client) - 5 pts
 
 Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.
 
@@ -117,36 +117,36 @@ Install lsof and ensure tcpdump is removed.
 
 ---
 
-## Question 17 - Use server as the only chrony source and enable chronyd (client) - 4 pts
+## Question 17 - make chronyd available as the lab time source. On client, configure chro (client + server) - 4 pts
 
-Use server as the only chrony source and enable chronyd.
-
----
-
-## Question 18 - allow TCP port 2208 permanently in firewalld and reload the firewall (server) - 4 pts
-
-On server, allow TCP port 2208 permanently in firewalld and reload the firewall.
+On server, make chronyd available as the lab time source. On client, configure chronyd with server as its only time source.
 
 ---
 
-## Question 19 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 18 - publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd (server) - 4 pts
 
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
-
----
-
-## Question 20 - Allow %teamh10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
-
-Allow %teamh10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+On server, publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd on TCP port 8207.
 
 ---
 
-## Question 21 - Create /usr/local/bin/h-who that prints the primary group for the suppli (client) - 5 pts
+## Question 19 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
 
-Create /usr/local/bin/h-who that prints the primary group for the supplied user argument.
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
-## Question 22 - Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 20 - Allow %teamh10 to run /usr/bin/systemctl without a password (client) - 4 pts
+
+Allow %teamh10 to run /usr/bin/systemctl without a password.
+
+---
+
+## Question 21 - allow members of serverh10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+
+On server, allow members of serverh10 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 22 - Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
 
 Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab.

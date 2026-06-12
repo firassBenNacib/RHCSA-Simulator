@@ -32,7 +32,7 @@
         "(client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mapping 192.168.122.3 to serverg.exam10.lab.",
         "(client) Configure the connection \"System eth1\" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.",
         "(client) Add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.",
-        "(client) Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
         "On client, add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.",
         "(server) Set the server login message in /etc/motd to Authorized exam-g server.",
         "(client) Create group devg10. Create users grant10 and hazel10 with devg10 as a supplementary group and passwords set to cinder9.",
@@ -40,16 +40,17 @@
         "(client) Create user noaccess70 with no home directory and login shell /sbin/nologin.",
         "(client) Set password aging for grant10: maximum 35 days, minimum 5 days, warning 7 days. Add umask 0077 to /home/grant10/.bashrc.",
         "(client) Create user copy10 with UID 5010 and password cinder9 on the client. Also create user copy10 with the same UID 5010 and password cinder9 on the server.",
-        "(client) As copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then use scp to copy /etc/hostname from the server to /home/copy10/server-hostname on the client.",
+        "(client) As copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then copy /etc/hostname from the server to /home/copy10/server-hostname on the client.",
         "(client) Schedule an at job for user hazel10 that runs: echo \"exam-g task\" >> /home/hazel10/at-result.txt",
         "(server) Configure persistent systemd journal storage on the server.",
-        "(client) Run the command \"sleep 600\" in the background, then renice that process to priority 15.",
-        "(client) Find all files under /opt/exam-g/find owned by user grant10 that were modified in the last day. Write the list to /root/grant-files (one path per line).",
-        "(client) Extract all lines containing the string \"data\" from /usr/share/dict/words and write them to /root/g-data-lines.",
-        "(client) Create a gzip-compressed tar archive /root/g-etc.tar.gz containing the entire /etc directory.",
-        "(client) Create a systemd timer examgtimer.timer that triggers its companion service every 12 minutes. Enable the timer persistently.",
+        "On server, route local5 log messages to /var/log/server-g-local5.log and write a test message.",
+        "On server, create /srv/serverg10 owned by root:serverg10 with mode 2770.",
+        "On server, create group serverg10 and user srvg10 with password cinder9, then add the user to serverg10.",
+        "On server, publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd on TCP port 8206.",
+        "On server, create and enable servergtimer.timer so it appends SERVER-G to /var/log/servergtimer.log every 12 minutes.",
         "(client) Create a 500 MiB swap partition on /dev/sdb, format it as swap, and enable it persistently via /etc/fstab.",
-        "(client) Create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10."
+        "(client) Create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10.",
+        "On server, export /exports/exam-g to the 192.168.122.0/24 network. On client, mount server:/exports/exam-g persistently at /mnt/gprojects."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -63,7 +64,7 @@
         "hostnamectl --static | grep -qx clientg.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverg\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.66/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "grep -q 'audit_backlog_limit=8192' /proc/cmdline || grubby --info=DEFAULT | grep -q 'audit_backlog_limit=8192'",
-        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examgflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "ssh server bash -lc 'set -euo pipefail; grep -qx '\"'\"'Authorized exam-g server'\"'\"' /etc/motd'",
         "getent group devg10 >/dev/null && id -nG grant10 | tr ' ' '\\n' | grep -qx devg10 && id -nG hazel10 | tr ' ' '\\n' | grep -qx devg10",
@@ -74,13 +75,14 @@
         "test -f /home/copy10/server-hostname && test -s /home/copy10/server-hostname",
         "test -f /home/hazel10/at-result.txt || atq 2>/dev/null | grep -q .",
         "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
-        "ps -eo ni,comm | awk '$2==\"sleep\" && $1==15 {found=1} END{exit !found}'",
-        "test -s /root/grant-files",
-        "test -s /root/g-data-lines && grep -q 'data' /root/g-data-lines",
-        "test -f /root/g-etc.tar.gz && tar -tzf /root/g-etc.tar.gz | awk '$0 ~ /^etc\\// {found=1} END{exit !found}'",
-        "systemctl cat examgtimer.timer >/dev/null 2>&1 && systemctl is-enabled examgtimer.timer | grep -qx enabled",
+        "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^local5\\.\\*[[:space:]]+/var/log/server-g-local5\\.log$'\"'\"' /etc/rsyslog.d/server-g-local5.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq '\"'\"'server-g-local5'\"'\"' /var/log/server-g-local5.log'",
+        "ssh server bash -lc 'set -euo pipefail; getent group serverg10 >/dev/null && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/serverg10 | grep -qx root:serverg10:2770'",
+        "ssh server bash -lc 'set -euo pipefail; getent group serverg10 >/dev/null && id -nG srvg10 | tr '\"'\"' '\"'\"' '\"'\"'\\n'\"'\"' | grep -qx serverg10'",
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-G /var/www/html/server-g.html && grep -Eq '\"'\"'^Listen[[:space:]]+8206$'\"'\"' /etc/httpd/conf.d/exam-g-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8206([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8206/tcp && firewall-cmd --query-port=8206/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled servergtimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/12$'\"'\"' /etc/systemd/system/servergtimer.timer && grep -Fxq '\"'\"'echo SERVER-G >> /var/log/servergtimer.log'\"'\"' /usr/local/sbin/servergtimer.sh'",
         "swap_uuid=\"$(blkid -s UUID -o value /dev/sdb1)\"; test -n \"$swap_uuid\" && swapon --show=NAME --noheadings | grep -qx /dev/sdb1 && awk -v dev=\"/dev/sdb1\" -v uuid=\"$swap_uuid\" '$1 !~ /^#/ && $2 == \"swap\" && $3 == \"swap\" && ($1 == dev || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
-        "lv_path=/dev/vgg10/datag; mapper_path=/dev/mapper/vgg10-datag; mountpoint=/mnt/datag10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
+        "lv_path=/dev/vgg10/datag; mapper_path=/dev/mapper/vgg10-datag; mountpoint=/mnt/datag10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
+        "findmnt -no SOURCE,TARGET /mnt/gprojects | grep -qx 'server:/exports/exam-g /mnt/gprojects' && grep -Eq '^server:/exports/exam-g[[:space:]]+/mnt/gprojects[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && ssh server bash -lc 'set -euo pipefail; grep -Eq \"^/exports/exam-g[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/exam-g-integrated.exports && systemctl is-active nfs-server | grep -qx active'"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on.",
@@ -93,7 +95,7 @@
         "(client) Set the hostname to clientg.exam10.lab. Add an entry to /etc/ho",
         "(client) Configure the connection \"System eth1\" with static IPv4: addres",
         "(client) Add the kernel boot argument audit_backlog_limit=8192 to the de",
-        "(client) Create enabled BaseOS and AppStream repository definitions usin",
+        "On client and server, create enabled BaseOS and AppStream repository def",
         "add a system-level Flatpak remote named examgflatpak pointing to file://",
         "(server) Set the server login message in /etc/motd to Authorized exam-g ",
         "(client) Create group devg10. Create users grant10 and hazel10 with devg",
@@ -104,13 +106,14 @@
         "(client) As copy10, generate an SSH key pair (no passphrase) and distrib",
         "(client) Schedule an at job for user hazel10 that runs: echo \"exam-g tas",
         "(server) Configure persistent systemd journal storage on the server",
-        "(client) Run the command \"sleep 600\" in the background, then renice that",
-        "(client) Find all files under /opt/exam-g/find owned by user grant10 tha",
-        "(client) Extract all lines containing the string \"data\" from /usr/share/",
-        "(client) Create a gzip-compressed tar archive /root/g-etc.tar.gz contain",
-        "(client) Create a systemd timer examgtimer.timer that triggers its compa",
+        "route local5 log messages to /var/log/server-g-local5.log and write a te",
+        "create /srv/serverg10 owned by root:serverg10 with mode 2770",
+        "create group serverg10 and user srvg10 with password cinder9, then add t",
+        "publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd",
+        "create and enable servergtimer.timer so it appends SERVER-G to /var/log/",
         "(client) Create a 500 MiB swap partition on /dev/sdb, format it as swap,",
-        "(client) Create physical volume on /dev/sdc, volume group vgg10, logical"
+        "(client) Create physical volume on /dev/sdc, volume group vgg10, logical",
+        "export /exports/exam-g to the 192.168.122.0/24 network. On client, mount"
       ],
       "task_points": [
         5,
@@ -121,10 +124,11 @@
         5,
         5,
         5,
-        5,
-        5,
-        5,
-        5,
+        4,
+        4,
+        4,
+        4,
+        4,
         4,
         4,
         4,
@@ -158,7 +162,11 @@
           "grub2-mkconfig -o /boot/grub2/grub.cfg"
         ],
         [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF"
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "# On server:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all"
         ],
         [
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo",
@@ -213,24 +221,47 @@
           "journalctl --flush"
         ],
         [
-          "nohup nice -n 15 sleep 600 >/dev/null 2>&1 &"
+          "# On server:",
+          "cat > /etc/rsyslog.d/server-g-local5.conf <<'EOF'\nlocal5.* /var/log/server-g-local5.log\nEOF",
+          "systemctl enable --now rsyslog",
+          "systemctl restart rsyslog",
+          "logger -p local5.info 'server-g-local5'",
+          "sleep 1"
         ],
         [
-          "find /opt/exam-g/find -user grant10 -mtime -1 -type f > /root/grant-files"
+          "# On server:",
+          "getent group serverg10 >/dev/null || groupadd serverg10",
+          "mkdir -p /srv/serverg10",
+          "chown root:serverg10 /srv/serverg10",
+          "chmod 2770 /srv/serverg10"
         ],
         [
-          "grep 'data' /usr/share/dict/words > /root/g-data-lines"
+          "# On server:",
+          "getent group serverg10 >/dev/null || groupadd serverg10",
+          "id srvg10 >/dev/null 2>&1 || useradd srvg10",
+          "gpasswd -a srvg10 serverg10",
+          "echo 'srvg10:cinder9' | chpasswd"
         ],
         [
-          "tar -czf /root/g-etc.tar.gz /etc"
+          "# On server:",
+          "mkdir -p /var/www/html",
+          "echo RHCSA10-G > /var/www/html/server-g.html",
+          "restorecon -v /var/www/html/server-g.html || true",
+          "cat > /etc/httpd/conf.d/exam-g-port.conf <<'EOF'\nListen 8206\nEOF",
+          "semanage port -a -t http_port_t -p tcp 8206 2>/dev/null || semanage port -m -t http_port_t -p tcp 8206",
+          "firewall-cmd --permanent --add-port=8206/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd",
+          "systemctl restart httpd"
         ],
         [
-          "cat > /usr/local/sbin/examgtimer.sh <<'EOF'\n#!/bin/bash\necho examgtimer >> /var/log/examgtimer.log\nEOF",
-          "chmod +x /usr/local/sbin/examgtimer.sh",
-          "cat > /etc/systemd/system/examgtimer.service <<'EOF'\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/examgtimer.sh\nEOF",
-          "cat > /etc/systemd/system/examgtimer.timer <<'EOF'\n[Timer]\nOnCalendar=*:0/12\nPersistent=true\n[Install]\nWantedBy=timers.target\nEOF",
+          "# On server:",
+          "cat > /usr/local/sbin/servergtimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-G >> /var/log/servergtimer.log\nEOF",
+          "chmod +x /usr/local/sbin/servergtimer.sh",
+          "cat > /etc/systemd/system/servergtimer.service <<'EOF'\n[Unit]\nDescription=Server G timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/servergtimer.sh\nEOF",
+          "cat > /etc/systemd/system/servergtimer.timer <<'EOF'\n[Unit]\nDescription=Run server G timer job\n\n[Timer]\nOnCalendar=*:/12\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
-          "systemctl enable --now examgtimer.timer"
+          "systemctl enable --now servergtimer.timer"
         ],
         [
           "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB",
@@ -249,8 +280,54 @@
           "mkdir -p /mnt/datag10",
           "echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab",
           "mount -a"
+        ],
+        [
+          "# On server:",
+          "mkdir -p /exports/exam-g",
+          "echo 'exam g export' > /exports/exam-g/README",
+          "cat > /etc/exports.d/exam-g-integrated.exports <<'EOF'\n/exports/exam-g 192.168.122.0/24(rw,sync,no_root_squash)\nEOF",
+          "systemctl enable --now nfs-server",
+          "firewall-cmd --permanent --add-service=nfs",
+          "firewall-cmd --permanent --add-service=mountd",
+          "firewall-cmd --permanent --add-service=rpc-bind",
+          "firewall-cmd --reload",
+          "exportfs -arv",
+          "# On client:",
+          "mkdir -p /mnt/gprojects",
+          "grep -Eq '^server:/exports/exam-g[[:space:]]+/mnt/gprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-g /mnt/gprojects nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "mount -a"
         ]
-      ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client",
+        "client",
+        "both",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "both",
+        "both",
+        "client",
+        "server",
+        "server",
+        "server",
+        "server",
+        "server",
+        "server",
+        "client",
+        "client",
+        "both"
+      ],
+      "target_balance": {
+        "client_only": 12,
+        "server_only": 7,
+        "client_server": 4
+      }
     }
   },
   "vm_scripts": {

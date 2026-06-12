@@ -39,93 +39,93 @@ Create /root/d-original, hard link /root/d-hard, and symlink /root/d-soft.
 
 ---
 
-## Question 04 - Create and enable examdtimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 04 - create and enable serverdtimer.timer so it appends SERVER-D to /var/log/ (server) - 5 pts
 
-Create and enable examdtimer.timer that runs every 10 minutes.
+On server, create and enable serverdtimer.timer so it appends SERVER-D to /var/log/serverdtimer.log every 10 minutes.
 
 ---
 
-## Question 05 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (client) - 4 pts
+## Question 05 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (client) - 5 pts
 
 Create VG vgd10 and LV datad mounted at /mnt/datad10.
 
 ---
 
-## Question 06 - Create /var/www/html/d.html and restore its default SELinux context (client) - 4 pts
+## Question 06 - Create /var/www/html/d.html and restore its default SELinux context (client) - 5 pts
 
 Create /var/www/html/d.html and restore its default SELinux context.
 
 ---
 
-## Question 07 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 07 - Persistently enable httpd_can_network_connect (client) - 5 pts
 
 Persistently enable httpd_can_network_connect.
 
 ---
 
-## Question 08 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 08 - enable persistent systemd journal storage (server) - 5 pts
 
-Configure persistent systemd journal storage.
-
----
-
-## Question 09 - Use server as the only chrony source and enable chronyd (client) - 4 pts
-
-Use server as the only chrony source and enable chronyd.
+On server, enable persistent systemd journal storage.
 
 ---
 
-## Question 10 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 09 - make chronyd available as the lab time source. On client, configure chro (client + server) - 5 pts
 
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
-
----
-
-## Question 11 - create and enable a custom systemd service named examd-heartbeat.service (client) - 5 pts
-
-On client, create and enable a custom systemd service named examd-heartbeat.service.
+On server, make chronyd available as the lab time source. On client, configure chronyd with server as its only time source.
 
 ---
 
-## Question 12 - route local5 log messages to /var/log/examd-local5.log and write a test (client) - 5 pts
+## Question 10 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
-On client, route local5 log messages to /var/log/examd-local5.log and write a test message.
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
-## Question 13 - Create group teamd10, create user userd10, set password cinder9, and add (client) - 5 pts
+## Question 11 - publish /var/www/html/server-d.html containing RHCSA10-D and serve httpd (server) - 5 pts
+
+On server, publish /var/www/html/server-d.html containing RHCSA10-D and serve httpd on TCP port 8203.
+
+---
+
+## Question 12 - route local5 log messages to /var/log/server-d-local5.log and write a te (server) - 5 pts
+
+On server, route local5 log messages to /var/log/server-d-local5.log and write a test message.
+
+---
+
+## Question 13 - Create group teamd10, create user userd10, set password cinder9, and add (client) - 4 pts
 
 Create group teamd10, create user userd10, set password cinder9, and add the user to teamd10.
 
 ---
 
-## Question 14 - Allow %teamd10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 14 - allow members of serverd10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
-Allow %teamd10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
-
----
-
-## Question 15 - Set maximum password age for userd10 to 48 days and warning period to 7 (client) - 5 pts
-
-Set maximum password age for userd10 to 48 days and warning period to 7 days.
+On server, allow members of serverd10 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 16 - Create /usr/local/bin/d-who that prints the primary group for the suppli (client) - 5 pts
+## Question 15 - create group serverd10 and user srvd10 with password cinder9, then add t (server) - 4 pts
+
+On server, create group serverd10 and user srvd10 with password cinder9, then add the user to serverd10.
+
+---
+
+## Question 16 - Create /usr/local/bin/d-who that prints the primary group for the suppli (client) - 4 pts
 
 Create /usr/local/bin/d-who that prints the primary group for the supplied user argument.
 
 ---
 
-## Question 17 - Write users whose shell ends with sh to /root/d-shell-users.txt (client) - 5 pts
+## Question 17 - Write users whose shell ends with sh to /root/d-shell-users.txt (client) - 4 pts
 
 Write users whose shell ends with sh to /root/d-shell-users.txt.
 
 ---
 
-## Question 18 - Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 18 - create /root/exam-d-report.txt containing REPORT-D and copy it to server (client) - 4 pts
 
-Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fstab.
+On client, create /root/exam-d-report.txt containing REPORT-D and copy it to server:/root/exam-d-report.txt.
 
 ---
 
@@ -135,15 +135,15 @@ Create a cron job for userd10 that writes EXAM10 to /home/userd10/exam10.log eve
 
 ---
 
-## Question 20 - configure autofs so /remoted/projects mounts server:/exports/autofs/proj (client) - 4 pts
+## Question 20 - export /exports/exam-d to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
-On client, configure autofs so /remoted/projects mounts server:/exports/autofs/projects.
+On server, export /exports/exam-d to the 192.168.122.0/24 network. On client, mount server:/exports/exam-d persistently at /mnt/dprojects.
 
 ---
 
-## Question 21 - allow the http service permanently in firewalld and reload the firewall (client) - 4 pts
+## Question 21 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
-On client, allow the http service permanently in firewalld and reload the firewall.
+On server, set the default boot target to multi-user.target without rebooting.
 
 ---
 

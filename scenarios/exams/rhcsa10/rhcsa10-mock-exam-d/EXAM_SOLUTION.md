@@ -50,33 +50,41 @@ ln -s /root/d-original /root/d-soft
 
 ---
 
-## Question 04 - Create and enable examdtimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 04 - create and enable serverdtimer.timer so it appends SERVER-D to /var/log/ (server) - 5 pts
 
 ```bash
-cat > /usr/local/sbin/examdtimer.sh <<'EOF'
+# On server:
+cat > /usr/local/sbin/serverdtimer.sh <<'EOF'
 #!/bin/bash
-echo examdtimer >> /var/log/examdtimer.log
+echo SERVER-D >> /var/log/serverdtimer.log
 EOF
-chmod +x /usr/local/sbin/examdtimer.sh
-cat > /etc/systemd/system/examdtimer.service <<'EOF'
+chmod +x /usr/local/sbin/serverdtimer.sh
+cat > /etc/systemd/system/serverdtimer.service <<'EOF'
+[Unit]
+Description=Server D timer job
+
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/examdtimer.sh
+ExecStart=/usr/local/sbin/serverdtimer.sh
 EOF
-cat > /etc/systemd/system/examdtimer.timer <<'EOF'
+cat > /etc/systemd/system/serverdtimer.timer <<'EOF'
+[Unit]
+Description=Run server D timer job
+
 [Timer]
-OnCalendar=*:0/10
+OnCalendar=*:/10
 Persistent=true
+
 [Install]
 WantedBy=timers.target
 EOF
 systemctl daemon-reload
-systemctl enable --now examdtimer.timer
+systemctl enable --now serverdtimer.timer
 ```
 
 ---
 
-## Question 05 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (client) - 4 pts
+## Question 05 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (client) - 5 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -90,7 +98,7 @@ mount -a
 
 ---
 
-## Question 06 - Create /var/www/html/d.html and restore its default SELinux context (client) - 4 pts
+## Question 06 - Create /var/www/html/d.html and restore its default SELinux context (client) - 5 pts
 
 ```bash
 echo d > /var/www/html/d.html
@@ -100,7 +108,7 @@ restorecon -v /var/www/html/d.html
 
 ---
 
-## Question 07 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 07 - Persistently enable httpd_can_network_connect (client) - 5 pts
 
 ```bash
 setsebool -P httpd_can_network_connect on
@@ -108,9 +116,10 @@ setsebool -P httpd_can_network_connect on
 
 ---
 
-## Question 08 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 08 - enable persistent systemd journal storage (server) - 5 pts
 
 ```bash
+# On server:
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
 [Journal]
@@ -122,17 +131,24 @@ journalctl --flush
 
 ---
 
-## Question 09 - Use server as the only chrony source and enable chronyd (client) - 4 pts
+## Question 09 - make chronyd available as the lab time source. On client, configure chro (client + server) - 5 pts
 
 ```bash
-sed -i '/^pool /d;/^server /d' /etc/chrony.conf
-echo 'server server iburst' >> /etc/chrony.conf
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
 systemctl enable --now chronyd
 ```
 
 ---
 
-## Question 10 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 10 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -148,51 +164,61 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
+# On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 11 - create and enable a custom systemd service named examd-heartbeat.service (client) - 5 pts
+## Question 11 - publish /var/www/html/server-d.html containing RHCSA10-D and serve httpd (server) - 5 pts
 
 ```bash
-cat > /usr/local/sbin/examd-heartbeat.sh <<'EOF'
-#!/bin/bash
-echo 'exam-d heartbeat' >> /var/log/examd-heartbeat.log
+# On server:
+mkdir -p /var/www/html
+echo RHCSA10-D > /var/www/html/server-d.html
+restorecon -v /var/www/html/server-d.html || true
+cat > /etc/httpd/conf.d/exam-d-port.conf <<'EOF'
+Listen 8203
 EOF
-chmod +x /usr/local/sbin/examd-heartbeat.sh
-cat > /etc/systemd/system/examd-heartbeat.service <<'EOF'
-[Unit]
-Description=Exam D heartbeat
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/sbin/examd-heartbeat.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl daemon-reload
-systemctl enable --now examd-heartbeat.service
+semanage port -a -t http_port_t -p tcp 8203 2>/dev/null || semanage port -m -t http_port_t -p tcp 8203
+firewall-cmd --permanent --add-port=8203/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
 ```
 
 ---
 
-## Question 12 - route local5 log messages to /var/log/examd-local5.log and write a test (client) - 5 pts
+## Question 12 - route local5 log messages to /var/log/server-d-local5.log and write a te (server) - 5 pts
 
 ```bash
-cat > /etc/rsyslog.d/examd-local5.conf <<'EOF'
-local5.* /var/log/examd-local5.log
+# On server:
+cat > /etc/rsyslog.d/server-d-local5.conf <<'EOF'
+local5.* /var/log/server-d-local5.log
 EOF
 systemctl enable --now rsyslog
 systemctl restart rsyslog
-logger -p local5.info 'exam-d local5'
+logger -p local5.info 'server-d-local5'
 sleep 1
 ```
 
 ---
 
-## Question 13 - Create group teamd10, create user userd10, set password cinder9, and add (client) - 5 pts
+## Question 13 - Create group teamd10, create user userd10, set password cinder9, and add (client) - 4 pts
 
 ```bash
 groupadd teamd10
@@ -203,24 +229,30 @@ passwd userd10
 
 ---
 
-## Question 14 - Allow %teamd10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 14 - allow members of serverd10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
-echo '%teamd10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamd10
-chmod 440 /etc/sudoers.d/teamd10
+# On server:
+getent group serverd10 >/dev/null || groupadd serverd10
+echo '%serverd10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/serverd10-systemctl
+chmod 0440 /etc/sudoers.d/serverd10-systemctl
 ```
 
 ---
 
-## Question 15 - Set maximum password age for userd10 to 48 days and warning period to 7 (client) - 5 pts
+## Question 15 - create group serverd10 and user srvd10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
-chage -M 48 -W 7 userd10
+# On server:
+getent group serverd10 >/dev/null || groupadd serverd10
+id srvd10 >/dev/null 2>&1 || useradd srvd10
+gpasswd -a srvd10 serverd10
+echo 'srvd10:cinder9' | chpasswd
 ```
 
 ---
 
-## Question 16 - Create /usr/local/bin/d-who that prints the primary group for the suppli (client) - 5 pts
+## Question 16 - Create /usr/local/bin/d-who that prints the primary group for the suppli (client) - 4 pts
 
 ```bash
 cat > /usr/local/bin/d-who <<'EOF'
@@ -233,7 +265,7 @@ chmod +x /usr/local/bin/d-who
 
 ---
 
-## Question 17 - Write users whose shell ends with sh to /root/d-shell-users.txt (client) - 5 pts
+## Question 17 - Write users whose shell ends with sh to /root/d-shell-users.txt (client) - 4 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/d-shell-users.txt
@@ -241,11 +273,13 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/d-shell-users.txt
 
 ---
 
-## Question 18 - Create gzip archive /root/d-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 18 - create /root/exam-d-report.txt containing REPORT-D and copy it to server (client) - 4 pts
 
 ```bash
-tar -czf /root/d-etc.tar.gz /etc/hosts /etc/fstab
-tar -tzf /root/d-etc.tar.gz
+echo REPORT-D > /root/exam-d-report.txt
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-d-report.txt root@server:/root/exam-d-report.txt
 ```
 
 ---
@@ -258,23 +292,35 @@ echo '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log' | crontab -u userd10
 
 ---
 
-## Question 20 - configure autofs so /remoted/projects mounts server:/exports/autofs/proj (client) - 4 pts
+## Question 20 - export /exports/exam-d to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
 ```bash
-mkdir -p /remoted
-echo '/remoted /etc/auto.remoted' > /etc/auto.master.d/d.autofs
-echo 'projects -ro server:/exports/autofs/projects' > /etc/auto.remoted
-systemctl enable --now autofs
+# On server:
+mkdir -p /exports/exam-d
+echo 'exam d export' > /exports/exam-d/README
+cat > /etc/exports.d/exam-d-integrated.exports <<'EOF'
+/exports/exam-d 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/dprojects
+grep -Eq '^server:/exports/exam-d[[:space:]]+/mnt/dprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-d /mnt/dprojects nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
 ```
 
 ---
 
-## Question 21 - allow the http service permanently in firewalld and reload the firewall (client) - 4 pts
+## Question 21 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
-firewall-cmd --permanent --add-service=http
-firewall-cmd --reload
-firewall-cmd --query-service=http
+# On server:
+systemctl set-default multi-user.target
+systemctl get-default
 ```
 
 ---

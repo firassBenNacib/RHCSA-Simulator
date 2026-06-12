@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 03 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -56,6 +56,22 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
+# On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
@@ -135,10 +151,13 @@ chmod +x /usr/local/bin/b-who
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/b-shell-users.txt (client) - 5 pts
+## Question 10 - create /root/exam-b-report.txt containing REPORT-B and copy it to server (client) - 5 pts
 
 ```bash
-awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/b-shell-users.txt
+echo REPORT-B > /root/exam-b-report.txt
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-b-report.txt root@server:/root/exam-b-report.txt
 ```
 
 ---
@@ -162,28 +181,36 @@ ln -s /root/b-original /root/b-soft
 
 ---
 
-## Question 13 - Create and enable exambtimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 13 - create and enable serverbtimer.timer so it appends SERVER-B to /var/log/ (server) - 4 pts
 
 ```bash
-cat > /usr/local/sbin/exambtimer.sh <<'EOF'
+# On server:
+cat > /usr/local/sbin/serverbtimer.sh <<'EOF'
 #!/bin/bash
-echo exambtimer >> /var/log/exambtimer.log
+echo SERVER-B >> /var/log/serverbtimer.log
 EOF
-chmod +x /usr/local/sbin/exambtimer.sh
-cat > /etc/systemd/system/exambtimer.service <<'EOF'
+chmod +x /usr/local/sbin/serverbtimer.sh
+cat > /etc/systemd/system/serverbtimer.service <<'EOF'
+[Unit]
+Description=Server B timer job
+
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/exambtimer.sh
+ExecStart=/usr/local/sbin/serverbtimer.sh
 EOF
-cat > /etc/systemd/system/exambtimer.timer <<'EOF'
+cat > /etc/systemd/system/serverbtimer.timer <<'EOF'
+[Unit]
+Description=Run server B timer job
+
 [Timer]
-OnCalendar=*:0/10
+OnCalendar=*:/10
 Persistent=true
+
 [Install]
 WantedBy=timers.target
 EOF
 systemctl daemon-reload
-systemctl enable --now exambtimer.timer
+systemctl enable --now serverbtimer.timer
 ```
 
 ---
@@ -202,36 +229,52 @@ mount -a
 
 ---
 
-## Question 15 - Create /var/www/html/b.html and restore its default SELinux context (client) - 4 pts
+## Question 15 - publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd (server) - 4 pts
 
 ```bash
-echo b > /var/www/html/b.html
-chcon -t user_tmp_t /var/www/html/b.html
-restorecon -v /var/www/html/b.html
+# On server:
+mkdir -p /var/www/html
+echo RHCSA10-B > /var/www/html/server-b.html
+restorecon -v /var/www/html/server-b.html || true
+cat > /etc/httpd/conf.d/exam-b-port.conf <<'EOF'
+Listen 8201
+EOF
+semanage port -a -t http_port_t -p tcp 8201 2>/dev/null || semanage port -m -t http_port_t -p tcp 8201
+firewall-cmd --permanent --add-port=8201/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
 ```
 
 ---
 
-## Question 16 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 16 - create group serverb10 and user srvb10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
-setsebool -P httpd_can_network_connect on
+# On server:
+getent group serverb10 >/dev/null || groupadd serverb10
+id srvb10 >/dev/null 2>&1 || useradd srvb10
+gpasswd -a srvb10 serverb10
+echo 'srvb10:cinder9' | chpasswd
 ```
 
 ---
 
-## Question 17 - Activate the throughput-performance tuned profile (client) - 4 pts
+## Question 17 - allow members of serverb10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
-systemctl enable --now tuned
-tuned-adm profile throughput-performance
+# On server:
+getent group serverb10 >/dev/null || groupadd serverb10
+echo '%serverb10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/serverb10-systemctl
+chmod 0440 /etc/sudoers.d/serverb10-systemctl
 ```
 
 ---
 
-## Question 18 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 18 - enable persistent systemd journal storage (server) - 4 pts
 
 ```bash
+# On server:
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
 [Journal]
@@ -243,28 +286,48 @@ journalctl --flush
 
 ---
 
-## Question 19 - set a default ACL on /srv/teamb10 that gives group teamb10 full access t (client) - 4 pts
+## Question 19 - route local5 log messages to /var/log/server-b-local5.log and write a te (server) - 4 pts
 
 ```bash
-setfacl -m g:teamb10:rwx,d:g:teamb10:rwx /srv/teamb10
-getfacl -p /srv/teamb10
+# On server:
+cat > /etc/rsyslog.d/server-b-local5.conf <<'EOF'
+local5.* /var/log/server-b-local5.log
+EOF
+systemctl enable --now rsyslog
+systemctl restart rsyslog
+logger -p local5.info 'server-b-local5'
+sleep 1
 ```
 
 ---
 
-## Question 20 - mount server:/exports/direct at /mnt/bdirect persistently (client) - 4 pts
+## Question 20 - export /exports/exam-b to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
 ```bash
-mkdir -p /mnt/bdirect
-echo 'server:/exports/direct /mnt/bdirect nfs defaults,_netdev 0 0' >> /etc/fstab
+# On server:
+mkdir -p /exports/exam-b
+echo 'exam b export' > /exports/exam-b/README
+cat > /etc/exports.d/exam-b-integrated.exports <<'EOF'
+/exports/exam-b 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/bprojects
+grep -Eq '^server:/exports/exam-b[[:space:]]+/mnt/bprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-b /mnt/bprojects nfs defaults,_netdev 0 0' >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 21 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 21 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
+# On server:
 systemctl set-default multi-user.target
 systemctl get-default
 ```

@@ -45,25 +45,25 @@ On client, configure httpd to listen on TCP port 8102 and make the port usable b
 
 ---
 
-## Question 05 - set the login message to RHCSA10-C authorized access only (client) - 5 pts
+## Question 05 - set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168 (server) - 5 pts
 
-On client, set the login message to RHCSA10-C authorized access only.
-
----
-
-## Question 06 - create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof (client) - 5 pts
-
-On client, create /root/c-original, hard link /root/c-hard, and symlink /root/c-soft.
+On server, set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168.122.4.
 
 ---
 
-## Question 07 - create and enable examctimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 06 - create /srv/serverc10 owned by root:serverc10 with mode 2770 (server) - 5 pts
+
+On server, create /srv/serverc10 owned by root:serverc10 with mode 2770.
+
+---
+
+## Question 07 - create and enable examctimer.timer that runs every 10 minutes (client) - 5 pts
 
 On client, create and enable examctimer.timer that runs every 10 minutes.
 
 ---
 
-## Question 08 - create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 4 pts
+## Question 08 - create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 5 pts
 
 On client, create VG vgc10 and LV datac mounted at /mnt/datac10.
 
@@ -75,39 +75,39 @@ On client, allow TCP port 8102 permanently in firewalld and reload.
 
 ---
 
-## Question 10 - create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 10 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
 
-On client, create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
-## Question 11 - create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 11 - create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (client) - 4 pts
 
 On client, create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.
 
 ---
 
-## Question 12 - install org.rhcsa.Tools from examcflatpak and leave it installed (client) - 5 pts
+## Question 12 - install org.rhcsa.Tools from examcflatpak and leave it installed (client) - 4 pts
 
 On client, install org.rhcsa.Tools from examcflatpak and leave it installed.
 
 ---
 
-## Question 13 - create group teamc10, create user userc10, set password cinder9, and add (client) - 5 pts
+## Question 13 - create group teamc10, create user userc10, set password cinder9, and add (client) - 4 pts
 
 On client, create group teamc10, create user userc10, set password cinder9, and add the user to teamc10.
 
 ---
 
-## Question 14 - allow %teamc10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 14 - allow %teamc10 to run /usr/bin/systemctl without a password (client) - 4 pts
 
-On client, allow %teamc10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+On client, allow %teamc10 to run /usr/bin/systemctl without a password.
 
 ---
 
-## Question 15 - set maximum password age for userc10 to 47 days and warning period to 7 (client) - 5 pts
+## Question 15 - allow members of serverc10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
-On client, set maximum password age for userc10 to 47 days and warning period to 7 days.
+On server, allow members of serverc10 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
@@ -117,36 +117,42 @@ On client, create /var/www/html/c.html and restore its default SELinux context.
 
 ---
 
-## Question 17 - activate the throughput-performance tuned profile (client) - 4 pts
+## Question 17 - publish /var/www/html/server-c.html containing RHCSA10-C and serve httpd (server) - 4 pts
 
-On client, activate the throughput-performance tuned profile.
-
----
-
-## Question 18 - configure persistent systemd journal storage (client) - 4 pts
-
-On client, configure persistent systemd journal storage.
+On server, publish /var/www/html/server-c.html containing RHCSA10-C and serve httpd on TCP port 8202.
 
 ---
 
-## Question 19 - create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10 (client) - 4 pts
+## Question 18 - enable persistent systemd journal storage (server) - 4 pts
 
-On client, create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10.log every 15 minutes.
-
----
-
-## Question 20 - mount server:/exports/direct at /mnt/cdirect persistently (client) - 4 pts
-
-On client, mount server:/exports/direct at /mnt/cdirect persistently.
+On server, enable persistent systemd journal storage.
 
 ---
 
-## Question 21 - configure autofs so /remotec/projects mounts server:/exports/autofs/proj (client) - 4 pts
+## Question 19 - create and enable serverctimer.timer so it appends SERVER-C to /var/log/ (server) - 4 pts
 
-On client, configure autofs so /remotec/projects mounts server:/exports/autofs/projects.
+On server, create and enable serverctimer.timer so it appends SERVER-C to /var/log/serverctimer.log every 5 minutes.
 
 ---
 
-## Question 22 - set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 20 - export /exports/exam-c to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
-On client, set the default target to multi-user.target without rebooting.
+On server, export /exports/exam-c to the 192.168.122.0/24 network. On client, mount server:/exports/exam-c persistently at /mnt/cprojects.
+
+---
+
+## Question 21 - add a hosts entry for serverc.exam10.lab and save the output of http://s (client) - 4 pts
+
+On client, add a hosts entry for serverc.exam10.lab and save the output of http://serverc.exam10.lab:8202/server-c.html to /root/server-c-web-check.txt.
+
+---
+
+## Question 22 - route local6 log messages to /var/log/server-c-local6.log and write a te (server) - 4 pts
+
+On server, route local6 log messages to /var/log/server-c-local6.log and write a test message.
+
+---
+
+## Question 23 - create /root/exam-c-report.txt containing REPORT-C and copy it to server (client) - 4 pts
+
+On client, create /root/exam-c-report.txt containing REPORT-C and copy it to server:/root/exam-c-report.txt.

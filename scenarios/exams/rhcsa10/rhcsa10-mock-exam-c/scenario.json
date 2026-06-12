@@ -34,24 +34,25 @@
         "On client, configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "On client, publish a web page /var/www/html/examc.html containing EXAMC and enable httpd.",
         "On client, configure httpd to listen on TCP port 8102 and make the port usable by the web service.",
-        "On client, set the login message to RHCSA10-C authorized access only.",
-        "On client, create /root/c-original, hard link /root/c-hard, and symlink /root/c-soft.",
+        "On server, set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168.122.4.",
+        "On server, create /srv/serverc10 owned by root:serverc10 with mode 2770.",
         "On client, create and enable examctimer.timer that runs every 10 minutes.",
         "On client, create VG vgc10 and LV datac mounted at /mnt/datac10.",
         "On client, allow TCP port 8102 permanently in firewalld and reload.",
-        "On client, create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
         "On client, create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
         "On client, install org.rhcsa.Tools from examcflatpak and leave it installed.",
         "On client, create group teamc10, create user userc10, set password cinder9, and add the user to teamc10.",
-        "On client, allow %teamc10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
-        "On client, set maximum password age for userc10 to 47 days and warning period to 7 days.",
+        "On client, allow %teamc10 to run /usr/bin/systemctl without a password.",
+        "On server, allow members of serverc10 to run /usr/bin/systemctl with sudo without a password.",
         "On client, create /var/www/html/c.html and restore its default SELinux context.",
-        "On client, activate the throughput-performance tuned profile.",
-        "On client, configure persistent systemd journal storage.",
-        "On client, create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10.log every 15 minutes.",
-        "On client, mount server:/exports/direct at /mnt/cdirect persistently.",
-        "On client, configure autofs so /remotec/projects mounts server:/exports/autofs/projects.",
-        "On client, set the default target to multi-user.target without rebooting."
+        "On server, publish /var/www/html/server-c.html containing RHCSA10-C and serve httpd on TCP port 8202.",
+        "On server, enable persistent systemd journal storage.",
+        "On server, create and enable serverctimer.timer so it appends SERVER-C to /var/log/serverctimer.log every 5 minutes.",
+        "On server, export /exports/exam-c to the 192.168.122.0/24 network. On client, mount server:/exports/exam-c persistently at /mnt/cprojects.",
+        "On client, add a hosts entry for serverc.exam10.lab and save the output of http://serverc.exam10.lab:8202/server-c.html to /root/server-c-web-check.txt.",
+        "On server, route local6 log messages to /var/log/server-c-local6.log and write a test message.",
+        "On client, create /root/exam-c-report.txt containing REPORT-C and copy it to server:/root/exam-c-report.txt."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -63,24 +64,25 @@
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.62/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "test \"$(cat /var/www/html/examc.html 2>/dev/null)\" = EXAMC && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active",
         "grep -Eq '^Listen[[:space:]]+8102$' /etc/httpd/conf.d/examc-port.conf && semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8102([, ]|$)/ {found=1} END {exit !found}' && systemctl is-active httpd | grep -qx active && ss -ltn | awk '$4 ~ /(^|:)8102$/ {found=1} END {exit !found}'",
-        "grep -Fxq 'RHCSA10-C authorized access only' /etc/motd",
-        "test \"$(stat -c %i /root/c-original)\" = \"$(stat -c %i /root/c-hard)\" && test -L /root/c-soft",
+        "ssh server bash -lc 'set -euo pipefail; hostnamectl --static | grep -qx serverc.exam10.lab && awk '\"'\"'$1 == \"192.168.122.4\" {for (i = 2; i <= NF; i++) if ($i == \"clientc.exam10.lab\") found = 1} END {exit !found}'\"'\"' /etc/hosts'",
+        "ssh server bash -lc 'set -euo pipefail; getent group serverc10 >/dev/null && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/serverc10 | grep -qx root:serverc10:2770'",
         "systemctl cat examctimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examctimer.timer | grep -qx enabled",
         "lv_path=/dev/vgc10/datac; mapper_path=/dev/mapper/vgc10-datac; mountpoint=/mnt/datac10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "firewall-cmd --permanent --query-port=8102/tcp && firewall-cmd --query-port=8102/tcp",
-        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examcflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group teamc10 >/dev/null && id -nG userc10 | tr ' ' '\\n' | grep -qx teamc10",
         "grep -ERq '^%teamc10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
-        "chage -l userc10 | grep -Eq 'Maximum.*47'",
+        "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^%serverc10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$'\"'\"' /etc/sudoers.d/serverc10-systemctl && visudo -cf /etc/sudoers.d/serverc10-systemctl >/dev/null'",
         "ls -Z /var/www/html/c.html | grep -q httpd_sys_content_t",
-        "tuned-adm active | grep -q throughput-performance",
-        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
-        "crontab -l -u userc10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log'",
-        "findmnt -no SOURCE,TARGET /mnt/cdirect | grep -qx 'server:/exports/direct /mnt/cdirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/cdirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
-        "grep -Eq '^/remotec[[:space:]]+/etc/auto.remotec' /etc/auto.master.d/c.autofs && systemctl is-enabled autofs | grep -qx enabled",
-        "systemctl get-default | grep -qx multi-user.target"
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-C /var/www/html/server-c.html && grep -Eq '\"'\"'^Listen[[:space:]]+8202$'\"'\"' /etc/httpd/conf.d/exam-c-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8202([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8202/tcp && firewall-cmd --query-port=8202/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
+        "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverctimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/5$'\"'\"' /etc/systemd/system/serverctimer.timer && grep -Fxq '\"'\"'echo SERVER-C >> /var/log/serverctimer.log'\"'\"' /usr/local/sbin/serverctimer.sh'",
+        "findmnt -no SOURCE,TARGET /mnt/cprojects | grep -qx 'server:/exports/exam-c /mnt/cprojects' && grep -Eq '^server:/exports/exam-c[[:space:]]+/mnt/cprojects[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && ssh server bash -lc 'set -euo pipefail; grep -Eq \"^/exports/exam-c[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/exam-c-integrated.exports && systemctl is-active nfs-server | grep -qx active'",
+        "grep -Fxq RHCSA10-C /root/server-c-web-check.txt",
+        "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^local6\\.\\*[[:space:]]+/var/log/server-c-local6\\.log$'\"'\"' /etc/rsyslog.d/server-c-local6.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq '\"'\"'server-c-local6'\"'\"' /var/log/server-c-local6.log'",
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq REPORT-C /root/exam-c-report.txt'"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -90,24 +92,25 @@
         "configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.1",
         "publish a web page /var/www/html/examc.html containing EXAMC and enable ",
         "configure httpd to listen on TCP port 8102 and make the port usable by t",
-        "set the login message to RHCSA10-C authorized access only",
-        "create /root/c-original, hard link /root/c-hard, and symlink /root/c-sof",
+        "set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168",
+        "create /srv/serverc10 owned by root:serverc10 with mode 2770",
         "create and enable examctimer.timer that runs every 10 minutes",
         "create VG vgc10 and LV datac mounted at /mnt/datac10",
         "allow TCP port 8102 permanently in firewalld and reload",
-        "create enabled BaseOS and AppStream repository definitions using http://",
+        "On client and server, create enabled BaseOS and AppStream repository def",
         "create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/",
         "install org.rhcsa.Tools from examcflatpak and leave it installed",
         "create group teamc10, create user userc10, set password cinder9, and add",
-        "allow %teamc10 to run /usr/bin/systemctl without a password by using a s",
-        "set maximum password age for userc10 to 47 days and warning period to 7 ",
+        "allow %teamc10 to run /usr/bin/systemctl without a password",
+        "allow members of serverc10 to run /usr/bin/systemctl with sudo without a",
         "create /var/www/html/c.html and restore its default SELinux context",
-        "activate the throughput-performance tuned profile",
-        "configure persistent systemd journal storage",
-        "create a cron job for userc10 that writes EXAM10 to /home/userc10/exam10",
-        "mount server:/exports/direct at /mnt/cdirect persistently",
-        "configure autofs so /remotec/projects mounts server:/exports/autofs/proj",
-        "set the default target to multi-user.target without rebooting"
+        "publish /var/www/html/server-c.html containing RHCSA10-C and serve httpd",
+        "enable persistent systemd journal storage",
+        "create and enable serverctimer.timer so it appends SERVER-C to /var/log/",
+        "export /exports/exam-c to the 192.168.122.0/24 network. On client, mount",
+        "add a hosts entry for serverc.exam10.lab and save the output of http://s",
+        "route local6 log messages to /var/log/server-c-local6.log and write a te",
+        "create /root/exam-c-report.txt containing REPORT-C and copy it to server"
       ],
       "task_points": [
         5,
@@ -116,15 +119,16 @@
         5,
         5,
         5,
+        5,
+        5,
         4,
         4,
         4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
+        4,
+        4,
+        4,
+        4,
+        4,
         4,
         4,
         4,
@@ -155,12 +159,16 @@
           "systemctl restart httpd"
         ],
         [
-          "echo 'RHCSA10-C authorized access only' > /etc/motd"
+          "# On server:",
+          "hostnamectl set-hostname serverc.exam10.lab",
+          "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clientc\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 clientc.exam10.lab' >> /etc/hosts"
         ],
         [
-          "echo link > /root/c-original",
-          "ln /root/c-original /root/c-hard",
-          "ln -s /root/c-original /root/c-soft"
+          "# On server:",
+          "getent group serverc10 >/dev/null || groupadd serverc10",
+          "mkdir -p /srv/serverc10",
+          "chown root:serverc10 /srv/serverc10",
+          "chmod 2770 /srv/serverc10"
         ],
         [
           "cat > /usr/local/sbin/examctimer.sh <<'EOF'",
@@ -197,19 +205,11 @@
           "firewall-cmd --reload"
         ],
         [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
-          "[rhcsa10-exam-baseos]",
-          "name=RHCSA10 Exam BaseOS",
-          "baseurl=http://server/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[rhcsa10-exam-appstream]",
-          "name=RHCSA10 Exam AppStream",
-          "baseurl=http://server/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          "EOF"
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "# On server:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all"
         ],
         [
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file:///opt/rhcsa/flatpak/repo"
@@ -229,7 +229,10 @@
           "chmod 440 /etc/sudoers.d/teamc10"
         ],
         [
-          "chage -M 47 -W 7 userc10"
+          "# On server:",
+          "getent group serverc10 >/dev/null || groupadd serverc10",
+          "echo '%serverc10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/serverc10-systemctl",
+          "chmod 0440 /etc/sudoers.d/serverc10-systemctl"
         ],
         [
           "echo c > /var/www/html/c.html",
@@ -237,34 +240,98 @@
           "restorecon -v /var/www/html/c.html"
         ],
         [
-          "systemctl enable --now tuned",
-          "tuned-adm profile throughput-performance"
+          "# On server:",
+          "mkdir -p /var/www/html",
+          "echo RHCSA10-C > /var/www/html/server-c.html",
+          "restorecon -v /var/www/html/server-c.html || true",
+          "cat > /etc/httpd/conf.d/exam-c-port.conf <<'EOF'\nListen 8202\nEOF",
+          "semanage port -a -t http_port_t -p tcp 8202 2>/dev/null || semanage port -m -t http_port_t -p tcp 8202",
+          "firewall-cmd --permanent --add-port=8202/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd",
+          "systemctl restart httpd"
         ],
         [
+          "# On server:",
           "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
           "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
           "systemctl restart systemd-journald",
           "journalctl --flush"
         ],
         [
-          "echo '*/15 * * * * echo EXAM10 >> /home/userc10/exam10.log' | crontab -u userc10 -"
+          "# On server:",
+          "cat > /usr/local/sbin/serverctimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-C >> /var/log/serverctimer.log\nEOF",
+          "chmod +x /usr/local/sbin/serverctimer.sh",
+          "cat > /etc/systemd/system/serverctimer.service <<'EOF'\n[Unit]\nDescription=Server C timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serverctimer.sh\nEOF",
+          "cat > /etc/systemd/system/serverctimer.timer <<'EOF'\n[Unit]\nDescription=Run server C timer job\n\n[Timer]\nOnCalendar=*:/5\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now serverctimer.timer"
         ],
         [
-          "mkdir -p /mnt/cdirect",
-          "echo 'server:/exports/direct /mnt/cdirect nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "# On server:",
+          "mkdir -p /exports/exam-c",
+          "echo 'exam c export' > /exports/exam-c/README",
+          "cat > /etc/exports.d/exam-c-integrated.exports <<'EOF'\n/exports/exam-c 192.168.122.0/24(rw,sync,no_root_squash)\nEOF",
+          "systemctl enable --now nfs-server",
+          "firewall-cmd --permanent --add-service=nfs",
+          "firewall-cmd --permanent --add-service=mountd",
+          "firewall-cmd --permanent --add-service=rpc-bind",
+          "firewall-cmd --reload",
+          "exportfs -arv",
+          "# On client:",
+          "mkdir -p /mnt/cprojects",
+          "grep -Eq '^server:/exports/exam-c[[:space:]]+/mnt/cprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-c /mnt/cprojects nfs defaults,_netdev 0 0' >> /etc/fstab",
           "mount -a"
         ],
         [
-          "mkdir -p /remotec",
-          "echo '/remotec /etc/auto.remotec' > /etc/auto.master.d/c.autofs",
-          "echo 'projects -ro server:/exports/autofs/projects' > /etc/auto.remotec",
-          "systemctl enable --now autofs"
+          "grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverc\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts",
+          "curl -s http://serverc.exam10.lab:8202/server-c.html > /root/server-c-web-check.txt"
         ],
         [
-          "systemctl set-default multi-user.target",
-          "systemctl get-default"
+          "# On server:",
+          "cat > /etc/rsyslog.d/server-c-local6.conf <<'EOF'\nlocal6.* /var/log/server-c-local6.log\nEOF",
+          "systemctl enable --now rsyslog",
+          "systemctl restart rsyslog",
+          "logger -p local6.info 'server-c-local6'",
+          "sleep 1"
+        ],
+        [
+          "echo REPORT-C > /root/exam-c-report.txt",
+          "test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1",
+          "ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server",
+          "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-c-report.txt root@server:/root/exam-c-report.txt"
         ]
-      ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "server",
+        "client",
+        "client",
+        "client",
+        "both",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "server",
+        "server",
+        "server",
+        "both",
+        "both",
+        "server",
+        "both"
+      ],
+      "target_balance": {
+        "client_only": 12,
+        "server_only": 7,
+        "client_server": 4
+      }
     }
   },
   "vm_scripts": {

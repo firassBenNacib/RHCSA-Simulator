@@ -33,9 +33,9 @@ Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 03 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
@@ -75,9 +75,9 @@ Create /usr/local/bin/b-who that prints the primary group for the supplied user 
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/b-shell-users.txt (client) - 5 pts
+## Question 10 - create /root/exam-b-report.txt containing REPORT-B and copy it to server (client) - 5 pts
 
-Write users whose shell ends with sh to /root/b-shell-users.txt.
+On client, create /root/exam-b-report.txt containing REPORT-B and copy it to server:/root/exam-b-report.txt.
 
 ---
 
@@ -93,9 +93,9 @@ Create /root/b-original, hard link /root/b-hard, and symlink /root/b-soft.
 
 ---
 
-## Question 13 - Create and enable exambtimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 13 - create and enable serverbtimer.timer so it appends SERVER-B to /var/log/ (server) - 4 pts
 
-Create and enable exambtimer.timer that runs every 10 minutes.
+On server, create and enable serverbtimer.timer so it appends SERVER-B to /var/log/serverbtimer.log every 10 minutes.
 
 ---
 
@@ -105,45 +105,45 @@ Create VG vgb10 and LV datab mounted at /mnt/datab10.
 
 ---
 
-## Question 15 - Create /var/www/html/b.html and restore its default SELinux context (client) - 4 pts
+## Question 15 - publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd (server) - 4 pts
 
-Create /var/www/html/b.html and restore its default SELinux context.
-
----
-
-## Question 16 - Persistently enable httpd_can_network_connect (client) - 4 pts
-
-Persistently enable httpd_can_network_connect.
+On server, publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd on TCP port 8201.
 
 ---
 
-## Question 17 - Activate the throughput-performance tuned profile (client) - 4 pts
+## Question 16 - create group serverb10 and user srvb10 with password cinder9, then add t (server) - 4 pts
 
-Activate the throughput-performance tuned profile.
-
----
-
-## Question 18 - Configure persistent systemd journal storage (client) - 4 pts
-
-Configure persistent systemd journal storage.
+On server, create group serverb10 and user srvb10 with password cinder9, then add the user to serverb10.
 
 ---
 
-## Question 19 - set a default ACL on /srv/teamb10 that gives group teamb10 full access t (client) - 4 pts
+## Question 17 - allow members of serverb10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
-On client, set a default ACL on /srv/teamb10 that gives group teamb10 full access to new files.
-
----
-
-## Question 20 - mount server:/exports/direct at /mnt/bdirect persistently (client) - 4 pts
-
-On client, mount server:/exports/direct at /mnt/bdirect persistently.
+On server, allow members of serverb10 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 21 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 18 - enable persistent systemd journal storage (server) - 4 pts
 
-Set the default target to multi-user.target without rebooting.
+On server, enable persistent systemd journal storage.
+
+---
+
+## Question 19 - route local5 log messages to /var/log/server-b-local5.log and write a te (server) - 4 pts
+
+On server, route local5 log messages to /var/log/server-b-local5.log and write a test message.
+
+---
+
+## Question 20 - export /exports/exam-b to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+
+On server, export /exports/exam-b to the 192.168.122.0/24 network. On client, mount server:/exports/exam-b persistently at /mnt/bprojects.
+
+---
+
+## Question 21 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
+
+On server, set the default boot target to multi-user.target without rebooting.
 
 ---
 

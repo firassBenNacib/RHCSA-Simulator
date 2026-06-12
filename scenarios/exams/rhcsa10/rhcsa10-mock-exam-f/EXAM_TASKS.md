@@ -33,19 +33,19 @@ Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - copy regular files owned by root from /opt/exam-f/find to /root/examf-ro (client) - 4 pts
+## Question 03 - create /root/exam-f-report.txt containing REPORT-F and copy it to server (client) - 5 pts
 
-On client, copy regular files owned by root from /opt/exam-f/find to /root/examf-rootfiles while preserving paths.
+On client, create /root/exam-f-report.txt containing REPORT-F and copy it to server:/root/exam-f-report.txt.
 
 ---
 
-## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 4 pts
+## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 5 pts
 
 On client, create a 500 MiB swap partition on /dev/sdc and make it active and persistent.
 
 ---
 
-## Question 05 - Activate the throughput-performance tuned profile (client) - 4 pts
+## Question 05 - Activate the throughput-performance tuned profile (client) - 5 pts
 
 Activate the throughput-performance tuned profile.
 
@@ -63,15 +63,15 @@ Ensure org.rhcsa.Tools is not installed after configuring examfflatpak.
 
 ---
 
-## Question 08 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 08 - enable persistent systemd journal storage (server) - 5 pts
 
-Configure persistent systemd journal storage.
+On server, enable persistent systemd journal storage.
 
 ---
 
-## Question 09 - Allow %teamf10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 09 - Allow %teamf10 to run /usr/bin/systemctl without a password (client) - 5 pts
 
-Allow %teamf10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
+Allow %teamf10 to run /usr/bin/systemctl without a password.
 
 ---
 
@@ -81,7 +81,7 @@ Create group teamf10, create user userf10, set password cinder9, and add the use
 
 ---
 
-## Question 11 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (client) - 4 pts
+## Question 11 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (client) - 5 pts
 
 Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10.log every 15 minutes.
 
@@ -93,60 +93,60 @@ Create /usr/local/bin/f-who that prints the primary group for the supplied user 
 
 ---
 
-## Question 13 - Set the default target to multi-user.target without rebooting (client) - 4 pts
+## Question 13 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
-Set the default target to multi-user.target without rebooting.
+On server, set the default boot target to multi-user.target without rebooting.
 
 ---
 
-## Question 14 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 14 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
 
 Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fstab.
 
 ---
 
-## Question 15 - Install lsof and ensure tcpdump is removed (client) - 4 pts
+## Question 15 - export /exports/exam-f to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
-Install lsof and ensure tcpdump is removed.
-
----
-
-## Question 16 - Create and enable examftimer.timer that runs every 10 minutes (client) - 4 pts
-
-Create and enable examftimer.timer that runs every 10 minutes.
+On server, export /exports/exam-f to the 192.168.122.0/24 network. On client, mount server:/exports/exam-f persistently at /mnt/fprojects.
 
 ---
 
-## Question 17 - Allow TCP port 8105 permanently in firewalld and reload (client) - 4 pts
+## Question 16 - create and enable serverftimer.timer so it appends SERVER-F to /var/log/ (server) - 4 pts
 
-Allow TCP port 8105 permanently in firewalld and reload.
-
----
-
-## Question 18 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
-
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+On server, create and enable serverftimer.timer so it appends SERVER-F to /var/log/serverftimer.log every 10 minutes.
 
 ---
 
-## Question 19 - Set maximum password age for userf10 to 50 days and warning period to 7 (client) - 5 pts
+## Question 17 - publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd (server) - 4 pts
+
+On server, publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd on TCP port 8205.
+
+---
+
+## Question 18 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
+
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
+
+---
+
+## Question 19 - Set maximum password age for userf10 to 50 days and warning period to 7 (client) - 4 pts
 
 Set maximum password age for userf10 to 50 days and warning period to 7 days.
 
 ---
 
-## Question 20 - create and enable examf-cleanup.service so it writes F-CLEANUP to /var/l (client) - 5 pts
+## Question 20 - route local6 log messages to /var/log/server-f-local6.log and write a te (server) - 4 pts
 
-On client, create and enable examf-cleanup.service so it writes F-CLEANUP to /var/log/examf-cleanup.log when started.
-
----
-
-## Question 21 - Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof (client) - 5 pts
-
-Create /root/f-original, hard link /root/f-hard, and symlink /root/f-soft.
+On server, route local6 log messages to /var/log/server-f-local6.log and write a test message.
 
 ---
 
-## Question 22 - Create VG vgf10 and LV dataf mounted at /mnt/dataf10 (client) - 4 pts
+## Question 21 - create /srv/serverf10 owned by root:serverf10 with mode 2770 (server) - 4 pts
 
-Create VG vgf10 and LV dataf mounted at /mnt/dataf10.
+On server, create /srv/serverf10 owned by root:serverf10 with mode 2770.
+
+---
+
+## Question 22 - create group serverf10 and user srvf10 with password cinder9, then add t (server) - 4 pts
+
+On server, create group serverf10 and user srvf10 with password cinder9, then add the user to serverf10.

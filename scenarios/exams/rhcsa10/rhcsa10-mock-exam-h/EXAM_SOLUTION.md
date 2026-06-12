@@ -50,36 +50,47 @@ grep -Eq '^192\.168\.122\.4[[:space:]]+clienth\.exam10\.lab$' /etc/hosts || echo
 
 ---
 
-## Question 04 - create /var/tmp/examh-client.txt containing HCLIENT (client) - 5 pts
+## Question 04 - create /root/exam-h-report.txt containing REPORT-H and copy it to server (client) - 5 pts
 
 ```bash
-echo HCLIENT > /var/tmp/examh-client.txt
+echo REPORT-H > /root/exam-h-report.txt
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-h-report.txt root@server:/root/exam-h-report.txt
 ```
 
 ---
 
-## Question 05 - Create and enable examhtimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 05 - create and enable serverhtimer.timer so it appends SERVER-H to /var/log/ (server) - 5 pts
 
 ```bash
-cat > /usr/local/sbin/examhtimer.sh <<'EOF'
+# On server:
+cat > /usr/local/sbin/serverhtimer.sh <<'EOF'
 #!/bin/bash
-echo examhtimer >> /var/log/examhtimer.log
+echo SERVER-H >> /var/log/serverhtimer.log
 EOF
-chmod +x /usr/local/sbin/examhtimer.sh
-cat > /etc/systemd/system/examhtimer.service <<'EOF'
+chmod +x /usr/local/sbin/serverhtimer.sh
+cat > /etc/systemd/system/serverhtimer.service <<'EOF'
+[Unit]
+Description=Server H timer job
+
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/examhtimer.sh
+ExecStart=/usr/local/sbin/serverhtimer.sh
 EOF
-cat > /etc/systemd/system/examhtimer.timer <<'EOF'
+cat > /etc/systemd/system/serverhtimer.timer <<'EOF'
+[Unit]
+Description=Run server H timer job
+
 [Timer]
-OnCalendar=*:0/10
+OnCalendar=*:/10
 Persistent=true
+
 [Install]
 WantedBy=timers.target
 EOF
 systemctl daemon-reload
-systemctl enable --now examhtimer.timer
+systemctl enable --now serverhtimer.timer
 ```
 
 ---
@@ -103,7 +114,7 @@ chage -M 52 -W 7 userh10
 
 ---
 
-## Question 08 - Persistently enable httpd_can_network_connect (client) - 4 pts
+## Question 08 - Persistently enable httpd_can_network_connect (client) - 5 pts
 
 ```bash
 setsebool -P httpd_can_network_connect on
@@ -119,7 +130,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt
 
 ---
 
-## Question 10 - configure persistent systemd journal storage (server) - 4 pts
+## Question 10 - configure persistent systemd journal storage (server) - 5 pts
 
 ```bash
 # On server:
@@ -134,17 +145,19 @@ journalctl --flush
 
 ---
 
-## Question 11 - Create /root/h-original, hard link /root/h-hard, and symlink /root/h-sof (client) - 5 pts
+## Question 11 - create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 5 pts
 
 ```bash
-echo link > /root/h-original
-ln /root/h-original /root/h-hard
-ln -s /root/h-original /root/h-soft
+# On server:
+getent group serverh10 >/dev/null || groupadd serverh10
+mkdir -p /srv/serverh10
+chown root:serverh10 /srv/serverh10
+chmod 2770 /srv/serverh10
 ```
 
 ---
 
-## Question 12 - Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10 (client) - 4 pts
+## Question 12 - Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10 (client) - 5 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log' | crontab -u userh10 -
@@ -213,28 +226,43 @@ dnf remove -y tcpdump
 
 ---
 
-## Question 17 - Use server as the only chrony source and enable chronyd (client) - 4 pts
+## Question 17 - make chronyd available as the lab time source. On client, configure chro (client + server) - 4 pts
 
 ```bash
-sed -i '/^pool /d;/^server /d' /etc/chrony.conf
-echo 'server server iburst' >> /etc/chrony.conf
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
 systemctl enable --now chronyd
 ```
 
 ---
 
-## Question 18 - allow TCP port 2208 permanently in firewalld and reload the firewall (server) - 4 pts
+## Question 18 - publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd (server) - 4 pts
 
 ```bash
 # On server:
-firewall-cmd --permanent --add-port=2208/tcp
+mkdir -p /var/www/html
+echo RHCSA10-H > /var/www/html/server-h.html
+restorecon -v /var/www/html/server-h.html || true
+cat > /etc/httpd/conf.d/exam-h-port.conf <<'EOF'
+Listen 8207
+EOF
+semanage port -a -t http_port_t -p tcp 8207 2>/dev/null || semanage port -m -t http_port_t -p tcp 8207
+firewall-cmd --permanent --add-port=8207/tcp
 firewall-cmd --reload
-firewall-cmd --query-port=2208/tcp
+systemctl enable --now httpd
+systemctl restart httpd
 ```
 
 ---
 
-## Question 19 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 19 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -250,11 +278,27 @@ baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
 EOF
+dnf clean all
+# On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 20 - Allow %teamh10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 20 - Allow %teamh10 to run /usr/bin/systemctl without a password (client) - 4 pts
 
 ```bash
 echo '%teamh10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamh10
@@ -263,20 +307,18 @@ chmod 440 /etc/sudoers.d/teamh10
 
 ---
 
-## Question 21 - Create /usr/local/bin/h-who that prints the primary group for the suppli (client) - 5 pts
+## Question 21 - allow members of serverh10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
-cat > /usr/local/bin/h-who <<'EOF'
-#!/bin/bash
-test -n "${1:-}" || exit 2
-id -gn "$1"
-EOF
-chmod +x /usr/local/bin/h-who
+# On server:
+getent group serverh10 >/dev/null || groupadd serverh10
+echo '%serverh10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/serverh10-systemctl
+chmod 0440 /etc/sudoers.d/serverh10-systemctl
 ```
 
 ---
 
-## Question 22 - Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 22 - Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
 
 ```bash
 tar -czf /root/h-etc.tar.gz /etc/hosts /etc/fstab

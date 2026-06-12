@@ -33,9 +33,9 @@ Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions using http:// (client) - 5 pts
+## Question 03 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
 
-Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
@@ -57,45 +57,45 @@ Create group teame10, create user usere10, set password cinder9, and add the use
 
 ---
 
-## Question 07 - Allow %teame10 to run /usr/bin/systemctl without a password by using a s (client) - 5 pts
+## Question 07 - create group servere10 and user srve10 with password cinder9, then add t (server) - 5 pts
 
-Allow %teame10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.
-
----
-
-## Question 08 - Set maximum password age for usere10 to 49 days and warning period to 7 (client) - 5 pts
-
-Set maximum password age for usere10 to 49 days and warning period to 7 days.
+On server, create group servere10 and user srve10 with password cinder9, then add the user to servere10.
 
 ---
 
-## Question 09 - Create /usr/local/bin/e-who that prints the primary group for the suppli (client) - 5 pts
+## Question 08 - allow members of servere10 to run /usr/bin/systemctl with sudo without a (server) - 5 pts
+
+On server, allow members of servere10 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 09 - Create /usr/local/bin/e-who that prints the primary group for the suppli (client) - 4 pts
 
 Create /usr/local/bin/e-who that prints the primary group for the supplied user argument.
 
 ---
 
-## Question 10 - Write users whose shell ends with sh to /root/e-shell-users.txt (client) - 5 pts
+## Question 10 - Write users whose shell ends with sh to /root/e-shell-users.txt (client) - 4 pts
 
 Write users whose shell ends with sh to /root/e-shell-users.txt.
 
 ---
 
-## Question 11 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 11 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
 
 Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fstab.
 
 ---
 
-## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (client) - 5 pts
+## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (client) - 4 pts
 
 Create /root/e-original, hard link /root/e-hard, and symlink /root/e-soft.
 
 ---
 
-## Question 13 - Create and enable exametimer.timer that runs every 10 minutes (client) - 4 pts
+## Question 13 - create and enable serveretimer.timer so it appends SERVER-E to /var/log/ (server) - 4 pts
 
-Create and enable exametimer.timer that runs every 10 minutes.
+On server, create and enable serveretimer.timer so it appends SERVER-E to /var/log/serveretimer.log every 10 minutes.
 
 ---
 
@@ -105,15 +105,15 @@ Create VG vge10 and LV datae mounted at /mnt/datae10.
 
 ---
 
-## Question 15 - Allow TCP port 8104 permanently in firewalld and reload (client) - 4 pts
+## Question 15 - publish /var/www/html/server-e.html containing RHCSA10-E and serve httpd (server) - 4 pts
 
-Allow TCP port 8104 permanently in firewalld and reload.
+On server, publish /var/www/html/server-e.html containing RHCSA10-E and serve httpd on TCP port 8204.
 
 ---
 
-## Question 16 - Create /var/www/html/e.html and restore its default SELinux context (client) - 4 pts
+## Question 16 - create /srv/servere10 owned by root:servere10 with mode 2770 (server) - 4 pts
 
-Create /var/www/html/e.html and restore its default SELinux context.
+On server, create /srv/servere10 owned by root:servere10 with mode 2770.
 
 ---
 
@@ -123,21 +123,21 @@ Activate the throughput-performance tuned profile.
 
 ---
 
-## Question 18 - Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10 (client) - 4 pts
+## Question 18 - route local5 log messages to /var/log/server-e-local5.log and write a te (server) - 4 pts
 
-Create a cron job for usere10 that writes EXAM10 to /home/usere10/exam10.log every 15 minutes.
-
----
-
-## Question 19 - mount server:/exports/direct at /mnt/edirect persistently (client) - 4 pts
-
-On client, mount server:/exports/direct at /mnt/edirect persistently.
+On server, route local5 log messages to /var/log/server-e-local5.log and write a test message.
 
 ---
 
-## Question 20 - save the first useradd help usage line to /root/e-useradd-help.txt (client) - 4 pts
+## Question 19 - export /exports/exam-e to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
 
-On client, save the first useradd help usage line to /root/e-useradd-help.txt.
+On server, export /exports/exam-e to the 192.168.122.0/24 network. On client, mount server:/exports/exam-e persistently at /mnt/eprojects.
+
+---
+
+## Question 20 - create /root/exam-e-report.txt containing REPORT-E and copy it to server (client) - 4 pts
+
+On client, create /root/exam-e-report.txt containing REPORT-E and copy it to server:/root/exam-e-report.txt.
 
 ---
 
@@ -147,6 +147,12 @@ Install lsof and ensure tcpdump is removed.
 
 ---
 
-## Question 22 - Configure persistent systemd journal storage (client) - 4 pts
+## Question 22 - enable persistent systemd journal storage (server) - 4 pts
 
-Configure persistent systemd journal storage.
+On server, enable persistent systemd journal storage.
+
+---
+
+## Question 23 - add a hosts entry for servere.exam10.lab and save the output of http://s (client) - 4 pts
+
+On client, add a hosts entry for servere.exam10.lab and save the output of http://servere.exam10.lab:8204/server-e.html to /root/server-e-web-check.txt.

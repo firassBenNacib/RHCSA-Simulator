@@ -31,26 +31,26 @@
       "tasks": [
         "On client, set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
-        "On client, copy regular files owned by root from /opt/exam-f/find to /root/examf-rootfiles while preserving paths.",
+        "On client, create /root/exam-f-report.txt containing REPORT-F and copy it to server:/root/exam-f-report.txt.",
         "On client, create a 500 MiB swap partition on /dev/sdc and make it active and persistent.",
         "Activate the throughput-performance tuned profile.",
         "Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
         "Ensure org.rhcsa.Tools is not installed after configuring examfflatpak.",
-        "Configure persistent systemd journal storage.",
-        "Allow %teamf10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
+        "On server, enable persistent systemd journal storage.",
+        "Allow %teamf10 to run /usr/bin/systemctl without a password.",
         "Create group teamf10, create user userf10, set password cinder9, and add the user to teamf10.",
         "Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10.log every 15 minutes.",
         "Create /usr/local/bin/f-who that prints the primary group for the supplied user argument.",
-        "Set the default target to multi-user.target without rebooting.",
+        "On server, set the default boot target to multi-user.target without rebooting.",
         "Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fstab.",
-        "Install lsof and ensure tcpdump is removed.",
-        "Create and enable examftimer.timer that runs every 10 minutes.",
-        "Allow TCP port 8105 permanently in firewalld and reload.",
-        "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        "On server, export /exports/exam-f to the 192.168.122.0/24 network. On client, mount server:/exports/exam-f persistently at /mnt/fprojects.",
+        "On server, create and enable serverftimer.timer so it appends SERVER-F to /var/log/serverftimer.log every 10 minutes.",
+        "On server, publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd on TCP port 8205.",
+        "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
         "Set maximum password age for userf10 to 50 days and warning period to 7 days.",
-        "On client, create and enable examf-cleanup.service so it writes F-CLEANUP to /var/log/examf-cleanup.log when started.",
-        "Create /root/f-original, hard link /root/f-hard, and symlink /root/f-soft.",
-        "Create VG vgf10 and LV dataf mounted at /mnt/dataf10."
+        "On server, route local6 log messages to /var/log/server-f-local6.log and write a test message.",
+        "On server, create /srv/serverf10 owned by root:serverf10 with mode 2770.",
+        "On server, create group serverf10 and user srvf10 with password cinder9, then add the user to serverf10."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -60,26 +60,26 @@
       "checks": [
         "hostnamectl --static | grep -qx clientf.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverf\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.65/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
-        "test -f /root/examf-rootfiles/opt/exam-f/find/a/root.conf && ! test -e /root/examf-rootfiles/opt/exam-f/find/b/user.conf",
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq REPORT-F /root/exam-f-report.txt'",
         "swap_uuid=\"$(blkid -s UUID -o value /dev/sdc1)\"; test -n \"$swap_uuid\" && swapon --show=NAME --noheadings | grep -qx /dev/sdc1 && awk -v dev=\"/dev/sdc1\" -v uuid=\"$swap_uuid\" '$1 !~ /^#/ && $2 == \"swap\" && $3 == \"swap\" && ($1 == dev || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "tuned-adm active | grep -q throughput-performance",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examfflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
-        "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
+        "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
         "grep -ERq '^%teamf10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "getent group teamf10 >/dev/null && id -nG userf10 | tr ' ' '\\n' | grep -qx teamf10",
         "crontab -l -u userf10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log'",
         "test -x /usr/local/bin/f-who && /usr/local/bin/f-who root | grep -qx root",
-        "systemctl get-default | grep -qx multi-user.target",
+        "ssh server bash -lc 'set -euo pipefail; systemctl get-default | grep -qx multi-user.target'",
         "test -f /root/f-etc.tar.gz && tar -tzf /root/f-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
-        "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1",
-        "systemctl cat examftimer.timer | grep -Fqx 'OnCalendar=*:0/10' && systemctl is-enabled examftimer.timer | grep -qx enabled",
-        "firewall-cmd --permanent --query-port=8105/tcp && firewall-cmd --query-port=8105/tcp",
-        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
+        "findmnt -no SOURCE,TARGET /mnt/fprojects | grep -qx 'server:/exports/exam-f /mnt/fprojects' && grep -Eq '^server:/exports/exam-f[[:space:]]+/mnt/fprojects[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && ssh server bash -lc 'set -euo pipefail; grep -Eq \"^/exports/exam-f[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/exam-f-integrated.exports && systemctl is-active nfs-server | grep -qx active'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverftimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/10$'\"'\"' /etc/systemd/system/serverftimer.timer && grep -Fxq '\"'\"'echo SERVER-F >> /var/log/serverftimer.log'\"'\"' /usr/local/sbin/serverftimer.sh'",
+        "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-F /var/www/html/server-f.html && grep -Eq '\"'\"'^Listen[[:space:]]+8205$'\"'\"' /etc/httpd/conf.d/exam-f-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8205([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8205/tcp && firewall-cmd --query-port=8205/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
+        "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
         "chage -l userf10 | grep -Eq 'Maximum.*50'",
-        "systemctl is-enabled examf-cleanup.service | grep -qx enabled && systemctl is-active examf-cleanup.service | grep -qx active && grep -Fxq F-CLEANUP /var/log/examf-cleanup.log",
-        "test \"$(stat -c %i /root/f-original)\" = \"$(stat -c %i /root/f-hard)\" && test -L /root/f-soft",
-        "lv_path=/dev/vgf10/dataf; mapper_path=/dev/mapper/vgf10-dataf; mountpoint=/mnt/dataf10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
+        "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^local6\\.\\*[[:space:]]+/var/log/server-f-local6\\.log$'\"'\"' /etc/rsyslog.d/server-f-local6.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq '\"'\"'server-f-local6'\"'\"' /var/log/server-f-local6.log'",
+        "ssh server bash -lc 'set -euo pipefail; getent group serverf10 >/dev/null && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/serverf10 | grep -qx root:serverf10:2770'",
+        "ssh server bash -lc 'set -euo pipefail; getent group serverf10 >/dev/null && id -nG srvf10 | tr '\"'\"' '\"'\"' '\"'\"'\\n'\"'\"' | grep -qx serverf10'"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -87,49 +87,49 @@
       "task_titles": [
         "set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.1",
-        "copy regular files owned by root from /opt/exam-f/find to /root/examf-ro",
+        "create /root/exam-f-report.txt containing REPORT-F and copy it to server",
         "create a 500 MiB swap partition on /dev/sdc and make it active and persi",
         "Activate the throughput-performance tuned profile",
         "Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/",
         "Ensure org.rhcsa.Tools is not installed after configuring examfflatpak",
-        "Configure persistent systemd journal storage",
-        "Allow %teamf10 to run /usr/bin/systemctl without a password by using a s",
+        "enable persistent systemd journal storage",
+        "Allow %teamf10 to run /usr/bin/systemctl without a password",
         "Create group teamf10, create user userf10, set password cinder9, and add",
         "Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10",
         "Create /usr/local/bin/f-who that prints the primary group for the suppli",
-        "Set the default target to multi-user.target without rebooting",
+        "set the default boot target to multi-user.target without rebooting",
         "Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs",
-        "Install lsof and ensure tcpdump is removed",
-        "Create and enable examftimer.timer that runs every 10 minutes",
-        "Allow TCP port 8105 permanently in firewalld and reload",
-        "Create enabled BaseOS and AppStream repository definitions using http://",
+        "export /exports/exam-f to the 192.168.122.0/24 network. On client, mount",
+        "create and enable serverftimer.timer so it appends SERVER-F to /var/log/",
+        "publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd",
+        "On client and server, create enabled BaseOS and AppStream repository def",
         "Set maximum password age for userf10 to 50 days and warning period to 7 ",
-        "create and enable examf-cleanup.service so it writes F-CLEANUP to /var/l",
-        "Create /root/f-original, hard link /root/f-hard, and symlink /root/f-sof",
-        "Create VG vgf10 and LV dataf mounted at /mnt/dataf10"
+        "route local6 log messages to /var/log/server-f-local6.log and write a te",
+        "create /srv/serverf10 owned by root:serverf10 with mode 2770",
+        "create group serverf10 and user srvf10 with password cinder9, then add t"
       ],
       "task_points": [
         5,
         5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        4,
         4,
         4,
         4,
-        5,
-        5,
-        4,
-        5,
-        5,
-        4,
-        5,
-        4,
-        5,
         4,
         4,
         4,
-        5,
-        5,
-        5,
-        5,
+        4,
+        4,
         4
       ],
       "solution_commands": [
@@ -143,9 +143,10 @@
           "nmcli connection up \"System eth1\""
         ],
         [
-          "mkdir -p /root/examf-rootfiles",
-          "find /opt/exam-f/find -type f -user root -exec cp --parents -t /root/examf-rootfiles {} +",
-          "find /root/examf-rootfiles -type f -print"
+          "echo REPORT-F > /root/exam-f-report.txt",
+          "test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-exam >/dev/null 2>&1",
+          "ssh-copy-id -i /root/.ssh/id_ed25519.pub root@server",
+          "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-f-report.txt root@server:/root/exam-f-report.txt"
         ],
         [
           "parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB",
@@ -167,6 +168,7 @@
           "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
         ],
         [
+          "# On server:",
           "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
           "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
           "systemctl restart systemd-journald",
@@ -194,6 +196,7 @@
           "chmod +x /usr/local/bin/f-who"
         ],
         [
+          "# On server:",
           "systemctl set-default multi-user.target",
           "systemctl get-default"
         ],
@@ -202,76 +205,104 @@
           "tar -tzf /root/f-etc.tar.gz"
         ],
         [
+          "# On server:",
+          "mkdir -p /exports/exam-f",
+          "echo 'exam f export' > /exports/exam-f/README",
+          "cat > /etc/exports.d/exam-f-integrated.exports <<'EOF'\n/exports/exam-f 192.168.122.0/24(rw,sync,no_root_squash)\nEOF",
+          "systemctl enable --now nfs-server",
+          "firewall-cmd --permanent --add-service=nfs",
+          "firewall-cmd --permanent --add-service=mountd",
+          "firewall-cmd --permanent --add-service=rpc-bind",
+          "firewall-cmd --reload",
+          "exportfs -arv",
+          "# On client:",
+          "mkdir -p /mnt/fprojects",
+          "grep -Eq '^server:/exports/exam-f[[:space:]]+/mnt/fprojects[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/exam-f /mnt/fprojects nfs defaults,_netdev 0 0' >> /etc/fstab",
+          "mount -a"
+        ],
+        [
+          "# On server:",
+          "cat > /usr/local/sbin/serverftimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-F >> /var/log/serverftimer.log\nEOF",
+          "chmod +x /usr/local/sbin/serverftimer.sh",
+          "cat > /etc/systemd/system/serverftimer.service <<'EOF'\n[Unit]\nDescription=Server F timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serverftimer.sh\nEOF",
+          "cat > /etc/systemd/system/serverftimer.timer <<'EOF'\n[Unit]\nDescription=Run server F timer job\n\n[Timer]\nOnCalendar=*:/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "systemctl daemon-reload",
+          "systemctl enable --now serverftimer.timer"
+        ],
+        [
+          "# On server:",
+          "mkdir -p /var/www/html",
+          "echo RHCSA10-F > /var/www/html/server-f.html",
+          "restorecon -v /var/www/html/server-f.html || true",
+          "cat > /etc/httpd/conf.d/exam-f-port.conf <<'EOF'\nListen 8205\nEOF",
+          "semanage port -a -t http_port_t -p tcp 8205 2>/dev/null || semanage port -m -t http_port_t -p tcp 8205",
+          "firewall-cmd --permanent --add-port=8205/tcp",
+          "firewall-cmd --reload",
+          "systemctl enable --now httpd",
+          "systemctl restart httpd"
+        ],
+        [
           "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
           "dnf clean all",
-          "dnf install -y lsof",
-          "dnf remove -y tcpdump"
-        ],
-        [
-          "cat > /usr/local/sbin/examftimer.sh <<'EOF'",
-          "#!/bin/bash",
-          "echo examftimer >> /var/log/examftimer.log",
-          "EOF",
-          "chmod +x /usr/local/sbin/examftimer.sh",
-          "cat > /etc/systemd/system/examftimer.service <<'EOF'",
-          "[Service]",
-          "Type=oneshot",
-          "ExecStart=/usr/local/sbin/examftimer.sh",
-          "EOF",
-          "cat > /etc/systemd/system/examftimer.timer <<'EOF'",
-          "[Timer]",
-          "OnCalendar=*:0/10",
-          "Persistent=true",
-          "[Install]",
-          "WantedBy=timers.target",
-          "EOF",
-          "systemctl daemon-reload",
-          "systemctl enable --now examftimer.timer"
-        ],
-        [
-          "firewall-cmd --permanent --add-port=8105/tcp",
-          "firewall-cmd --reload"
-        ],
-        [
-          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'",
-          "[rhcsa10-exam-baseos]",
-          "name=RHCSA10 Exam BaseOS",
-          "baseurl=http://server/repo/BaseOS/",
-          "enabled=1",
-          "gpgcheck=0",
-          "",
-          "[rhcsa10-exam-appstream]",
-          "name=RHCSA10 Exam AppStream",
-          "baseurl=http://server/repo/AppStream/",
-          "enabled=1",
-          "gpgcheck=0",
-          "EOF"
+          "# On server:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all"
         ],
         [
           "chage -M 50 -W 7 userf10"
         ],
         [
-          "cat > /usr/local/sbin/examf-cleanup.sh <<'EOF'\n#!/bin/bash\necho F-CLEANUP >> /var/log/examf-cleanup.log\nEOF",
-          "chmod +x /usr/local/sbin/examf-cleanup.sh",
-          "cat > /etc/systemd/system/examf-cleanup.service <<'EOF'\n[Unit]\nDescription=Exam F cleanup marker\n\n[Service]\nType=oneshot\nRemainAfterExit=yes\nExecStart=/usr/local/sbin/examf-cleanup.sh\n\n[Install]\nWantedBy=multi-user.target\nEOF",
-          "systemctl daemon-reload",
-          "systemctl enable --now examf-cleanup.service"
+          "# On server:",
+          "cat > /etc/rsyslog.d/server-f-local6.conf <<'EOF'\nlocal6.* /var/log/server-f-local6.log\nEOF",
+          "systemctl enable --now rsyslog",
+          "systemctl restart rsyslog",
+          "logger -p local6.info 'server-f-local6'",
+          "sleep 1"
         ],
         [
-          "echo link > /root/f-original",
-          "ln /root/f-original /root/f-hard",
-          "ln -s /root/f-original /root/f-soft"
+          "# On server:",
+          "getent group serverf10 >/dev/null || groupadd serverf10",
+          "mkdir -p /srv/serverf10",
+          "chown root:serverf10 /srv/serverf10",
+          "chmod 2770 /srv/serverf10"
         ],
         [
-          "pvcreate /dev/sdb",
-          "vgcreate vgf10 /dev/sdb",
-          "lvcreate -L 384M -n dataf vgf10",
-          "mkfs.xfs -f /dev/vgf10/dataf",
-          "mkdir -p /mnt/dataf10",
-          "echo '/dev/vgf10/dataf /mnt/dataf10 xfs defaults 0 0' >> /etc/fstab",
-          "mount -a"
+          "# On server:",
+          "getent group serverf10 >/dev/null || groupadd serverf10",
+          "id srvf10 >/dev/null 2>&1 || useradd srvf10",
+          "gpasswd -a srvf10 serverf10",
+          "echo 'srvf10:cinder9' | chpasswd"
         ]
-      ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "both",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "both",
+        "server",
+        "server",
+        "both",
+        "client",
+        "server",
+        "server",
+        "server"
+      ],
+      "target_balance": {
+        "client_only": 12,
+        "server_only": 7,
+        "client_server": 3
+      }
     }
   },
   "vm_scripts": {
