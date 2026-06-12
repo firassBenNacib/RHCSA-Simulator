@@ -77,5 +77,6 @@
   },
   "vm_scripts": {
     "server": "scripts/server.sh"
-  }
+  },
+  "scope": "server"
 }

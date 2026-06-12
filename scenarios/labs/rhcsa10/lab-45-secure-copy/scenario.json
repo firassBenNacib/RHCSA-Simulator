@@ -58,5 +58,6 @@
   "vm_scripts": {
     "client": "scripts/client.sh",
     "server": "scripts/server.sh"
-  }
+  },
+  "scope": "client-server"
 }

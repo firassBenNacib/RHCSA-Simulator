@@ -12,19 +12,19 @@
 Manage tuned profiles.
 
 ### Systems
-- client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Ensure tuned is enabled and running (client) - 10 pts
+## Task 01 - ensure tuned is enabled and running (server) - 10 pts
 
-Ensure tuned is enabled and running.
+On server, ensure tuned is enabled and running.
 
 ---
 
-## Task 02 - Activate the throughput-performance tuned profile (client) - 20 pts
+## Task 02 - activate the throughput-performance tuned profile (server) - 20 pts
 
-Activate the throughput-performance tuned profile.
+On server, activate the throughput-performance tuned profile.

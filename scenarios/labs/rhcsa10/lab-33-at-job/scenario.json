@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create user at10 and set password cinder9.",
-        "Enable and start atd.",
-        "As at10, schedule a job that appends AT10 to /home/at10/at10.log two minutes from now."
+        "On server, create user at10 and set password cinder9.",
+        "On server, enable and start atd.",
+        "On server, as at10, schedule a job that appends AT10 to /home/at10/at10.log two minutes from now."
       ],
       "hints": [
         "Use standard input to submit the at job.",
         "Use atq to verify a queued job."
       ],
       "checks": [
-        "getent passwd at10 >/dev/null",
-        "systemctl is-enabled atd | grep -qx enabled && systemctl is-active atd | grep -qx active",
-        "atq | grep -q at10"
+        "# server getent passwd at10 >/dev/null",
+        "# server systemctl is-enabled atd | grep -qx enabled && systemctl is-active atd | grep -qx active",
+        "# server atq | grep -q at10"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create user at10 and set password cinder9",
-        "Enable and start atd",
-        "As at10, schedule a job that appends AT10 to /home/at10/at10.log two min"
+        "create user at10 and set password cinder9",
+        "enable and start atd",
+        "as at10, schedule a job that appends AT10 to /home/at10/at10.log two min"
       ],
       "task_points": [
         10,
@@ -65,5 +65,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

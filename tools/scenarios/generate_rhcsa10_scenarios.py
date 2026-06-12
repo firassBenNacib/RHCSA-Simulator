@@ -1799,20 +1799,44 @@ def _retarget_lab_to_server(block: dict[str, Any]) -> dict[str, Any]:
     return updated
 
 
+def _lab_scope(block: dict[str, Any], requires_server: bool) -> str:
+    tasks = [str(task) for task in block.get("tasks", [])]
+    has_server_task = any(re.search(r"\bon server\b|\(server\)", task, re.I) for task in tasks)
+    has_client_task = any(re.search(r"\bon client\b|\(client\)|server:/", task, re.I) for task in tasks)
+    if has_server_task and has_client_task:
+        return "client-server"
+    if has_server_task:
+        return "server"
+    if requires_server:
+        return "client-server"
+    return "client"
+
+
+def _clean_lab_task_wording(task: Any) -> str:
+    text = str(task)
+    text = text.replace(" by using a sudoers drop-in", "")
+    text = text.replace(" by using a sudoers drop-in file", "")
+    text = text.replace("Use a sudoers drop-in file.", "")
+    return re.sub(r"[ \t]+\n", "\n", text).strip()
+
+
 def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any]:
     """Fix RHCSA10 labs whose old task/check split could not score 1:1."""
     if lab_id == "lab-01-hostname-resolution":
         return _replace_lab_progression(
             block,
             [
+                "On server, set the persistent hostname to server10.lab.example.",
                 "On client, set the persistent hostname to client10.lab.example.",
                 "On client, add a persistent hosts entry mapping server10.lab.example to 192.168.122.3.",
             ],
             [
+                "# server hostnamectl --static | grep -qx server10.lab.example",
                 "hostnamectl --static | grep -qx client10.lab.example",
                 "awk '$1 == \"192.168.122.3\" {for (i = 2; i <= NF; i++) if ($i == \"server10.lab.example\") found = 1} END {exit !found}' /etc/hosts && getent hosts server10.lab.example | grep -q '192.168.122.3'",
             ],
             [
+                ["# On server:", "hostnamectl set-hostname server10.lab.example"],
                 ["hostnamectl set-hostname client10.lab.example"],
                 [
                     "echo '192.168.122.3 server10.lab.example' >> /etc/hosts",
@@ -1820,7 +1844,6 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                     "getent hosts server10.lab.example",
                 ],
             ],
-            points=[10, 20],
         )
 
     if lab_id == "lab-02-ipv4-nmcli":
@@ -1873,8 +1896,8 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         return _replace_lab_progression(
             block,
             [
-                "On client, configure a persistent BaseOS repository using http://server/repo/BaseOS/.",
-                "On client, configure a persistent AppStream repository using http://server/repo/AppStream/.",
+                "On client, configure a persistent BaseOS repository. BaseOS URL: http://server/repo/BaseOS/.",
+                "On client, configure a persistent AppStream repository. AppStream URL: http://server/repo/AppStream/.",
                 "On client, disable GPG checks for both RHCSA10 repositories and verify both repositories are enabled.",
             ],
             [
@@ -2044,20 +2067,22 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         )
 
     if lab_id == "lab-23-selinux-boolean":
-        return _replace_lab_progression(
-            block,
-            [
-                "Enable the httpd_can_network_connect SELinux boolean immediately.",
-                "Make the httpd_can_network_connect SELinux boolean persistent.",
-            ],
-            [
-                "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
-                "semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
-            ],
-            [
-                ["setsebool httpd_can_network_connect on"],
-                ["setsebool -P httpd_can_network_connect on", "semanage boolean -l | grep httpd_can_network_connect"],
-            ],
+        return _retarget_lab_to_server(
+            _replace_lab_progression(
+                block,
+                [
+                    "Enable the httpd_can_network_connect SELinux boolean immediately.",
+                    "Make the httpd_can_network_connect SELinux boolean persistent.",
+                ],
+                [
+                    "getsebool httpd_can_network_connect | grep -Eq -- '--> on$'",
+                    "semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
+                ],
+                [
+                    ["setsebool httpd_can_network_connect on"],
+                    ["setsebool -P httpd_can_network_connect on", "semanage boolean -l | grep httpd_can_network_connect"],
+                ],
+            )
         )
 
     if lab_id == "lab-28-chrony-client":
@@ -2351,21 +2376,33 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         return _replace_lab_progression(
             block,
             [
-                "Create /var/www/html/rhcsa10-boot.html containing BOOT10.",
-                "Enable and start httpd.",
-                "Allow the http service permanently in firewalld.",
+                "On server, create /var/www/html/rhcsa10-boot.html containing BOOT10.",
+                "On server, enable httpd and allow the http service permanently in firewalld.",
+                "On client, save the server web page output to /root/rhcsa10-boot-check.txt.",
             ],
             [
-                "test \"$(cat /var/www/html/rhcsa10-boot.html 2>/dev/null)\" = BOOT10",
-                "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active",
-                "firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http",
+                "# server test \"$(cat /var/www/html/rhcsa10-boot.html 2>/dev/null)\" = BOOT10",
+                "# server systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active && firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http",
+                "grep -Fxq BOOT10 /root/rhcsa10-boot-check.txt",
             ],
             [
-                ["mkdir -p /var/www/html", "echo BOOT10 > /var/www/html/rhcsa10-boot.html", "restorecon -v /var/www/html/rhcsa10-boot.html || true"],
-                ["systemctl enable --now httpd"],
-                ["firewall-cmd --permanent --add-service=http", "firewall-cmd --reload"],
+                ["# On server:", "mkdir -p /var/www/html", "echo BOOT10 > /var/www/html/rhcsa10-boot.html", "restorecon -v /var/www/html/rhcsa10-boot.html || true"],
+                ["# On server:", "systemctl enable --now httpd", "firewall-cmd --permanent --add-service=http", "firewall-cmd --reload"],
+                ["curl -fsS http://server/rhcsa10-boot.html > /root/rhcsa10-boot-check.txt"],
             ],
         )
+
+    if lab_id in {
+        "lab-19-firewalld-service",
+        "lab-22-selinux-port",
+        "lab-25-tuned-profile",
+        "lab-27-rsyslog-logger",
+        "lab-32-cron",
+        "lab-33-at-job",
+        "lab-43-sticky-directory",
+        "lab-44-permission-repair",
+    }:
+        return _retarget_lab_to_server(block)
 
     return block
 
@@ -2394,6 +2431,8 @@ def _update_lab_manifest(manifest_path: Path, client_scripts: dict[str, str], se
     lab_id = str(manifest["id"])
     lab_block = dict(manifest.get("content", {}).get("lab", {}))
     lab_block = _repair_lab_progression(lab_id, lab_block)
+    lab_block["tasks"] = [_clean_lab_task_wording(task) for task in lab_block.get("tasks", [])]
+    lab_block["task_titles"] = [task_title(task) for task in lab_block.get("tasks", [])]
     manifest.setdefault("content", {})["lab"] = normalize_lab_block(lab_block)
 
     scenario_scripts: dict[str, str] = {}
@@ -2420,6 +2459,7 @@ def _update_lab_manifest(manifest_path: Path, client_scripts: dict[str, str], se
         or (lab_id in server_prerequisite_labs)
         or has_server_task
     )
+    manifest["scope"] = _lab_scope(manifest["content"]["lab"], bool(manifest["flags"]["requires_server"]))
 
     write_json(manifest_path, manifest)
 

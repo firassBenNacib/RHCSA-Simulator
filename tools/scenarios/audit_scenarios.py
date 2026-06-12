@@ -279,6 +279,17 @@ def audit_rhcsa10_exam_target_balance(path: Path, scenario: dict[str, Any], find
             )
 
 
+def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
+        return
+    scope = scenario.get("scope")
+    if scope not in {"client", "server", "client-server"}:
+        findings.append(Finding(path, "RHCSA10 lab must include scope as client, server, or client-server"))
+        return
+    if scope != "client" and not scenario.get("flags", {}).get("requires_server", False):
+        findings.append(Finding(path, f"RHCSA10 lab scope {scope} must require server"))
+
+
 def audit_rhcsa10_swap_persistence(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario):
         return
@@ -361,6 +372,7 @@ def main() -> int:
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa10_lab_scope(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
 
@@ -379,6 +391,21 @@ def main() -> int:
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]
     if len(server_labs) < 12:
         findings.append(Finding(SCENARIOS_DIR / "labs", f"expected at least 12 labs requiring server, found {len(server_labs)}"))
+    rhcsa10_lab_scopes = {"client": 0, "server": 0, "client-server": 0}
+    for path, scenario in labs:
+        if "rhcsa10" not in scenario_tracks(scenario):
+            continue
+        scope = scenario.get("scope")
+        if scope in rhcsa10_lab_scopes:
+            rhcsa10_lab_scopes[scope] += 1
+    expected_rhcsa10_lab_scopes = {"client": 22, "server": 14, "client-server": 12}
+    if rhcsa10_lab_scopes != expected_rhcsa10_lab_scopes:
+        findings.append(
+            Finding(
+                SCENARIOS_DIR / "labs" / "rhcsa10",
+                f"expected RHCSA10 lab scopes {expected_rhcsa10_lab_scopes}, found {rhcsa10_lab_scopes}",
+            )
+        )
 
     recurring_limits = {
         "root recovery": ({"rhcsa9": 3, "rhcsa10": 6}, lambda text: has_pattern(text, r"root recovery", r"password recovery")),

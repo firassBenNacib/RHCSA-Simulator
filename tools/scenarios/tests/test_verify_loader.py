@@ -24,9 +24,10 @@ class VerifyLoaderTests(unittest.TestCase):
     def test_load_manifest_normalizes_standalone_lab_verification_tasks(self) -> None:
         manifest = load_manifest("lab", "lab-01-hostname-resolution", "rhcsa10")
         lab = manifest["content"]["lab"]
-        self.assertEqual(len(lab["tasks"]), 2)
-        self.assertEqual(len(lab["checks"]), 2)
-        self.assertIn("getent hosts server10.lab.example", lab["checks"][1])
+        self.assertEqual(len(lab["tasks"]), 3)
+        self.assertEqual(len(lab["checks"]), 3)
+        self.assertEqual(manifest["scope"], "client-server")
+        self.assertIn("getent hosts server10.lab.example", lab["checks"][2])
 
     def test_rhcsa10_lab_manifest_includes_generator_reset_scripts(self) -> None:
         manifest = load_manifest("lab", "lab-42-autofs", "rhcsa10")

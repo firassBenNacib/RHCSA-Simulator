@@ -55,5 +55,6 @@
         ]
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

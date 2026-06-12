@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create /srv/repair10/report.txt.",
-        "Make the file readable and writable by owner and group, and unreadable by others.",
-        "Ensure the parent directory allows group traversal."
+        "On server, create /srv/repair10/report.txt.",
+        "On server, make the file readable and writable by owner and group, and unreadable by others.",
+        "On server, ensure the parent directory allows group traversal."
       ],
       "hints": [
         "Use chmod 660 for the file.",
         "Use chmod 770 for the directory."
       ],
       "checks": [
-        "test -f /srv/repair10/report.txt",
-        "stat -c '%a' /srv/repair10/report.txt | grep -qx 660",
-        "stat -c '%a' /srv/repair10 | grep -qx 770"
+        "# server test -f /srv/repair10/report.txt",
+        "# server stat -c '%a' /srv/repair10/report.txt | grep -qx 660",
+        "# server stat -c '%a' /srv/repair10 | grep -qx 770"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /srv/repair10/report.txt",
-        "Make the file readable and writable by owner and group, and unreadable b",
-        "Ensure the parent directory allows group traversal"
+        "create /srv/repair10/report.txt",
+        "make the file readable and writable by owner and group, and unreadable b",
+        "ensure the parent directory allows group traversal"
       ],
       "task_points": [
         10,
@@ -60,5 +60,6 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": null,
+  "scope": "server"
 }

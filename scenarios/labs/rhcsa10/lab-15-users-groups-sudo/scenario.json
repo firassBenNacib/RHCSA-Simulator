@@ -22,7 +22,7 @@
       "tasks": [
         "Create local group ops10.",
         "Create user relay10, set the password to cinder9, and make ops10 the user's supplementary group.",
-        "Allow members of ops10 to run /usr/bin/systemctl with sudo without a password by using a sudoers drop-in."
+        "Allow members of ops10 to run /usr/bin/systemctl with sudo without a password."
       ],
       "hints": [
         "Use a file under /etc/sudoers.d.",
@@ -62,5 +62,6 @@
       ]
     }
   },
-  "vm_scripts": null
+  "vm_scripts": null,
+  "scope": "client"
 }

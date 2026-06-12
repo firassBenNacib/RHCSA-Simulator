@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create group share10.",
-        "Create /srv/share10 owned by root:share10.",
-        "Set permissions so group members can write and only owners can delete their own files."
+        "On server, create group share10.",
+        "On server, create /srv/share10 owned by root:share10.",
+        "On server, set permissions so group members can write and only owners can delete their own files."
       ],
       "hints": [
         "Use chmod 3770 for setgid plus sticky.",
         "Use chgrp or chown to set the group."
       ],
       "checks": [
-        "getent group share10 >/dev/null",
-        "stat -c '%U:%G' /srv/share10 | grep -qx root:share10",
-        "stat -c '%a' /srv/share10 | grep -qx 3770"
+        "# server getent group share10 >/dev/null",
+        "# server stat -c '%U:%G' /srv/share10 | grep -qx root:share10",
+        "# server stat -c '%a' /srv/share10 | grep -qx 3770"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create group share10",
-        "Create /srv/share10 owned by root:share10",
-        "Set permissions so group members can write and only owners can delete th"
+        "create group share10",
+        "create /srv/share10 owned by root:share10",
+        "set permissions so group members can write and only owners can delete th"
       ],
       "task_points": [
         10,
@@ -62,5 +62,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

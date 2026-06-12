@@ -18,31 +18,31 @@
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Create /var/www/html/rhcsa10-boot.html containing BOOT10.",
-        "Enable and start httpd.",
-        "Allow the http service permanently in firewalld."
+        "On server, create /var/www/html/rhcsa10-boot.html containing BOOT10.",
+        "On server, enable httpd and allow the http service permanently in firewalld.",
+        "On client, save the server web page output to /root/rhcsa10-boot-check.txt."
       ],
       "hints": [
         "Use systemctl enable --now.",
         "Use firewall-cmd --permanent and reload."
       ],
       "checks": [
-        "test \"$(cat /var/www/html/rhcsa10-boot.html 2>/dev/null)\" = BOOT10",
-        "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active",
-        "firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http"
+        "# server test \"$(cat /var/www/html/rhcsa10-boot.html 2>/dev/null)\" = BOOT10",
+        "# server systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active && firewall-cmd --permanent --query-service=http && firewall-cmd --query-service=http",
+        "grep -Fxq BOOT10 /root/rhcsa10-boot-check.txt"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /var/www/html/rhcsa10-boot.html containing BOOT10",
-        "Enable and start httpd",
-        "Allow the http service permanently in firewalld"
+        "create /var/www/html/rhcsa10-boot.html containing BOOT10",
+        "enable httpd and allow the http service permanently in firewalld",
+        "save the server web page output to /root/rhcsa10-boot-check.txt"
       ],
       "task_points": [
         10,
@@ -51,18 +51,22 @@
       ],
       "solution_commands": [
         [
+          "# On server:",
           "mkdir -p /var/www/html",
           "echo BOOT10 > /var/www/html/rhcsa10-boot.html",
           "restorecon -v /var/www/html/rhcsa10-boot.html || true"
         ],
         [
-          "systemctl enable --now httpd"
-        ],
-        [
+          "# On server:",
+          "systemctl enable --now httpd",
           "firewall-cmd --permanent --add-service=http",
           "firewall-cmd --reload"
+        ],
+        [
+          "curl -fsS http://server/rhcsa10-boot.html > /root/rhcsa10-boot-check.txt"
         ]
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

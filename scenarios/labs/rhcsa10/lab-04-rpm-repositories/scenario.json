@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, configure a persistent BaseOS repository using http://server/repo/BaseOS/.",
-        "On client, configure a persistent AppStream repository using http://server/repo/AppStream/.",
+        "On client, configure a persistent BaseOS repository. BaseOS URL: http://server/repo/BaseOS/.",
+        "On client, configure a persistent AppStream repository. AppStream URL: http://server/repo/AppStream/.",
         "On client, disable GPG checks for both RHCSA10 repositories and verify both repositories are enabled."
       ],
       "hints": [
@@ -37,8 +37,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "configure a persistent BaseOS repository using http://server/repo/BaseOS",
-        "configure a persistent AppStream repository using http://server/repo/App",
+        "configure a persistent BaseOS repository. BaseOS URL: http://server/repo",
+        "configure a persistent AppStream repository. AppStream URL: http://serve",
         "disable GPG checks for both RHCSA10 repositories and verify both reposit"
       ],
       "task_points": [
@@ -64,5 +64,6 @@
   "vm_scripts": {
     "client": "scripts/client.sh",
     "server": "scripts/server.sh"
-  }
+  },
+  "scope": "client-server"
 }

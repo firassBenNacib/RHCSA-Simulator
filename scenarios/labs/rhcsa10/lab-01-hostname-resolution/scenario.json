@@ -18,11 +18,12 @@
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
+        "On server, set the persistent hostname to server10.lab.example.",
         "On client, set the persistent hostname to client10.lab.example.",
         "On client, add a persistent hosts entry mapping server10.lab.example to 192.168.122.3."
       ],
@@ -31,6 +32,7 @@
         "Edit /etc/hosts for local host resolution."
       ],
       "checks": [
+        "# server hostnamectl --static | grep -qx server10.lab.example",
         "hostnamectl --static | grep -qx client10.lab.example",
         "awk '$1 == \"192.168.122.3\" {for (i = 2; i <= NF; i++) if ($i == \"server10.lab.example\") found = 1} END {exit !found}' /etc/hosts && getent hosts server10.lab.example | grep -q '192.168.122.3'"
       ],
@@ -38,14 +40,20 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
+        "set the persistent hostname to server10.lab.example",
         "set the persistent hostname to client10.lab.example",
         "add a persistent hosts entry mapping server10.lab.example to 192.168.122"
       ],
       "task_points": [
         10,
-        20
+        10,
+        10
       ],
       "solution_commands": [
+        [
+          "# On server:",
+          "hostnamectl set-hostname server10.lab.example"
+        ],
         [
           "hostnamectl set-hostname client10.lab.example"
         ],
@@ -56,5 +64,6 @@
         ]
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

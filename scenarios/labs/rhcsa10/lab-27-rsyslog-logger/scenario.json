@@ -15,31 +15,31 @@
   "rhel_major": 10,
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "Ensure rsyslog is running.",
-        "Configure local7.* messages to log to /var/log/rhcsa10-local7.log.",
-        "Send a logger test message with facility local7 and verify it is written."
+        "On server, ensure rsyslog is running.",
+        "On server, configure local7.* messages to log to /var/log/rhcsa10-local7.log.",
+        "On server, send a logger test message with facility local7 and verify it is written."
       ],
       "hints": [
         "Use a file under /etc/rsyslog.d.",
         "Use logger -p local7.info."
       ],
       "checks": [
-        "systemctl is-active rsyslog | grep -qx active",
-        "grep -Rqx 'local7.* /var/log/rhcsa10-local7.log' /etc/rsyslog.d",
-        "grep -q 'RHCSA10 local7 test' /var/log/rhcsa10-local7.log"
+        "# server systemctl is-active rsyslog | grep -qx active",
+        "# server grep -Rqx 'local7.* /var/log/rhcsa10-local7.log' /etc/rsyslog.d",
+        "# server grep -q 'RHCSA10 local7 test' /var/log/rhcsa10-local7.log"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Ensure rsyslog is running",
-        "Configure local7.* messages to log to /var/log/rhcsa10-local7.log",
-        "Send a logger test message with facility local7 and verify it is written"
+        "ensure rsyslog is running",
+        "configure local7.* messages to log to /var/log/rhcsa10-local7.log",
+        "send a logger test message with facility local7 and verify it is written"
       ],
       "task_points": [
         10,
@@ -64,5 +64,6 @@
   },
   "vm_scripts": {
     "client": "scripts/client.sh"
-  }
+  },
+  "scope": "server"
 }

@@ -12,6 +12,7 @@
 Configure network services to start at boot.
 
 ### Systems
+- server
 - client
 
 ## General Instructions
@@ -19,18 +20,18 @@ Configure network services to start at boot.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /var/www/html/rhcsa10-boot.html containing BOOT10 (client) - 10 pts
+## Task 01 - create /var/www/html/rhcsa10-boot.html containing BOOT10 (server) - 10 pts
 
-Create /var/www/html/rhcsa10-boot.html containing BOOT10.
-
----
-
-## Task 02 - Enable and start httpd (client) - 10 pts
-
-Enable and start httpd.
+On server, create /var/www/html/rhcsa10-boot.html containing BOOT10.
 
 ---
 
-## Task 03 - Allow the http service permanently in firewalld (client) - 10 pts
+## Task 02 - enable httpd and allow the http service permanently in firewalld (server) - 10 pts
 
-Allow the http service permanently in firewalld.
+On server, enable httpd and allow the http service permanently in firewalld.
+
+---
+
+## Task 03 - save the server web page output to /root/rhcsa10-boot-check.txt (client) - 10 pts
+
+On client, save the server web page output to /root/rhcsa10-boot-check.txt.
