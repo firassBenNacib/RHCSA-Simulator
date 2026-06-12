@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, filesystems-and-autofs, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Web service and network focus: httpd service setup, custom service port, SELinux port labeling, firewalld, Flatpak, client storage, NFS, autofs, users, and scheduling.
 
 ### Systems
 - client
@@ -33,21 +33,21 @@ On client, configure System eth1 with IPv4 address 192.168.122.62/24, gateway 19
 
 ---
 
-## Question 03 - create /usr/local/bin/c-who that prints the primary group for the suppli (client) - 5 pts
+## Question 03 - publish a web page /var/www/html/examc.html containing EXAMC and enable (client) - 5 pts
 
-On client, create /usr/local/bin/c-who that prints the primary group for the supplied user argument.
-
----
-
-## Question 04 - write users whose shell ends with sh to /root/c-shell-users.txt (client) - 5 pts
-
-On client, write users whose shell ends with sh to /root/c-shell-users.txt.
+On client, publish a web page /var/www/html/examc.html containing EXAMC and enable httpd.
 
 ---
 
-## Question 05 - create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 04 - configure httpd to listen on TCP port 8102 and make the port usable by t (client) - 5 pts
 
-On client, create gzip archive /root/c-etc.tar.gz containing /etc/hosts and /etc/fstab.
+On client, configure httpd to listen on TCP port 8102 and make the port usable by the web service.
+
+---
+
+## Question 05 - set the login message to RHCSA10-C authorized access only (client) - 5 pts
+
+On client, set the login message to RHCSA10-C authorized access only.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "id": "rhcsa10-mock-exam-b",
   "title": "RHCSA 10 Mock Exam B",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "Software and permissions focus: offline package installation, shared directories, default ACLs, fixed user identity, storage, NFS, journald, and systemd administration.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
@@ -33,10 +33,10 @@
         "On client, set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168.122.3.",
         "Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "Create enabled BaseOS and AppStream repository definitions using http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
-        "Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
-        "Ensure org.rhcsa.Tools is not installed after configuring exambflatpak.",
+        "On client, install the tree package from the configured offline repositories.",
+        "On client, create /srv/teamb10 as a shared directory for group teamb10.",
         "Create group teamb10, create user userb10, set password cinder9, and add the user to teamb10.",
-        "Allow %teamb10 to run /usr/bin/systemctl without a password by using a sudoers drop-in.",
+        "On client, create user auditorb10 with UID 6102 and shell /sbin/nologin.",
         "Set maximum password age for userb10 to 46 days and warning period to 7 days.",
         "Create /usr/local/bin/b-who that prints the primary group for the supplied user argument.",
         "Write users whose shell ends with sh to /root/b-shell-users.txt.",
@@ -48,7 +48,7 @@
         "Persistently enable httpd_can_network_connect.",
         "Activate the throughput-performance tuned profile.",
         "Configure persistent systemd journal storage.",
-        "Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10.log every 15 minutes.",
+        "On client, set a default ACL on /srv/teamb10 that gives group teamb10 full access to new files.",
         "On client, mount server:/exports/direct at /mnt/bdirect persistently.",
         "Set the default target to multi-user.target without rebooting.",
         "Install lsof and ensure tcpdump is removed."
@@ -62,10 +62,10 @@
         "hostnamectl --static | grep -qx clientb.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverb\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.61/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo",
-        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"exambflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
-        "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
+        "command -v tree >/dev/null && rpm -q tree >/dev/null",
+        "getent group teamb10 >/dev/null && stat -c '%U:%G:%a' /srv/teamb10 | grep -qx root:teamb10:3770",
         "getent group teamb10 >/dev/null && id -nG userb10 | tr ' ' '\\n' | grep -qx teamb10",
-        "grep -ERq '^%teamb10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
+        "id -u auditorb10 | grep -qx 6102 && getent passwd auditorb10 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l userb10 | grep -Eq 'Maximum.*46'",
         "test -x /usr/local/bin/b-who && /usr/local/bin/b-who root | grep -qx root",
         "test -s /root/b-shell-users.txt && grep -q '^root$' /root/b-shell-users.txt",
@@ -77,7 +77,7 @@
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
         "tuned-adm active | grep -q throughput-performance",
         "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
-        "crontab -l -u userb10 2>/dev/null | grep -Fqx '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log'",
+        "getfacl -p /srv/teamb10 | grep -Eq '^default:group:teamb10:rwx$'",
         "findmnt -no SOURCE,TARGET /mnt/bdirect | grep -qx 'server:/exports/direct /mnt/bdirect' && grep -Eq '^server:/exports/direct[[:space:]]+/mnt/bdirect[[:space:]]+nfs([[:space:]]|$)' /etc/fstab",
         "systemctl get-default | grep -qx multi-user.target",
         "rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1"
@@ -89,10 +89,10 @@
         "set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168",
         "Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.1",
         "Create enabled BaseOS and AppStream repository definitions using http://",
-        "Create system Flatpak remote exambflatpak pointing to file:///opt/rhcsa/",
-        "Ensure org.rhcsa.Tools is not installed after configuring exambflatpak",
+        "install the tree package from the configured offline repositories",
+        "create /srv/teamb10 as a shared directory for group teamb10",
         "Create group teamb10, create user userb10, set password cinder9, and add",
-        "Allow %teamb10 to run /usr/bin/systemctl without a password by using a s",
+        "create user auditorb10 with UID 6102 and shell /sbin/nologin",
         "Set maximum password age for userb10 to 46 days and warning period to 7 ",
         "Create /usr/local/bin/b-who that prints the primary group for the suppli",
         "Write users whose shell ends with sh to /root/b-shell-users.txt",
@@ -104,7 +104,7 @@
         "Persistently enable httpd_can_network_connect",
         "Activate the throughput-performance tuned profile",
         "Configure persistent systemd journal storage",
-        "Create a cron job for userb10 that writes EXAM10 to /home/userb10/exam10",
+        "set a default ACL on /srv/teamb10 that gives group teamb10 full access t",
         "mount server:/exports/direct at /mnt/bdirect persistently",
         "Set the default target to multi-user.target without rebooting",
         "Install lsof and ensure tcpdump is removed"
@@ -159,20 +159,26 @@
           "EOF"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify exambflatpak file:///opt/rhcsa/flatpak/repo"
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "dnf install -y tree",
+          "rpm -q tree"
         ],
         [
-          "flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true"
+          "getent group teamb10 >/dev/null || groupadd teamb10",
+          "mkdir -p /srv/teamb10",
+          "chown root:teamb10 /srv/teamb10",
+          "chmod 3770 /srv/teamb10"
         ],
         [
-          "groupadd teamb10",
-          "useradd -G teamb10 userb10",
-          "passwd userb10",
-          "# enter: cinder9"
+          "getent group teamb10 >/dev/null || groupadd teamb10",
+          "id userb10 >/dev/null 2>&1 || useradd userb10",
+          "gpasswd -a userb10 teamb10",
+          "echo 'userb10:cinder9' | chpasswd"
         ],
         [
-          "echo '%teamb10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/teamb10",
-          "chmod 440 /etc/sudoers.d/teamb10"
+          "id auditorb10 >/dev/null 2>&1 || useradd -u 6102 -s /sbin/nologin auditorb10",
+          "usermod -u 6102 -s /sbin/nologin auditorb10"
         ],
         [
           "chage -M 46 -W 7 userb10"
@@ -246,7 +252,8 @@
           "journalctl --flush"
         ],
         [
-          "echo '*/15 * * * * echo EXAM10 >> /home/userb10/exam10.log' | crontab -u userb10 -"
+          "setfacl -m g:teamb10:rwx,d:g:teamb10:rwx /srv/teamb10",
+          "getfacl -p /srv/teamb10"
         ],
         [
           "mkdir -p /mnt/bdirect",

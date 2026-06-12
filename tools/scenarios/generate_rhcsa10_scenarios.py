@@ -506,6 +506,20 @@ firewall-cmd --permanent --remove-service=http >/dev/null 2>&1 || true
 firewall-cmd --remove-service=http >/dev/null 2>&1 || true
 firewall-cmd --reload >/dev/null 2>&1 || true
 """
+    if letter == "b":
+        exam_extra_client_reset += """
+# --- Exam B permissions and package cleanup ---
+userdel -r auditorb10 >/dev/null 2>&1 || true
+dnf remove -y tree >/dev/null 2>&1 || true
+rm -rf /srv/teamb10
+"""
+    if letter == "c":
+        exam_extra_client_reset += """
+# --- Exam C web service cleanup ---
+systemctl disable --now httpd >/dev/null 2>&1 || true
+rm -f /etc/httpd/conf.d/examc-port.conf /var/www/html/examc.html
+: > /etc/motd
+"""
     if letter == "e":
         exam_extra_client_reset += """
 # --- Exam E label filesystem cleanup ---
@@ -788,6 +802,121 @@ def _replace_exam_step(
 
 def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[str], commands: list[list[str]]) -> None:
     """Vary selected RHCSA10 exams beyond the base generated exam skeleton."""
+    if exam_id == "rhcsa10-mock-exam-b":
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            3,
+            "On client, install the tree package from the configured offline repositories.",
+            "command -v tree >/dev/null && rpm -q tree >/dev/null",
+            [
+                "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+                "dnf clean all",
+                "dnf install -y tree",
+                "rpm -q tree",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            4,
+            "On client, create /srv/teamb10 as a shared directory for group teamb10.",
+            "getent group teamb10 >/dev/null && stat -c '%U:%G:%a' /srv/teamb10 | grep -qx root:teamb10:3770",
+            [
+                "getent group teamb10 >/dev/null || groupadd teamb10",
+                "mkdir -p /srv/teamb10",
+                "chown root:teamb10 /srv/teamb10",
+                "chmod 3770 /srv/teamb10",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            5,
+            "Create group teamb10, create user userb10, set password cinder9, and add the user to teamb10.",
+            "getent group teamb10 >/dev/null && id -nG userb10 | tr ' ' '\\n' | grep -qx teamb10",
+            [
+                "getent group teamb10 >/dev/null || groupadd teamb10",
+                "id userb10 >/dev/null 2>&1 || useradd userb10",
+                "gpasswd -a userb10 teamb10",
+                "echo 'userb10:cinder9' | chpasswd",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            6,
+            "On client, create user auditorb10 with UID 6102 and shell /sbin/nologin.",
+            "id -u auditorb10 | grep -qx 6102 && getent passwd auditorb10 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
+            [
+                "id auditorb10 >/dev/null 2>&1 || useradd -u 6102 -s /sbin/nologin auditorb10",
+                "usermod -u 6102 -s /sbin/nologin auditorb10",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            18,
+            "On client, set a default ACL on /srv/teamb10 that gives group teamb10 full access to new files.",
+            "getfacl -p /srv/teamb10 | grep -Eq '^default:group:teamb10:rwx$'",
+            [
+                "setfacl -m g:teamb10:rwx,d:g:teamb10:rwx /srv/teamb10",
+                "getfacl -p /srv/teamb10",
+            ],
+        )
+
+    if exam_id == "rhcsa10-mock-exam-c":
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            2,
+            "On client, publish a web page /var/www/html/examc.html containing EXAMC and enable httpd.",
+            (
+                "test \"$(cat /var/www/html/examc.html 2>/dev/null)\" = EXAMC && "
+                "systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"
+            ),
+            [
+                "mkdir -p /var/www/html",
+                "echo EXAMC > /var/www/html/examc.html",
+                "restorecon -v /var/www/html/examc.html || true",
+                "systemctl enable --now httpd",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            3,
+            "On client, configure httpd to listen on TCP port 8102 and make the port usable by the web service.",
+            (
+                "grep -Eq '^Listen[[:space:]]+8102$' /etc/httpd/conf.d/examc-port.conf && "
+                "semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && "
+                "$0 ~ /(^|[ ,])8102([, ]|$)/ {found=1} END {exit !found}'"
+            ),
+            [
+                "cat > /etc/httpd/conf.d/examc-port.conf <<'EOF'\nListen 8102\nEOF",
+                "semanage port -a -t http_port_t -p tcp 8102 2>/dev/null || semanage port -m -t http_port_t -p tcp 8102",
+                "systemctl restart httpd",
+            ],
+        )
+        _replace_exam_step(
+            tasks,
+            checks,
+            commands,
+            4,
+            "On client, set the login message to RHCSA10-C authorized access only.",
+            "grep -Fxq 'RHCSA10-C authorized access only' /etc/motd",
+            [
+                "echo 'RHCSA10-C authorized access only' > /etc/motd",
+            ],
+        )
+
     if exam_id == "rhcsa10-mock-exam-d":
         _replace_exam_step(
             tasks,
@@ -1933,6 +2062,16 @@ def _update_exam_manifest(manifest_path: Path) -> None:
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["exam"]
     manifest.setdefault("content", {})["exam"] = _repair_exam_progression(str(manifest["id"]), exam_block)
+    if str(manifest["id"]) == "rhcsa10-mock-exam-b":
+        manifest["description"] = (
+            "Software and permissions focus: offline package installation, shared directories, "
+            "default ACLs, fixed user identity, storage, NFS, journald, and systemd administration."
+        )
+    if str(manifest["id"]) == "rhcsa10-mock-exam-c":
+        manifest["description"] = (
+            "Web service and network focus: httpd service setup, custom service port, SELinux port "
+            "labeling, firewalld, Flatpak, client storage, NFS, autofs, users, and scheduling."
+        )
     if str(manifest["id"]) == "rhcsa10-mock-exam-d":
         manifest["description"] = (
             "Service and logging focus: custom systemd service, rsyslog routing, firewall service access, "

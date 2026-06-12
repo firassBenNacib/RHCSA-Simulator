@@ -20,6 +20,11 @@ userdel -r userc10 >/dev/null 2>&1 || true
 groupdel teamc10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamc10-systemctl
 
+# --- Exam C web service cleanup ---
+systemctl disable --now httpd >/dev/null 2>&1 || true
+rm -f /etc/httpd/conf.d/examc-port.conf /var/www/html/examc.html
+: > /etc/motd
+
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true

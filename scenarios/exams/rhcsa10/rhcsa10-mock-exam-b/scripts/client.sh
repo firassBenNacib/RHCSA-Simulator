@@ -20,6 +20,11 @@ userdel -r userb10 >/dev/null 2>&1 || true
 groupdel teamb10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamb10-systemctl
 
+# --- Exam B permissions and package cleanup ---
+userdel -r auditorb10 >/dev/null 2>&1 || true
+dnf remove -y tree >/dev/null 2>&1 || true
+rm -rf /srv/teamb10
+
 
 # --- SELinux: reset boolean, remove port labels ---
 setsebool httpd_can_network_connect 0 2>/dev/null || true
