@@ -122,7 +122,7 @@
         "test -s /root/a-shell-users.txt && grep -q '^root$' /root/a-shell-users.txt",
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq REPORT-A /root/exam-a-report.txt'",
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-A /var/www/html/server-a.html && grep -Eq '\"'\"'^Listen[[:space:]]+8200$'\"'\"' /etc/httpd/conf.d/exam-a-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8200([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8200/tcp && firewall-cmd --query-port=8200/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
-        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serveratimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/10$'\"'\"' /etc/systemd/system/serveratimer.timer && grep -Fxq '\"'\"'echo SERVER-A >> /var/log/serveratimer.log'\"'\"' /usr/local/sbin/serveratimer.sh'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serveratimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:0/10$'\"'\"' /etc/systemd/system/serveratimer.timer && grep -Fxq '\"'\"'echo SERVER-A >> /var/log/serveratimer.log'\"'\"' /usr/local/sbin/serveratimer.sh'",
         "lv_path=/dev/vga10/dataa; mapper_path=/dev/mapper/vga10-dataa; mountpoint=/mnt/dataa10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "ssh server bash -lc 'set -euo pipefail; getent group servera10 >/dev/null && id -nG srva10 | tr '\"'\"' '\"'\"' '\"'\"'\\n'\"'\"' | grep -qx servera10'",
         "ssh server bash -lc 'set -euo pipefail; getent group servera10 >/dev/null && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/servera10 | grep -qx root:servera10:2770'",
@@ -222,7 +222,7 @@
           "cat > /usr/local/sbin/serveratimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-A >> /var/log/serveratimer.log\nEOF",
           "chmod +x /usr/local/sbin/serveratimer.sh",
           "cat > /etc/systemd/system/serveratimer.service <<'EOF'\n[Unit]\nDescription=Server A timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serveratimer.sh\nEOF",
-          "cat > /etc/systemd/system/serveratimer.timer <<'EOF'\n[Unit]\nDescription=Run server A timer job\n\n[Timer]\nOnCalendar=*:/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "cat > /etc/systemd/system/serveratimer.timer <<'EOF'\n[Unit]\nDescription=Run server A timer job\n\n[Timer]\nOnCalendar=*:0/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
           "systemctl enable --now serveratimer.timer"
         ],

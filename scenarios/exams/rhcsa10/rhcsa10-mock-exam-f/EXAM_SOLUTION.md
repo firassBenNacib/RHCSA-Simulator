@@ -210,7 +210,7 @@ cat > /etc/systemd/system/serverftimer.timer <<'EOF'
 Description=Run server F timer job
 
 [Timer]
-OnCalendar=*:/10
+OnCalendar=*:0/10
 Persistent=true
 
 [Install]

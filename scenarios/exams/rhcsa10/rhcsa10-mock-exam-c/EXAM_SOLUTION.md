@@ -284,7 +284,7 @@ cat > /etc/systemd/system/serverctimer.timer <<'EOF'
 Description=Run server C timer job
 
 [Timer]
-OnCalendar=*:/5
+OnCalendar=*:0/5
 Persistent=true
 
 [Install]

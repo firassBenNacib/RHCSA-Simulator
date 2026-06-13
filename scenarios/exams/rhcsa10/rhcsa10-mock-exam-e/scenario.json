@@ -72,7 +72,7 @@
         "test -s /root/e-shell-users.txt && grep -q '^root$' /root/e-shell-users.txt",
         "test -f /root/e-etc.tar.gz && tar -tzf /root/e-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
         "test \"$(stat -c %i /root/e-original)\" = \"$(stat -c %i /root/e-hard)\" && test -L /root/e-soft",
-        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serveretimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/10$'\"'\"' /etc/systemd/system/serveretimer.timer && grep -Fxq '\"'\"'echo SERVER-E >> /var/log/serveretimer.log'\"'\"' /usr/local/sbin/serveretimer.sh'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serveretimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:0/10$'\"'\"' /etc/systemd/system/serveretimer.timer && grep -Fxq '\"'\"'echo SERVER-E >> /var/log/serveretimer.log'\"'\"' /usr/local/sbin/serveretimer.sh'",
         "lv_path=/dev/vge10/datae; mapper_path=/dev/mapper/vge10-datae; mountpoint=/mnt/datae10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-E /var/www/html/server-e.html && grep -Eq '\"'\"'^Listen[[:space:]]+8204$'\"'\"' /etc/httpd/conf.d/exam-e-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8204([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8204/tcp && firewall-cmd --query-port=8204/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
         "ssh server bash -lc 'set -euo pipefail; getent group servere10 >/dev/null && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/servere10 | grep -qx root:servere10:2770'",
@@ -212,7 +212,7 @@
           "cat > /usr/local/sbin/serveretimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-E >> /var/log/serveretimer.log\nEOF",
           "chmod +x /usr/local/sbin/serveretimer.sh",
           "cat > /etc/systemd/system/serveretimer.service <<'EOF'\n[Unit]\nDescription=Server E timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serveretimer.sh\nEOF",
-          "cat > /etc/systemd/system/serveretimer.timer <<'EOF'\n[Unit]\nDescription=Run server E timer job\n\n[Timer]\nOnCalendar=*:/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "cat > /etc/systemd/system/serveretimer.timer <<'EOF'\n[Unit]\nDescription=Run server E timer job\n\n[Timer]\nOnCalendar=*:0/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
           "systemctl enable --now serveretimer.timer"
         ],

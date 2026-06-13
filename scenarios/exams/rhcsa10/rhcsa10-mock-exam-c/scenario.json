@@ -78,7 +78,7 @@
         "ls -Z /var/www/html/c.html | grep -q httpd_sys_content_t",
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq RHCSA10-C /var/www/html/server-c.html && grep -Eq '\"'\"'^Listen[[:space:]]+8202$'\"'\"' /etc/httpd/conf.d/exam-c-port.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8202([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8202/tcp && firewall-cmd --query-port=8202/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
         "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
-        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverctimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/5$'\"'\"' /etc/systemd/system/serverctimer.timer && grep -Fxq '\"'\"'echo SERVER-C >> /var/log/serverctimer.log'\"'\"' /usr/local/sbin/serverctimer.sh'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverctimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:0/5$'\"'\"' /etc/systemd/system/serverctimer.timer && grep -Fxq '\"'\"'echo SERVER-C >> /var/log/serverctimer.log'\"'\"' /usr/local/sbin/serverctimer.sh'",
         "findmnt -no SOURCE,TARGET /mnt/cprojects | grep -qx 'server:/exports/exam-c /mnt/cprojects' && grep -Eq '^server:/exports/exam-c[[:space:]]+/mnt/cprojects[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && ssh server bash -lc 'set -euo pipefail; grep -Eq \"^/exports/exam-c[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/exam-c-integrated.exports && systemctl is-active nfs-server | grep -qx active'",
         "grep -Fxq RHCSA10-C /root/server-c-web-check.txt",
         "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^local6\\.\\*[[:space:]]+/var/log/server-c-local6\\.log$'\"'\"' /etc/rsyslog.d/server-c-local6.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq '\"'\"'server-c-local6'\"'\"' /var/log/server-c-local6.log'",
@@ -263,7 +263,7 @@
           "cat > /usr/local/sbin/serverctimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-C >> /var/log/serverctimer.log\nEOF",
           "chmod +x /usr/local/sbin/serverctimer.sh",
           "cat > /etc/systemd/system/serverctimer.service <<'EOF'\n[Unit]\nDescription=Server C timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serverctimer.sh\nEOF",
-          "cat > /etc/systemd/system/serverctimer.timer <<'EOF'\n[Unit]\nDescription=Run server C timer job\n\n[Timer]\nOnCalendar=*:/5\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "cat > /etc/systemd/system/serverctimer.timer <<'EOF'\n[Unit]\nDescription=Run server C timer job\n\n[Timer]\nOnCalendar=*:0/5\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
           "systemctl enable --now serverctimer.timer"
         ],

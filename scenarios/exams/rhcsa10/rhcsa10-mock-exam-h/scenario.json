@@ -62,7 +62,7 @@
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.67/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "hostnamectl --static | grep -qx serverh.exam10.lab && grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts",
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq REPORT-H /root/exam-h-report.txt'",
-        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverhtimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/10$'\"'\"' /etc/systemd/system/serverhtimer.timer && grep -Fxq '\"'\"'echo SERVER-H >> /var/log/serverhtimer.log'\"'\"' /usr/local/sbin/serverhtimer.sh'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverhtimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:0/10$'\"'\"' /etc/systemd/system/serverhtimer.timer && grep -Fxq '\"'\"'echo SERVER-H >> /var/log/serverhtimer.log'\"'\"' /usr/local/sbin/serverhtimer.sh'",
         "getent group teamh10 >/dev/null && id -nG userh10 | tr ' ' '\\n' | grep -qx teamh10",
         "chage -l userh10 | grep -Eq 'Maximum.*52'",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
@@ -158,7 +158,7 @@
           "cat > /usr/local/sbin/serverhtimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-H >> /var/log/serverhtimer.log\nEOF",
           "chmod +x /usr/local/sbin/serverhtimer.sh",
           "cat > /etc/systemd/system/serverhtimer.service <<'EOF'\n[Unit]\nDescription=Server H timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serverhtimer.sh\nEOF",
-          "cat > /etc/systemd/system/serverhtimer.timer <<'EOF'\n[Unit]\nDescription=Run server H timer job\n\n[Timer]\nOnCalendar=*:/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "cat > /etc/systemd/system/serverhtimer.timer <<'EOF'\n[Unit]\nDescription=Run server H timer job\n\n[Timer]\nOnCalendar=*:0/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
           "systemctl enable --now serverhtimer.timer"
         ],
