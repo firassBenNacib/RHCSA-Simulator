@@ -203,7 +203,7 @@ cat > /etc/systemd/system/serverbtimer.timer <<'EOF'
 Description=Run server B timer job
 
 [Timer]
-OnCalendar=*:/10
+OnCalendar=*:0/10
 Persistent=true
 
 [Install]

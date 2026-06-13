@@ -997,7 +997,7 @@ def _server_timer_step(letter: str, minutes: int = 10) -> tuple[str, str, list[s
         f"On server, create and enable {timer}.timer so it appends SERVER-{letter.upper()} to /var/log/{timer}.log every {minutes} minutes.",
         _ssh_server_check(
             f"systemctl is-enabled {timer}.timer | grep -qx enabled && "
-            f"grep -Eq '^OnCalendar=\\*:\\*/{minutes}$' /etc/systemd/system/{timer}.timer && "
+            f"grep -Eq '^OnCalendar=\\*:0/{minutes}$' /etc/systemd/system/{timer}.timer && "
             f"grep -Fxq 'echo SERVER-{letter.upper()} >> /var/log/{timer}.log' /usr/local/sbin/{timer}.sh"
         ),
         [
@@ -1005,7 +1005,7 @@ def _server_timer_step(letter: str, minutes: int = 10) -> tuple[str, str, list[s
             f"cat > /usr/local/sbin/{timer}.sh <<'EOF'\n#!/bin/bash\necho SERVER-{letter.upper()} >> /var/log/{timer}.log\nEOF",
             f"chmod +x /usr/local/sbin/{timer}.sh",
             f"cat > /etc/systemd/system/{timer}.service <<'EOF'\n[Unit]\nDescription=Server {letter.upper()} timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/{timer}.sh\nEOF",
-            f"cat > /etc/systemd/system/{timer}.timer <<'EOF'\n[Unit]\nDescription=Run server {letter.upper()} timer job\n\n[Timer]\nOnCalendar=*:/{minutes}\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+            f"cat > /etc/systemd/system/{timer}.timer <<'EOF'\n[Unit]\nDescription=Run server {letter.upper()} timer job\n\n[Timer]\nOnCalendar=*:0/{minutes}\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
             "systemctl daemon-reload",
             f"systemctl enable --now {timer}.timer",
         ],

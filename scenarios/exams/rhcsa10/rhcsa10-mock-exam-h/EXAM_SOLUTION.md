@@ -83,7 +83,7 @@ cat > /etc/systemd/system/serverhtimer.timer <<'EOF'
 Description=Run server H timer job
 
 [Timer]
-OnCalendar=*:/10
+OnCalendar=*:0/10
 Persistent=true
 
 [Install]

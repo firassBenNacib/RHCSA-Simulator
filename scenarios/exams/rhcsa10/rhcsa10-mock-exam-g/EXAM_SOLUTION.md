@@ -282,7 +282,7 @@ cat > /etc/systemd/system/servergtimer.timer <<'EOF'
 Description=Run server G timer job
 
 [Timer]
-OnCalendar=*:/12
+OnCalendar=*:0/12
 Persistent=true
 
 [Install]

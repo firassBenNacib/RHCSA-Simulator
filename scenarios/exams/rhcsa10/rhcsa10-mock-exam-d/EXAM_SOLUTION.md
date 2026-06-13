@@ -72,7 +72,7 @@ cat > /etc/systemd/system/serverdtimer.timer <<'EOF'
 Description=Run server D timer job
 
 [Timer]
-OnCalendar=*:/10
+OnCalendar=*:0/10
 Persistent=true
 
 [Install]

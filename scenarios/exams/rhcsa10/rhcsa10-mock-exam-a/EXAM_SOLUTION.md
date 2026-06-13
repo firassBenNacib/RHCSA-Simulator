@@ -218,7 +218,7 @@ cat > /etc/systemd/system/serveratimer.timer <<'EOF'
 Description=Run server A timer job
 
 [Timer]
-OnCalendar=*:/10
+OnCalendar=*:0/10
 Persistent=true
 
 [Install]

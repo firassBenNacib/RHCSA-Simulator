@@ -62,7 +62,7 @@
         "hostnamectl --static | grep -qx clientd.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverd\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.63/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "test \"$(stat -c %i /root/d-original)\" = \"$(stat -c %i /root/d-hard)\" && test -L /root/d-soft",
-        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverdtimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:\\*/10$'\"'\"' /etc/systemd/system/serverdtimer.timer && grep -Fxq '\"'\"'echo SERVER-D >> /var/log/serverdtimer.log'\"'\"' /usr/local/sbin/serverdtimer.sh'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled serverdtimer.timer | grep -qx enabled && grep -Eq '\"'\"'^OnCalendar=\\*:0/10$'\"'\"' /etc/systemd/system/serverdtimer.timer && grep -Fxq '\"'\"'echo SERVER-D >> /var/log/serverdtimer.log'\"'\"' /usr/local/sbin/serverdtimer.sh'",
         "lv_path=/dev/vgd10/datad; mapper_path=/dev/mapper/vgd10-datad; mountpoint=/mnt/datad10; lv_uuid=\"$(blkid -s UUID -o value \"$lv_path\")\"; lvs \"$lv_path\" >/dev/null 2>&1 && findmnt -no TARGET \"$mountpoint\" | grep -qx \"$mountpoint\" && awk -v dev=\"$lv_path\" -v mapper=\"$mapper_path\" -v uuid=\"$lv_uuid\" -v target=\"$mountpoint\" '$1 !~ /^#/ && $2 == target && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab",
         "ls -Z /var/www/html/d.html | grep -q httpd_sys_content_t",
         "getsebool httpd_can_network_connect | grep -Eq -- '--> on$' && semanage boolean -l -C | grep -E '^httpd_can_network_connect\\s+\\(on\\s*,\\s*on\\)'",
@@ -153,7 +153,7 @@
           "cat > /usr/local/sbin/serverdtimer.sh <<'EOF'\n#!/bin/bash\necho SERVER-D >> /var/log/serverdtimer.log\nEOF",
           "chmod +x /usr/local/sbin/serverdtimer.sh",
           "cat > /etc/systemd/system/serverdtimer.service <<'EOF'\n[Unit]\nDescription=Server D timer job\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/serverdtimer.sh\nEOF",
-          "cat > /etc/systemd/system/serverdtimer.timer <<'EOF'\n[Unit]\nDescription=Run server D timer job\n\n[Timer]\nOnCalendar=*:/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
+          "cat > /etc/systemd/system/serverdtimer.timer <<'EOF'\n[Unit]\nDescription=Run server D timer job\n\n[Timer]\nOnCalendar=*:0/10\nPersistent=true\n\n[Install]\nWantedBy=timers.target\nEOF",
           "systemctl daemon-reload",
           "systemctl enable --now serverdtimer.timer"
         ],

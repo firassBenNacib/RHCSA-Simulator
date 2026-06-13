@@ -196,7 +196,7 @@ cat > /etc/systemd/system/serveretimer.timer <<'EOF'
 Description=Run server E timer job
 
 [Timer]
-OnCalendar=*:/10
+OnCalendar=*:0/10
 Persistent=true
 
 [Install]

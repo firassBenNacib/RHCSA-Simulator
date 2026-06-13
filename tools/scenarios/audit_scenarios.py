@@ -290,6 +290,23 @@ def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list
         findings.append(Finding(path, f"RHCSA10 lab scope {scope} must require server"))
 
 
+def audit_rhcsa10_timer_calendar(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario):
+        return
+
+    content = scenario.get("content", {})
+    for mode in ("lab", "exam"):
+        block = content.get(mode)
+        if not isinstance(block, dict):
+            continue
+        generated_text = "\n".join(flatten_strings([
+            block.get("checks", []),
+            block.get("solution_commands", []),
+        ]))
+        if re.search(r"OnCalendar=\*:(?:\*/|/)\d+", generated_text):
+            findings.append(Finding(path, f"{mode} timer uses invalid OnCalendar form; use *:0/N"))
+
+
 def audit_rhcsa10_swap_persistence(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario):
         return
@@ -373,6 +390,7 @@ def main() -> int:
         task_lengths_ok(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
         audit_rhcsa10_lab_scope(path, scenario, findings)
+        audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
 
@@ -384,6 +402,7 @@ def main() -> int:
         audit_solution_style(path, scenario, findings)
         audit_rhcsa10_exam_roles(path, scenario, findings)
         audit_rhcsa10_exam_target_balance(path, scenario, findings)
+        audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
         audit_rhcsa10_exam_strictness(path, scenario, findings)
