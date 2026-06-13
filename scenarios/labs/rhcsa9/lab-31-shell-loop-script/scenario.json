@@ -23,8 +23,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create an executable script /usr/local/bin/listlogs31 that loops over the files in /opt/lab31 and writes the absolute path of each file ending in .log to /root/listlogs31.out.",
-        "Run the script once."
+        "On client, create an executable script /usr/local/bin/listlogs31 that loops over the files in /opt/lab31 and writes the absolute path of each file ending in .log to /root/listlogs31.out.",
+        "On client, run the script once."
       ],
       "hints": [
         "A for loop is sufficient for this task.",
@@ -59,7 +59,20 @@
         [
           "/usr/local/bin/listlogs31"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

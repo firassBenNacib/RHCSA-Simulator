@@ -1,6 +1,6 @@
 {
   "id": "lab-10-find-copy",
-  "title": "RHCSA 10 Lab 10: Find And Copy",
+  "title": "RHCSA 10 Lab 10: Find and Copy",
   "description": "Find files and preserve metadata",
   "objective_tags": [
     "essential-tools"
@@ -50,6 +50,18 @@
           "find /etc/skel -type f -size -1k -exec cp -a {} /root/rhcsa10-found/ \\;",
           "find /root/rhcsa10-found -type f -ls"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

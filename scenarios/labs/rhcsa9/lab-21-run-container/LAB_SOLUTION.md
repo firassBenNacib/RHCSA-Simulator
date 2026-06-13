@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-21-run-container` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | containers |
 

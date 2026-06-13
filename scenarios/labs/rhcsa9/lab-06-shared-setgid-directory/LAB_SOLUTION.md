@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-06-shared-setgid-directory` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | filesystems-and-autofs, selinux-and-default-perms |
 

@@ -17,6 +17,7 @@ from pathlib import Path
 from functools import lru_cache
 
 from rhcsa_scenarios.lab_normalization import normalize_lab_block
+from rhcsa_scenarios.targets import normalize_target
 from rhcsa_scenarios.tracks import normalize_track
 
 
@@ -376,6 +377,22 @@ def default_vm_for_task(manifest: dict, task_text: str, kind: str = "lab") -> st
     if manifest.get("flags", {}).get("requires_server", False) and "client" not in description_lower:
         return "server"
     return "client"
+
+
+def explicit_target(content: dict, field: str, index: int) -> str | None:
+    values = content.get(field)
+    if not isinstance(values, list) or index >= len(values):
+        return None
+    target = normalize_target(values[index], default="")
+    return target if target in {"client", "server", "both"} else None
+
+
+def vm_for_target(target: str | None, fallback: str) -> str:
+    if target == "server":
+        return "server"
+    if target == "client":
+        return "client"
+    return fallback
 
 
 def is_probable_shell_command(line: str) -> bool:
@@ -752,7 +769,11 @@ def translate_task(
     normalized_lines = normalize_command_list(content["solution_commands"][task_index])
     password = extract_password(task_text, normalized_lines)
 
-    current_vm = default_vm_for_task(manifest, task_text, kind)
+    target = explicit_target(content, "solution_targets", task_index) or explicit_target(content, "task_targets", task_index)
+    fallback_vm = default_vm_for_task(manifest, task_text, kind)
+    if target == "both" and initial_vm in {"client", "server"}:
+        fallback_vm = initial_vm
+    current_vm = vm_for_target(target, fallback_vm)
     current_user = "root"
     units: list[ExecutionUnit] = []
     buffer: list[str] = []
@@ -1240,12 +1261,31 @@ def rebuild_baseline(output: str, timeout_seconds: int) -> tuple[bool, str]:
 
 
 def run_exam_checks(manifest: dict, timeout: int) -> tuple[int, int, list[str]]:
-    checks = manifest["content"]["exam"].get("checks", [])
+    exam = manifest["content"]["exam"]
+    checks = exam.get("checks", [])
     passed = 0
     failures: list[str] = []
     requires_server = bool(manifest.get("flags", {}).get("requires_server", False))
     for index, command in enumerate(checks, start=1):
         print(f"  exam check {index}/{len(checks)}", flush=True)
+        explicit_check_target = explicit_target(exam, "check_targets", index - 1)
+        if explicit_check_target in {"client", "server"}:
+            target_vm, effective_command = resolve_exam_check_clause(command) if explicit_check_target == "server" else ("client", command)
+            if explicit_check_target == "server":
+                target_vm = "server"
+            proc = run_remote_script(target_vm, "root", f"set -euo pipefail\n{effective_command}", timeout)
+            if proc.returncode == 0:
+                passed += 1
+                continue
+            failures.append(
+                (
+                    f"check {index}: {command}\n"
+                    f"[{target_vm}] exit {proc.returncode}\n"
+                    f"{proc.stdout}{proc.stderr}"
+                ).strip()
+            )
+            continue
+
         proc = run_remote_script("client", "root", f"set -euo pipefail\n{command}", timeout)
         if proc.returncode == 0:
             passed += 1

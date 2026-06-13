@@ -21,7 +21,7 @@ Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, N
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168 (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname cliente.exam10.lab
@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
+## Question 03 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -76,7 +76,7 @@ dnf clean all
 
 ---
 
-## Question 04 - create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a (client) - 5 pts
+## Question 04 - Create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a (client) - 5 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary xfs 1MiB 513MiB
@@ -91,7 +91,7 @@ mount -a
 
 ---
 
-## Question 05 - add audit_backlog_limit=8192 to all installed kernel entries (client) - 5 pts
+## Question 05 - Add audit_backlog_limit=8192 to all installed kernel entries (client) - 5 pts
 
 ```bash
 grubby --update-kernel=ALL --args='audit_backlog_limit=8192'
@@ -111,7 +111,7 @@ passwd usere10
 
 ---
 
-## Question 07 - create group servere10 and user srve10 with password cinder9, then add t (server) - 5 pts
+## Question 07 - Create group servere10 and user srve10 with password cinder9, then add t (server) - 5 pts
 
 ```bash
 # On server:
@@ -123,7 +123,7 @@ echo 'srve10:cinder9' | chpasswd
 
 ---
 
-## Question 08 - allow members of servere10 to run /usr/bin/systemctl with sudo without a (server) - 5 pts
+## Question 08 - Allow members of servere10 to run /usr/bin/systemctl with sudo without a (server) - 5 pts
 
 ```bash
 # On server:
@@ -174,7 +174,7 @@ ln -s /root/e-original /root/e-soft
 
 ---
 
-## Question 13 - create and enable serveretimer.timer so it appends SERVER-E to /var/log/ (server) - 4 pts
+## Question 13 - Create and enable serveretimer.timer so it appends SERVER-E to /var/log/ (server) - 4 pts
 
 ```bash
 # On server:
@@ -222,7 +222,7 @@ mount -a
 
 ---
 
-## Question 15 - publish /var/www/html/server-e.html containing RHCSA10-E and serve httpd (server) - 4 pts
+## Question 15 - Publish /var/www/html/server-e.html containing RHCSA10-E and serve httpd (server) - 4 pts
 
 ```bash
 # On server:
@@ -241,7 +241,7 @@ systemctl restart httpd
 
 ---
 
-## Question 16 - create /srv/servere10 owned by root:servere10 with mode 2770 (server) - 4 pts
+## Question 16 - Create /srv/servere10 owned by root:servere10 with mode 2770 (server) - 4 pts
 
 ```bash
 # On server:
@@ -262,7 +262,7 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Question 18 - route local5 log messages to /var/log/server-e-local5.log and write a te (server) - 4 pts
+## Question 18 - Route local5 log messages to /var/log/server-e-local5.log and write a te (server) - 4 pts
 
 ```bash
 # On server:
@@ -277,7 +277,7 @@ sleep 1
 
 ---
 
-## Question 19 - export /exports/exam-e to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+## Question 19 - Export /exports/exam-e to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -300,7 +300,7 @@ mount -a
 
 ---
 
-## Question 20 - create /root/exam-e-report.txt containing REPORT-E and copy it to server (client) - 4 pts
+## Question 20 - Create /root/exam-e-report.txt containing REPORT-E and copy it to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-E > /root/exam-e-report.txt
@@ -334,7 +334,7 @@ dnf remove -y tcpdump
 
 ---
 
-## Question 22 - enable persistent systemd journal storage (server) - 4 pts
+## Question 22 - Enable persistent systemd journal storage (server) - 4 pts
 
 ```bash
 # On server:
@@ -349,7 +349,7 @@ journalctl --flush
 
 ---
 
-## Question 23 - add a hosts entry for servere.exam10.lab and save the output of http://s (client) - 4 pts
+## Question 23 - Add a hosts entry for servere.exam10.lab and save the output of http://s (client + server) - 4 pts
 
 ```bash
 grep -Eq '^192\.168\.122\.3[[:space:]]+servere\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts

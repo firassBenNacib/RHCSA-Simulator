@@ -51,6 +51,18 @@
           "getenforce",
           "grep '^SELINUX=' /etc/selinux/config"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

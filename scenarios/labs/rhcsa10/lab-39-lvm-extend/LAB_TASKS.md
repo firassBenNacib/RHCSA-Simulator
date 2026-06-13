@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-39-lvm-extend` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | storage-lvm |
 

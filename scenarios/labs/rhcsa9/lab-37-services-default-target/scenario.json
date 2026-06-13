@@ -25,8 +25,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure server to boot into multi-user.target by default.",
-        "Ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it."
+        "On client, configure server to boot into multi-user.target by default.",
+        "On server, ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it."
       ],
       "hints": [
         "This lab belongs on server, not client.",
@@ -56,7 +56,20 @@
           "systemctl enable --now rsyslog",
           "rpm -q postfix >/dev/null 2>&1 && systemctl disable --now postfix || true"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "server"
+      ],
+      "solution_targets": [
+        "client",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

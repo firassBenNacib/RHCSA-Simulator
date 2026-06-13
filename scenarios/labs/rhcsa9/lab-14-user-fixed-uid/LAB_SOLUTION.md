@@ -1,4 +1,4 @@
-# Lab 14: User With Fixed UID
+# Lab 14: User with Fixed UID
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-14-user-fixed-uid` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | users-sudo-ssh |
 

@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "enable the httpd_can_network_connect SELinux boolean immediately",
-        "make the httpd_can_network_connect SELinux boolean persistent"
+        "Enable the httpd_can_network_connect SELinux boolean immediately",
+        "Make the httpd_can_network_connect SELinux boolean persistent"
       ],
       "task_points": [
         10,
@@ -50,6 +50,18 @@
           "setsebool -P httpd_can_network_connect on",
           "semanage boolean -l | grep httpd_can_network_connect"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server"
       ]
     }
   },

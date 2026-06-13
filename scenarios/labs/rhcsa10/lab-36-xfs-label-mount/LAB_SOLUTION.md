@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-36-xfs-label-mount` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | storage-lvm |
 

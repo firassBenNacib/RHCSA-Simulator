@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-25-pwquality-policy` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |
 

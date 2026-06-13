@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-38-selinux-boolean` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | selinux-and-default-perms |
 

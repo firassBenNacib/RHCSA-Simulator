@@ -21,7 +21,7 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168 (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clientf.exam10.lab
@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - create /root/exam-f-report.txt containing REPORT-F and copy it to server (client) - 5 pts
+## Question 03 - Create /root/exam-f-report.txt containing REPORT-F and copy it to server (client + server) - 5 pts
 
 ```bash
 echo REPORT-F > /root/exam-f-report.txt
@@ -51,7 +51,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 04 - create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 5 pts
+## Question 04 - Create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 5 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB
@@ -90,7 +90,7 @@ flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 
 ---
 
-## Question 08 - enable persistent systemd journal storage (server) - 5 pts
+## Question 08 - Enable persistent systemd journal storage (server) - 5 pts
 
 ```bash
 # On server:
@@ -146,7 +146,7 @@ chmod +x /usr/local/bin/f-who
 
 ---
 
-## Question 13 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
+## Question 13 - Set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
 # On server:
@@ -165,7 +165,7 @@ tar -tzf /root/f-etc.tar.gz
 
 ---
 
-## Question 15 - export /exports/exam-f to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+## Question 15 - Export /exports/exam-f to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -188,7 +188,7 @@ mount -a
 
 ---
 
-## Question 16 - create and enable serverftimer.timer so it appends SERVER-F to /var/log/ (server) - 4 pts
+## Question 16 - Create and enable serverftimer.timer so it appends SERVER-F to /var/log/ (server) - 4 pts
 
 ```bash
 # On server:
@@ -222,7 +222,7 @@ systemctl enable --now serverftimer.timer
 
 ---
 
-## Question 17 - publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd (server) - 4 pts
+## Question 17 - Publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd (server) - 4 pts
 
 ```bash
 # On server:
@@ -241,7 +241,7 @@ systemctl restart httpd
 
 ---
 
-## Question 18 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
+## Question 18 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -285,7 +285,7 @@ chage -M 50 -W 7 userf10
 
 ---
 
-## Question 20 - route local6 log messages to /var/log/server-f-local6.log and write a te (server) - 4 pts
+## Question 20 - Route local6 log messages to /var/log/server-f-local6.log and write a te (server) - 4 pts
 
 ```bash
 # On server:
@@ -300,7 +300,7 @@ sleep 1
 
 ---
 
-## Question 21 - create /srv/serverf10 owned by root:serverf10 with mode 2770 (server) - 4 pts
+## Question 21 - Create /srv/serverf10 owned by root:serverf10 with mode 2770 (server) - 4 pts
 
 ```bash
 # On server:
@@ -312,7 +312,7 @@ chmod 2770 /srv/serverf10
 
 ---
 
-## Question 22 - create group serverf10 and user srvf10 with password cinder9, then add t (server) - 4 pts
+## Question 22 - Create group serverf10 and user srvf10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
 # On server:

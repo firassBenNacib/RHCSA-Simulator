@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-34-journald-rsyslog` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | processes-logs-tuning, software-scheduling-time |
 

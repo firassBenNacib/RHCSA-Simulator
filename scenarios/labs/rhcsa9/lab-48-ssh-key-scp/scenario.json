@@ -1,6 +1,6 @@
 {
   "id": "lab-48-ssh-key-scp",
-  "title": "Lab 48: SSH Key Authentication And SCP",
+  "title": "Lab 48: SSH Key Authentication and SCP",
   "description": "Use a key pair and scp between the two lab hosts.",
   "objective_tags": [
     "users-sudo-ssh"
@@ -24,10 +24,10 @@
   "content": {
     "lab": {
       "tasks": [
-        "Ensure user bridge48 exists on both client and server, and set the password on both systems to cinder9.",
-        "As user bridge48 on client, generate an ED25519 SSH key pair with no passphrase.",
-        "Configure passwordless SSH access for bridge48 from client to server using the public key.",
-        "Using scp over SSH, copy /home/bridge48/payload.txt from client to /home/bridge48/inbox/ on server."
+        "On client, ensure user bridge48 exists on both client and server, and set the password on both systems to cinder9.",
+        "On client, as user bridge48 on client, generate an ED25519 SSH key pair with no passphrase.",
+        "On client, configure passwordless SSH access for bridge48 from client to server using the public key.",
+        "On client, using scp over SSH, copy /home/bridge48/payload.txt from client to /home/bridge48/inbox/ on server."
       ],
       "hints": [
         "This lab does need a home directory because the key pair lives under ~/.ssh.",
@@ -86,7 +86,26 @@
           "su - bridge48",
           "scp /home/bridge48/payload.txt bridge48@server:/home/bridge48/inbox/"
         ]
+      ],
+      "task_targets": [
+        "both",
+        "client",
+        "both",
+        "both"
+      ],
+      "solution_targets": [
+        "both",
+        "client",
+        "both",
+        "both"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

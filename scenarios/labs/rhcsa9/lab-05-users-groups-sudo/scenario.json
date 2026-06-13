@@ -1,6 +1,6 @@
 {
   "id": "lab-05-users-groups-sudo",
-  "title": "Lab 05: Users Groups And Sudo",
+  "title": "Lab 05: Users Groups and Sudo",
   "description": "Create local users on server with minimal useradd usage and delegated sudo rules.",
   "objective_tags": [
     "users-sudo-ssh"
@@ -24,9 +24,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the group opsrune and the users brenor, lyessa, and quillan. Create brenor and lyessa with opsrune as a supplementary group at creation time. Create sarahx without a home directory and with the shell /sbin/nologin.",
-        "Set the passwords of brenor, lyessa, and quillan to cinder9.",
-        "Allow members of opsrune to run /usr/sbin/useradd through sudo, and allow brenor to run /usr/bin/passwd for other users without a sudo password prompt."
+        "On client, create the group opsrune and the users brenor, lyessa, and quillan. Create brenor and lyessa with opsrune as a supplementary group at creation time. Create sarahx without a home directory and with the shell /sbin/nologin.",
+        "On client, set the passwords of brenor, lyessa, and quillan to cinder9.",
+        "On client, allow members of opsrune to run /usr/sbin/useradd through sudo, and allow brenor to run /usr/bin/passwd for other users without a sudo password prompt."
       ],
       "hints": [
         "Use useradd -G when the supplementary group is known at account creation time.",
@@ -70,7 +70,23 @@
           "%opsrune ALL=(ALL) /usr/sbin/useradd",
           "brenor ALL=(ALL) NOPASSWD: /usr/bin/passwd"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "server"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

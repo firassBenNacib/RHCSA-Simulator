@@ -24,10 +24,10 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the script file /usr/local/bin/usercheck40 on client.",
-        "Make /usr/local/bin/usercheck40 executable.",
-        "If the user exists, print EXISTS: username to standard output and exit with status 0.",
-        "If the user does not exist, print MISSING: username to standard output and exit with status 1."
+        "On client, create the script file /usr/local/bin/usercheck40 on client.",
+        "On client, make /usr/local/bin/usercheck40 executable.",
+        "On client, if the user exists, print EXISTS: username to standard output and exit with status 0.",
+        "On client, if the user does not exist, print MISSING: username to standard output and exit with status 1."
       ],
       "hints": [
         "Use an if test against the passwd database or the id command.",
@@ -68,7 +68,26 @@
         [
           "/usr/bin/printf '%s\\n' '#!/bin/bash' 'user_name=\"$1\"' 'if id \"$user_name\" >/dev/null 2>&1; then' '  echo \"EXISTS: $user_name\"' '  exit 0' 'else' '  echo \"MISSING: $user_name\"' '  exit 1' 'fi' > /usr/local/bin/usercheck40"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

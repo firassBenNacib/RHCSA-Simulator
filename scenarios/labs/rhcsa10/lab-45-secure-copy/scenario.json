@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "create /root/rhcsa10-transfer.txt containing TRANSFER10",
-        "copy the file to server:/root/rhcsa10-transfer.txt"
+        "Create /root/rhcsa10-transfer.txt containing TRANSFER10",
+        "Copy the file to server:/root/rhcsa10-transfer.txt"
       ],
       "task_points": [
         10,
@@ -52,6 +52,18 @@
           "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/rhcsa10-transfer.txt root@server:/root/rhcsa10-transfer.txt",
           "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 root@server 'cat /root/rhcsa10-transfer.txt'"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "both"
+      ],
+      "solution_targets": [
+        "client",
+        "both"
+      ],
+      "check_targets": [
+        "client",
+        "server"
       ]
     }
   },

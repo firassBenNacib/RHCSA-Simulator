@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-45-secure-copy` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -20,7 +21,7 @@ Securely transfer files between systems.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - create /root/rhcsa10-transfer.txt containing TRANSFER10 (client) - 10 pts
+## Task 01 - Create /root/rhcsa10-transfer.txt containing TRANSFER10 (client) - 10 pts
 
 ```bash
 echo TRANSFER10 > /root/rhcsa10-transfer.txt
@@ -28,7 +29,7 @@ echo TRANSFER10 > /root/rhcsa10-transfer.txt
 
 ---
 
-## Task 02 - copy the file to server:/root/rhcsa10-transfer.txt (client) - 20 pts
+## Task 02 - Copy the file to server:/root/rhcsa10-transfer.txt (client + server) - 20 pts
 
 ```bash
 test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa10-transfer >/dev/null 2>&1

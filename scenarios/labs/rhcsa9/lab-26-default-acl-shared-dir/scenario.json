@@ -24,9 +24,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the group collab26 and the user probe26 without a home directory. Set the password of probe26 to cinder9.",
-        "Create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.",
-        "Configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26."
+        "On client, create the group collab26 and the user probe26 without a home directory. Set the password of probe26 to cinder9.",
+        "On client, create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.",
+        "On client, configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26."
       ],
       "hints": [
         "probe26 does not need a home directory for this task.",
@@ -67,7 +67,23 @@
         [
           "setfacl -m d:u:probe26:rwx /shared/collab26"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

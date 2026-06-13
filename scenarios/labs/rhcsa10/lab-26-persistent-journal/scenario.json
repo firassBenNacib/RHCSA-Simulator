@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "configure persistent systemd journal storage",
-        "restart systemd-journald and flush current journal data to persistent st"
+        "Configure persistent systemd journal storage",
+        "Restart systemd-journald and flush current journal data to persistent st"
       ],
       "task_points": [
         10,
@@ -51,6 +51,18 @@
           "systemctl restart systemd-journald",
           "journalctl --flush"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server"
       ]
     }
   },

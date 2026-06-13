@@ -23,8 +23,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the active client connection with the following persistent IPv6 settings:\n\nIPv6 Address: fd00:122:41::25/64\nIPv6 Gateway: fd00:122:41::1\nDNS Server: fd00:122:41::53",
-        "Set the following persistent identity and resolution settings on client:\n\nHostname: client.ipv6lab.local\nStatic host entry: server.ipv6lab.local\nAddress: fd00:122:41::3"
+        "On client, configure the active client connection with the following persistent IPv6 settings:\n\nIPv6 Address: fd00:122:41::25/64\nIPv6 Gateway: fd00:122:41::1\nDNS: fd00:122:41::53",
+        "On client, set the following persistent identity and resolution settings on client:\n\nHostname: client.ipv6lab.local\nStatic host entry: server.ipv6lab.local\nAddress: fd00:122:41::3"
       ],
       "hints": [
         "Use nmcli so the change survives a reconnect."
@@ -36,7 +36,7 @@
       "solution_outline": [],
       "task_titles": [
         "IPv6 Address Configuration",
-        "Hostname And IPv6 Host Entry"
+        "Hostname and IPv6 Host Entry"
       ],
       "task_points": [
         10,
@@ -54,7 +54,20 @@
           "vim /etc/hosts",
           "fd00:122:41::3 server.ipv6lab.local"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

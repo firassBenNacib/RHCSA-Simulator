@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-02-root-recovery` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 40 minutes |
 | Objectives | boot-and-recovery |
 

@@ -6,12 +6,14 @@
 |---|---|
 | Scenario ID | `lab-37-services-default-target` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time, boot-and-recovery |
 
 Manage the default target and key services on server.
 
 ### Systems
+- client
 - server
 
 ## General Instructions
@@ -19,7 +21,7 @@ Manage the default target and key services on server.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Set the default boot target on server (server) - 10 pts
+## Task 01 - Set the default boot target on server (client) - 10 pts
 
 ```bash
 systemctl set-default multi-user.target

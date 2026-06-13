@@ -21,7 +21,7 @@ Software and permissions focus: offline package installation, shared directories
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Set hostname to clientb.exam10.lab and map serverb.exam10.lab to 192.168 (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clientb.exam10.lab
@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
+## Question 03 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -76,7 +76,7 @@ dnf clean all
 
 ---
 
-## Question 04 - install the tree package from the configured offline repositories (client) - 5 pts
+## Question 04 - Install the tree package from the configured offline repositories (client) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -99,7 +99,7 @@ rpm -q tree
 
 ---
 
-## Question 05 - create /srv/teamb10 as a shared directory for group teamb10 (client) - 5 pts
+## Question 05 - Create /srv/teamb10 as a shared directory for group teamb10 (client) - 5 pts
 
 ```bash
 getent group teamb10 >/dev/null || groupadd teamb10
@@ -121,7 +121,7 @@ echo 'userb10:cinder9' | chpasswd
 
 ---
 
-## Question 07 - create user auditorb10 with UID 6102 and shell /sbin/nologin (client) - 5 pts
+## Question 07 - Create user auditorb10 with UID 6102 and shell /sbin/nologin (client) - 5 pts
 
 ```bash
 id auditorb10 >/dev/null 2>&1 || useradd -u 6102 -s /sbin/nologin auditorb10
@@ -151,7 +151,7 @@ chmod +x /usr/local/bin/b-who
 
 ---
 
-## Question 10 - create /root/exam-b-report.txt containing REPORT-B and copy it to server (client) - 5 pts
+## Question 10 - Create /root/exam-b-report.txt containing REPORT-B and copy it to server (client + server) - 5 pts
 
 ```bash
 echo REPORT-B > /root/exam-b-report.txt
@@ -181,7 +181,7 @@ ln -s /root/b-original /root/b-soft
 
 ---
 
-## Question 13 - create and enable serverbtimer.timer so it appends SERVER-B to /var/log/ (server) - 4 pts
+## Question 13 - Create and enable serverbtimer.timer so it appends SERVER-B to /var/log/ (server) - 4 pts
 
 ```bash
 # On server:
@@ -229,7 +229,7 @@ mount -a
 
 ---
 
-## Question 15 - publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd (server) - 4 pts
+## Question 15 - Publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd (server) - 4 pts
 
 ```bash
 # On server:
@@ -248,7 +248,7 @@ systemctl restart httpd
 
 ---
 
-## Question 16 - create group serverb10 and user srvb10 with password cinder9, then add t (server) - 4 pts
+## Question 16 - Create group serverb10 and user srvb10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
 # On server:
@@ -260,7 +260,7 @@ echo 'srvb10:cinder9' | chpasswd
 
 ---
 
-## Question 17 - allow members of serverb10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 17 - Allow members of serverb10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
 # On server:
@@ -271,7 +271,7 @@ chmod 0440 /etc/sudoers.d/serverb10-systemctl
 
 ---
 
-## Question 18 - enable persistent systemd journal storage (server) - 4 pts
+## Question 18 - Enable persistent systemd journal storage (server) - 4 pts
 
 ```bash
 # On server:
@@ -286,7 +286,7 @@ journalctl --flush
 
 ---
 
-## Question 19 - route local5 log messages to /var/log/server-b-local5.log and write a te (server) - 4 pts
+## Question 19 - Route local5 log messages to /var/log/server-b-local5.log and write a te (server) - 4 pts
 
 ```bash
 # On server:
@@ -301,7 +301,7 @@ sleep 1
 
 ---
 
-## Question 20 - export /exports/exam-b to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+## Question 20 - Export /exports/exam-b to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -324,7 +324,7 @@ mount -a
 
 ---
 
-## Question 21 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
+## Question 21 - Set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
 # On server:

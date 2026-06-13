@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-21-run-container` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | containers |
 
@@ -21,10 +22,10 @@ Run a container from a prepared local image with bind mounts.
 
 ## Task 01 - Create runner21 and set its password (client) - 10 pts
 
-Create user runner21 if it does not already exist and set its password to cinder9.
+On client, create user runner21 if it does not already exist and set its password to cinder9.
 
 ---
 
 ## Task 02 - Run mycontainer21 with bind mounts (client) - 10 pts
 
-As user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest with /opt/file21 bind mounted to /data/input and /opt/processed21 bind mounted to /data/output.
+On client, as user runner21, run a container named mycontainer21 from localhost/text2pdf21:latest with /opt/file21 bind mounted to /data/input and /opt/processed21 bind mounted to /data/output.

@@ -1,4 +1,4 @@
-# Lab 08: Autofs With NFS
+# Lab 08: Autofs with NFS
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-08-autofs-nfs` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 40 minutes |
 | Objectives | filesystems-and-autofs |
 
@@ -20,7 +21,7 @@ Configure an indirect automount from server.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Seed Export And User (client + server) - 10 pts
+## Task 01 - Seed Export and User (client + server) - 10 pts
 
 ```bash
 # On server
@@ -35,7 +36,7 @@ passwd vault8
 
 ---
 
-## Task 02 - Configure Persistent Autofs Map (client) - 20 pts
+## Task 02 - Configure Persistent Autofs Map (client + server) - 20 pts
 
 ```bash
 vim /etc/auto.lab8

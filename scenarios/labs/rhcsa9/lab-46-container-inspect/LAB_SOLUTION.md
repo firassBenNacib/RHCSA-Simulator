@@ -1,4 +1,4 @@
-# Lab 46: Container Load And Inspect
+# Lab 46: Container Load and Inspect
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-46-container-inspect` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | containers |
 

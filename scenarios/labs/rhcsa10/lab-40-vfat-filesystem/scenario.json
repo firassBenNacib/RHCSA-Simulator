@@ -62,6 +62,21 @@
           "echo 'LABEL=RHCSA10VFAT /mnt/vfat10 vfat defaults 0 0' >> /etc/fstab",
           "mount -a"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

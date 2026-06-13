@@ -33,7 +33,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "set the default systemd target to multi-user.target without rebooting"
+        "Set the default systemd target to multi-user.target without rebooting"
       ],
       "task_points": [
         10
@@ -43,6 +43,15 @@
           "systemctl set-default multi-user.target",
           "systemctl get-default"
         ]
+      ],
+      "task_targets": [
+        "server"
+      ],
+      "solution_targets": [
+        "server"
+      ],
+      "check_targets": [
+        "server"
       ]
     }
   },

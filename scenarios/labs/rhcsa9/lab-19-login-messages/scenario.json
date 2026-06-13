@@ -73,7 +73,23 @@
           "EOF",
           "chmod 644 /etc/profile.d/lab19-greeting.sh"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "client",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "client",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "client",
+        "server"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

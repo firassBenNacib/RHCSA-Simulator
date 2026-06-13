@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-38-lvm-create` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 40 minutes |
 | Objectives | storage-lvm |
 

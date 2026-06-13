@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-32-ssh-key-auth` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 35 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -41,7 +42,7 @@ passwd vault32
 
 ---
 
-## Task 03 - Configure key-based SSH authentication (client) - 10 pts
+## Task 03 - Configure key-based SSH authentication (client + server) - 10 pts
 
 ```bash
 su - relay32

@@ -1,4 +1,4 @@
-# RHCSA 10 Lab 15: Users Groups And Sudo
+# RHCSA 10 Lab 15: Users Groups and Sudo
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-15-users-groups-sudo` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | users-sudo-ssh |
 

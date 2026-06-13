@@ -1,4 +1,4 @@
-# Lab 30: Hard And Soft Links
+# Lab 30: Hard and Soft Links
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-30-links-hard-soft` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 
@@ -21,10 +22,10 @@ Create and verify both a hard link and a symbolic link to the same source file.
 
 ## Task 01 - Create the file /root/linksource30 containing the (client) - 10 pts
 
-Create the file /root/linksource30 containing the text link-test.
+On client, create the file /root/linksource30 containing the text link-test.
 
 ---
 
 ## Task 02 - Create the hard link /root/linkhard30 and the (client) - 10 pts
 
-Create the hard link /root/linkhard30 and the symbolic link /root/linksoft30 to /root/linksource30.
+On client, create the hard link /root/linkhard30 and the symbolic link /root/linksoft30 to /root/linksource30.

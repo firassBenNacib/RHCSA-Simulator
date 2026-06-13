@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-40-script-args-conditionals` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | shell-scripting, users-sudo-ssh |
 

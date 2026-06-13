@@ -23,9 +23,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user cycle47 and set the password to cinder9.",
-        "Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.",
-        "Force cycle47 to change the password at the next login."
+        "On client, create user cycle47 and set the password to cinder9.",
+        "On client, configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.",
+        "On client, force cycle47 to change the password at the next login."
       ],
       "hints": [
         "This lab is about chage, not about home-directory behavior.",
@@ -62,7 +62,23 @@
         [
           "chage -d 0 cycle47"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

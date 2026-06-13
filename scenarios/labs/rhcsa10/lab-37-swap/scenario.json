@@ -58,6 +58,21 @@
           "uuid=$(blkid -s UUID -o value /dev/sdb1)",
           "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

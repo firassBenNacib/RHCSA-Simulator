@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-45-restorecon-httpd` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms |
 

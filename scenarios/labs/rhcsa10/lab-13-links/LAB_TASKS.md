@@ -1,4 +1,4 @@
-# RHCSA 10 Lab 13: Hard And Soft Links
+# RHCSA 10 Lab 13: Hard and Soft Links
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-13-links` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 

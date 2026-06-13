@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-19-login-messages` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 

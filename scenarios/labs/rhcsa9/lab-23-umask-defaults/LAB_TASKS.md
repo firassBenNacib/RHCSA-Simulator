@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-23-umask-defaults` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms, users-sudo-ssh |
 
@@ -21,10 +22,10 @@ Configure a user specific umask so new files and directories get the required de
 
 ## Task 01 - Create the user veil23 and set its password to cinder9 (client) - 10 pts
 
-Create the user veil23 and set its password to cinder9.
+On client, create the user veil23 and set its password to cinder9.
 
 ---
 
 ## Task 02 - Configure the umask for user veil23 so that new (client) - 10 pts
 
-Configure the umask for user veil23 so that new regular files are created with mode 0640 and new directories are created with mode 0750 whenever the user logs in.
+On client, configure the umask for user veil23 so that new regular files are created with mode 0640 and new directories are created with mode 0750 whenever the user logs in.

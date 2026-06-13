@@ -1,4 +1,4 @@
-# Lab 12: Find And Copy With Structure
+# Lab 12: Find and Copy with Structure
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-12-find-copy-preserve` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | essential-tools |
 

@@ -1,6 +1,6 @@
 {
   "id": "lab-13-links",
-  "title": "RHCSA 10 Lab 13: Hard And Soft Links",
+  "title": "RHCSA 10 Lab 13: Hard and Soft Links",
   "description": "Create hard and symbolic links",
   "objective_tags": [
     "essential-tools"
@@ -56,6 +56,21 @@
         [
           "ln -s /root/rhcsa10-original /root/rhcsa10-soft"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

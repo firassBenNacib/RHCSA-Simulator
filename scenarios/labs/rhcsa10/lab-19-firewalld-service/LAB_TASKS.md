@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-19-firewalld-service` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 20 minutes |
 | Objectives | networking-and-firewall, selinux-and-default-perms |
 
@@ -19,18 +20,18 @@ Manage persistent firewalld service rules.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - ensure firewalld is enabled and running (server) - 10 pts
+## Task 01 - Ensure firewalld is enabled and running (server) - 10 pts
 
 On server, ensure firewalld is enabled and running.
 
 ---
 
-## Task 02 - permanently allow the https service in the public zone (server) - 10 pts
+## Task 02 - Permanently allow the https service in the public zone (server) - 10 pts
 
 On server, permanently allow the https service in the public zone.
 
 ---
 
-## Task 03 - reload firewalld and verify the service is allowed (server) - 10 pts
+## Task 03 - Reload firewalld and verify the service is allowed (server) - 10 pts
 
 On server, reload firewalld and verify the service is allowed.

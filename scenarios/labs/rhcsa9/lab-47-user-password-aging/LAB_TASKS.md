@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-47-user-password-aging` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -21,16 +22,16 @@ Apply per-user password aging settings without adding extra account noise.
 
 ## Task 01 - Create cycle47 and set the password (client) - 10 pts
 
-Create user cycle47 and set the password to cinder9.
+On client, create user cycle47 and set the password to cinder9.
 
 ---
 
 ## Task 02 - Apply the requested password aging values (client) - 10 pts
 
-Configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.
+On client, configure cycle47 with a maximum password age of 30 days, a minimum age of 2 days, and a warning period of 7 days.
 
 ---
 
 ## Task 03 - Expire the password for the next login (client) - 10 pts
 
-Force cycle47 to change the password at the next login.
+On client, force cycle47 to change the password at the next login.

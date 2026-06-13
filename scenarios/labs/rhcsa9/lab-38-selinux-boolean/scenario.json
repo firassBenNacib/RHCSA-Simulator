@@ -46,7 +46,17 @@
           "getenforce",
           "getsebool httpd_can_network_connect"
         ]
+      ],
+      "task_targets": [
+        "client"
+      ],
+      "solution_targets": [
+        "client"
+      ],
+      "check_targets": [
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

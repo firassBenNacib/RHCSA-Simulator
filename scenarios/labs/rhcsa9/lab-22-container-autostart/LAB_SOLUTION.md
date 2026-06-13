@@ -1,4 +1,4 @@
-# Lab 22: Container Autostart With Systemd
+# Lab 22: Container Autostart with Systemd
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-22-container-autostart` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | containers |
 

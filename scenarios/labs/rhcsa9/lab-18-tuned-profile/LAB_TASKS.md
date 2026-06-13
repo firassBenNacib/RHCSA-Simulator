@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-18-tuned-profile` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | processes-logs-tuning |
 
@@ -21,4 +22,4 @@ Apply the system recommended tuned profile.
 
 ## Task 01 - Apply the recommended tuned profile and leave it (client) - 10 pts
 
-Apply the recommended tuned profile and leave it active after reboot.
+On client, apply the recommended tuned profile and leave it active after reboot.

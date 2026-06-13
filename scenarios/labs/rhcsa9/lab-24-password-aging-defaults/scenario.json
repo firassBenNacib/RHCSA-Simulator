@@ -23,9 +23,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the system defaults for newly created local users so that the maximum password age is 60 days, the minimum age is 7 days, and the warning period is 10 days.",
-        "Configure the default inactive period for newly created local users to 15 days.",
-        "Create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy."
+        "On client, configure the system defaults for newly created local users so that the maximum password age is 60 days, the minimum age is 7 days, and the warning period is 10 days.",
+        "On client, configure the default inactive period for newly created local users to 15 days.",
+        "On client, create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy."
       ],
       "hints": [
         "PASS_MAX_DAYS, PASS_MIN_DAYS, and PASS_WARN_AGE live in /etc/login.defs.",
@@ -65,7 +65,23 @@
           "useradd drift24",
           "echo 'drift24:cinder9' | chpasswd"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

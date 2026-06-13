@@ -1,4 +1,4 @@
-# Lab 42: Process Kill And Renice
+# Lab 42: Process Kill and Renice
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-42-process-kill-renice` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | processes-logs-tuning |
 

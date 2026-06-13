@@ -36,7 +36,7 @@
       ],
       "task_titles": [
         "Create /root/rhcsa10-shell-users.txt",
-        "Populate it with account names from /etc/passwd whose shell ends in sh, "
+        "Populate it with account names from /etc/passwd whose shell ends in sh,"
       ],
       "task_points": [
         10,
@@ -50,6 +50,18 @@
           "awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/rhcsa10-shell-users.txt",
           "cat /root/rhcsa10-shell-users.txt"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

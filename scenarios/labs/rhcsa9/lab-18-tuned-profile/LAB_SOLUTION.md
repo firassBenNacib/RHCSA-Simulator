@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-18-tuned-profile` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | processes-logs-tuning |
 

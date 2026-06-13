@@ -23,9 +23,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the user queue27 and set its password to cinder9.",
-        "Enable and start the atd service.",
-        "As user queue27, schedule a one-time at job that appends the text AT27 OK to /home/queue27/at27.log two minutes from now."
+        "On client, create the user queue27 and set its password to cinder9.",
+        "On client, enable and start the atd service.",
+        "On client, as user queue27, schedule a one-time at job that appends the text AT27 OK to /home/queue27/at27.log two minutes from now."
       ],
       "hints": [
         "You can submit the job to at with standard input.",
@@ -63,7 +63,23 @@
           "echo 'echo AT27 OK >> /home/queue27/at27.log' | at now + 2 minutes",
           "atq"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

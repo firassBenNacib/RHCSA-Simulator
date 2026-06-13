@@ -25,10 +25,10 @@
   "content": {
     "lab": {
       "tasks": [
-        "Ensure the user mesh39 exists on both client and server, and set the password on both systems to cinder9.",
-        "As user mesh39 on client, generate an ED25519 SSH key pair with no passphrase.",
-        "Configure passwordless SSH access for mesh39 from client to server using public key authentication.",
-        "Using rsync over SSH, copy the directory /home/mesh39/client-data/ from client to /home/mesh39/server-data/ on server."
+        "On client, ensure the user mesh39 exists on both client and server, and set the password on both systems to cinder9.",
+        "On client, as user mesh39 on client, generate an ED25519 SSH key pair with no passphrase.",
+        "On client, configure passwordless SSH access for mesh39 from client to server using public key authentication.",
+        "On client, using rsync over SSH, copy the directory /home/mesh39/client-data/ from client to /home/mesh39/server-data/ on server."
       ],
       "hints": [
         "Use the mesh39 account for the SSH key work.",
@@ -83,7 +83,26 @@
           "su - mesh39",
           "rsync -av -e ssh /home/mesh39/client-data/ mesh39@192.168.122.3:/home/mesh39/server-data/"
         ]
+      ],
+      "task_targets": [
+        "both",
+        "client",
+        "both",
+        "both"
+      ],
+      "solution_targets": [
+        "both",
+        "client",
+        "both",
+        "both"
+      ],
+      "check_targets": [
+        "server",
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

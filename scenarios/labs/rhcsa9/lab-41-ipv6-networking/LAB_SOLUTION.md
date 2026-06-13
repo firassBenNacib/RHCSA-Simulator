@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-41-ipv6-networking` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | networking-and-firewall |
 
@@ -30,7 +31,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Task 02 - Hostname And IPv6 Host Entry (client) - 10 pts
+## Task 02 - Hostname and IPv6 Host Entry (client) - 10 pts
 
 ```bash
 hostnamectl set-hostname client.ipv6lab.local

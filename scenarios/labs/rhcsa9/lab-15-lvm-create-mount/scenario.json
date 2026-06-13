@@ -1,6 +1,6 @@
 {
   "id": "lab-15-lvm-create-mount",
-  "title": "Lab 15: LVM Creation And Mount",
+  "title": "Lab 15: LVM Creation and Mount",
   "description": "Create a new volume group and logical volume and mount it persistently",
   "objective_tags": [
     "storage-lvm"
@@ -23,8 +23,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "On /dev/sdb, create an LVM partition, then create volume group wgroupx with physical extent size 8 MiB.",
-        "Create logical volume wsharex with 50 extents, format it as ext4, and mount it persistently on /mnt/wsharex."
+        "On client, on /dev/sdb, create an LVM partition, then create volume group wgroupx with physical extent size 8 MiB.",
+        "On client, create logical volume wsharex with 50 extents, format it as ext4, and mount it persistently on /mnt/wsharex."
       ],
       "hints": [
         "Use GPT on /dev/sdb.",
@@ -38,7 +38,7 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "On /dev/sdb, create an LVM partition, then create...",
+        "on /dev/sdb, create an LVM partition, then create...",
         "Create logical volume wsharex with 50 extents,..."
       ],
       "task_points": [
@@ -61,7 +61,20 @@
           "mount -a",
           "findmnt /mnt/wsharex"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-25-tuned-profile` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 15 minutes |
 | Objectives | processes-logs-tuning |
 
@@ -19,12 +20,12 @@ Manage tuned profiles.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - ensure tuned is enabled and running (server) - 10 pts
+## Task 01 - Ensure tuned is enabled and running (server) - 10 pts
 
 On server, ensure tuned is enabled and running.
 
 ---
 
-## Task 02 - activate the throughput-performance tuned profile (server) - 20 pts
+## Task 02 - Activate the throughput-performance tuned profile (server) - 20 pts
 
 On server, activate the throughput-performance tuned profile.

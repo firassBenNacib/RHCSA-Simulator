@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-07-cron-logger` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |
 

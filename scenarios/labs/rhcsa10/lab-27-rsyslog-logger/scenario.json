@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "ensure rsyslog is running",
-        "configure local7.* messages to log to /var/log/rhcsa10-local7.log",
-        "send a logger test message with facility local7 and verify it is written"
+        "Ensure rsyslog is running",
+        "Configure local7.* messages to log to /var/log/rhcsa10-local7.log",
+        "Send a logger test message with facility local7 and verify it is written"
       ],
       "task_points": [
         10,
@@ -59,6 +59,21 @@
           "sleep 1",
           "grep 'RHCSA10 local7 test' /var/log/rhcsa10-local7.log"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "server"
       ]
     }
   },

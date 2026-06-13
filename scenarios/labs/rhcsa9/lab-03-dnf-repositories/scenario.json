@@ -76,7 +76,20 @@
           "gpgcheck=0",
           "dnf clean all"
         ]
+      ],
+      "task_targets": [
+        "both",
+        "server"
+      ],
+      "solution_targets": [
+        "both",
+        "server"
+      ],
+      "check_targets": [
+        "client",
+        "server"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

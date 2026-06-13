@@ -25,7 +25,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.",
+        "On client, persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.",
         "On client, use the mount options ro,sync, mount it now, and ensure the file nfs36.txt can be read from the mount point."
       ],
       "hints": [
@@ -61,7 +61,20 @@
           "for attempt in 1 2 3 4 5; do mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt && break; sleep 2; done",
           "ls /mnt/direct36"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

@@ -1,6 +1,6 @@
 {
   "id": "lab-22-container-autostart",
-  "title": "Lab 22: Container Autostart With Systemd",
+  "title": "Lab 22: Container Autostart with Systemd",
   "description": "Run a rootless container as a persistent user service",
   "objective_tags": [
     "containers"
@@ -23,9 +23,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Ensure user merin22 exists, set the password to cinder9, and then, as that user, run a container named render22 from localhost/fluxpdf22:latest with /opt/inbox22 mounted to /data/input and /opt/outbox22 mounted to /data/output.",
-        "Enable lingering for merin22 so the user service can start automatically after reboot.",
-        "As user merin22, generate a systemd user unit for that container and enable it."
+        "On client, ensure user merin22 exists, set the password to cinder9, and then, as that user, run a container named render22 from localhost/fluxpdf22:latest with /opt/inbox22 mounted to /data/input and /opt/outbox22 mounted to /data/output.",
+        "On client, enable lingering for merin22 so the user service can start automatically after reboot.",
+        "On client, as user merin22, generate a systemd user unit for that container and enable it."
       ],
       "hints": [
         "Use podman generate systemd --files --new or podman generate systemd --new depending on the environment.",
@@ -71,7 +71,23 @@
           "runuser -l merin22 -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user daemon-reload'",
           "runuser -l merin22 -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user enable --now container-render22.service'"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

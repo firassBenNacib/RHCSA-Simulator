@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-20-build-container-image` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | containers |
 

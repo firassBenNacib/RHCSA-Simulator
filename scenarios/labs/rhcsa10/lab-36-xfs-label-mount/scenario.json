@@ -60,6 +60,21 @@
           "echo 'LABEL=RHCSA10DATA /mnt/rhcsa10data xfs defaults 0 0' >> /etc/fstab",
           "mount -a"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

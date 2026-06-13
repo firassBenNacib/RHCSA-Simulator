@@ -23,9 +23,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "On /dev/sdb, create a GPT partition of 600 MiB for an ext4 filesystem.",
-        "Format the new partition with the filesystem label DATA44 and mount it at /data44.",
-        "Configure the mount persistently in /etc/fstab by using LABEL=DATA44."
+        "On client, on /dev/sdb, create a GPT partition of 600 MiB for an ext4 filesystem.",
+        "On client, format the new partition with the filesystem label DATA44 and mount it at /data44.",
+        "On client, configure the mount persistently in /etc/fstab by using LABEL=DATA44."
       ],
       "hints": [
         "The title already tells you the required persistence method.",
@@ -73,7 +73,23 @@
           "vim /etc/fstab",
           "LABEL=DATA44 /data44 ext4 defaults 0 0"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

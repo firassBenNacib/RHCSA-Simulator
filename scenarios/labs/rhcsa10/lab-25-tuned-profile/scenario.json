@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "ensure tuned is enabled and running",
-        "activate the throughput-performance tuned profile"
+        "Ensure tuned is enabled and running",
+        "Activate the throughput-performance tuned profile"
       ],
       "task_points": [
         10,
@@ -50,6 +50,18 @@
           "tuned-adm profile throughput-performance",
           "tuned-adm active"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server"
       ]
     }
   },

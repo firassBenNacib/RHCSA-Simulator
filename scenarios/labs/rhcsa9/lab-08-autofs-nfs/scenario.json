@@ -1,6 +1,6 @@
 {
   "id": "lab-08-autofs-nfs",
-  "title": "Lab 08: Autofs With NFS",
+  "title": "Lab 08: Autofs with NFS",
   "description": "Configure an indirect automount from server",
   "objective_tags": [
     "filesystems-and-autofs"
@@ -25,7 +25,7 @@
     "lab": {
       "tasks": [
         "On server, export /exports/vault8. On client, create user vault8 with password cinder9.",
-        "Configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8 and persists across reboot."
+        "On client, configure autofs on client so /netdir/vault8 is mounted on demand from server:/exports/vault8 and persists across reboot."
       ],
       "hints": [
         "Use an indirect map.",
@@ -39,7 +39,7 @@
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Seed Export And User",
+        "Seed Export and User",
         "Configure Persistent Autofs Map"
       ],
       "task_points": [
@@ -67,7 +67,20 @@
           "mount | grep -Eq 'server:/exports/vault8 on /netdir/vault8 type nfs'",
           "cat /netdir/vault8/welcome.txt"
         ]
+      ],
+      "task_targets": [
+        "both",
+        "both"
+      ],
+      "solution_targets": [
+        "both",
+        "both"
+      ],
+      "check_targets": [
+        "client",
+        "both"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

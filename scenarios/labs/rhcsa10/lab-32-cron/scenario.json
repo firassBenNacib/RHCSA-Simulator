@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "create user cron10 and set password cinder9",
-        "configure a cron job for cron10 that writes CRON10 to /home/cron10/cron1",
-        "ensure crond is enabled and running"
+        "Create user cron10 and set password cinder9",
+        "Configure a cron job for cron10 that writes CRON10 to /home/cron10/cron1",
+        "Ensure crond is enabled and running"
       ],
       "task_points": [
         10,
@@ -58,6 +58,21 @@
         [
           "systemctl enable --now crond"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "server"
       ]
     }
   },

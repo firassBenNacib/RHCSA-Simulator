@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-09-shell-loop` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | shell-scripting |
 

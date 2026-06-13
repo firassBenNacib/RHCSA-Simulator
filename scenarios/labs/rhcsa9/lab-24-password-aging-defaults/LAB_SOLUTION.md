@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-24-password-aging-defaults` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | users-sudo-ssh |
 

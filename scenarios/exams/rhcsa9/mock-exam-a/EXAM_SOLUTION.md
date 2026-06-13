@@ -9,7 +9,7 @@
 | Time limit | 150 minutes |
 | Objectives | boot-and-recovery, networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
 
-A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.
+A 22-task RHCSA practice mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.
 
 ### Systems
 - client
@@ -55,7 +55,7 @@ grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
 
 ---
 
-## Question 04 - Client Repositories (client) - 5 pts
+## Question 04 - Client Repositories (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/opsa.repo <<'EOF'
@@ -75,7 +75,7 @@ dnf clean all
 
 ---
 
-## Question 05 - Server Repositories (server) - 5 pts
+## Question 05 - Server Repositories (client + server) - 5 pts
 
 ```bash
 # Run on server
@@ -99,30 +99,26 @@ dnf clean all
 ## Question 06 - Apache SELinux Port (client) - 5 pts
 
 ```bash
-grep -Rqs '^Listen 8282$' /etc/httpd/conf /etc/httpd/conf.d || echo 'Listen 8282' > /etc/httpd/conf.d/opsa-listen.conf
-systemctl enable httpd
+vim /etc/httpd/conf/httpd.conf
+Listen 8282
+systemctl enable --now httpd
 firewall-cmd --permanent --add-port=8282/tcp
 firewall-cmd --reload
-semanage port -a -t http_port_t -p tcp 8282 || semanage port -m -t http_port_t -p tcp 8282
-mkdir -p /var/www/html
-test -s /var/www/html/index.html || echo 'exam-a portal' > /var/www/html/index.html
-restorecon -Rv /var/www/html >/dev/null 2>&1 || true
+semanage port -a -t http_port_t -p tcp 8282
 systemctl restart httpd
 ```
 
 ---
 
-## Question 07 - Users And Group (client) - 5 pts
+## Question 07 - Users and Group (client) - 5 pts
 
 ```bash
-getent group sysopsa >/dev/null || groupadd sysopsa
-id violet >/dev/null 2>&1 || useradd -m violet
-id -nG violet | tr ' ' '\n' | grep -qx sysopsa || gpasswd -a violet sysopsa
-id amber >/dev/null 2>&1 || useradd -m amber
-id -nG amber | tr ' ' '\n' | grep -qx sysopsa || gpasswd -a amber sysopsa
-id frost >/dev/null 2>&1 || useradd -M -s /sbin/nologin frost
-usermod -s /sbin/nologin frost
-rm -rf /home/frost
+groupadd sysopsa
+useradd violet
+gpasswd -a violet sysopsa
+useradd amber
+gpasswd -a amber sysopsa
+useradd -M -s /sbin/nologin frost
 ```
 
 ---
@@ -179,14 +175,13 @@ vim /etc/hosts
 ## Question 13 - Fixed UID User (client) - 4 pts
 
 ```bash
-id ash420 >/dev/null 2>&1 || useradd -u 4420 ash420
-usermod -u 4420 ash420
+useradd -u 4420 ash420
 echo cinder9 | passwd --stdin ash420
 ```
 
 ---
 
-## Question 14 - Find And Copy (client) - 4 pts
+## Question 14 - Find and Copy (client) - 4 pts
 
 ```bash
 mkdir -p /root/amber-files
@@ -218,7 +213,7 @@ cat > /usr/local/bin/opsa-report <<'SCRIPT'
 #!/bin/bash
 > /root/opsa-services.txt
 for svc in $(cat /usr/local/share/exam-a/services.lst); do
-  systemctl is-active "$svc" >> /root/opsa-services.txt || true
+  systemctl is-active "$svc" >> /root/opsa-services.txt
 done
 SCRIPT
 chmod +x /usr/local/bin/opsa-report
@@ -239,12 +234,7 @@ blockdev --rereadpt /dev/sdb || true
 partprobe /dev/sdb || true
 udevadm settle
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB
-blockdev --rereadpt /dev/sdb || true
-partprobe /dev/sdb || true
-partx -u /dev/sdb || partx -a /dev/sdb || true
-udevadm settle
-for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done
-test -b /dev/sdb1
+partprobe /dev/sdb
 mkswap /dev/sdb1
 swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
@@ -265,18 +255,8 @@ resize2fs /dev/reviewvga/reviewa
 ## Question 20 - Rootless Container (client) - 4 pts
 
 ```bash
-mkdir -p /opt/inc /opt/outa /opt/rhcsa/workspaces/exam-a/site-content
-echo 'exam a container' > /opt/rhcsa/workspaces/exam-a/site-content/index.html
-cat > /opt/rhcsa/workspaces/exam-a/Containerfile <<'EOF'
-FROM localhost/rhcsa-httpd-base:latest
-COPY site-content/ /var/www/html/
-CMD ["/usr/bin/bash", "-lc", "while true; do sleep 300; done"]
-EOF
-chown -R oriona:oriona /opt/rhcsa/workspaces/exam-a /opt/inc /opt/outa
 su - oriona
 cd /opt/rhcsa/workspaces/exam-a
-podman rmi -f localhost/rhcsa-httpd-base:latest >/dev/null 2>&1 || true
-podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar
 podman build -t localhost/opsa-web:latest .
 podman run -d --name pdfa -v /opt/inc:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest
 exit
@@ -287,16 +267,14 @@ exit
 ## Question 21 - Container Autostart (client) - 4 pts
 
 ```bash
+su - oriona
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+podman generate systemd --name pdfa --files --new
+systemctl --user daemon-reload
+systemctl --user enable --now container-pdfa.service
+exit
 loginctl enable-linger oriona
-uid=$(id -u oriona)
-systemctl start "user@$uid.service" || true
-for i in $(seq 1 20); do test -S "/run/user/$uid/bus" && break; sleep 1; done
-test -S "/run/user/$uid/bus"
-runuser -l oriona -c 'mkdir -p ~/.config/systemd/user'
-runuser -l oriona -c 'cd ~/.config/systemd/user && podman generate systemd --name pdfa --files'
-runuser -l oriona -c 'podman kill pdfa >/dev/null 2>&1 || true'
-runuser -l oriona -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user daemon-reload'
-runuser -l oriona -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus systemctl --user enable --now container-pdfa.service'
 ```
 
 ---

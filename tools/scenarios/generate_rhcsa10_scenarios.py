@@ -9,6 +9,15 @@ from typing import Any
 
 from generate_scenario_markdown import main as generate_scenario_markdown
 from rhcsa_scenarios.lab_normalization import normalize_lab_block
+from rhcsa_scenarios.targets import (
+    infer_check_target,
+    infer_solution_target,
+    infer_task_target,
+    normalize_authored_wording,
+    normalize_title_capitalization,
+    prefix_task_target,
+    scope_from_targets,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -88,7 +97,7 @@ def scenario(kind: str, sid: str, title: str, description: str, tags: list[str],
         vm_scripts = {}
     return {
         "id": sid,
-        "title": title,
+        "title": normalize_title_capitalization(title),
         "description": description,
         "objective_tags": tags,
         "supported_modes": [kind],
@@ -123,10 +132,13 @@ def lab(sid: str, title: str, description: str, tags: list[str], minutes: int, t
 
 def task_title(task: str) -> str:
     line = task.splitlines()[0].strip().rstrip(".")
-    for prefix in ("On client, ", "On server, ", "As root, "):
+    for prefix in ("On client and server, ", "On server and client, ", "On client, ", "On server, ", "As root, "):
         if line.startswith(prefix):
             line = line[len(prefix):]
-    return line[:72]
+    line = line[:72].strip()
+    if line:
+        line = line[0].upper() + line[1:]
+    return normalize_title_capitalization(line)
 
 
 def _lab_client_scripts() -> dict[str, str]:
@@ -1143,41 +1155,33 @@ def _exam_points(task_count: int) -> list[int]:
 
 
 def _task_target(task: Any, command_group: list[str]) -> str:
-    text = str(task).lower()
-    markers = [str(command).strip().lower() for command in command_group if str(command).strip().startswith("#")]
-    has_server_marker = any(marker.startswith("# on server") or "run on server" in marker for marker in markers)
-    has_client_marker = any(marker.startswith("# on client") or "run on client" in marker for marker in markers)
-    explicit_server = bool(re.search(r"^\s*\(server\)|\bon server\b", text))
-    explicit_client = bool(re.search(r"^\s*\(client\)|\bon client\b", text))
-    integrated = bool(
-        re.search(r"\bon client and server\b|\bon server and client\b|both client and server", text)
-        or "server:/" in text
-        or re.search(r"\bcopy\b.*\bserver:", text)
-        or re.search(r"\bssh\b.*\bserver\b", text)
-        or re.search(r"\bhttp://server[a-h]?\.exam10\.lab", text)
-    )
-    if integrated or (has_server_marker and (has_client_marker or explicit_client)):
-        return "both"
-    if has_server_marker or explicit_server:
-        return "server"
-    return "client"
+    return infer_task_target(task, command_group)
 
 
-def _apply_target_metadata(block: dict[str, Any]) -> None:
+def _apply_target_metadata(block: dict[str, Any], requires_server: bool = False, include_balance: bool = False) -> None:
     targets = [
         _task_target(task, commands)
         for task, commands in zip(block.get("tasks", []), block.get("solution_commands", []))
     ]
     block["task_targets"] = targets
-    block["target_balance"] = {
-        "client_only": targets.count("client"),
-        "server_only": targets.count("server"),
-        "client_server": targets.count("both"),
-    }
+    block["solution_targets"] = [
+        infer_solution_target(commands, targets[index] if index < len(targets) else "client")
+        for index, commands in enumerate(block.get("solution_commands", []))
+    ]
+    block["check_targets"] = [
+        infer_check_target(check, requires_server=requires_server)
+        for check in block.get("checks", [])
+    ]
+    if include_balance:
+        block["target_balance"] = {
+            "client_only": targets.count("client"),
+            "server_only": targets.count("server"),
+            "client_server": targets.count("both"),
+        }
 
 
 def _clean_exam_task_wording(task: Any) -> str:
-    text = str(task)
+    text = normalize_authored_wording(task)
     text = text.replace(" by using a sudoers drop-in", "")
     text = text.replace(" by using a sudoers drop-in file", "")
     text = text.replace("Use a sudoers drop-in file.", "")
@@ -1800,20 +1804,11 @@ def _retarget_lab_to_server(block: dict[str, Any]) -> dict[str, Any]:
 
 
 def _lab_scope(block: dict[str, Any], requires_server: bool) -> str:
-    tasks = [str(task) for task in block.get("tasks", [])]
-    has_server_task = any(re.search(r"\bon server\b|\(server\)", task, re.I) for task in tasks)
-    has_client_task = any(re.search(r"\bon client\b|\(client\)|server:/", task, re.I) for task in tasks)
-    if has_server_task and has_client_task:
-        return "client-server"
-    if has_server_task:
-        return "server"
-    if requires_server:
-        return "client-server"
-    return "client"
+    return scope_from_targets(block.get("task_targets", []), requires_server=requires_server)
 
 
 def _clean_lab_task_wording(task: Any) -> str:
-    text = str(task)
+    text = normalize_authored_wording(task)
     text = text.replace(" by using a sudoers drop-in", "")
     text = text.replace(" by using a sudoers drop-in file", "")
     text = text.replace("Use a sudoers drop-in file.", "")
@@ -2442,6 +2437,8 @@ def _update_lab_manifest(manifest_path: Path, client_scripts: dict[str, str], se
         scenario_scripts["server"] = server_scripts[lab_id]
 
     manifest["tracks"] = ["rhcsa10"]
+    manifest["title"] = normalize_title_capitalization(manifest["title"])
+    manifest["description"] = normalize_authored_wording(manifest["description"])
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["lab"]
     manifest["vm_scripts"] = _write_scenario_scripts(scenario_root, scenario_scripts)
@@ -2459,6 +2456,7 @@ def _update_lab_manifest(manifest_path: Path, client_scripts: dict[str, str], se
         or (lab_id in server_prerequisite_labs)
         or has_server_task
     )
+    _apply_target_metadata(manifest["content"]["lab"], requires_server=bool(manifest["flags"]["requires_server"]))
     manifest["scope"] = _lab_scope(manifest["content"]["lab"], bool(manifest["flags"]["requires_server"]))
 
     write_json(manifest_path, manifest)
@@ -2757,12 +2755,14 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
             tasks[index] = _prefix_client_task(task_text)
 
     tasks = [_clean_exam_task_wording(task) for task in tasks]
+    task_targets = [_task_target(task, commands[index]) for index, task in enumerate(tasks)]
+    tasks = [prefix_task_target(task, task_targets[index]) for index, task in enumerate(tasks)]
     updated["tasks"] = tasks
     updated["checks"] = checks
     updated["solution_commands"] = commands
     updated["task_titles"] = [task_title(task) for task in tasks]
     updated["task_points"] = _exam_points(len(tasks))
-    _apply_target_metadata(updated)
+    _apply_target_metadata(updated, requires_server=True, include_balance=True)
     return updated
 
 
@@ -2774,6 +2774,8 @@ def _update_exam_manifest(manifest_path: Path) -> None:
     exam_block = dict(manifest.get("content", {}).get("exam", {}))
 
     manifest["tracks"] = ["rhcsa10"]
+    manifest["title"] = normalize_title_capitalization(manifest["title"])
+    manifest["description"] = normalize_authored_wording(manifest["description"])
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["exam"]
     manifest.setdefault("content", {})["exam"] = _repair_exam_progression(str(manifest["id"]), exam_block)

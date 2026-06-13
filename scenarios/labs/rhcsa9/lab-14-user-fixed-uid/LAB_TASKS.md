@@ -1,4 +1,4 @@
-# Lab 14: User With Fixed UID
+# Lab 14: User with Fixed UID
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-14-user-fixed-uid` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -21,4 +22,4 @@ Create a local user with a specific UID.
 
 ## Task 01 - Create user tavric with UID 4111 and set its (client) - 10 pts
 
-Create user tavric with UID 4111 and set its password to cinder9.
+On client, create user tavric with UID 4111 and set its password to cinder9.

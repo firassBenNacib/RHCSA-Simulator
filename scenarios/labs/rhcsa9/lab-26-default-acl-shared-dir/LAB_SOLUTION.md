@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-26-default-acl-shared-dir` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | filesystems-and-autofs, selinux-and-default-perms |
 

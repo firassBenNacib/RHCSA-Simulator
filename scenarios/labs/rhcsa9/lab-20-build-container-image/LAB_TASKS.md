@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-20-build-container-image` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | containers |
 
@@ -21,4 +22,4 @@ Build and tag a local container image from a provided Containerfile.
 
 ## Task 01 - Build the text2pdf20 image as builder20 (client) - 10 pts
 
-As user builder20, build an image named localhost/text2pdf20:latest from /opt/rhcsa/workspaces/text2pdf20/Containerfile.
+On client, as user builder20, build an image named localhost/text2pdf20:latest from /opt/rhcsa/workspaces/text2pdf20/Containerfile.

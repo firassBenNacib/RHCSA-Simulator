@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-16-swap-space` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |
 

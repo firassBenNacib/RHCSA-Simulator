@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-33-grub-kernel-arg` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | boot-and-recovery |
 
@@ -21,4 +22,4 @@ Modify the system bootloader so every installed kernel boots with the required p
 
 ## Task 01 - Configure the persistent kernel argument (client) - 10 pts
 
-Configure the bootloader on client so that every installed kernel boots persistently with the kernel argument audit_backlog_limit=8192 without manual GRUB editing during startup.
+On client, configure the bootloader on client so that every installed kernel boots persistently with the kernel argument audit_backlog_limit=8192 without manual GRUB editing during startup.

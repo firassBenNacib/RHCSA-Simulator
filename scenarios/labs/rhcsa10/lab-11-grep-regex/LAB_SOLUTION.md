@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-11-grep-regex` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 

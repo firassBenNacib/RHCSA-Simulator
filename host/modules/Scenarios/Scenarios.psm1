@@ -183,6 +183,12 @@ $solutionCommands = @($LabContent.SolutionCommands | ForEach-Object { @([string[
 $hints = @([string[]]@($LabContent.Hints))
 $checks = @([string[]]@($LabContent.Checks))
 $solutionOutline = @([string[]]@($LabContent.SolutionOutline))
+$taskTargets = @(if ($LabContent.PSObject.Properties.Name -contains 'TaskTargets') { @([string[]]@($LabContent.TaskTargets)) })
+$solutionTargets = @(if ($LabContent.PSObject.Properties.Name -contains 'SolutionTargets') { @([string[]]@($LabContent.SolutionTargets)) })
+$checkTargets = @(if ($LabContent.PSObject.Properties.Name -contains 'CheckTargets') { @([string[]]@($LabContent.CheckTargets)) })
+$taskTargets = @($taskTargets | ForEach-Object { $_ })
+$solutionTargets = @($solutionTargets | ForEach-Object { $_ })
+$checkTargets = @($checkTargets | ForEach-Object { $_ })
 
 $normalizedTasks = New-Object System.Collections.Generic.List[string]
 $normalizedTaskTitles = New-Object System.Collections.Generic.List[string]
@@ -191,6 +197,9 @@ $normalizedSolutionCommands = New-Object System.Collections.Generic.List[object]
 $normalizedHints = New-Object System.Collections.Generic.List[string]
 $normalizedChecks = New-Object System.Collections.Generic.List[string]
 $normalizedSolutionOutline = New-Object System.Collections.Generic.List[string]
+$normalizedTaskTargets = New-Object System.Collections.Generic.List[string]
+$normalizedSolutionTargets = New-Object System.Collections.Generic.List[string]
+$normalizedCheckTargets = New-Object System.Collections.Generic.List[string]
 
 for ($index = 0; $index -lt $tasks.Count; $index++) {
     $shouldMerge = $index -gt 0 -and $normalizedTasks.Count -gt 0 -and (Test-StandaloneLabVerificationTask -TaskText $tasks[$index])
@@ -208,6 +217,18 @@ for ($index = 0; $index -lt $tasks.Count; $index++) {
 
         if ($index -lt $taskPoints.Count) {
             $normalizedTaskPoints[$normalizedTaskPoints.Count - 1] = [int]$normalizedTaskPoints[$normalizedTaskPoints.Count - 1] + [int]$taskPoints[$index]
+        }
+
+        if ($index -lt $taskTargets.Count -and $normalizedTaskTargets.Count -gt 0 -and [string]$normalizedTaskTargets[$normalizedTaskTargets.Count - 1] -ne [string]$taskTargets[$index]) {
+            $normalizedTaskTargets[$normalizedTaskTargets.Count - 1] = 'both'
+        }
+
+        if ($index -lt $solutionTargets.Count -and $normalizedSolutionTargets.Count -gt 0 -and [string]$normalizedSolutionTargets[$normalizedSolutionTargets.Count - 1] -ne [string]$solutionTargets[$index]) {
+            $normalizedSolutionTargets[$normalizedSolutionTargets.Count - 1] = 'both'
+        }
+
+        if ($index -lt $checkTargets.Count -and $normalizedCheckTargets.Count -gt 0 -and [string]$normalizedCheckTargets[$normalizedCheckTargets.Count - 1] -ne [string]$checkTargets[$index]) {
+            $normalizedCheckTargets[$normalizedCheckTargets.Count - 1] = 'both'
         }
 
         continue
@@ -232,6 +253,15 @@ for ($index = 0; $index -lt $tasks.Count; $index++) {
     if ($index -lt $solutionOutline.Count) {
         $normalizedSolutionOutline.Add($solutionOutline[$index])
     }
+    if ($index -lt $taskTargets.Count) {
+        $normalizedTaskTargets.Add([string]$taskTargets[$index])
+    }
+    if ($index -lt $solutionTargets.Count) {
+        $normalizedSolutionTargets.Add([string]$solutionTargets[$index])
+    }
+    if ($index -lt $checkTargets.Count) {
+        $normalizedCheckTargets.Add([string]$checkTargets[$index])
+    }
 }
 
 return [PSCustomObject]@{
@@ -242,6 +272,9 @@ SolutionCommands = $normalizedSolutionCommands.ToArray()
 Hints = $normalizedHints.ToArray()
 Checks = $normalizedChecks.ToArray()
 SolutionOutline = $normalizedSolutionOutline.ToArray()
+TaskTargets = $normalizedTaskTargets.ToArray()
+SolutionTargets = $normalizedSolutionTargets.ToArray()
+CheckTargets = $normalizedCheckTargets.ToArray()
 }
 }
 
@@ -367,6 +400,9 @@ $labSolutionCommands = @()
 $labHints = @()
 $labChecks = @()
 $labSolutionOutline = @()
+$labTaskTargets = @()
+$labSolutionTargets = @()
+$labCheckTargets = @()
 if ($null -ne $labContent) {
 $labTasks = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'tasks') -Label "Scenario '$id' content.lab.tasks"
 $labTaskTitles = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'task_titles') -Label "Scenario '$id' content.lab.task_titles"
@@ -375,6 +411,15 @@ $labSolutionCommands = Get-StringMatrix -Value (Get-RequiredProperty -Object $la
 $labHints = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'hints' -AllowZero) -Label "Scenario '$id' content.lab.hints" -AllowEmpty
 $labChecks = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'checks' -AllowZero) -Label "Scenario '$id' content.lab.checks" -AllowEmpty
 $labSolutionOutline = Get-StringArray -Value (Get-RequiredProperty -Object $labContent -Name 'solution_outline' -AllowZero) -Label "Scenario '$id' content.lab.solution_outline" -AllowEmpty
+$labTaskTargetsRaw = Get-OptionalPropertyValue -Object $labContent -Name 'task_targets'
+$labSolutionTargetsRaw = Get-OptionalPropertyValue -Object $labContent -Name 'solution_targets'
+$labCheckTargetsRaw = Get-OptionalPropertyValue -Object $labContent -Name 'check_targets'
+$labTaskTargets = @(if ($null -ne $labTaskTargetsRaw) { Get-StringArray -Value $labTaskTargetsRaw -Label "Scenario '$id' content.lab.task_targets" -AllowEmpty })
+$labSolutionTargets = @(if ($null -ne $labSolutionTargetsRaw) { Get-StringArray -Value $labSolutionTargetsRaw -Label "Scenario '$id' content.lab.solution_targets" -AllowEmpty })
+$labCheckTargets = @(if ($null -ne $labCheckTargetsRaw) { Get-StringArray -Value $labCheckTargetsRaw -Label "Scenario '$id' content.lab.check_targets" -AllowEmpty })
+$labTaskTargets = @($labTaskTargets | ForEach-Object { $_ })
+$labSolutionTargets = @($labSolutionTargets | ForEach-Object { $_ })
+$labCheckTargets = @($labCheckTargets | ForEach-Object { $_ })
 
 if ($labTaskTitles.Count -ne $labTasks.Count) {
 throw "Scenario '$id' content.lab.task_titles must match the task count."
@@ -388,6 +433,18 @@ if ($labSolutionCommands.Count -ne $labTasks.Count) {
 throw "Scenario '$id' content.lab.solution_commands must match the task count."
 }
 
+if ($labTaskTargets.Count -gt 0 -and $labTaskTargets.Count -ne $labTasks.Count) {
+throw "Scenario '$id' content.lab.task_targets must match the task count."
+}
+
+if ($labSolutionTargets.Count -gt 0 -and $labSolutionTargets.Count -ne $labTasks.Count) {
+throw "Scenario '$id' content.lab.solution_targets must match the task count."
+}
+
+if ($labCheckTargets.Count -gt 0 -and $labCheckTargets.Count -ne $labChecks.Count) {
+throw "Scenario '$id' content.lab.check_targets must match the check count."
+}
+
 $normalizedLabContent = Normalize-LabContent -LabContent ([PSCustomObject]@{
 Tasks = $labTasks
 TaskTitles = $labTaskTitles
@@ -396,6 +453,9 @@ SolutionCommands = $labSolutionCommands
 Hints = $labHints
 Checks = $labChecks
 SolutionOutline = $labSolutionOutline
+TaskTargets = $labTaskTargets
+SolutionTargets = $labSolutionTargets
+CheckTargets = $labCheckTargets
 })
 $labTasks = @($normalizedLabContent.Tasks)
 $labTaskTitles = @($normalizedLabContent.TaskTitles)
@@ -404,6 +464,9 @@ $labSolutionCommands = @($normalizedLabContent.SolutionCommands)
 $labHints = @($normalizedLabContent.Hints)
 $labChecks = @($normalizedLabContent.Checks)
 $labSolutionOutline = @($normalizedLabContent.SolutionOutline)
+$labTaskTargets = @($normalizedLabContent.TaskTargets)
+$labSolutionTargets = @($normalizedLabContent.SolutionTargets)
+$labCheckTargets = @($normalizedLabContent.CheckTargets)
 }
 
 $examTasks = @()
@@ -411,12 +474,24 @@ $examTaskTitles = @()
 $examTaskPoints = @()
 $examSolutionCommands = @()
 $examChecks = @()
+$examTaskTargets = @()
+$examSolutionTargets = @()
+$examCheckTargets = @()
 if ($null -ne $examContent) {
 $examTasks = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'tasks') -Label "Scenario '$id' content.exam.tasks"
 $examTaskTitles = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'task_titles') -Label "Scenario '$id' content.exam.task_titles"
 $examTaskPoints = Get-IntegerArray -Value (Get-RequiredProperty -Object $examContent -Name 'task_points') -Label "Scenario '$id' content.exam.task_points"
 $examSolutionCommands = Get-StringMatrix -Value (Get-RequiredProperty -Object $examContent -Name 'solution_commands') -Label "Scenario '$id' content.exam.solution_commands"
 $examChecks = Get-StringArray -Value (Get-RequiredProperty -Object $examContent -Name 'checks' -AllowZero) -Label "Scenario '$id' content.exam.checks" -AllowEmpty
+$examTaskTargetsRaw = Get-OptionalPropertyValue -Object $examContent -Name 'task_targets'
+$examSolutionTargetsRaw = Get-OptionalPropertyValue -Object $examContent -Name 'solution_targets'
+$examCheckTargetsRaw = Get-OptionalPropertyValue -Object $examContent -Name 'check_targets'
+$examTaskTargets = @(if ($null -ne $examTaskTargetsRaw) { Get-StringArray -Value $examTaskTargetsRaw -Label "Scenario '$id' content.exam.task_targets" -AllowEmpty })
+$examSolutionTargets = @(if ($null -ne $examSolutionTargetsRaw) { Get-StringArray -Value $examSolutionTargetsRaw -Label "Scenario '$id' content.exam.solution_targets" -AllowEmpty })
+$examCheckTargets = @(if ($null -ne $examCheckTargetsRaw) { Get-StringArray -Value $examCheckTargetsRaw -Label "Scenario '$id' content.exam.check_targets" -AllowEmpty })
+$examTaskTargets = @($examTaskTargets | ForEach-Object { $_ })
+$examSolutionTargets = @($examSolutionTargets | ForEach-Object { $_ })
+$examCheckTargets = @($examCheckTargets | ForEach-Object { $_ })
 
 if ($examTaskTitles.Count -ne $examTasks.Count) {
 throw "Scenario '$id' content.exam.task_titles must match the task count."
@@ -428,6 +503,18 @@ throw "Scenario '$id' content.exam.task_points must match the task count."
 
 if ($examSolutionCommands.Count -ne $examTasks.Count) {
 throw "Scenario '$id' content.exam.solution_commands must match the task count."
+}
+
+if ($examTaskTargets.Count -gt 0 -and $examTaskTargets.Count -ne $examTasks.Count) {
+throw "Scenario '$id' content.exam.task_targets must match the task count."
+}
+
+if ($examSolutionTargets.Count -gt 0 -and $examSolutionTargets.Count -ne $examTasks.Count) {
+throw "Scenario '$id' content.exam.solution_targets must match the task count."
+}
+
+if ($examCheckTargets.Count -gt 0 -and $examCheckTargets.Count -ne $examChecks.Count) {
+throw "Scenario '$id' content.exam.check_targets must match the check count."
 }
 
 if ((($examTaskPoints | Measure-Object -Sum).Sum) -ne 100) {
@@ -476,6 +563,9 @@ Tasks = $labTasks
 TaskTitles = $labTaskTitles
 TaskPoints = $labTaskPoints
 SolutionCommands = $labSolutionCommands
+TaskTargets = $labTaskTargets
+SolutionTargets = $labSolutionTargets
+CheckTargets = $labCheckTargets
 Hints = $labHints
 Checks = $labChecks
 SolutionOutline = $labSolutionOutline
@@ -485,6 +575,9 @@ Tasks = $examTasks
 TaskTitles = $examTaskTitles
 TaskPoints = $examTaskPoints
 SolutionCommands = $examSolutionCommands
+TaskTargets = $examTaskTargets
+SolutionTargets = $examSolutionTargets
+CheckTargets = $examCheckTargets
 Checks = $examChecks
 }
 }
@@ -535,7 +628,9 @@ param(
 [Parameter(Mandatory = $true)]
 [string]$Command,
 [Parameter(Mandatory = $true)]
-[int]$Index
+[int]$Index,
+[ValidateSet('client', 'server', 'both', '')]
+[string]$Target = ''
 )
 
 $trimmedCommand = $Command.Trim()
@@ -556,6 +651,10 @@ elseif ($trimmedCommand -match '^\s*#\s*server\s+') {
 $target = 'server'
 $effectiveCommand = $trimmedCommand -replace '^\s*#\s*server\s+', ''
 $effectiveCommand = $effectiveCommand.Trim()
+}
+
+if ($Target -in @('client', 'server')) {
+$target = $Target
 }
 
 return [PSCustomObject]@{
@@ -675,9 +774,11 @@ $sourceHash = Get-ScenarioSourceHash -Path $Manifest.ManifestPath
 
 $checks = @()
 $checkIndex = 0
+$checkTargets = @($Manifest.Content.Lab.CheckTargets)
 foreach ($checkCommand in @($Manifest.Content.Lab.Checks)) {
 $checkIndex++
-$checks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex
+$explicitTarget = if ($checkIndex -le $checkTargets.Count) { [string]$checkTargets[$checkIndex - 1] } else { '' }
+$checks += ConvertTo-ExerciseCheckEntry -Command ([string]$checkCommand) -Index $checkIndex -Target $explicitTarget
 }
 
 $expectedCheckMetadata = @(

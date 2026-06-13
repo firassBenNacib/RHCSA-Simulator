@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-36-nfs-direct-mount` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | filesystems-and-autofs, storage-lvm |
 
@@ -22,7 +23,7 @@ Mount a remote NFS export persistently using /etc/fstab.
 
 ## Task 01 - Persistently mount the NFS export (client) - 10 pts
 
-Persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.
+On client, persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.
 
 ---
 

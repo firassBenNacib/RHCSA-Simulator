@@ -9,7 +9,7 @@
 | Time limit | 150 minutes |
 | Objectives | networking-and-firewall, users-sudo-ssh, software-management, storage-lvm |
 
-A 22 task RHCSA style mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.
+A 22-task RHCSA practice mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.
 
 ### Systems
 - client
@@ -95,8 +95,7 @@ useradd -D -f 14
 ## Question 06 - No-Home User (client) - 5 pts
 
 ```bash
-id trainee54 >/dev/null 2>&1 || useradd -M trainee54
-rm -rf /home/trainee54
+useradd -M trainee54
 echo cinder9 | passwd --stdin trainee54
 ```
 
@@ -105,7 +104,7 @@ echo cinder9 | passwd --stdin trainee54
 ## Question 07 - Admin User (client) - 5 pts
 
 ```bash
-id kara >/dev/null 2>&1 || useradd -m kara
+useradd kara
 echo cinder9 | passwd --stdin kara
 ```
 
@@ -136,7 +135,7 @@ echo 'Summit maintenance host' > /etc/motd
 # Run on server
 systemctl set-default multi-user.target
 systemctl enable --now rsyslog
-if systemctl list-unit-files postfix.service 2>/dev/null | grep -q '^postfix.service'; then systemctl disable --now postfix; fi
+systemctl disable --now postfix
 ```
 
 ---
@@ -165,7 +164,7 @@ PASS_WARN_AGE 7
 ## Question 13 - Forced Password Change (client) - 4 pts
 
 ```bash
-id miles >/dev/null 2>&1 || useradd -m miles
+useradd miles
 echo cinder9 | passwd --stdin miles
 chage -d 0 miles
 ```
@@ -175,8 +174,7 @@ chage -d 0 miles
 ## Question 14 - Fixed UID User (client) - 4 pts
 
 ```bash
-id cedar540 >/dev/null 2>&1 || useradd -u 4540 cedar540
-usermod -u 4540 cedar540
+useradd -u 4540 cedar540
 echo cinder9 | passwd --stdin cedar540
 ```
 
@@ -200,7 +198,7 @@ chmod 0750 /srv/summit-audit
 
 ---
 
-## Question 17 - Find And Copy (client) - 4 pts
+## Question 17 - Find and Copy (client) - 4 pts
 
 ```bash
 mkdir -p /root/foragerd-files
@@ -232,7 +230,7 @@ cat > /usr/local/bin/summit-scan <<'SCRIPT'
 #!/bin/bash
 > /root/summit-units.txt
 for unit in $(cat /usr/local/share/exam-d/units.lst); do
-  systemctl is-active "$unit" >> /root/summit-units.txt || true
+  systemctl is-active "$unit" >> /root/summit-units.txt
 done
 SCRIPT
 chmod +x /usr/local/bin/summit-scan
@@ -245,12 +243,7 @@ chmod +x /usr/local/bin/summit-scan
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 513MiB
-blockdev --rereadpt /dev/sdb || true
-partprobe /dev/sdb || true
-partx -u /dev/sdb || partx -a /dev/sdb || true
-udevadm settle
-for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done
-test -b /dev/sdb1
+partprobe /dev/sdb
 mkswap /dev/sdb1
 swapon /dev/sdb1
 uuid=$(blkid -s UUID -o value /dev/sdb1)
@@ -259,16 +252,11 @@ echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
 
 ---
 
-## Question 22 - Create And Mount LV (client) - 4 pts
+## Question 22 - Create and Mount LV (client) - 4 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
-blockdev --rereadpt /dev/sdc || true
-partprobe /dev/sdc || true
-partx -u /dev/sdc || partx -a /dev/sdc || true
-udevadm settle
-for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdc1 && break; blockdev --rereadpt /dev/sdc || true; partprobe /dev/sdc || true; partx -u /dev/sdc || partx -a /dev/sdc || true; udevadm settle; sleep 1; done
-test -b /dev/sdc1
+partprobe /dev/sdc
 pvcreate /dev/sdc1
 vgcreate -s 16M summitvg /dev/sdc1
 lvcreate -n summitlv -l 16 summitvg

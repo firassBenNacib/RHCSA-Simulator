@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-35-process-priority-tuned` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 25 minutes |
 | Objectives | processes-logs-tuning |
 

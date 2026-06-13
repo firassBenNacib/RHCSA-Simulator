@@ -60,7 +60,7 @@ grubby --update-kernel=ALL --args='audit_backlog_limit=8192'
 
 ---
 
-## Question 05 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
+## Question 05 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -96,7 +96,7 @@ dnf clean all
 
 ---
 
-## Question 06 - set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168 (server) - 5 pts
+## Question 06 - Set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168 (server) - 5 pts
 
 ```bash
 # On server:
@@ -106,7 +106,7 @@ grep -Eq '^192\.168\.122\.4[[:space:]]+clienta\.exam10\.lab$' /etc/hosts || echo
 
 ---
 
-## Question 07 - add a system-level Flatpak remote named examaflatpak pointing to file:// (client) - 5 pts
+## Question 07 - Add a system-level Flatpak remote named examaflatpak pointing to file:// (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo
@@ -128,7 +128,7 @@ echo cinder9 | passwd --stdin atlas10
 
 ---
 
-## Question 09 - allow members of %opsa10 to run /usr/bin/systemctl without a password pr (client) - 4 pts
+## Question 09 - Allow members of %opsa10 to run /usr/bin/systemctl without a password pr (client) - 4 pts
 
 ```bash
 echo '%opsa10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsa10
@@ -137,7 +137,7 @@ chmod 440 /etc/sudoers.d/opsa10
 
 ---
 
-## Question 10 - set the maximum password age for anna10 to 45 days and the password warn (client) - 4 pts
+## Question 10 - Set the maximum password age for anna10 to 45 days and the password warn (client) - 4 pts
 
 ```bash
 chage -M 45 -W 7 anna10
@@ -158,7 +158,7 @@ chmod +x /usr/local/bin/a-who
 
 ---
 
-## Question 12 - write all usernames whose login shell ends with sh to /root/a-shell-user (client) - 4 pts
+## Question 12 - Write all usernames whose login shell ends with sh to /root/a-shell-user (client) - 4 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/a-shell-users.txt
@@ -166,7 +166,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/a-shell-users.txt
 
 ---
 
-## Question 13 - create /root/exam-a-report.txt containing REPORT-A and copy it to server (client) - 4 pts
+## Question 13 - Create /root/exam-a-report.txt containing REPORT-A and copy it to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-A > /root/exam-a-report.txt
@@ -177,7 +177,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 14 - publish /var/www/html/server-a.html containing RHCSA10-A and serve httpd (server) - 4 pts
+## Question 14 - Publish /var/www/html/server-a.html containing RHCSA10-A and serve httpd (server) - 4 pts
 
 ```bash
 # On server:
@@ -196,7 +196,7 @@ systemctl restart httpd
 
 ---
 
-## Question 15 - create and enable serveratimer.timer so it appends SERVER-A to /var/log/ (server) - 4 pts
+## Question 15 - Create and enable serveratimer.timer so it appends SERVER-A to /var/log/ (server) - 4 pts
 
 ```bash
 # On server:
@@ -230,7 +230,7 @@ systemctl enable --now serveratimer.timer
 
 ---
 
-## Question 16 - create volume group vga10 from /dev/sdb (client) - 4 pts
+## Question 16 - Create volume group vga10 from /dev/sdb (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -244,7 +244,7 @@ mount -a
 
 ---
 
-## Question 17 - create group servera10 and user srva10 with password cinder9, then add t (server) - 4 pts
+## Question 17 - Create group servera10 and user srva10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
 # On server:
@@ -256,7 +256,7 @@ echo 'srva10:cinder9' | chpasswd
 
 ---
 
-## Question 18 - create /srv/servera10 owned by root:servera10 with mode 2770 (server) - 4 pts
+## Question 18 - Create /srv/servera10 owned by root:servera10 with mode 2770 (server) - 4 pts
 
 ```bash
 # On server:
@@ -268,7 +268,7 @@ chmod 2770 /srv/servera10
 
 ---
 
-## Question 19 - persistently enable the SELinux boolean httpd_can_network_connect (server) - 4 pts
+## Question 19 - Persistently enable the SELinux boolean httpd_can_network_connect (server) - 4 pts
 
 ```bash
 # On server:
@@ -278,7 +278,7 @@ getsebool httpd_can_network_connect
 
 ---
 
-## Question 20 - create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se (client) - 4 pts
+## Question 20 - Create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se (client) - 4 pts
 
 ```bash
 mkdir -p /srv/opsa10
@@ -288,7 +288,7 @@ chmod 3770 /srv/opsa10
 
 ---
 
-## Question 21 - enable persistent systemd journal storage (server) - 4 pts
+## Question 21 - Enable persistent systemd journal storage (server) - 4 pts
 
 ```bash
 # On server:
@@ -303,7 +303,7 @@ journalctl --flush
 
 ---
 
-## Question 22 - make chronyd available as the lab time source. On client, configure chro (client + server) - 4 pts
+## Question 22 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -320,7 +320,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 23 - export /exports/exam-a to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+## Question 23 - Export /exports/exam-a to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
 
 ```bash
 # On server:

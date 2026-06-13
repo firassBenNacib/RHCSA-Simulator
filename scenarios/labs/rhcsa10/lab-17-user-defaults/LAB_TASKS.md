@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-17-user-defaults` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |
 

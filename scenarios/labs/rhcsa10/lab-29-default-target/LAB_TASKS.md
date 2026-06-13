@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-29-default-target` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 15 minutes |
 | Objectives | boot-and-recovery |
 
@@ -19,6 +20,6 @@ Configure system boot target.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - set the default systemd target to multi-user.target without rebooting (server) - 10 pts
+## Task 01 - Set the default systemd target to multi-user.target without rebooting (server) - 10 pts
 
 On server, set the default systemd target to multi-user.target without rebooting.
