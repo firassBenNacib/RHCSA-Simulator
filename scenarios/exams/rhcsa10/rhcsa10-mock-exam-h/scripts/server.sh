@@ -16,18 +16,6 @@ rm -f /etc/rsyslog.d/examh-local6.conf /var/log/examh-local6.log
 firewall-cmd --permanent --remove-port=2208/tcp >/dev/null 2>&1 || true
 firewall-cmd --remove-port=2208/tcp >/dev/null 2>&1 || true
 firewall-cmd --reload >/dev/null 2>&1 || true
-# --- NFS exports ---
-mkdir -p /exports/direct
-echo 'exam h direct' > /exports/direct/welcome.txt
-chown -R nobody:nobody /exports/direct
-
-mkdir -p /exports/autofs/projects
-echo 'exam h autofs' > /exports/autofs/projects/welcome.txt
-chown -R nobody:nobody /exports/autofs/projects
-
-cat > /etc/exports.d/exam-h.exports <<'EOFX'
-/exports/direct 192.168.122.0/24(rw,sync,no_root_squash)
-/exports/autofs/projects 192.168.122.0/24(rw,sync,no_root_squash)
-EOFX
-systemctl enable --now nfs-server >/dev/null 2>&1 || true
-exportfs -arv >/dev/null 2>&1 || true
+# --- NFS cleanup ---
+rm -f /etc/exports.d/exam-h.exports /etc/exports.d/exam-h-integrated.exports
+exportfs -ar >/dev/null 2>&1 || true

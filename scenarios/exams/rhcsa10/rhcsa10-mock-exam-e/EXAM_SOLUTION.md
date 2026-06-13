@@ -349,7 +349,7 @@ journalctl --flush
 
 ---
 
-## Question 23 - Add a hosts entry for servere.exam10.lab and save the output of http://s (client + server) - 4 pts
+## Question 23 - Add a hosts entry for servere.exam10.lab and save the output of http://s (client) - 4 pts
 
 ```bash
 grep -Eq '^192\.168\.122\.3[[:space:]]+servere\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts

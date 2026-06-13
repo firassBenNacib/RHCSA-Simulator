@@ -141,7 +141,7 @@ On server, export /exports/exam-c to the 192.168.122.0/24 network. On client, mo
 
 ---
 
-## Question 21 - Add a hosts entry for serverc.exam10.lab and save the output of http://s (client + server) - 4 pts
+## Question 21 - Add a hosts entry for serverc.exam10.lab and save the output of http://s (client) - 4 pts
 
 On client, add a hosts entry for serverc.exam10.lab and save the output of http://serverc.exam10.lab:8202/server-c.html to /root/server-c-web-check.txt.
 

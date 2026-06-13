@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-f` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, processes-logs-tuning, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,142 +21,142 @@ A 22-task RHCSA practice mock exam centered on chrony, SSH hardening, account de
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, recover root access from the console and set the root password to cinder9.
 
-- **IP Address:** 192.168.122.38
-- **Netmask:** 255.255.255.0
+---
+
+## Question 02 - Client IPv4 Networking (client) - 5 pts
+
+On client, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.45/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.exam-f.lab
+- **Hostname:** client-f.exam9.lab
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, add a persistent hosts entry so db.exam-f.lab resolves to 192.168.122.3.
-
----
-
-## Question 03 - Chrony Server (server) - 5 pts
-
-On server, configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 04 - Chrony Client (client) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On client, configure chronyd on client so it synchronizes only with server and starts automatically at boot.
-
----
-
-## Question 05 - SSH Port (server) - 5 pts
-
-On server, configure sshd to listen on TCP port 2222 and keep both password and public key authentication enabled.
+On client, install lsof from the configured repositories and remove tcpdump if it is installed.
 
 ---
 
-## Question 06 - Rich Rule (server) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.
-
----
-
-## Question 07 - Useradd Defaults (client) - 5 pts
-
-On client, set the default inactive period for newly created local users to 14 days.
+On client, create group opsf9. Create users anaf9, devf9, and auditf9; auditf9 must use /sbin/nologin. Set each password to cinder9 and add anaf9 and devf9 to opsf9.
 
 ---
 
-## Question 08 - No-Home UID User (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, create user pine560 with UID 4560, no home directory, shell /sbin/nologin, and password cinder9.
-
----
-
-## Question 09 - Admin User (client) - 5 pts
-
-On client, create user elio with a home directory and password cinder9.
+On client, set maximum password age 60 days and warning period 7 days for anaf9. Allow members of opsf9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 10 - Delegated Sudo (client) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On client, allow elio to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.
-
----
-
-## Question 11 - SSH Key Generation (client) - 5 pts
-
-On client, as elio on client, generate an ED25519 SSH key pair with no passphrase.
+On client, create /srv/opsf9 owned by root:opsf9 with permissions 2770 and a default ACL granting opsf9 full access.
 
 ---
 
-## Question 12 - Remote Account (server) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On server, create user backupf on server with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.
-
----
-
-## Question 13 - Passwordless SSH (server) - 4 pts
-
-On server, install elio's public key for backupf on server and verify passwordless SSH access on port 2222.
+On client, create executable script /usr/local/bin/report-f9 that writes the active state of sshd, chronyd, and firewalld to /root/report-f9.txt.
 
 ---
 
-## Question 14 - Rsync Transfer (client + server) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
-On client, use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.
-
----
-
-## Question 15 - User Umask (client) - 4 pts
-
-On client, set a personal umask of 027 for elio.
+On client, create a 512 MiB swap file at /swapf9, activate it immediately, and make it persistent.
 
 ---
 
-## Question 16 - Find and Copy (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
-On client, find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.
-
----
-
-## Question 17 - Grep Filter (client) - 4 pts
-
-On client, extract lines containing comet from /usr/share/dict/words into /root/comet-lines.
+On client, create volume group vgf9 on /dev/sdb, create logical volume dataf9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/dataf9.
 
 ---
 
-## Question 18 - Archive (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
-On client, create /root/usr-local-f.tar.gz containing /usr/local.
-
----
-
-## Question 19 - Shell Script (client) - 4 pts
-
-On client, create executable script /usr/local/bin/aurora-report that writes the active state of each unit listed in /usr/local/share/exam-f/units.lst to /root/aurora-units.txt.
+On client, create user podf9, enable lingering for that user, and run a rootless container named webf9 from localhost/rhcsa-httpd-base:latest.
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
-On client, on /dev/sdb, create a 704 MiB swap partition.
+On server, configure persistent IPv4 networking.
 
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.
-
----
-
-## Question 21 - Create and Mount LV (client) - 4 pts
-
-On client, on /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB and a logical volume auroralv of 50 extents. Format it with xfs and mount it persistently on /mnt/auroralv.
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-f.exam9.lab
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
-On client, apply the recommended tuned profile and leave it active.
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+On server, create group srvf9, create user svcf9 with password cinder9, add svcf9 to srvf9, and allow srvf9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-f.html containing RHCSA9-F, configure httpd to listen on TCP port 8305, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+On server, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+On server, create and enable auditf9.timer so it runs every 10 minutes and appends server-f to /var/log/auditf9.log.
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+On server, set the default boot target to multi-user.target and create /srv/server-f9 owned by root:srvf9 with permissions 2770.
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+On server, export /exports/rhcsa9-f to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-f persistently at /mnt/rhcsa9-f.
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+On server, create user copyf9 with password cinder9. On client, configure key-based SSH login for root to copyf9@server.
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+On client, create /root/exam-f-copy.txt containing RHCSA9-F and copy it to server:/home/copyf9/exam-f-copy.txt.
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

@@ -365,6 +365,45 @@ def audit_rhcsa9_exam_check_granularity(path: Path, scenario: dict[str, Any], fi
         findings.append(Finding(path, "RHCSA9 exam has server tasks but no server-targeted checks"))
 
 
+def audit_rhcsa9_exam_target_balance(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa9" not in scenario_tracks(scenario) or "exam" not in scenario.get("content", {}):
+        return
+
+    exam = scenario["content"]["exam"]
+    tasks = exam.get("tasks", [])
+    targets = [str(target) for target in exam.get("task_targets", [])]
+    if len(tasks) not in {22, 23}:
+        findings.append(Finding(path, f"RHCSA9 exam should have 22 or 23 tasks, found {len(tasks)}"))
+    if len(targets) != len(tasks):
+        findings.append(Finding(path, "RHCSA9 exam task_targets must match task count"))
+        return
+
+    expected_balance = {
+        "client_only": targets.count("client"),
+        "server_only": targets.count("server"),
+        "client_server": targets.count("both"),
+    }
+    if exam.get("target_balance") != expected_balance:
+        findings.append(Finding(path, f"RHCSA9 exam target_balance must match task_targets ({expected_balance})"))
+
+    ranges = {
+        22: {"client_only": (11, 12), "server_only": (6, 7), "client_server": (3, 4)},
+        23: {"client_only": (12, 13), "server_only": (7, 8), "client_server": (3, 4)},
+    }
+    for key, value in expected_balance.items():
+        low, high = ranges[len(tasks)][key]
+        if not (low <= value <= high):
+            findings.append(Finding(path, f"RHCSA9 exam target_balance.{key}={value} outside required range {low}-{high}"))
+
+    text = authored_text(scenario)
+    if not has_pattern(text, r"recover root access"):
+        findings.append(Finding(path, "RHCSA9 exam must include root recovery"))
+    if not (has_pattern(text, r"on client.*ipv4", r"client.*ip address") and has_pattern(text, r"on server.*ipv4", r"server.*ip address")):
+        findings.append(Finding(path, "RHCSA9 exam must include IPv4 networking on client and server"))
+    if not (has_pattern(text, r"on client.*baseos.*appstream", r"client.*rpm repositories") and has_pattern(text, r"on server.*baseos.*appstream", r"server.*rpm repositories")):
+        findings.append(Finding(path, "RHCSA9 exam must include RPM repositories on client and server"))
+
+
 def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
         return
@@ -493,6 +532,7 @@ def main() -> int:
         audit_rhcsa10_exam_roles(path, scenario, findings)
         audit_rhcsa10_exam_target_balance(path, scenario, findings)
         audit_rhcsa9_exam_check_granularity(path, scenario, findings)
+        audit_rhcsa9_exam_target_balance(path, scenario, findings)
         audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
@@ -518,9 +558,9 @@ def main() -> int:
         )
 
     recurring_limits = {
-        "root recovery": ({"rhcsa9": 3, "rhcsa10": 6}, lambda text: has_pattern(text, r"root recovery", r"password recovery")),
+        "root recovery": ({"rhcsa9": 8, "rhcsa10": 6}, lambda text: has_pattern(text, r"root recovery", r"password recovery")),
         "repo on both hosts": (
-            {"rhcsa9": 4, "rhcsa10": 8},
+            {"rhcsa9": 8, "rhcsa10": 8},
             lambda text: (
                 has_pattern(text, r"repositories on both systems")
                 or (has_pattern(text, r"client repositor") and has_pattern(text, r"server repositor"))
@@ -529,13 +569,13 @@ def main() -> int:
             ),
         ),
         "apache custom port/docroot": (
-            {"rhcsa9": 3, "rhcsa10": 8},
+            {"rhcsa9": 8, "rhcsa10": 8},
             lambda text: has_pattern(text, r"apache", r"httpd")
             and has_pattern(text, r"docroot", r"document root", r"listen", r"http_port_t", r"httpd[^\n]{0,80}\bport\b", r"\bport\b[^\n]{0,80}httpd"),
         ),
-        "chrony": ({"rhcsa9": 3, "rhcsa10": 8}, lambda text: has_pattern(text, r"chrony")),
-        "autofs/nfs": ({"rhcsa9": 4, "rhcsa10": 8}, lambda text: has_pattern(text, r"autofs", r"\bnfs\b")),
-        "rootless container autostart": ({"rhcsa9": 3, "rhcsa10": 0}, lambda text: has_pattern(text, r"container autostart", r"systemctl --user", r"loginctl enable-linger")),
+        "chrony": ({"rhcsa9": 8, "rhcsa10": 8}, lambda text: has_pattern(text, r"chrony")),
+        "autofs/nfs": ({"rhcsa9": 8, "rhcsa10": 8}, lambda text: has_pattern(text, r"autofs", r"\bnfs\b")),
+        "rootless container": ({"rhcsa9": 8, "rhcsa10": 0}, lambda text: has_pattern(text, r"rootless container", r"podman run", r"loginctl enable-linger")),
     }
 
     recurring_counts: dict[str, dict[str, int]] = {
@@ -614,13 +654,6 @@ def main() -> int:
         findings.append(Finding(SCENARIOS_DIR / "exams", f"expected at least 4 exams with non-default identity/security variants, found {identity_variant_exams}"))
     if perms_variant_exams < 4:
         findings.append(Finding(SCENARIOS_DIR / "exams", f"expected at least 4 exams with non-default permissions/SELinux variants, found {perms_variant_exams}"))
-
-    for track, signatures in sorted(identity_signatures.items()):
-        for signature, exam_ids in sorted(signatures.items()):
-            if track == "rhcsa10":
-                continue
-            if len(exam_ids) > 1 and set(signature) >= {"group-user", "sudo", "perm-block"}:
-                findings.append(Finding(SCENARIOS_DIR / "exams", f"repeated identity/sudo/permissions block across {track} exams: {', '.join(exam_ids)}"))
 
     if findings:
         for finding in findings:

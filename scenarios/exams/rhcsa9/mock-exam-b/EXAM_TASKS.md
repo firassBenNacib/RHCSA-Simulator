@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-b` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, processes-logs-tuning, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam emphasizing chrony, SSH hardening, user defaults, and storage administration.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,142 +21,142 @@ A 22-task RHCSA practice mock exam emphasizing chrony, SSH hardening, user defau
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, recover root access from the console and set the root password to cinder9.
 
-- **IP Address:** 192.168.122.27
-- **Netmask:** 255.255.255.0
+---
+
+## Question 02 - Client IPv4 Networking (client) - 5 pts
+
+On client, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.41/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.exam-b.lab
+- **Hostname:** client-b.exam9.lab
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, add a persistent hosts entry so registry.exam-b.lab resolves to 192.168.122.3.
-
----
-
-## Question 03 - Chrony Server (server) - 5 pts
-
-On server, configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 04 - Chrony Client (client) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On client, configure chronyd on client so it synchronizes only with server and starts automatically at boot.
-
----
-
-## Question 05 - Useradd Defaults (client) - 5 pts
-
-On client, set the default inactive period for newly created local users to 20 days.
+On client, install lsof from the configured repositories and remove tcpdump if it is installed.
 
 ---
 
-## Question 06 - No-Home UID User (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, create user cato421 with UID 4421, no home directory, and password cinder9.
-
----
-
-## Question 07 - Login User with Password Aging (client) - 5 pts
-
-On client, create user jonas with a home directory, password cinder9, and password aging of maximum 45 days, minimum 5 days, warning 7 days.
+On client, create group opsb9. Create users anab9, devb9, and auditb9; auditb9 must use /sbin/nologin. Set each password to cinder9 and add anab9 and devb9 to opsb9.
 
 ---
 
-## Question 08 - Pwquality Policy (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.
-
----
-
-## Question 09 - Delegated Sudo (client) - 5 pts
-
-On client, allow mira to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.
+On client, set maximum password age 60 days and warning period 7 days for anab9. Allow members of opsb9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 10 - SSH Port (server) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On server, configure sshd to listen on TCP port 2222 and keep password and public key authentication enabled.
-
----
-
-## Question 11 - Rich Rule (server) - 5 pts
-
-On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.
+On client, create /srv/opsb9 owned by root:opsb9 with permissions 2770 and a default ACL granting opsb9 full access.
 
 ---
 
-## Question 12 - SSH Key Generation (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On client, create user mira with a home directory and password cinder9, then as mira on client, generate an ED25519 SSH key pair with no passphrase.
-
----
-
-## Question 13 - Passwordless SSH (client + server) - 4 pts
-
-On server, create user meshremote with password cinder9 if it does not already exist. Then install mira's public key for meshremote and verify passwordless SSH access on port 2222.
+On client, create executable script /usr/local/bin/report-b9 that writes the active state of sshd, chronyd, and firewalld to /root/report-b9.txt.
 
 ---
 
-## Question 14 - Rsync Transfer (client + server) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
-On client, use rsync over SSH port 2222 to copy /opt/exam-b/report.txt to /home/meshremote/inbox/report.txt on server.
-
----
-
-## Question 15 - User Umask (client) - 4 pts
-
-On client, set a personal umask of 027 for mira.
+On client, create a 512 MiB swap file at /swapb9, activate it immediately, and make it persistent.
 
 ---
 
-## Question 16 - Find and Copy (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
-On client, find all files under /opt/exam-b/find that are owned by mira and were modified within the last 24 hours. Copy them to /root/mira-files while preserving the source directory structure.
-
----
-
-## Question 17 - Grep Filter (client) - 4 pts
-
-On client, extract lines containing proto from /usr/share/dict/words into /root/proto-lines.
+On client, create volume group vgb9 on /dev/sdb, create logical volume datab9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datab9.
 
 ---
 
-## Question 18 - Archive (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
-On client, create /root/usr-local-b.tar.bz2 containing /usr/local.
-
----
-
-## Question 19 - Shell Script (client) - 4 pts
-
-On client, create executable script /usr/local/bin/corecheck that writes the active state of each unit listed in /usr/local/share/exam-b/units.lst to /root/coremesh-units.txt.
+On client, create user podb9, enable lingering for that user, and run a rootless container named webb9 from localhost/rhcsa-httpd-base:latest.
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
-On client, on /dev/sdb, create a 600 MiB swap partition.
+On server, configure persistent IPv4 networking.
 
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.
-
----
-
-## Question 21 - Create and Mount LV (client) - 4 pts
-
-On client, on /dev/sdc, create a volume group reviewvgb with a physical extent size of 8 MiB and a logical volume reviewb of 50 extents. Format it with ext4 and mount it persistently on /mnt/reviewb.
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-b.exam9.lab
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
-On client, apply the recommended tuned profile and leave it active.
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+On server, create group srvb9, create user svcb9 with password cinder9, add svcb9 to srvb9, and allow srvb9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-b.html containing RHCSA9-B, configure httpd to listen on TCP port 8301, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+On server, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+On server, create and enable auditb9.timer so it runs every 6 minutes and appends server-b to /var/log/auditb9.log.
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+On server, set the default boot target to multi-user.target and create /srv/server-b9 owned by root:srvb9 with permissions 2770.
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+On server, export /exports/rhcsa9-b to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-b persistently at /mnt/rhcsa9-b.
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+On server, create user copyb9 with password cinder9. On client, configure key-based SSH login for root to copyb9@server.
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+On client, create /root/exam-b-copy.txt containing RHCSA9-B and copy it to server:/home/copyb9/exam-b-copy.txt.
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

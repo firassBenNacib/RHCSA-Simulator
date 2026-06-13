@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-c` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, filesystems-and-autofs, users-sudo-ssh, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -23,142 +23,140 @@ A 22-task RHCSA practice mock exam centered on recovery, boot persistence, NFS, 
 
 ## Question 01 - Root Recovery (client) - 5 pts
 
-On client, recover root access on client from the console.
-
-Set the root password to: cinder9
+On client, recover root access from the console and set the root password to cinder9.
 
 ---
 
-## Question 02 - Client Network (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, configure persistent IPv4 networking.
 
-- **IP Address:** 192.168.122.28
-- **Netmask:** 255.255.255.0
+- **IP address:** 192.168.122.42/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.exam-c.lab
+- **Hostname:** client-c.exam9.lab
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
----
-
-## Question 04 - Host Entry (client) - 5 pts
-
-On client, add a persistent hosts entry so vault.exam-c.lab resolves to 192.168.122.3.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 05 - Direct NFS Mount (client + server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On client, persistently mount server:/exports/bluec on /mnt/bluec using /etc/fstab.
-
----
-
-## Question 06 - Users and Group (client) - 5 pts
-
-On client, create group infrac and users talia and ren with infrac as a supplementary group. Set the password of both users to cinder9.
+On client, install lsof from the configured repositories and remove dos2unix if it is installed.
 
 ---
 
-## Question 07 - Default ACL Directory (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, create /srv/infrac owned by root:infrac with mode 2770 and a default ACL that grants group infrac rwx on new files and directories.
-
----
-
-## Question 08 - No-Home User (client) - 5 pts
-
-On client, create user remote63 without a home directory and with login shell /sbin/nologin.
+On client, create group opsc9. Create users anac9, devc9, and auditc9; auditc9 must use /sbin/nologin. Set each password to cinder9 and add anac9 and devc9 to opsc9.
 
 ---
 
-## Question 09 - At Job (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, queue a one-time at job as user ren that appends the message "exam-c audit" to /root/exam-c-at.log in 2 minutes.
-
----
-
-## Question 10 - Per-User Password Aging (client) - 5 pts
-
-On client, set password aging for talia to maximum 45 days, minimum 5 days, warning 7 days.
+On client, set maximum password age 60 days and warning period 7 days for anac9. Allow members of opsc9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 11 - Persistent Journal (server) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
+
+On client, create /srv/opsc9 owned by root:opsc9 with permissions 2770 and a default ACL granting opsc9 full access.
+
+---
+
+## Question 08 - Client Report Script (client) - 5 pts
+
+On client, create executable script /usr/local/bin/report-c9 that writes the active state of sshd, chronyd, and firewalld to /root/report-c9.txt.
+
+---
+
+## Question 09 - Client Swap Persistence (client) - 5 pts
+
+On client, create a 512 MiB swap file at /swapc9, activate it immediately, and make it persistent.
+
+---
+
+## Question 10 - Client LVM Mount (client) - 5 pts
+
+On client, create volume group vgc9 on /dev/sdb, create logical volume datac9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datac9.
+
+---
+
+## Question 11 - Client Rootless Container (client) - 5 pts
+
+On client, create user podc9, enable lingering for that user, and run a rootless container named webc9 from localhost/rhcsa-httpd-base:latest.
+
+---
+
+## Question 12 - Server IPv4 Networking (server) - 5 pts
+
+On server, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-c.exam9.lab
+
+---
+
+## Question 13 - Server RPM Repositories (server) - 4 pts
+
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+On server, create group srvc9, create user svcc9 with password cinder9, add svcc9 to srvc9, and allow srvc9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-c.html containing RHCSA9-C, configure httpd to listen on TCP port 8302, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
 
 On server, enable persistent systemd journal storage and restart systemd-journald.
 
 ---
 
-## Question 12 - User Umask (client) - 5 pts
+## Question 17 - Server Systemd Timer (server) - 4 pts
 
-On client, set a personal umask of 027 for user ren.
-
----
-
-## Question 13 - Per-User Login Message (client) - 4 pts
-
-On client, append a login message for ren to ~/.bash_profile that prints "exam-c access" when ren logs in.
+On server, create and enable auditc9.timer so it runs every 7 minutes and appends server-c to /var/log/auditc9.log.
 
 ---
 
-## Question 14 - Fixed UID User (client) - 4 pts
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
 
-On client, create user kian431 with UID 4431 and set its password to cinder9.
-
----
-
-## Question 15 - Find and Copy (client) - 4 pts
-
-On client, find all files under /opt/exam-c/find that are owned by ren and were modified in the last 24 hours, then copy them to /root/ren-files while preserving the directory structure.
+On server, set the default boot target to multi-user.target and create /srv/server-c9 owned by root:srvc9 with permissions 2770.
 
 ---
 
-## Question 16 - Grep Filter (client) - 4 pts
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
-On client, extract lines containing orbit from /usr/share/dict/words into /root/orbit-lines.
-
----
-
-## Question 17 - Archive (client) - 4 pts
-
-On client, create /root/etc-c.tar.bz2 containing /etc.
+On server, export /exports/rhcsa9-c to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-c persistently at /mnt/rhcsa9-c.
 
 ---
 
-## Question 18 - Service Status Script (client) - 4 pts
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
 
-On client, create executable script /usr/local/bin/northcheck that writes the active state of each service listed in /usr/local/share/exam-c/check.lst to /root/north-services.txt.
-
----
-
-## Question 19 - Swap Space (client) - 4 pts
-
-On client, on /dev/sdb, create a 700 MiB swap partition.
-
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.
+On server, create user copyc9 with password cinder9. On client, configure key-based SSH login for root to copyc9@server.
 
 ---
 
-## Question 20 - Resize Existing LV (client) - 4 pts
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
-On client, resize /dev/reviewvgc/reviewc so the final size is 340 MiB without losing data.
-
----
-
-## Question 21 - Rootless Container (client) - 4 pts
-
-On client, as user eirac, build localhost/northstar-web:latest from /opt/rhcsa/workspaces/exam-c/Containerfile, then run container pdfc with /opt/inc mounted to /data/input and /opt/outc mounted to /data/output.
+On client, create /root/exam-c-copy.txt containing RHCSA9-C and copy it to server:/home/copyc9/exam-c-copy.txt.
 
 ---
 
-## Question 22 - Container Autostart (client) - 4 pts
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
 
-On client, generate and enable a systemd user service for pdfc and enable lingering for eirac.
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

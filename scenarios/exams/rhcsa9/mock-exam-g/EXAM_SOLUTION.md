@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-g` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, filesystems-and-autofs, users-sudo-ssh, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -34,165 +34,224 @@ exec /sbin/init
 
 ---
 
-## Question 02 - Client Network (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
 ```bash
-nmcli device status
-nmcli connection show "System eth1"
-nmcli connection modify "System eth1" ipv4.addresses 192.168.122.39/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "System eth1"
-nmcli connection up "System eth1"
-hostnamectl set-hostname client.deltaforge.lab
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.46/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname client-g.exam9.lab
 ```
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
 ```bash
-grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 G BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 G AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 04 - Host Entry (client) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 vault.deltaforge.lab
+dnf install -y tree
+dnf remove -y dos2unix || true
 ```
 
 ---
 
-## Question 05 - Direct NFS Mount (client + server) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
 ```bash
-mkdir -p /mnt/delta-home
-vim /etc/fstab
-server:/exports/delta-home /mnt/delta-home nfs defaults,_netdev 0 0
+getent group opsg9 >/dev/null || groupadd opsg9
+id anag9 >/dev/null 2>&1 || useradd -m anag9
+id devg9 >/dev/null 2>&1 || useradd -m devg9
+id auditg9 >/dev/null 2>&1 || useradd -M -s /sbin/nologin auditg9
+usermod -s /sbin/nologin auditg9
+echo 'anag9:cinder9\ndevg9:cinder9\nauditg9:cinder9' | chpasswd
+gpasswd -a anag9 opsg9
+gpasswd -a devg9 opsg9
+```
+
+---
+
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
+
+```bash
+chage -M 60 -W 7 anag9
+echo '%opsg9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsg9-systemctl
+chmod 0440 /etc/sudoers.d/opsg9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/opsg9-systemctl >/dev/null'
+```
+
+---
+
+## Question 07 - Client Shared Directory (client) - 5 pts
+
+```bash
+mkdir -p /srv/opsg9
+chown root:opsg9 /srv/opsg9
+chmod 2770 /srv/opsg9
+setfacl -m d:g:opsg9:rwx /srv/opsg9
+```
+
+---
+
+## Question 08 - Client Report Script (client) - 5 pts
+
+```bash
+cat > /usr/local/bin/report-g9 <<'SCRIPT'
+#!/bin/bash
+: > /root/report-g9.txt
+for service in sshd chronyd firewalld; do
+  systemctl is-active "$service" >> /root/report-g9.txt || true
+done
+SCRIPT
+chmod +x /usr/local/bin/report-g9
+/usr/local/bin/report-g9
+```
+
+---
+
+## Question 09 - Client Swap Persistence (client) - 5 pts
+
+```bash
+swapoff /swapg9 >/dev/null 2>&1 || true
+sed -i '\#/swapg9#d' /etc/fstab
+rm -f /swapg9
+dd if=/dev/zero of=/swapg9 bs=1M count=512
+chmod 0600 /swapg9
+mkswap /swapg9
+echo '/swapg9 swap swap defaults 0 0' >> /etc/fstab
+swapon /swapg9
+```
+
+---
+
+## Question 10 - Client LVM Mount (client) - 5 pts
+
+```bash
+umount /mnt/datag9 >/dev/null 2>&1 || true
+sed -i '\#/mnt/datag9#d' /etc/fstab
+lvremove -ff /dev/vgg9/datag9 >/dev/null 2>&1 || true
+vgremove -ff vgg9 >/dev/null 2>&1 || true
+pvremove -ff -y /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100%
+partprobe /dev/sdb || true
+udevadm settle
+pvcreate -ff -y /dev/sdb1
+vgcreate vgg9 /dev/sdb1
+lvcreate -n datag9 -L 320M vgg9
+mkfs.xfs -f /dev/vgg9/datag9
+mkdir -p /mnt/datag9
+uuid=$(blkid -s UUID -o value /dev/vgg9/datag9)
+echo "UUID=$uuid /mnt/datag9 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 06 - Ops User and Group (client) - 5 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
 ```bash
-groupadd deltaops
-useradd -G deltaops pavel
-echo cinder9 | passwd --stdin pavel
+id podg9 >/dev/null 2>&1 || useradd -m podg9
+echo 'podg9:cinder9' | chpasswd
+loginctl enable-linger podg9
+su - podg9
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true
+podman rm -f webg9 >/dev/null 2>&1 || true
+podman run -d --name webg9 localhost/rhcsa-httpd-base:latest
 ```
 
 ---
 
-## Question 07 - Sticky Shared Directory (client) - 5 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
 ```bash
-mkdir -p /projects/delta-drop
-chown root:deltaops /projects/delta-drop
-chmod 3770 /projects/delta-drop
+# On server:
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname server-g.exam9.lab
 ```
 
 ---
 
-## Question 08 - No-Home Audit User (client) - 5 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
 ```bash
-useradd -M -s /sbin/nologin auditg
+# On server:
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 G BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 G AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
 ```
 
 ---
 
-## Question 09 - Password Aging and Umask (client) - 5 pts
+## Question 14 - Server User and Sudo (server) - 4 pts
 
 ```bash
-chage -M 45 -m 5 -W 7 pavel
-echo 'umask 027' >> /home/pavel/.bash_profile
+# On server:
+getent group srvg9 >/dev/null || groupadd srvg9
+id svcg9 >/dev/null 2>&1 || useradd -m svcg9
+echo 'svcg9:cinder9' | chpasswd
+gpasswd -a svcg9 srvg9
+echo '%srvg9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/srvg9-systemctl
+chmod 0440 /etc/sudoers.d/srvg9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/srvg9-systemctl >/dev/null'
 ```
 
 ---
 
-## Question 10 - Copy User on Both Systems (server) - 5 pts
+## Question 15 - Server Web Service (server) - 4 pts
 
 ```bash
-useradd copyg
-echo cinder9 | passwd --stdin copyg
-# Run on server
-useradd copyg
-echo cinder9 | passwd --stdin copyg
-mkdir -p /home/copyg/inbox
-chown copyg:copyg /home/copyg/inbox
-chmod 0755 /home/copyg/inbox
+# On server:
+mkdir -p /var/www/html
+echo RHCSA9-G > /var/www/html/exam-g.html
+restorecon -v /var/www/html/exam-g.html || true
+cat > /etc/httpd/conf.d/exam-g.conf <<'EOF'
+Listen 8306
+EOF
+semanage port -a -t http_port_t -p tcp 8306 2>/dev/null
+firewall-cmd --permanent --add-port=8306/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
 ```
 
 ---
 
-## Question 11 - SSH Key and Secure Copy (client + server) - 5 pts
+## Question 16 - Server Persistent Journal (server) - 4 pts
 
 ```bash
-mkdir -p /home/copyg/.ssh
-chown copyg:copyg /home/copyg/.ssh
-chmod 0700 /home/copyg/.ssh
-test -f /home/copyg/.ssh/id_ed25519 || runuser -u copyg -- ssh-keygen -t ed25519 -N '' -f /home/copyg/.ssh/id_ed25519 -C copyg-exam-replay >/dev/null 2>&1
-chmod 0600 /home/copyg/.ssh/id_ed25519
-chmod 0644 /home/copyg/.ssh/id_ed25519.pub
-# Run on client
-su - copyg
-ssh-copy-id -i /home/copyg/.ssh/id_ed25519.pub -p 22 copyg@server
-scp -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /opt/exam-g/copyg-payload.txt copyg@server:/home/copyg/inbox/payload.txt
-```
-
----
-
-## Question 12 - At Job (client) - 5 pts
-
-```bash
-systemctl enable --now atd
-su - pavel
-echo "echo exam-g tick >> /root/exam-g-at.log" | at now + 2 minutes
-```
-
----
-
-## Question 13 - Per-User Login Message (client) - 4 pts
-
-```bash
-echo 'echo exam-g access' >> /home/pavel/.bash_profile
-```
-
----
-
-## Question 14 - Find and Copy (client) - 4 pts
-
-```bash
-mkdir -p /root/trackerg-files
-find /opt/exam-g/find -user trackerg -mtime -1 -type f -exec cp --parents {} /root/trackerg-files \;
-```
-
----
-
-## Question 15 - Grep Filter (client) - 4 pts
-
-```bash
-grep ember /usr/share/dict/words > /root/ember-lines
-```
-
----
-
-## Question 16 - Archive (client) - 4 pts
-
-```bash
-tar -cjf /root/etc-g.tar.bz2 /etc
-```
-
----
-
-## Question 17 - Persistent Journal (client) - 4 pts
-
-```bash
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+# On server:
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-persistent.conf <<'EOF'
 [Journal]
 Storage=persistent
 EOF
@@ -202,66 +261,106 @@ journalctl --flush
 
 ---
 
-## Question 18 - Process Renice and Kill (client) - 4 pts
+## Question 17 - Server Systemd Timer (server) - 4 pts
 
 ```bash
-kill "$(cat /home/workerg/cpu.pid)"
-renice 10 -p "$(cat /home/workerg/sleep.pid)"
+# On server:
+cat > /usr/local/sbin/auditg9.sh <<'EOF'
+#!/bin/bash
+echo server-g >> /var/log/auditg9.log
+EOF
+chmod +x /usr/local/sbin/auditg9.sh
+cat > /etc/systemd/system/auditg9.service <<'EOF'
+[Unit]
+Description=Server G audit marker
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/auditg9.sh
+EOF
+cat > /etc/systemd/system/auditg9.timer <<'EOF'
+[Unit]
+Description=Run server G audit marker
+[Timer]
+OnCalendar=*:0/11
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now auditg9.timer
 ```
 
 ---
 
-## Question 19 - Swap Space (client) - 4 pts
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
 
 ```bash
-parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 737MiB
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-uuid=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+# On server:
+systemctl set-default multi-user.target
+getent group srvg9 >/dev/null || groupadd srvg9
+mkdir -p /srv/server-g9
+chown root:srvg9 /srv/server-g9
+chmod 2770 /srv/server-g9
 ```
 
 ---
 
-## Question 20 - Create and Mount LV (client) - 4 pts
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
 ```bash
-parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 701MiB set 1 lvm on
-partprobe /dev/sdc
-pvcreate /dev/sdc1
-vgcreate -s 16M deltavg /dev/sdc1
-lvcreate -n deltalv -l 40 deltavg
-mkfs.ext4 /dev/deltavg/deltalv
-mkdir -p /mnt/deltalv
-uuid=$(blkid -s UUID -o value /dev/deltavg/deltalv)
-echo "UUID=$uuid /mnt/deltalv ext4 defaults 0 0" >> /etc/fstab
+# On server:
+mkdir -p /exports/rhcsa9-g
+echo exam-g > /exports/rhcsa9-g/README
+cat > /etc/exports.d/rhcsa9-g.exports <<'EOF'
+/exports/rhcsa9-g 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/rhcsa9-g
+grep -Eq '^server:/exports/rhcsa9-g[[:space:]]+/mnt/rhcsa9-g[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/rhcsa9-g /mnt/rhcsa9-g nfs defaults,_netdev 0 0' >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 21 - Rootless Container (client) - 4 pts
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
 
 ```bash
-su - solg
-cd /opt/rhcsa/workspaces/exam-g
-podman build -t localhost/deltaforge-web:latest .
-podman run -d --name pdfg -v /opt/inc:/data/input:Z -v /opt/outg:/data/output:Z localhost/deltaforge-web:latest
-exit
+# On server:
+id copyg9 >/dev/null 2>&1 || useradd -m copyg9
+echo 'copyg9:cinder9' | chpasswd
+# On client:
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa9-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub copyg9@server
 ```
 
 ---
 
-## Question 22 - Container Autostart (client) - 4 pts
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-su - solg
-mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user
-podman generate systemd --name pdfg --files --new
-systemctl --user daemon-reload
-systemctl --user enable --now container-pdfg.service
-exit
-loginctl enable-linger solg
+echo RHCSA9-G > /root/exam-g-copy.txt
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-g-copy.txt copyg9@server:/home/copyg9/exam-g-copy.txt
+```
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+```bash
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
+systemctl enable --now chronyd
 ```

@@ -319,12 +319,12 @@
         "both",
         "client",
         "server",
-        "both"
+        "client"
       ],
       "target_balance": {
-        "client_only": 12,
+        "client_only": 13,
         "server_only": 7,
-        "client_server": 4
+        "client_server": 3
       },
       "solution_targets": [
         "client",
@@ -349,7 +349,7 @@
         "both",
         "client",
         "server",
-        "both"
+        "client"
       ],
       "check_targets": [
         "client",

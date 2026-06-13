@@ -78,8 +78,12 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def write_script(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists() or path.read_text(encoding="utf-8") != content:
-        path.write_text(content, encoding="utf-8")
+    rendered = content.replace("\r\n", "\n").replace("\r", "\n")
+    if not rendered.endswith("\n"):
+        rendered += "\n"
+    encoded = rendered.encode("utf-8")
+    if not path.exists() or path.read_bytes() != encoded:
+        path.write_text(rendered, encoding="utf-8", newline="\n")
     path.chmod(0o755)
 
 
@@ -659,6 +663,8 @@ vgremove -fy vg{letter}10 >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdb >/dev/null 2>&1 || true
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
+udevadm settle
 
 # --- Default target: reset to graphical ---
 systemctl set-default graphical.target >/dev/null 2>&1 || true
@@ -679,21 +685,9 @@ rm -f /root/{letter}-original /root/{letter}-hard /root/{letter}-soft
 # --- Reset repos on server ---
 mkdir -p /root/.repo-backup-server-exam-{letter}
 rhcsa_reset_repo_directory /root/.repo-backup-server-exam-{letter}
-{exam_extra_server_reset}# --- NFS exports ---
-mkdir -p /exports/direct
-echo 'exam {letter} direct' > /exports/direct/welcome.txt
-chown -R nobody:nobody /exports/direct
-
-mkdir -p /exports/autofs/projects
-echo 'exam {letter} autofs' > /exports/autofs/projects/welcome.txt
-chown -R nobody:nobody /exports/autofs/projects
-
-cat > /etc/exports.d/exam-{letter}.exports <<'EOFX'
-/exports/direct 192.168.122.0/24(rw,sync,no_root_squash)
-/exports/autofs/projects 192.168.122.0/24(rw,sync,no_root_squash)
-EOFX
-systemctl enable --now nfs-server >/dev/null 2>&1 || true
-exportfs -arv >/dev/null 2>&1 || true
+{exam_extra_server_reset}# --- NFS cleanup ---
+rm -f /etc/exports.d/exam-{letter}.exports /etc/exports.d/exam-{letter}-integrated.exports
+exportfs -ar >/dev/null 2>&1 || true
 """
 
     return client, server
@@ -1894,11 +1888,13 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                 "On client, configure a persistent BaseOS repository. BaseOS URL: http://server/repo/BaseOS/.",
                 "On client, configure a persistent AppStream repository. AppStream URL: http://server/repo/AppStream/.",
                 "On client, disable GPG checks for both RHCSA10 repositories and verify both repositories are enabled.",
+                "On server, configure matching BaseOS and AppStream repositories with GPG checks disabled.",
             ],
             [
                 "grep -ERq '^\\[rhcsa10-baseos\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d",
                 "grep -ERq '^\\[rhcsa10-appstream\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d",
-                "awk 'BEGIN{s=0} /^\\[rhcsa10-(baseos|appstream)\\]$/{repo=$0} /^gpgcheck=0$/{if (repo != \"\") s++} END{exit !(s >= 2)}' /etc/yum.repos.d/*.repo && dnf repolist --enabled | grep -Eq 'rhcsa10-baseos|rhcsa10-appstream'",
+                "awk 'BEGIN{s=0} /^\\[rhcsa10-(baseos|appstream)\\]$/{repo=$0} /^enabled=1$/{if (repo != \"\") e++} /^gpgcheck=0$/{if (repo != \"\") g++} END{exit !(e >= 2 && g >= 2)}' /etc/yum.repos.d/*.repo && dnf repolist --enabled | grep -Eq 'rhcsa10-baseos|rhcsa10-appstream'",
+                "# server grep -ERq '^\\[rhcsa10-baseos\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^\\[rhcsa10-appstream\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d && awk 'BEGIN{s=0} /^\\[rhcsa10-(baseos|appstream)\\]$/{repo=$0} /^enabled=1$/{if (repo != \"\") e++} /^gpgcheck=0$/{if (repo != \"\") g++} END{exit !(e >= 2 && g >= 2)}' /etc/yum.repos.d/*.repo",
             ],
             [
                 [
@@ -1909,6 +1905,11 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                 ],
                 [
                     "sed -i 's/^gpgcheck=.*/gpgcheck=0/' /etc/yum.repos.d/rhcsa10.repo",
+                    "dnf clean all",
+                    "dnf repolist --enabled",
+                ],
+                [
+                    "cat > /etc/yum.repos.d/rhcsa10.repo <<'EOF'\n[rhcsa10-baseos]\nname=RHCSA10 BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-appstream]\nname=RHCSA10 AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
                     "dnf clean all",
                     "dnf repolist --enabled",
                 ],

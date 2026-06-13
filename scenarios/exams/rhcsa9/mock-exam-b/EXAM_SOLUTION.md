@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-b` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, processes-logs-tuning, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam emphasizing chrony, SSH hardening, user defaults, and storage administration.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,254 +21,346 @@ A 22-task RHCSA practice mock exam emphasizing chrony, SSH hardening, user defau
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
 ```bash
-nmcli device status
-nmcli connection show "System eth1"
-nmcli connection modify "System eth1" ipv4.addresses 192.168.122.27/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "System eth1"
-nmcli connection up "System eth1"
-hostnamectl set-hostname client.exam-b.lab
+# At the boot menu, edit the selected kernel entry.
+# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
+passwd root
+# enter: cinder9
+touch /.autorelabel
+exec /sbin/init
 ```
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 registry.exam-b.lab
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.41/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname client-b.exam9.lab
 ```
 
 ---
 
-## Question 03 - Chrony Server (server) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
 ```bash
-# Run on server
-cat > /etc/chrony.conf <<'EOF'
-driftfile /var/lib/chrony/drift
-makestep 1.0 3
-rtcsync
-allow 192.168.122.0/24
-local stratum 10
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 B BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 B AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
 EOF
-systemctl enable --now chronyd
+dnf clean all
 ```
 
 ---
 
-## Question 04 - Chrony Client (client) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
 ```bash
-cat > /etc/chrony.conf <<'EOF'
-server server iburst
-driftfile /var/lib/chrony/drift
-makestep 1.0 3
-rtcsync
-EOF
-systemctl enable --now chronyd
+dnf install -y lsof
+dnf remove -y tcpdump || true
 ```
 
 ---
 
-## Question 05 - Useradd Defaults (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
 ```bash
-useradd -D -f 20
+getent group opsb9 >/dev/null || groupadd opsb9
+id anab9 >/dev/null 2>&1 || useradd -m anab9
+id devb9 >/dev/null 2>&1 || useradd -m devb9
+id auditb9 >/dev/null 2>&1 || useradd -M -s /sbin/nologin auditb9
+usermod -s /sbin/nologin auditb9
+echo 'anab9:cinder9\ndevb9:cinder9\nauditb9:cinder9' | chpasswd
+gpasswd -a anab9 opsb9
+gpasswd -a devb9 opsb9
 ```
 
 ---
 
-## Question 06 - No-Home UID User (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
 ```bash
-useradd -M -u 4421 cato421
-echo cinder9 | passwd --stdin cato421
+chage -M 60 -W 7 anab9
+echo '%opsb9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsb9-systemctl
+chmod 0440 /etc/sudoers.d/opsb9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/opsb9-systemctl >/dev/null'
 ```
 
 ---
 
-## Question 07 - Login User with Password Aging (client) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
 ```bash
-useradd jonas
-echo cinder9 | passwd --stdin jonas
-chage -M 45 -m 5 -W 7 jonas
+mkdir -p /srv/opsb9
+chown root:opsb9 /srv/opsb9
+chmod 2770 /srv/opsb9
+setfacl -m d:g:opsb9:rwx /srv/opsb9
 ```
 
 ---
 
-## Question 08 - Pwquality Policy (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
 ```bash
-mkdir -p /etc/security/pwquality.conf.d
-cat > /etc/security/pwquality.conf.d/coremesh.conf <<'EOF'
-minlen = 12
-minclass = 3
-EOF
-```
-
----
-
-## Question 09 - Delegated Sudo (client) - 5 pts
-
-```bash
-visudo -f /etc/sudoers.d/mira-firewalld
-mira ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
-```
-
----
-
-## Question 10 - SSH Port (server) - 5 pts
-
-```bash
-# Run on server
-vim /etc/ssh/sshd_config
-Port 22
-Port 2222
-PasswordAuthentication yes
-PubkeyAuthentication yes
-semanage port -l | grep -Eq '^ssh_port_t\b.*\b2222\b' || semanage port -a -t ssh_port_t -p tcp 2222
-systemctl restart sshd
-```
-
----
-
-## Question 11 - Rich Rule (server) - 5 pts
-
-```bash
-# Run on server
-firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
-firewall-cmd --reload
-```
-
----
-
-## Question 12 - SSH Key Generation (client) - 5 pts
-
-```bash
-id mira >/dev/null 2>&1 || useradd mira
-echo cinder9 | passwd --stdin mira
-mkdir -p /home/mira/.ssh
-chown mira:mira /home/mira/.ssh
-chmod 0700 /home/mira/.ssh
-test -f /home/mira/.ssh/id_ed25519 || runuser -u mira -- ssh-keygen -t ed25519 -N '' -f /home/mira/.ssh/id_ed25519 -C mira-exam-replay >/dev/null 2>&1
-chmod 0600 /home/mira/.ssh/id_ed25519
-chmod 0644 /home/mira/.ssh/id_ed25519.pub
-```
-
----
-
-## Question 13 - Passwordless SSH (client + server) - 4 pts
-
-```bash
-# Run on server
-id meshremote >/dev/null 2>&1 || useradd meshremote
-echo cinder9 | passwd --stdin meshremote
-mkdir -p /home/meshremote/inbox
-chown meshremote:meshremote /home/meshremote/inbox
-chmod 0755 /home/meshremote/inbox
-# Run on client
-su - mira
-ssh-copy-id -i /home/mira/.ssh/id_ed25519.pub -p 2222 meshremote@server
-ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null meshremote@server true
-```
-
----
-
-## Question 14 - Rsync Transfer (client + server) - 4 pts
-
-```bash
-# Run on client
-su - mira
-rsync -e "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" /opt/exam-b/report.txt meshremote@server:/home/meshremote/inbox/report.txt
-```
-
----
-
-## Question 15 - User Umask (client) - 4 pts
-
-```bash
-echo 'umask 027' >> /home/mira/.bash_profile
-```
-
----
-
-## Question 16 - Find and Copy (client) - 4 pts
-
-```bash
-mkdir -p /root/mira-files
-find /opt/exam-b/find -user mira -mtime -1 -type f -exec cp --parents {} /root/mira-files \;
-```
-
----
-
-## Question 17 - Grep Filter (client) - 4 pts
-
-```bash
-grep proto /usr/share/dict/words > /root/proto-lines
-```
-
----
-
-## Question 18 - Archive (client) - 4 pts
-
-```bash
-tar -cjf /root/usr-local-b.tar.bz2 /usr/local
-```
-
----
-
-## Question 19 - Shell Script (client) - 4 pts
-
-```bash
-cat > /usr/local/bin/corecheck <<'SCRIPT'
+cat > /usr/local/bin/report-b9 <<'SCRIPT'
 #!/bin/bash
-> /root/coremesh-units.txt
-for unit in $(cat /usr/local/share/exam-b/units.lst); do
-  systemctl is-active "$unit" >> /root/coremesh-units.txt
+: > /root/report-b9.txt
+for service in sshd chronyd firewalld; do
+  systemctl is-active "$service" >> /root/report-b9.txt || true
 done
 SCRIPT
-chmod +x /usr/local/bin/corecheck
-/usr/local/bin/corecheck
+chmod +x /usr/local/bin/report-b9
+/usr/local/bin/report-b9
 ```
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
 ```bash
-parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 601MiB
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-uuid=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+swapoff /swapb9 >/dev/null 2>&1 || true
+sed -i '\#/swapb9#d' /etc/fstab
+rm -f /swapb9
+dd if=/dev/zero of=/swapb9 bs=1M count=512
+chmod 0600 /swapb9
+mkswap /swapb9
+echo '/swapb9 swap swap defaults 0 0' >> /etc/fstab
+swapon /swapb9
 ```
 
 ---
 
-## Question 21 - Create and Mount LV (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
 ```bash
-parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
-partprobe /dev/sdc
-pvcreate /dev/sdc1
-vgcreate -s 8M reviewvgb /dev/sdc1
-lvcreate -n reviewb -l 50 reviewvgb
-mkfs.ext4 /dev/reviewvgb/reviewb
-mkdir -p /mnt/reviewb
-uuid=$(blkid -s UUID -o value /dev/reviewvgb/reviewb)
-echo "UUID=$uuid /mnt/reviewb ext4 defaults 0 0" >> /etc/fstab
+umount /mnt/datab9 >/dev/null 2>&1 || true
+sed -i '\#/mnt/datab9#d' /etc/fstab
+lvremove -ff /dev/vgb9/datab9 >/dev/null 2>&1 || true
+vgremove -ff vgb9 >/dev/null 2>&1 || true
+pvremove -ff -y /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100%
+partprobe /dev/sdb || true
+udevadm settle
+pvcreate -ff -y /dev/sdb1
+vgcreate vgb9 /dev/sdb1
+lvcreate -n datab9 -L 320M vgb9
+mkfs.xfs -f /dev/vgb9/datab9
+mkdir -p /mnt/datab9
+uuid=$(blkid -s UUID -o value /dev/vgb9/datab9)
+echo "UUID=$uuid /mnt/datab9 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
 ```bash
-tuned-adm profile "$(tuned-adm recommend)"
+id podb9 >/dev/null 2>&1 || useradd -m podb9
+echo 'podb9:cinder9' | chpasswd
+loginctl enable-linger podb9
+su - podb9
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true
+podman rm -f webb9 >/dev/null 2>&1 || true
+podman run -d --name webb9 localhost/rhcsa-httpd-base:latest
+```
+
+---
+
+## Question 12 - Server IPv4 Networking (server) - 5 pts
+
+```bash
+# On server:
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname server-b.exam9.lab
+```
+
+---
+
+## Question 13 - Server RPM Repositories (server) - 4 pts
+
+```bash
+# On server:
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 B BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 B AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+```
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+```bash
+# On server:
+getent group srvb9 >/dev/null || groupadd srvb9
+id svcb9 >/dev/null 2>&1 || useradd -m svcb9
+echo 'svcb9:cinder9' | chpasswd
+gpasswd -a svcb9 srvb9
+echo '%srvb9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/srvb9-systemctl
+chmod 0440 /etc/sudoers.d/srvb9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/srvb9-systemctl >/dev/null'
+```
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/www/html
+echo RHCSA9-B > /var/www/html/exam-b.html
+restorecon -v /var/www/html/exam-b.html || true
+cat > /etc/httpd/conf.d/exam-b.conf <<'EOF'
+Listen 8301
+EOF
+semanage port -a -t http_port_t -p tcp 8301 2>/dev/null
+firewall-cmd --permanent --add-port=8301/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
+```
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+journalctl --flush
+```
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+```bash
+# On server:
+cat > /usr/local/sbin/auditb9.sh <<'EOF'
+#!/bin/bash
+echo server-b >> /var/log/auditb9.log
+EOF
+chmod +x /usr/local/sbin/auditb9.sh
+cat > /etc/systemd/system/auditb9.service <<'EOF'
+[Unit]
+Description=Server B audit marker
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/auditb9.sh
+EOF
+cat > /etc/systemd/system/auditb9.timer <<'EOF'
+[Unit]
+Description=Run server B audit marker
+[Timer]
+OnCalendar=*:0/6
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now auditb9.timer
+```
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+```bash
+# On server:
+systemctl set-default multi-user.target
+getent group srvb9 >/dev/null || groupadd srvb9
+mkdir -p /srv/server-b9
+chown root:srvb9 /srv/server-b9
+chmod 2770 /srv/server-b9
+```
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /exports/rhcsa9-b
+echo exam-b > /exports/rhcsa9-b/README
+cat > /etc/exports.d/rhcsa9-b.exports <<'EOF'
+/exports/rhcsa9-b 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/rhcsa9-b
+grep -Eq '^server:/exports/rhcsa9-b[[:space:]]+/mnt/rhcsa9-b[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/rhcsa9-b /mnt/rhcsa9-b nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+```bash
+# On server:
+id copyb9 >/dev/null 2>&1 || useradd -m copyb9
+echo 'copyb9:cinder9' | chpasswd
+# On client:
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa9-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub copyb9@server
+```
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+```bash
+echo RHCSA9-B > /root/exam-b-copy.txt
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-b-copy.txt copyb9@server:/home/copyb9/exam-b-copy.txt
+```
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+```bash
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
+systemctl enable --now chronyd
 ```

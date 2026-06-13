@@ -153,6 +153,6 @@ On server, enable persistent systemd journal storage.
 
 ---
 
-## Question 23 - Add a hosts entry for servere.exam10.lab and save the output of http://s (client + server) - 4 pts
+## Question 23 - Add a hosts entry for servere.exam10.lab and save the output of http://s (client) - 4 pts
 
 On client, add a hosts entry for servere.exam10.lab and save the output of http://servere.exam10.lab:8204/server-e.html to /root/server-e-web-check.txt.

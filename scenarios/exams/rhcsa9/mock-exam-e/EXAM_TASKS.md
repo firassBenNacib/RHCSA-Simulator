@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-e` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, software-management, filesystems-and-autofs, users-sudo-ssh, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,147 +21,142 @@ A 22-task RHCSA practice mock exam focused on offline repositories, Apache docum
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, recover root access from the console and set the root password to cinder9.
 
-- **IP Address:** 192.168.122.37
-- **Netmask:** 255.255.255.0
+---
+
+## Question 02 - Client IPv4 Networking (client) - 5 pts
+
+On client, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.44/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.exam-e.lab
+- **Hostname:** client-e.exam9.lab
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, add a persistent hosts entry so registry.exam-e.lab resolves to 192.168.122.3.
-
----
-
-## Question 03 - Client Repositories (client) - 5 pts
-
-On client, configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 04 - Server Repositories (server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On server, configure the same repository file on server.
-
----
-
-## Question 05 - Apache Custom Docroot (client) - 5 pts
-
-On client, configure Apache on client so it serves /srv/harbor-web on TCP port 8181.
-
-**Requirements**
-- Start automatically at boot.
-- Open the port permanently in the firewall.
-- Apply the SELinux changes needed for the custom document root and port.
+On client, install lsof from the configured repositories and remove dos2unix if it is installed.
 
 ---
 
-## Question 06 - Harbor Users (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, create group harborops and create users lena and ivor with harborops as a supplementary group at creation time. Set the password of both users to cinder9.
-
----
-
-## Question 07 - Password Aging (client) - 5 pts
-
-On client, set password aging for ivor to maximum 30 days, minimum 2 days, and warning 7 days.
+On client, create group opse9. Create users anae9, deve9, and audite9; audite9 must use /sbin/nologin. Set each password to cinder9 and add anae9 and deve9 to opse9.
 
 ---
 
-## Question 08 - Default ACL Directory (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, create /srv/harbor-drop owned by root:harborops with mode 2770 and a default ACL that grants harborops rwx on new files and directories.
-
----
-
-## Question 09 - No-Home Remote User (client) - 5 pts
-
-On client, create user harborremote without a home directory, with shell /sbin/nologin, and set its password to cinder9.
+On client, set maximum password age 60 days and warning period 7 days for anae9. Allow members of opse9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 10 - Pwquality Policy (client) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On client, configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.
-
----
-
-## Question 11 - At Job (client) - 5 pts
-
-On client, queue a one-time at job as user ivor that appends the message "exam-e tick" to /root/exam-e-at.log in 2 minutes.
+On client, create /srv/opse9 owned by root:opse9 with permissions 2770 and a default ACL granting opse9 full access.
 
 ---
 
-## Question 12 - Direct NFS Mount (client + server) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On client, persistently mount server:/exports/harborhome on /mnt/harborhome using /etc/fstab.
+On client, create executable script /usr/local/bin/report-e9 that writes the active state of sshd, chronyd, and firewalld to /root/report-e9.txt.
 
 ---
 
-## Question 13 - Persistent Journal (server) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
+
+On client, create a 512 MiB swap file at /swape9, activate it immediately, and make it persistent.
+
+---
+
+## Question 10 - Client LVM Mount (client) - 5 pts
+
+On client, create volume group vge9 on /dev/sdb, create logical volume datae9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datae9.
+
+---
+
+## Question 11 - Client Rootless Container (client) - 5 pts
+
+On client, create user pode9, enable lingering for that user, and run a rootless container named webe9 from localhost/rhcsa-httpd-base:latest.
+
+---
+
+## Question 12 - Server IPv4 Networking (server) - 5 pts
+
+On server, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-e.exam9.lab
+
+---
+
+## Question 13 - Server RPM Repositories (server) - 4 pts
+
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+On server, create group srve9, create user svce9 with password cinder9, add svce9 to srve9, and allow srve9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-e.html containing RHCSA9-E, configure httpd to listen on TCP port 8304, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
 
 On server, enable persistent systemd journal storage and restart systemd-journald.
 
 ---
 
-## Question 14 - Per-User Login Message (client) - 4 pts
+## Question 17 - Server Systemd Timer (server) - 4 pts
 
-On client, append a login message for ivor to ~/.bash_profile that prints "exam-e access" when ivor logs in.
-
----
-
-## Question 15 - Fixed UID User (client) - 4 pts
-
-On client, create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.
+On server, create and enable audite9.timer so it runs every 9 minutes and appends server-e to /var/log/audite9.log.
 
 ---
 
-## Question 16 - Find and Copy (client) - 4 pts
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
 
-On client, find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.
-
----
-
-## Question 17 - Grep Filter (client) - 4 pts
-
-On client, extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.
+On server, set the default boot target to multi-user.target and create /srv/server-e9 owned by root:srve9 with permissions 2770.
 
 ---
 
-## Question 18 - Archive (client) - 4 pts
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
-On client, create /root/var-tmp-harbor.tar.bz2 containing /var/tmp.
-
----
-
-## Question 19 - Shell Script (client) - 4 pts
-
-On client, create executable script /usr/local/bin/harbor-check that writes the active state of each service listed in /usr/local/share/exam-e/services.lst to /root/harbor-services.txt.
+On server, export /exports/rhcsa9-e to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-e persistently at /mnt/rhcsa9-e.
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
 
-On client, on /dev/sdb, create a 640 MiB swap partition.
-
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.
+On server, create user copye9 with password cinder9. On client, configure key-based SSH login for root to copye9@server.
 
 ---
 
-## Question 21 - Resize Existing LV (client) - 4 pts
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
-On client, resize /dev/reviewvge/reviewe so the final size is 360 MiB without losing the existing filesystem data.
+On client, create /root/exam-e-copy.txt containing RHCSA9-E and copy it to server:/home/copye9/exam-e-copy.txt.
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
 
-On client, apply the recommended tuned profile and leave it active.
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

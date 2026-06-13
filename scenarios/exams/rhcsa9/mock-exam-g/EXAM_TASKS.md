@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-g` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, filesystems-and-autofs, users-sudo-ssh, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -23,138 +23,140 @@ A 22-task RHCSA practice mock exam combining recovery, NFS, sticky directories, 
 
 ## Question 01 - Root Recovery (client) - 5 pts
 
-On client, recover root access on client from the console.
-
-Set the root password to: cinder9
+On client, recover root access from the console and set the root password to cinder9.
 
 ---
 
-## Question 02 - Client Network (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, configure persistent IPv4 networking.
 
-- **IP Address:** 192.168.122.39
-- **Netmask:** 255.255.255.0
+- **IP address:** 192.168.122.46/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.deltaforge.lab
+- **Hostname:** client-g.exam9.lab
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
----
-
-## Question 04 - Host Entry (client) - 5 pts
-
-On client, add a persistent hosts entry so vault.deltaforge.lab resolves to 192.168.122.3.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 05 - Direct NFS Mount (client + server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On client, mount the server export server:/exports/delta-home persistently on client at /mnt/delta-home using NFS.
-
----
-
-## Question 06 - Ops User and Group (client) - 5 pts
-
-On client, create group deltaops and create user pavel with deltaops as a supplementary group. Set the password of pavel to cinder9.
+On client, install tree from the configured repositories and remove dos2unix if it is installed.
 
 ---
 
-## Question 07 - Sticky Shared Directory (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, create /projects/delta-drop owned by root:deltaops with mode 3770 so group ownership is inherited and only file owners can delete their own files.
-
----
-
-## Question 08 - No-Home Audit User (client) - 5 pts
-
-On client, create user auditg without a home directory and with login shell /sbin/nologin.
+On client, create group opsg9. Create users anag9, devg9, and auditg9; auditg9 must use /sbin/nologin. Set each password to cinder9 and add anag9 and devg9 to opsg9.
 
 ---
 
-## Question 09 - Password Aging and Umask (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, set password aging for pavel to maximum 45 days, minimum 5 days, warning 7 days, and set a personal umask of 027 for pavel.
-
----
-
-## Question 10 - Copy User on Both Systems (server) - 5 pts
-
-On server, create user copyg on both systems with password cinder9.
+On client, set maximum password age 60 days and warning period 7 days for anag9. Allow members of opsg9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 11 - SSH Key and Secure Copy (client + server) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On client, as copyg on client, generate an ED25519 SSH key pair with no passphrase, install it on server, and copy /opt/exam-g/copyg-payload.txt to /home/copyg/inbox/payload.txt on server.
-
----
-
-## Question 12 - At Job (client) - 5 pts
-
-On client, queue a one-time at job as user pavel that appends the message "exam-g tick" to /root/exam-g-at.log in 2 minutes.
+On client, create /srv/opsg9 owned by root:opsg9 with permissions 2770 and a default ACL granting opsg9 full access.
 
 ---
 
-## Question 13 - Per-User Login Message (client) - 4 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On client, append a login message for pavel to ~/.bash_profile that prints "exam-g access" when pavel logs in.
-
----
-
-## Question 14 - Find and Copy (client) - 4 pts
-
-On client, find all files under /opt/exam-g/find that are owned by trackerg and were modified within the last 24 hours, then copy them to /root/trackerg-files while preserving the source directory structure.
+On client, create executable script /usr/local/bin/report-g9 that writes the active state of sshd, chronyd, and firewalld to /root/report-g9.txt.
 
 ---
 
-## Question 15 - Grep Filter (client) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
-On client, extract lines containing ember from /usr/share/dict/words into /root/ember-lines.
-
----
-
-## Question 16 - Archive (client) - 4 pts
-
-On client, create /root/etc-g.tar.bz2 containing /etc.
+On client, create a 512 MiB swap file at /swapg9, activate it immediately, and make it persistent.
 
 ---
 
-## Question 17 - Persistent Journal (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
-On client, enable persistent systemd journal storage and restart systemd-journald.
-
----
-
-## Question 18 - Process Renice and Kill (client) - 4 pts
-
-On client, user workerg has a CPU-bound process whose PID is stored in /home/workerg/cpu.pid and a sleep process whose PID is stored in /home/workerg/sleep.pid. Terminate the CPU-bound process and change the nice value of the sleep process to 10.
+On client, create volume group vgg9 on /dev/sdb, create logical volume datag9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datag9.
 
 ---
 
-## Question 19 - Swap Space (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
-On client, on /dev/sdb, create a 736 MiB swap partition and configure it persistently.
-
----
-
-## Question 20 - Create and Mount LV (client) - 4 pts
-
-On client, on /dev/sdc, create a volume group deltavg with a physical extent size of 16 MiB and a logical volume deltalv with 40 extents. Format it with ext4 and mount it persistently at /mnt/deltalv.
+On client, create user podg9, enable lingering for that user, and run a rootless container named webg9 from localhost/rhcsa-httpd-base:latest.
 
 ---
 
-## Question 21 - Rootless Container (client) - 4 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
-On client, as user solg, build localhost/deltaforge-web:latest from /opt/rhcsa/workspaces/exam-g/Containerfile, then run container pdfg with /opt/inc mounted to /data/input and /opt/outg mounted to /data/output.
+On server, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-g.exam9.lab
 
 ---
 
-## Question 22 - Container Autostart (client) - 4 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
-On client, generate and enable a systemd user service for pdfg and enable lingering for solg.
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+On server, create group srvg9, create user svcg9 with password cinder9, add svcg9 to srvg9, and allow srvg9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-g.html containing RHCSA9-G, configure httpd to listen on TCP port 8306, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+On server, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+On server, create and enable auditg9.timer so it runs every 11 minutes and appends server-g to /var/log/auditg9.log.
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+On server, set the default boot target to multi-user.target and create /srv/server-g9 owned by root:srvg9 with permissions 2770.
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+On server, export /exports/rhcsa9-g to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-g persistently at /mnt/rhcsa9-g.
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+On server, create user copyg9 with password cinder9. On client, configure key-based SSH login for root to copyg9@server.
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+On client, create /root/exam-g-copy.txt containing RHCSA9-G and copy it to server:/home/copyg9/exam-g-copy.txt.
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.
