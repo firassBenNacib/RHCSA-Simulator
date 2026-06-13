@@ -350,6 +350,21 @@ def audit_rhcsa10_exam_target_balance(path: Path, scenario: dict[str, Any], find
             )
 
 
+def audit_rhcsa9_exam_check_granularity(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa9" not in scenario_tracks(scenario) or "exam" not in scenario.get("content", {}):
+        return
+
+    exam = scenario["content"]["exam"]
+    tasks = exam.get("tasks", [])
+    checks = exam.get("checks", [])
+    task_targets = exam.get("task_targets", [])
+    check_targets = exam.get("check_targets", [])
+    if len(checks) < len(tasks):
+        findings.append(Finding(path, f"RHCSA9 exam should not use broad final checks ({len(checks)} checks for {len(tasks)} tasks)"))
+    if "server" in task_targets and not ({str(target) for target in check_targets} & {"server", "both"}):
+        findings.append(Finding(path, "RHCSA9 exam has server tasks but no server-targeted checks"))
+
+
 def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
         return
@@ -477,6 +492,7 @@ def main() -> int:
         audit_solution_style(path, scenario, findings)
         audit_rhcsa10_exam_roles(path, scenario, findings)
         audit_rhcsa10_exam_target_balance(path, scenario, findings)
+        audit_rhcsa9_exam_check_granularity(path, scenario, findings)
         audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)

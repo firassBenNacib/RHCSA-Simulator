@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from scenario_solution_normalizer import normalize_command_list
@@ -56,6 +57,94 @@ def block(title: str, task: str, commands: list[str]) -> tuple[str, str, list[st
     return (title, task.strip(), commands)
 
 
+def split_top_level_and_clauses(command: str) -> list[str]:
+    clauses: list[str] = []
+    buffer: list[str] = []
+    in_single = False
+    in_double = False
+    escaped = False
+    index = 0
+    while index < len(command):
+        char = command[index]
+        if escaped:
+            buffer.append(char)
+            escaped = False
+            index += 1
+            continue
+        if char == "\\" and not in_single:
+            buffer.append(char)
+            escaped = True
+            index += 1
+            continue
+        if char == "'" and not in_double:
+            in_single = not in_single
+            buffer.append(char)
+            index += 1
+            continue
+        if char == '"' and not in_single:
+            in_double = not in_double
+            buffer.append(char)
+            index += 1
+            continue
+        if not in_single and not in_double and command.startswith("&&", index):
+            clause = "".join(buffer).strip()
+            if clause:
+                clauses.append(clause)
+            buffer = []
+            index += 2
+            continue
+        buffer.append(char)
+        index += 1
+    clause = "".join(buffer).strip()
+    if clause:
+        clauses.append(clause)
+    return clauses
+
+
+def uses_shell_local_state(command: str) -> bool:
+    return bool(re.search(r"(^|;\s*)[A-Za-z_][A-Za-z0-9_]*=", command)) or any(
+        token in command for token in ("$files", "$rec", "$act", "$uuid")
+    )
+
+
+def split_exam_checks(checks: list[str]) -> list[str]:
+    split_checks: list[str] = []
+    for check in checks:
+        local_state_group: list[str] = []
+        for clause in split_top_level_and_clauses(check):
+            if local_state_group or uses_shell_local_state(clause):
+                local_state_group.append(clause)
+                continue
+            split_checks.append(clause)
+        if local_state_group:
+            split_checks.append(" && ".join(local_state_group))
+    return split_checks
+
+
+def rhcsa9_check_target_overrides(exam_id: str, checks: list[str], targets: list[str]) -> list[str]:
+    updated = list(targets)
+    server_chrony_enabled_check = False
+    for index, check in enumerate(checks):
+        if re.search(r"^grep -Eq '\^allow 192\\\.168\\\.122\\\.0/24\$' /etc/chrony\.conf$", check):
+            updated[index] = "server"
+            server_chrony_enabled_check = True
+            continue
+        if server_chrony_enabled_check and check == "systemctl is-enabled chronyd | grep -qx enabled":
+            updated[index] = "server"
+            server_chrony_enabled_check = False
+            continue
+        if (
+            "/home/" in check and "/inbox/" in check
+            or (exam_id in {"mock-exam-b", "mock-exam-f"} and check.startswith("grep -Eq '^Port 2222$' /etc/ssh/sshd_config"))
+            or (exam_id in {"mock-exam-b", "mock-exam-f"} and 'port port="2222" protocol="tcp" accept' in check)
+            or (exam_id in {"mock-exam-a", "mock-exam-c", "mock-exam-e"} and "systemd-journald" in check)
+            or (exam_id == "mock-exam-d" and any(token in check for token in ("/etc/issue", "/etc/motd", "systemctl get-default", "systemctl is-enabled rsyslog", "systemctl is-enabled postfix", "rpm -q tree", "rpm -q dos2unix")))
+        ):
+            updated[index] = "server"
+            continue
+    return updated
+
+
 def generate_replay_key(user: str) -> list[str]:
     return [
         f"install -d -m 0700 -o {user} -g {user} /home/{user}/.ssh",
@@ -73,6 +162,7 @@ def install_replay_key_with_ssh_copy_id(source_user: str, dest_user: str, *, por
 
 
 def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: list[str], password_recovery: bool, blocks: list[tuple[str, str, list[str]]], checks: list[str]) -> None:
+    track = discover_track(exam_id)
     data = load_exam(exam_id)
     exam = data["content"]["exam"]
     data["title"] = title
@@ -88,16 +178,22 @@ def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: 
     ]
     exam["solution_commands"] = command_groups
     exam["task_points"] = POINTS
-    exam["checks"] = [normalize_authored_wording(check) for check in checks]
+    exam["checks"] = [
+        normalize_authored_wording(check)
+        for check in split_exam_checks(checks)
+    ]
     exam["task_targets"] = task_targets
     exam["solution_targets"] = [
         infer_solution_target(command_groups[index], task_targets[index])
         for index in range(len(command_groups))
     ]
-    exam["check_targets"] = [
+    check_targets = [
         infer_check_target(check, requires_server=bool(data.get("flags", {}).get("requires_server", False)))
         for check in exam["checks"]
     ]
+    if track == "rhcsa9":
+        check_targets = rhcsa9_check_target_overrides(exam_id, exam["checks"], check_targets)
+    exam["check_targets"] = check_targets
     save_exam(exam_id, data)
 
 
