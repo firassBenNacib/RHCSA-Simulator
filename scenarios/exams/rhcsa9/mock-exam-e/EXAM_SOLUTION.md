@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-e` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, software-management, filesystems-and-autofs, users-sudo-ssh, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,39 +21,40 @@ A 22-task RHCSA practice mock exam focused on offline repositories, Apache docum
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
 ```bash
-nmcli device status
-nmcli connection show "System eth1"
-nmcli connection modify "System eth1" ipv4.addresses 192.168.122.37/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "System eth1"
-nmcli connection up "System eth1"
-hostnamectl set-hostname client.exam-e.lab
+# At the boot menu, edit the selected kernel entry.
+# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
+passwd root
+# enter: cinder9
+touch /.autorelabel
+exec /sbin/init
 ```
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 registry.exam-e.lab
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.44/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname client-e.exam9.lab
 ```
 
 ---
 
-## Question 03 - Client Repositories (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
 ```bash
-cat > /etc/yum.repos.d/exam-e.repo <<'EOF'
-[harbor-baseos]
-name=RHCSA BaseOS
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 E BaseOS
 baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
-[harbor-appstream]
-name=RHCSA AppStream
+[rhcsa9-exam-appstream]
+name=RHCSA9 E AppStream
 baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
@@ -63,129 +64,194 @@ dnf clean all
 
 ---
 
-## Question 04 - Server Repositories (server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
 ```bash
-# Run on server
-cat > /etc/yum.repos.d/exam-e.repo <<'EOF'
-[harbor-baseos]
-name=RHCSA BaseOS
-baseurl=http://server/repo/BaseOS/
-enabled=1
-gpgcheck=0
-[harbor-appstream]
-name=RHCSA AppStream
-baseurl=http://server/repo/AppStream/
-enabled=1
-gpgcheck=0
-EOF
-dnf clean all
+dnf install -y lsof
+dnf remove -y dos2unix || true
 ```
 
 ---
 
-## Question 05 - Apache Custom Docroot (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
 ```bash
-dnf install -y httpd
-mkdir -p /srv/harbor-web
-echo 'exam-e portal' > /srv/harbor-web/index.html
-vim /etc/httpd/conf/httpd.conf
-Listen 8181
-cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'
-<VirtualHost *:8181>
-    DocumentRoot "/srv/harbor-web"
-</VirtualHost>
-EOF
-semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?'
-restorecon -Rv /srv/harbor-web
-firewall-cmd --permanent --add-port=8181/tcp
-firewall-cmd --reload
-systemctl enable --now httpd
+getent group opse9 >/dev/null || groupadd opse9
+id anae9 >/dev/null 2>&1 || useradd -m anae9
+id deve9 >/dev/null 2>&1 || useradd -m deve9
+id audite9 >/dev/null 2>&1 || useradd -M -s /sbin/nologin audite9
+usermod -s /sbin/nologin audite9
+echo 'anae9:cinder9\ndeve9:cinder9\naudite9:cinder9' | chpasswd
+gpasswd -a anae9 opse9
+gpasswd -a deve9 opse9
 ```
 
 ---
 
-## Question 06 - Harbor Users (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
 ```bash
-groupadd harborops
-useradd -G harborops lena
-useradd -G harborops ivor
-echo cinder9 | passwd --stdin lena
-echo cinder9 | passwd --stdin ivor
+chage -M 60 -W 7 anae9
+echo '%opse9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opse9-systemctl
+chmod 0440 /etc/sudoers.d/opse9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/opse9-systemctl >/dev/null'
 ```
 
 ---
 
-## Question 07 - Password Aging (client) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
 ```bash
-chage -M 30 -m 2 -W 7 ivor
+mkdir -p /srv/opse9
+chown root:opse9 /srv/opse9
+chmod 2770 /srv/opse9
+setfacl -m d:g:opse9:rwx /srv/opse9
 ```
 
 ---
 
-## Question 08 - Default ACL Directory (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
 ```bash
-mkdir -p /srv/harbor-drop
-chown root:harborops /srv/harbor-drop
-chmod 2770 /srv/harbor-drop
-setfacl -d -m g:harborops:rwx /srv/harbor-drop
+cat > /usr/local/bin/report-e9 <<'SCRIPT'
+#!/bin/bash
+: > /root/report-e9.txt
+for service in sshd chronyd firewalld; do
+  systemctl is-active "$service" >> /root/report-e9.txt || true
+done
+SCRIPT
+chmod +x /usr/local/bin/report-e9
+/usr/local/bin/report-e9
 ```
 
 ---
 
-## Question 09 - No-Home Remote User (client) - 5 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
 ```bash
-useradd -M -s /sbin/nologin harborremote
-echo cinder9 | passwd --stdin harborremote
+swapoff /swape9 >/dev/null 2>&1 || true
+sed -i '\#/swape9#d' /etc/fstab
+rm -f /swape9
+dd if=/dev/zero of=/swape9 bs=1M count=512
+chmod 0600 /swape9
+mkswap /swape9
+echo '/swape9 swap swap defaults 0 0' >> /etc/fstab
+swapon /swape9
 ```
 
 ---
 
-## Question 10 - Pwquality Policy (client) - 5 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
 ```bash
-mkdir -p /etc/security/pwquality.conf.d
-cat > /etc/security/pwquality.conf.d/harborgrid.conf <<'EOF'
-minlen = 12
-minclass = 3
-EOF
-```
-
----
-
-## Question 11 - At Job (client) - 5 pts
-
-```bash
-su - ivor
-echo "echo exam-e tick >> /root/exam-e-at.log" | at now + 2 minutes
-systemctl enable --now atd
-```
-
----
-
-## Question 12 - Direct NFS Mount (client + server) - 5 pts
-
-```bash
-mkdir -p /mnt/harborhome
-vim /etc/fstab
-server:/exports/harborhome /mnt/harborhome nfs defaults,_netdev 0 0
+umount /mnt/datae9 >/dev/null 2>&1 || true
+sed -i '\#/mnt/datae9#d' /etc/fstab
+lvremove -ff /dev/vge9/datae9 >/dev/null 2>&1 || true
+vgremove -ff vge9 >/dev/null 2>&1 || true
+pvremove -ff -y /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100%
+partprobe /dev/sdb || true
+udevadm settle
+pvcreate -ff -y /dev/sdb1
+vgcreate vge9 /dev/sdb1
+lvcreate -n datae9 -L 320M vge9
+mkfs.xfs -f /dev/vge9/datae9
+mkdir -p /mnt/datae9
+uuid=$(blkid -s UUID -o value /dev/vge9/datae9)
+echo "UUID=$uuid /mnt/datae9 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 13 - Persistent Journal (server) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
 ```bash
-# Run on server
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+id pode9 >/dev/null 2>&1 || useradd -m pode9
+echo 'pode9:cinder9' | chpasswd
+loginctl enable-linger pode9
+su - pode9
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true
+podman rm -f webe9 >/dev/null 2>&1 || true
+podman run -d --name webe9 localhost/rhcsa-httpd-base:latest
+```
+
+---
+
+## Question 12 - Server IPv4 Networking (server) - 5 pts
+
+```bash
+# On server:
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname server-e.exam9.lab
+```
+
+---
+
+## Question 13 - Server RPM Repositories (server) - 4 pts
+
+```bash
+# On server:
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 E BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 E AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+```
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+```bash
+# On server:
+getent group srve9 >/dev/null || groupadd srve9
+id svce9 >/dev/null 2>&1 || useradd -m svce9
+echo 'svce9:cinder9' | chpasswd
+gpasswd -a svce9 srve9
+echo '%srve9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/srve9-systemctl
+chmod 0440 /etc/sudoers.d/srve9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/srve9-systemctl >/dev/null'
+```
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/www/html
+echo RHCSA9-E > /var/www/html/exam-e.html
+restorecon -v /var/www/html/exam-e.html || true
+cat > /etc/httpd/conf.d/exam-e.conf <<'EOF'
+Listen 8304
+EOF
+semanage port -a -t http_port_t -p tcp 8304 2>/dev/null
+firewall-cmd --permanent --add-port=8304/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
+```
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-persistent.conf <<'EOF'
 [Journal]
 Storage=persistent
 EOF
@@ -195,88 +261,106 @@ journalctl --flush
 
 ---
 
-## Question 14 - Per-User Login Message (client) - 4 pts
+## Question 17 - Server Systemd Timer (server) - 4 pts
 
 ```bash
-echo 'echo exam-e access' >> /home/ivor/.bash_profile
-```
-
----
-
-## Question 15 - Fixed UID User (client) - 4 pts
-
-```bash
-useradd -M -u 4551 -s /sbin/nologin maple551
-echo cinder9 | passwd --stdin maple551
-```
-
----
-
-## Question 16 - Find and Copy (client) - 4 pts
-
-```bash
-mkdir -p /root/scoutte-files
-find /opt/exam-e/find -user scoutte -mtime -1 -type f -exec cp --parents {} /root/scoutte-files \;
-```
-
----
-
-## Question 17 - Grep Filter (client) - 4 pts
-
-```bash
-grep beacon /usr/share/dict/words > /root/beacon-lines
-```
-
----
-
-## Question 18 - Archive (client) - 4 pts
-
-```bash
-tar -cjf /root/var-tmp-harbor.tar.bz2 /var/tmp
-```
-
----
-
-## Question 19 - Shell Script (client) - 4 pts
-
-```bash
-cat > /usr/local/bin/harbor-check <<'SCRIPT'
+# On server:
+cat > /usr/local/sbin/audite9.sh <<'EOF'
 #!/bin/bash
-> /root/harbor-services.txt
-for svc in $(cat /usr/local/share/exam-e/services.lst); do
-  systemctl is-active "$svc" >> /root/harbor-services.txt
-done
-SCRIPT
-chmod +x /usr/local/bin/harbor-check
-/usr/local/bin/harbor-check
+echo server-e >> /var/log/audite9.log
+EOF
+chmod +x /usr/local/sbin/audite9.sh
+cat > /etc/systemd/system/audite9.service <<'EOF'
+[Unit]
+Description=Server E audit marker
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/audite9.sh
+EOF
+cat > /etc/systemd/system/audite9.timer <<'EOF'
+[Unit]
+Description=Run server E audit marker
+[Timer]
+OnCalendar=*:0/9
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now audite9.timer
 ```
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
 
 ```bash
-parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-uuid=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+# On server:
+systemctl set-default multi-user.target
+getent group srve9 >/dev/null || groupadd srve9
+mkdir -p /srv/server-e9
+chown root:srve9 /srv/server-e9
+chmod 2770 /srv/server-e9
 ```
 
 ---
 
-## Question 21 - Resize Existing LV (client) - 4 pts
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
 ```bash
-lvextend -L 360M /dev/reviewvge/reviewe
-resize2fs /dev/reviewvge/reviewe
+# On server:
+mkdir -p /exports/rhcsa9-e
+echo exam-e > /exports/rhcsa9-e/README
+cat > /etc/exports.d/rhcsa9-e.exports <<'EOF'
+/exports/rhcsa9-e 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/rhcsa9-e
+grep -Eq '^server:/exports/rhcsa9-e[[:space:]]+/mnt/rhcsa9-e[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/rhcsa9-e /mnt/rhcsa9-e nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
 ```
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
 
 ```bash
-tuned-adm profile "$(tuned-adm recommend)"
+# On server:
+id copye9 >/dev/null 2>&1 || useradd -m copye9
+echo 'copye9:cinder9' | chpasswd
+# On client:
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa9-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub copye9@server
+```
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+```bash
+echo RHCSA9-E > /root/exam-e-copy.txt
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-e-copy.txt copye9@server:/home/copye9/exam-e-copy.txt
+```
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+```bash
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
+systemctl enable --now chronyd
 ```

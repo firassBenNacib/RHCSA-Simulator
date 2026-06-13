@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-a` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -34,38 +34,27 @@ exec /sbin/init
 
 ---
 
-## Question 02 - Client Network (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
 ```bash
-nmcli device status
-nmcli connection show "System eth1"
-nmcli connection modify "System eth1" ipv4.addresses 192.168.122.26/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "System eth1"
-nmcli connection up "System eth1"
-hostnamectl set-hostname client.exam-a.lab
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname client-a.exam9.lab
 ```
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
 ```bash
-grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
-```
-
----
-
-## Question 04 - Client Repositories (client + server) - 5 pts
-
-```bash
-cat > /etc/yum.repos.d/opsa.repo <<'EOF'
-[opsa-baseos]
-name=OpsA BaseOS
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 A BaseOS
 baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
-[opsa-appstream]
-name=OpsA AppStream
+[rhcsa9-exam-appstream]
+name=RHCSA9 A AppStream
 baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
@@ -75,18 +64,145 @@ dnf clean all
 
 ---
 
-## Question 05 - Server Repositories (client + server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
 ```bash
-# Run on server
-cat > /etc/yum.repos.d/opsa.repo <<'EOF'
-[opsa-baseos]
-name=OpsA BaseOS
+dnf install -y tree
+dnf remove -y dos2unix || true
+```
+
+---
+
+## Question 05 - Client Users and Group (client) - 5 pts
+
+```bash
+getent group opsa9 >/dev/null || groupadd opsa9
+id anaa9 >/dev/null 2>&1 || useradd -m anaa9
+id deva9 >/dev/null 2>&1 || useradd -m deva9
+id audita9 >/dev/null 2>&1 || useradd -M -s /sbin/nologin audita9
+usermod -s /sbin/nologin audita9
+echo 'anaa9:cinder9\ndeva9:cinder9\naudita9:cinder9' | chpasswd
+gpasswd -a anaa9 opsa9
+gpasswd -a deva9 opsa9
+```
+
+---
+
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
+
+```bash
+chage -M 60 -W 7 anaa9
+echo '%opsa9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsa9-systemctl
+chmod 0440 /etc/sudoers.d/opsa9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/opsa9-systemctl >/dev/null'
+```
+
+---
+
+## Question 07 - Client Shared Directory (client) - 5 pts
+
+```bash
+mkdir -p /srv/opsa9
+chown root:opsa9 /srv/opsa9
+chmod 2770 /srv/opsa9
+setfacl -m d:g:opsa9:rwx /srv/opsa9
+```
+
+---
+
+## Question 08 - Client Report Script (client) - 5 pts
+
+```bash
+cat > /usr/local/bin/report-a9 <<'SCRIPT'
+#!/bin/bash
+: > /root/report-a9.txt
+for service in sshd chronyd firewalld; do
+  systemctl is-active "$service" >> /root/report-a9.txt || true
+done
+SCRIPT
+chmod +x /usr/local/bin/report-a9
+/usr/local/bin/report-a9
+```
+
+---
+
+## Question 09 - Client Swap Persistence (client) - 5 pts
+
+```bash
+swapoff /swapa9 >/dev/null 2>&1 || true
+sed -i '\#/swapa9#d' /etc/fstab
+rm -f /swapa9
+dd if=/dev/zero of=/swapa9 bs=1M count=512
+chmod 0600 /swapa9
+mkswap /swapa9
+echo '/swapa9 swap swap defaults 0 0' >> /etc/fstab
+swapon /swapa9
+```
+
+---
+
+## Question 10 - Client LVM Mount (client) - 5 pts
+
+```bash
+umount /mnt/dataa9 >/dev/null 2>&1 || true
+sed -i '\#/mnt/dataa9#d' /etc/fstab
+lvremove -ff /dev/vga9/dataa9 >/dev/null 2>&1 || true
+vgremove -ff vga9 >/dev/null 2>&1 || true
+pvremove -ff -y /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100%
+partprobe /dev/sdb || true
+udevadm settle
+pvcreate -ff -y /dev/sdb1
+vgcreate vga9 /dev/sdb1
+lvcreate -n dataa9 -L 320M vga9
+mkfs.xfs -f /dev/vga9/dataa9
+mkdir -p /mnt/dataa9
+uuid=$(blkid -s UUID -o value /dev/vga9/dataa9)
+echo "UUID=$uuid /mnt/dataa9 xfs defaults 0 0" >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 11 - Client Rootless Container (client) - 5 pts
+
+```bash
+id poda9 >/dev/null 2>&1 || useradd -m poda9
+echo 'poda9:cinder9' | chpasswd
+loginctl enable-linger poda9
+su - poda9
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true
+podman rm -f weba9 >/dev/null 2>&1 || true
+podman run -d --name weba9 localhost/rhcsa-httpd-base:latest
+```
+
+---
+
+## Question 12 - Server IPv4 Networking (server) - 5 pts
+
+```bash
+# On server:
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname server-a.exam9.lab
+```
+
+---
+
+## Question 13 - Server RPM Repositories (server) - 4 pts
+
+```bash
+# On server:
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 A BaseOS
 baseurl=http://server/repo/BaseOS/
 enabled=1
 gpgcheck=0
-[opsa-appstream]
-name=OpsA AppStream
+[rhcsa9-exam-appstream]
+name=RHCSA9 A AppStream
 baseurl=http://server/repo/AppStream/
 enabled=1
 gpgcheck=0
@@ -96,199 +212,155 @@ dnf clean all
 
 ---
 
-## Question 06 - Apache SELinux Port (client) - 5 pts
+## Question 14 - Server User and Sudo (server) - 4 pts
 
 ```bash
-vim /etc/httpd/conf/httpd.conf
-Listen 8282
-systemctl enable --now httpd
-firewall-cmd --permanent --add-port=8282/tcp
+# On server:
+getent group srva9 >/dev/null || groupadd srva9
+id svca9 >/dev/null 2>&1 || useradd -m svca9
+echo 'svca9:cinder9' | chpasswd
+gpasswd -a svca9 srva9
+echo '%srva9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/srva9-systemctl
+chmod 0440 /etc/sudoers.d/srva9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/srva9-systemctl >/dev/null'
+```
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/www/html
+echo RHCSA9-A > /var/www/html/exam-a.html
+restorecon -v /var/www/html/exam-a.html || true
+cat > /etc/httpd/conf.d/exam-a.conf <<'EOF'
+Listen 8300
+EOF
+semanage port -a -t http_port_t -p tcp 8300 2>/dev/null
+firewall-cmd --permanent --add-port=8300/tcp
 firewall-cmd --reload
-semanage port -a -t http_port_t -p tcp 8282
+systemctl enable --now httpd
 systemctl restart httpd
 ```
 
 ---
 
-## Question 07 - Users and Group (client) - 5 pts
+## Question 16 - Server Persistent Journal (server) - 4 pts
 
 ```bash
-groupadd sysopsa
-useradd violet
-gpasswd -a violet sysopsa
-useradd amber
-gpasswd -a amber sysopsa
-useradd -M -s /sbin/nologin frost
-```
-
----
-
-## Question 08 - User Passwords (client) - 5 pts
-
-```bash
-echo cinder9 | passwd --stdin violet
-echo cinder9 | passwd --stdin amber
-echo cinder9 | passwd --stdin frost
-```
-
----
-
-## Question 09 - Delegated Sudo (client) - 5 pts
-
-```bash
-visudo -f /etc/sudoers.d/sysopsa-useradd
-%sysopsa ALL=(root) /usr/sbin/useradd
-visudo -f /etc/sudoers.d/violet-passwd
-violet ALL=(root) NOPASSWD: /usr/bin/passwd
-```
-
----
-
-## Question 10 - Setgid Directory (client) - 5 pts
-
-```bash
-mkdir -p /srv/sysopsa
-chown root:sysopsa /srv/sysopsa
-chmod 2770 /srv/sysopsa
-```
-
----
-
-## Question 11 - Cron Logger (client) - 5 pts
-
-```bash
-crontab -e -u amber
-*/2 * * * * logger "exam-a tick"
-```
-
----
-
-## Question 12 - Host Entry (client) - 5 pts
-
-```bash
-vim /etc/hosts
-192.168.122.3 api.exam-a.lab
-```
-
----
-
-## Question 13 - Fixed UID User (client) - 4 pts
-
-```bash
-useradd -u 4420 ash420
-echo cinder9 | passwd --stdin ash420
-```
-
----
-
-## Question 14 - Find and Copy (client) - 4 pts
-
-```bash
-mkdir -p /root/amber-files
-find /opt/exam-a/find -user amber -mtime -1 -type f -exec cp --parents {} /root/amber-files \;
-```
-
----
-
-## Question 15 - Grep Filter (client) - 4 pts
-
-```bash
-grep delta /usr/share/dict/words > /root/delta-lines
-```
-
----
-
-## Question 16 - Archive (client) - 4 pts
-
-```bash
-tar -cjf /root/etc-opsa.tar.bz2 /etc
-```
-
----
-
-## Question 17 - Service Report Script (client) - 4 pts
-
-```bash
-cat > /usr/local/bin/opsa-report <<'SCRIPT'
-#!/bin/bash
-> /root/opsa-services.txt
-for svc in $(cat /usr/local/share/exam-a/services.lst); do
-  systemctl is-active "$svc" >> /root/opsa-services.txt
-done
-SCRIPT
-chmod +x /usr/local/bin/opsa-report
-/usr/local/bin/opsa-report
-```
-
----
-
-## Question 18 - Swap Space (client) - 4 pts
-
-```bash
-for dev in /dev/sdb[0-9]*; do [ -e "$dev" ] || continue; swapoff "$dev" >/dev/null 2>&1 || true; findmnt -nr -S "$dev" -o TARGET 2>/dev/null | sort -r | xargs -r umount >/dev/null 2>&1 || true; done
-for vg in $(pvs --noheadings -o vg_name /dev/sdb[0-9]* 2>/dev/null | awk 'NF{print $1}' | sort -u); do vgchange -an "$vg" >/dev/null 2>&1 || true; done
-for dev in /dev/sdb[0-9]*; do [ -e "$dev" ] || continue; pvremove -ffy "$dev" >/dev/null 2>&1 || true; wipefs -a "$dev" >/dev/null 2>&1 || true; done
-partx -d /dev/sdb >/dev/null 2>&1 || true
-wipefs -a /dev/sdb >/dev/null 2>&1 || true
-blockdev --rereadpt /dev/sdb || true
-partprobe /dev/sdb || true
-udevadm settle
-parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 701MiB
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-uuid=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
-```
-
----
-
-## Question 19 - Resize Existing LV (client) - 4 pts
-
-```bash
-lvextend -L 320M /dev/reviewvga/reviewa
-resize2fs /dev/reviewvga/reviewa
-```
-
----
-
-## Question 20 - Rootless Container (client) - 4 pts
-
-```bash
-su - oriona
-cd /opt/rhcsa/workspaces/exam-a
-podman build -t localhost/opsa-web:latest .
-podman run -d --name pdfa -v /opt/inc:/data/input:Z -v /opt/outa:/data/output:Z localhost/opsa-web:latest
-exit
-```
-
----
-
-## Question 21 - Container Autostart (client) - 4 pts
-
-```bash
-su - oriona
-mkdir -p ~/.config/systemd/user
-cd ~/.config/systemd/user
-podman generate systemd --name pdfa --files --new
-systemctl --user daemon-reload
-systemctl --user enable --now container-pdfa.service
-exit
-loginctl enable-linger oriona
-```
-
----
-
-## Question 22 - Persistent Journal (server) - 4 pts
-
-```bash
-# Run on server
-mkdir -p /var/log/journal
-mkdir -p /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/persistent.conf <<'EOF'
+# On server:
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-persistent.conf <<'EOF'
 [Journal]
 Storage=persistent
 EOF
 systemctl restart systemd-journald
 journalctl --flush
+```
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+```bash
+# On server:
+cat > /usr/local/sbin/audita9.sh <<'EOF'
+#!/bin/bash
+echo server-a >> /var/log/audita9.log
+EOF
+chmod +x /usr/local/sbin/audita9.sh
+cat > /etc/systemd/system/audita9.service <<'EOF'
+[Unit]
+Description=Server A audit marker
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/audita9.sh
+EOF
+cat > /etc/systemd/system/audita9.timer <<'EOF'
+[Unit]
+Description=Run server A audit marker
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now audita9.timer
+```
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+```bash
+# On server:
+systemctl set-default multi-user.target
+getent group srva9 >/dev/null || groupadd srva9
+mkdir -p /srv/server-a9
+chown root:srva9 /srv/server-a9
+chmod 2770 /srv/server-a9
+```
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /exports/rhcsa9-a
+echo exam-a > /exports/rhcsa9-a/README
+cat > /etc/exports.d/rhcsa9-a.exports <<'EOF'
+/exports/rhcsa9-a 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/rhcsa9-a
+grep -Eq '^server:/exports/rhcsa9-a[[:space:]]+/mnt/rhcsa9-a[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/rhcsa9-a /mnt/rhcsa9-a nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+```bash
+# On server:
+id copya9 >/dev/null 2>&1 || useradd -m copya9
+echo 'copya9:cinder9' | chpasswd
+# On client:
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa9-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub copya9@server
+```
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+```bash
+echo RHCSA9-A > /root/exam-a-copy.txt
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-a-copy.txt copya9@server:/home/copya9/exam-a-copy.txt
+```
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+```bash
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
+systemctl enable --now chronyd
 ```

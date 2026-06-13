@@ -76,7 +76,6 @@ def infer_task_target(task: Any, command_group: Iterable[Any] | None = None, def
         or "server:/" in lowered
         or re.search(r"\bcopy\b.*\bserver:", lowered)
         or re.search(r"\bssh\b.*\bserver\b", lowered)
-        or re.search(r"\bhttp://server[a-z0-9.-]*", lowered)
     )
     if integrated or (explicit_client and explicit_server) or (has_server_marker and (has_client_marker or explicit_client)):
         return "both"

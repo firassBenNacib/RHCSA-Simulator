@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-h` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, software-management, users-sudo-ssh, processes-logs-tuning, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,143 +21,142 @@ A 22-task RHCSA practice mock exam covering repositories, SELinux HTTP changes, 
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, recover root access from the console and set the root password to cinder9.
 
-- **IP Address:** 192.168.122.40
-- **Netmask:** 255.255.255.0
+---
+
+## Question 02 - Client IPv4 Networking (client) - 5 pts
+
+On client, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.47/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.exam-h.lab
+- **Hostname:** client-h.exam9.lab
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, add a persistent hosts entry so registry.exam-h.lab resolves to 192.168.122.3.
-
----
-
-## Question 03 - Client Repositories (client) - 5 pts
-
-On client, configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 04 - Server Repositories (server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On server, configure the same repository file on server.
-
----
-
-## Question 05 - Apache SELinux Port (client) - 5 pts
-
-On client, configure Apache on client so it serves the existing site on TCP port 8181.
-
-**Requirements**
-- Start automatically at boot.
-- Open the port permanently in the firewall.
-- Apply the SELinux change required for the new port.
+On client, install lsof from the configured repositories and remove tcpdump if it is installed.
 
 ---
 
-## Question 06 - Pwquality Policy (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.
-
----
-
-## Question 07 - No-Home User (client) - 5 pts
-
-On client, create user agingh without a home directory, with shell /sbin/nologin, and set its password to cinder9.
+On client, create group opsh9. Create users anah9, devh9, and audith9; audith9 must use /sbin/nologin. Set each password to cinder9 and add anah9 and devh9 to opsh9.
 
 ---
 
-## Question 08 - Per-User Password Aging (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, set password aging for agingh to minimum 2 days, maximum 30 days, warning 7 days, and force a password change at the next login.
-
----
-
-## Question 09 - Sticky Directory (client) - 5 pts
-
-On client, create /srv/silver-drop as a sticky directory with ownership root:root and mode 1777.
+On client, set maximum password age 60 days and warning period 7 days for anah9. Allow members of opsh9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 10 - Chrony Server (server) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On server, configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.
-
----
-
-## Question 11 - Chrony Client (client) - 5 pts
-
-On client, configure chronyd on client so it synchronizes only with server and starts automatically at boot.
+On client, create /srv/opsh9 owned by root:opsh9 with permissions 2770 and a default ACL granting opsh9 full access.
 
 ---
 
-## Question 12 - Firewalld Rich Rule (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On client, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.
-
----
-
-## Question 13 - Useradd Defaults (client) - 4 pts
-
-On client, set the default inactive period for newly created local users to 10 days.
+On client, create executable script /usr/local/bin/report-h9 that writes the active state of sshd, chronyd, and firewalld to /root/report-h9.txt.
 
 ---
 
-## Question 14 - Find and Copy (client) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
-On client, find all files under /opt/exam-h/find that are owned by watcherh and were modified within the last 24 hours, then copy them to /root/watcherh-files while preserving the source directory structure.
-
----
-
-## Question 15 - Grep Filter (client) - 4 pts
-
-On client, extract lines containing silver from /usr/share/dict/words into /root/silver-lines.
+On client, create a 512 MiB swap file at /swaph9, activate it immediately, and make it persistent.
 
 ---
 
-## Question 16 - Archive (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
-On client, create /root/usr-local-h.tar.gz containing /usr/local.
-
----
-
-## Question 17 - Swap Space (client) - 4 pts
-
-On client, on /dev/sdb, create a 672 MiB swap partition and configure it persistently.
+On client, create volume group vgh9 on /dev/sdb, create logical volume datah9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datah9.
 
 ---
 
-## Question 18 - Resize Existing LV (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
-On client, resize /dev/reviewvgh/reviewh so the final size is 320 MiB without losing the existing file system or data.
-
----
-
-## Question 19 - Boot Target and Services (client) - 4 pts
-
-On client, configure client to boot into multi-user.target by default. Ensure rsyslog is enabled and running. If postfix is installed, disable it and stop it.
+On client, create user podh9, enable lingering for that user, and run a rootless container named webh9 from localhost/rhcsa-httpd-base:latest.
 
 ---
 
-## Question 20 - Install and Remove Packages (client) - 4 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
-On client, use the prepared local repositories to install the packages tree and dos2unix on client. Remove dos2unix and leave tree installed.
+On server, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-h.exam9.lab
 
 ---
 
-## Question 21 - Inspect Container Image (client) - 4 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
-On client, create user inspecth with password cinder9 if it does not already exist. As that user, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage and write the configured working directory of localhost/rhcsa-httpd-base:latest to /home/inspecth/workdir.txt.
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 14 - Server User and Sudo (server) - 4 pts
 
-On client, apply the recommended tuned profile and leave it active.
+On server, create group srvh9, create user svch9 with password cinder9, add svch9 to srvh9, and allow srvh9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-h.html containing RHCSA9-H, configure httpd to listen on TCP port 8307, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+On server, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+On server, create and enable audith9.timer so it runs every 12 minutes and appends server-h to /var/log/audith9.log.
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+On server, set the default boot target to multi-user.target and create /srv/server-h9 owned by root:srvh9 with permissions 2770.
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+On server, export /exports/rhcsa9-h to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-h persistently at /mnt/rhcsa9-h.
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+On server, create user copyh9 with password cinder9. On client, configure key-based SSH login for root to copyh9@server.
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+On client, create /root/exam-h-copy.txt containing RHCSA9-H and copy it to server:/home/copyh9/exam-h-copy.txt.
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

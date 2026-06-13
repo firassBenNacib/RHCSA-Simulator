@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-a` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | boot-and-recovery, networking-and-firewall, users-sudo-ssh, storage-lvm, containers |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -23,162 +23,140 @@ A 22-task RHCSA practice mock exam focused on recovery, repositories, Apache, su
 
 ## Question 01 - Root Recovery (client) - 5 pts
 
-On client, recover root access on client from the console.
-
-Set the root password to: cinder9
+On client, recover root access from the console and set the root password to cinder9.
 
 ---
 
-## Question 02 - Client Network (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, configure persistent IPv4 networking.
 
-- **IP Address:** 192.168.122.26
-- **Netmask:** 255.255.255.0
+- **IP address:** 192.168.122.40/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.exam-a.lab
+- **Hostname:** client-a.exam9.lab
 
 ---
 
-## Question 03 - Bootloader Kernel Argument (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.
-
-**Requirements**
-- The change must persist across reboots.
-- Do not rely on a one-time GRUB edit.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 04 - Client Repositories (client + server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On client, configure a repository file on client with the following settings:
-
-- **BaseOS:** http://server/repo/BaseOS/
-- **AppStream:** http://server/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+On client, install tree from the configured repositories and remove dos2unix if it is installed.
 
 ---
 
-## Question 05 - Server Repositories (client + server) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, configure the same repository file on server.
-
-- **BaseOS:** http://server/repo/BaseOS/
-- **AppStream:** http://server/repo/AppStream/
-- **gpgcheck:** disabled
-- **Repositories:** enabled
+On client, create group opsa9. Create users anaa9, deva9, and audita9; audita9 must use /sbin/nologin. Set each password to cinder9 and add anaa9 and deva9 to opsa9.
 
 ---
 
-## Question 06 - Apache SELinux Port (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, configure Apache on client so it serves the existing site on TCP port 8282.
-
-**Requirements**
-- Start the service automatically at boot.
-- Open the port permanently in the firewall.
-- Make the SELinux change required for the new port.
-- Leave the existing document root content in place.
+On client, set maximum password age 60 days and warning period 7 days for anaa9. Allow members of opsa9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 07 - Users and Group (client) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On client, create group sysopsa and ensure users violet and amber have sysopsa as a supplementary group. Create user frost without a home directory and with login shell /sbin/nologin.
-
----
-
-## Question 08 - User Passwords (client) - 5 pts
-
-On client, set the password of violet, amber, and frost to cinder9.
+On client, create /srv/opsa9 owned by root:opsa9 with permissions 2770 and a default ACL granting opsa9 full access.
 
 ---
 
-## Question 09 - Delegated Sudo (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On client, allow members of sysopsa to run /usr/sbin/useradd through sudo. Allow violet to run /usr/bin/passwd for other users without a sudo password prompt. Use sudoers drop-ins.
-
----
-
-## Question 10 - Setgid Directory (client) - 5 pts
-
-On client, create /srv/sysopsa owned by root:sysopsa with mode 2770 so new files inherit the sysopsa group.
+On client, create executable script /usr/local/bin/report-a9 that writes the active state of sshd, chronyd, and firewalld to /root/report-a9.txt.
 
 ---
 
-## Question 11 - Cron Logger (client) - 5 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
-On client, configure a cron job for amber that runs every 2 minutes and logs the message "exam-a tick".
-
----
-
-## Question 12 - Host Entry (client) - 5 pts
-
-On client, add a persistent hosts entry on client so api.exam-a.lab resolves to 192.168.122.3.
+On client, create a 512 MiB swap file at /swapa9, activate it immediately, and make it persistent.
 
 ---
 
-## Question 13 - Fixed UID User (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
-On client, create user ash420 with UID 4420 and set its password to cinder9.
-
----
-
-## Question 14 - Find and Copy (client) - 4 pts
-
-On client, find all files under /opt/exam-a/find that are owned by amber and were modified within the last 24 hours. Copy them to /root/amber-files while preserving the source directory structure.
+On client, create volume group vga9 on /dev/sdb, create logical volume dataa9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/dataa9.
 
 ---
 
-## Question 15 - Grep Filter (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
-On client, extract lines containing delta from /usr/share/dict/words into /root/delta-lines.
-
----
-
-## Question 16 - Archive (client) - 4 pts
-
-On client, create /root/etc-opsa.tar.bz2 containing /etc.
+On client, create user poda9, enable lingering for that user, and run a rootless container named weba9 from localhost/rhcsa-httpd-base:latest.
 
 ---
 
-## Question 17 - Service Report Script (client) - 4 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
-On client, create executable script /usr/local/bin/opsa-report that writes the active state of each service listed in /usr/local/share/exam-a/services.lst to /root/opsa-services.txt.
+On server, configure persistent IPv4 networking.
 
----
-
-## Question 18 - Swap Space (client) - 4 pts
-
-On client, on /dev/sdb, create a 700 MiB swap partition.
-
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-a.exam9.lab
 
 ---
 
-## Question 19 - Resize Existing LV (client) - 4 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
-On client, resize /dev/reviewvga/reviewa so the final size is 320 MiB without losing data.
-
----
-
-## Question 20 - Rootless Container (client) - 4 pts
-
-On client, as user oriona, build localhost/opsa-web:latest from /opt/rhcsa/workspaces/exam-a/Containerfile, then run container pdfa with /opt/inc mounted to /data/input and /opt/outa mounted to /data/output.
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 21 - Container Autostart (client) - 4 pts
+## Question 14 - Server User and Sudo (server) - 4 pts
 
-On client, generate and enable a systemd user service for pdfa and enable lingering for oriona.
+On server, create group srva9, create user svca9 with password cinder9, add svca9 to srva9, and allow srva9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 22 - Persistent Journal (server) - 4 pts
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-a.html containing RHCSA9-A, configure httpd to listen on TCP port 8300, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
 
 On server, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+On server, create and enable audita9.timer so it runs every 5 minutes and appends server-a to /var/log/audita9.log.
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+On server, set the default boot target to multi-user.target and create /srv/server-a9 owned by root:srva9 with permissions 2770.
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+On server, export /exports/rhcsa9-a to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-a persistently at /mnt/rhcsa9-a.
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+On server, create user copya9 with password cinder9. On client, configure key-based SSH login for root to copya9@server.
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+On client, create /root/exam-a-copy.txt containing RHCSA9-A and copy it to server:/home/copya9/exam-a-copy.txt.
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-d` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, software-management, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,142 +21,142 @@ A 22-task RHCSA practice mock exam focused on repository hygiene, account defaul
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
-On client, configure networking on client with the following settings:
+On client, recover root access from the console and set the root password to cinder9.
 
-- **IP Address:** 192.168.122.36
-- **Netmask:** 255.255.255.0
+---
+
+## Question 02 - Client IPv4 Networking (client) - 5 pts
+
+On client, configure persistent IPv4 networking.
+
+- **IP address:** 192.168.122.43/24
 - **Gateway:** 192.168.122.1
 - **Dns:** 192.168.122.3
-- **Hostname:** client.summit.lab
+- **Hostname:** client-d.exam9.lab
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
-On client, add a persistent hosts entry so mirror.summit.lab resolves to 192.168.122.3.
-
----
-
-## Question 03 - Client Repositories (client) - 5 pts
-
-On client, configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.
+On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
 
 ---
 
-## Question 04 - Server Repositories (server) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
-On server, configure the same repository file on server.
-
----
-
-## Question 05 - Useradd Defaults (client) - 5 pts
-
-On client, set the default inactive period for newly created local users to 14 days.
+On client, install tree from the configured repositories and remove tcpdump if it is installed.
 
 ---
 
-## Question 06 - No-Home User (client) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
-On client, create user trainee54 without a home directory and set its password to cinder9.
-
----
-
-## Question 07 - Admin User (client) - 5 pts
-
-On client, create user kara with a home directory and set its password to cinder9.
+On client, create group opsd9. Create users anad9, devd9, and auditd9; auditd9 must use /sbin/nologin. Set each password to cinder9 and add anad9 and devd9 to opsd9.
 
 ---
 
-## Question 08 - Delegated Sudo (client) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
-On client, allow kara to run /usr/bin/systemctl restart rsyslog and /usr/bin/systemctl status sshd through sudo. Use a sudoers drop-in.
-
----
-
-## Question 09 - Server Login Messages (server) - 5 pts
-
-On server, configure both /etc/issue and /etc/motd to contain the line Summit maintenance host.
+On client, set maximum password age 60 days and warning period 7 days for anad9. Allow members of opsd9 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 10 - Server Default Target (server) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
-On server, set the default target to multi-user.target, ensure rsyslog is enabled, and ensure postfix is disabled.
-
----
-
-## Question 11 - Package Management (server) - 5 pts
-
-On server, install tree and remove dos2unix.
+On client, create /srv/opsd9 owned by root:opsd9 with permissions 2770 and a default ACL granting opsd9 full access.
 
 ---
 
-## Question 12 - Password Aging Defaults (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
-On client, set password aging defaults so newly created users have maximum 60 days, minimum 2 days, and warning 7 days.
-
----
-
-## Question 13 - Forced Password Change (client) - 4 pts
-
-On client, create user miles with a home directory, set its password to cinder9, and force a password change on first login.
+On client, create executable script /usr/local/bin/report-d9 that writes the active state of sshd, chronyd, and firewalld to /root/report-d9.txt.
 
 ---
 
-## Question 14 - Fixed UID User (client) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
-On client, create user cedar540 with UID 4540 and set its password to cinder9.
-
----
-
-## Question 15 - User Umask (client) - 4 pts
-
-On client, set a personal umask of 027 for miles.
+On client, create a 512 MiB swap file at /swapd9, activate it immediately, and make it persistent.
 
 ---
 
-## Question 16 - Audit Directory (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
-On client, create /srv/summit-audit on client with mode 0750 and ownership root:root.
-
----
-
-## Question 17 - Find and Copy (client) - 4 pts
-
-On client, find all files under /opt/exam-d/find that are owned by foragerd and were modified within the last 24 hours. Copy them to /root/foragerd-files while preserving the source directory structure.
+On client, create volume group vgd9 on /dev/sdb, create logical volume datad9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datad9.
 
 ---
 
-## Question 18 - Grep Filter (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
-On client, extract lines containing alpha from /usr/share/dict/words into /root/alpha-lines.
-
----
-
-## Question 19 - Archive (client) - 4 pts
-
-On client, create /root/summit-etc.tar.gz containing /etc.
+On client, create user podd9, enable lingering for that user, and run a rootless container named webd9 from localhost/rhcsa-httpd-base:latest.
 
 ---
 
-## Question 20 - Shell Script (client) - 4 pts
+## Question 12 - Server IPv4 Networking (server) - 5 pts
 
-On client, create executable script /usr/local/bin/summit-scan that writes the active state of each unit listed in /usr/local/share/exam-d/units.lst to /root/summit-units.txt.
+On server, configure persistent IPv4 networking.
 
----
-
-## Question 21 - Swap Space (client) - 4 pts
-
-On client, on /dev/sdb, create a 512 MiB swap partition.
-
-**Requirements**
-- Enable it immediately.
-- Configure it persistently.
+- **IP address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **Dns:** 192.168.122.3
+- **Hostname:** server-d.exam9.lab
 
 ---
 
-## Question 22 - Create and Mount LV (client) - 4 pts
+## Question 13 - Server RPM Repositories (server) - 4 pts
 
-On client, on /dev/sdc, create a volume group summitvg with a physical extent size of 16 MiB and a logical volume summitlv of 16 extents. Format it with xfs and mount it persistently on /mnt/summitlv.
+On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+On server, create group srvd9, create user svcd9 with password cinder9, add svcd9 to srvd9, and allow srvd9 to run /usr/bin/systemctl with sudo without a password.
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+On server, publish /var/www/html/exam-d.html containing RHCSA9-D, configure httpd to listen on TCP port 8303, label the port for httpd, and open it permanently in firewalld.
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+On server, enable persistent systemd journal storage and restart systemd-journald.
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+On server, create and enable auditd9.timer so it runs every 8 minutes and appends server-d to /var/log/auditd9.log.
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+On server, set the default boot target to multi-user.target and create /srv/server-d9 owned by root:srvd9 with permissions 2770.
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+On server, export /exports/rhcsa9-d to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-d persistently at /mnt/rhcsa9-d.
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+On server, create user copyd9 with password cinder9. On client, configure key-based SSH login for root to copyd9@server.
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+On client, create /root/exam-d-copy.txt containing RHCSA9-D and copy it to server:/home/copyd9/exam-d-copy.txt.
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.

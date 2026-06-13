@@ -87,6 +87,8 @@ vgremove -fy vge10 >/dev/null 2>&1 || true
 pvremove -ffy /dev/sdb >/dev/null 2>&1 || true
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
+udevadm settle
 
 # --- Default target: reset to graphical ---
 systemctl set-default graphical.target >/dev/null 2>&1 || true

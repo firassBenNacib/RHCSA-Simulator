@@ -7,9 +7,9 @@
 | Scenario ID | `mock-exam-f` |
 | Mode | Exam |
 | Time limit | 150 minutes |
-| Objectives | networking-and-firewall, users-sudo-ssh, processes-logs-tuning, storage-lvm |
+| Objectives | boot-and-recovery, networking-and-firewall, software-management, users-sudo-ssh, storage-lvm, containers |
 
-A 22-task RHCSA practice mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.
+A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server.
 
 ### Systems
 - client
@@ -21,246 +21,346 @@ A 22-task RHCSA practice mock exam centered on chrony, SSH hardening, account de
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Client Network (client) - 5 pts
+## Question 01 - Root Recovery (client) - 5 pts
 
 ```bash
-nmcli device status
-nmcli connection show "System eth1"
-nmcli connection modify "System eth1" ipv4.addresses 192.168.122.38/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
-nmcli connection down "System eth1"
-nmcli connection up "System eth1"
-hostnamectl set-hostname client.exam-f.lab
+# At the boot menu, edit the selected kernel entry.
+# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.
+passwd root
+# enter: cinder9
+touch /.autorelabel
+exec /sbin/init
 ```
 
 ---
 
-## Question 02 - Host Entry (client) - 5 pts
+## Question 02 - Client IPv4 Networking (client) - 5 pts
 
 ```bash
-vim /etc/hosts
-192.168.122.3 db.exam-f.lab
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.45/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname client-f.exam9.lab
 ```
 
 ---
 
-## Question 03 - Chrony Server (server) - 5 pts
+## Question 03 - Client RPM Repositories (client) - 5 pts
 
 ```bash
-# Run on server
-cat > /etc/chrony.conf <<'EOF'
-driftfile /var/lib/chrony/drift
-makestep 1.0 3
-rtcsync
-allow 192.168.122.0/24
-local stratum 10
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 F BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 F AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
 EOF
-systemctl enable --now chronyd
+dnf clean all
 ```
 
 ---
 
-## Question 04 - Chrony Client (client) - 5 pts
+## Question 04 - Client Package Management (client) - 5 pts
 
 ```bash
-cat > /etc/chrony.conf <<'EOF'
-server server iburst
-driftfile /var/lib/chrony/drift
-makestep 1.0 3
-rtcsync
-EOF
-systemctl enable --now chronyd
+dnf install -y lsof
+dnf remove -y tcpdump || true
 ```
 
 ---
 
-## Question 05 - SSH Port (server) - 5 pts
+## Question 05 - Client Users and Group (client) - 5 pts
 
 ```bash
-# Run on server
-vim /etc/ssh/sshd_config
-Port 22
-Port 2222
-PasswordAuthentication yes
-PubkeyAuthentication yes
-semanage port -l | grep -Eq '^ssh_port_t\b.*\b2222\b' || semanage port -a -t ssh_port_t -p tcp 2222
-systemctl restart sshd
+getent group opsf9 >/dev/null || groupadd opsf9
+id anaf9 >/dev/null 2>&1 || useradd -m anaf9
+id devf9 >/dev/null 2>&1 || useradd -m devf9
+id auditf9 >/dev/null 2>&1 || useradd -M -s /sbin/nologin auditf9
+usermod -s /sbin/nologin auditf9
+echo 'anaf9:cinder9\ndevf9:cinder9\nauditf9:cinder9' | chpasswd
+gpasswd -a anaf9 opsf9
+gpasswd -a devf9 opsf9
 ```
 
 ---
 
-## Question 06 - Rich Rule (server) - 5 pts
+## Question 06 - Client Password Aging and Sudo (client) - 5 pts
 
 ```bash
-# Run on server
-firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port protocol="tcp" port="2222" accept'
-firewall-cmd --reload
+chage -M 60 -W 7 anaf9
+echo '%opsf9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsf9-systemctl
+chmod 0440 /etc/sudoers.d/opsf9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/opsf9-systemctl >/dev/null'
 ```
 
 ---
 
-## Question 07 - Useradd Defaults (client) - 5 pts
+## Question 07 - Client Shared Directory (client) - 5 pts
 
 ```bash
-useradd -D -f 14
+mkdir -p /srv/opsf9
+chown root:opsf9 /srv/opsf9
+chmod 2770 /srv/opsf9
+setfacl -m d:g:opsf9:rwx /srv/opsf9
 ```
 
 ---
 
-## Question 08 - No-Home UID User (client) - 5 pts
+## Question 08 - Client Report Script (client) - 5 pts
 
 ```bash
-useradd -M -u 4560 -s /sbin/nologin pine560
-echo cinder9 | passwd --stdin pine560
-```
-
----
-
-## Question 09 - Admin User (client) - 5 pts
-
-```bash
-useradd elio
-echo cinder9 | passwd --stdin elio
-```
-
----
-
-## Question 10 - Delegated Sudo (client) - 5 pts
-
-```bash
-visudo -f /etc/sudoers.d/elio-firewalld
-elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld
-```
-
----
-
-## Question 11 - SSH Key Generation (client) - 5 pts
-
-```bash
-mkdir -p /home/elio/.ssh
-chown elio:elio /home/elio/.ssh
-chmod 0700 /home/elio/.ssh
-test -f /home/elio/.ssh/id_ed25519 || runuser -u elio -- ssh-keygen -t ed25519 -N '' -f /home/elio/.ssh/id_ed25519 -C elio-exam-replay >/dev/null 2>&1
-chmod 0600 /home/elio/.ssh/id_ed25519
-chmod 0644 /home/elio/.ssh/id_ed25519.pub
-```
-
----
-
-## Question 12 - Remote Account (server) - 5 pts
-
-```bash
-# Run on server
-useradd backupf
-echo cinder9 | passwd --stdin backupf
-mkdir -p /home/backupf/inbox
-chown backupf:backupf /home/backupf/inbox
-chmod 0755 /home/backupf/inbox
-```
-
----
-
-## Question 13 - Passwordless SSH (server) - 4 pts
-
-```bash
-# Run on client
-su - elio
-ssh-copy-id -i /home/elio/.ssh/id_ed25519.pub -p 2222 backupf@server
-ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true
-```
-
----
-
-## Question 14 - Rsync Transfer (client + server) - 4 pts
-
-```bash
-# Run on client
-su - elio
-rsync -e "ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" /opt/exam-f/aurora-report.txt backupf@server:/home/backupf/inbox/report.txt
-```
-
----
-
-## Question 15 - User Umask (client) - 4 pts
-
-```bash
-echo 'umask 027' >> /home/elio/.bash_profile
-```
-
----
-
-## Question 16 - Find and Copy (client) - 4 pts
-
-```bash
-mkdir -p /root/seekerf-files
-find /opt/exam-f/find -user seekerf -mtime -1 -type f -exec cp --parents {} /root/seekerf-files \;
-```
-
----
-
-## Question 17 - Grep Filter (client) - 4 pts
-
-```bash
-grep comet /usr/share/dict/words > /root/comet-lines
-```
-
----
-
-## Question 18 - Archive (client) - 4 pts
-
-```bash
-tar -czf /root/usr-local-f.tar.gz /usr/local
-```
-
----
-
-## Question 19 - Shell Script (client) - 4 pts
-
-```bash
-cat > /usr/local/bin/aurora-report <<'SCRIPT'
+cat > /usr/local/bin/report-f9 <<'SCRIPT'
 #!/bin/bash
-> /root/aurora-units.txt
-for unit in $(cat /usr/local/share/exam-f/units.lst); do
-  systemctl is-active "$unit" >> /root/aurora-units.txt
+: > /root/report-f9.txt
+for service in sshd chronyd firewalld; do
+  systemctl is-active "$service" >> /root/report-f9.txt || true
 done
 SCRIPT
-chmod +x /usr/local/bin/aurora-report
-/usr/local/bin/aurora-report
+chmod +x /usr/local/bin/report-f9
+/usr/local/bin/report-f9
 ```
 
 ---
 
-## Question 20 - Swap Space (client) - 4 pts
+## Question 09 - Client Swap Persistence (client) - 5 pts
 
 ```bash
-parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 705MiB
-partprobe /dev/sdb
-mkswap /dev/sdb1
-swapon /dev/sdb1
-uuid=$(blkid -s UUID -o value /dev/sdb1)
-echo "UUID=$uuid swap swap defaults 0 0" >> /etc/fstab
+swapoff /swapf9 >/dev/null 2>&1 || true
+sed -i '\#/swapf9#d' /etc/fstab
+rm -f /swapf9
+dd if=/dev/zero of=/swapf9 bs=1M count=512
+chmod 0600 /swapf9
+mkswap /swapf9
+echo '/swapf9 swap swap defaults 0 0' >> /etc/fstab
+swapon /swapf9
 ```
 
 ---
 
-## Question 21 - Create and Mount LV (client) - 4 pts
+## Question 10 - Client LVM Mount (client) - 5 pts
 
 ```bash
-parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
-partprobe /dev/sdc
-pvcreate /dev/sdc1
-vgcreate -s 8M auroravg /dev/sdc1
-lvcreate -n auroralv -l 50 auroravg
-mkfs.xfs -f /dev/auroravg/auroralv
-mkdir -p /mnt/auroralv
-uuid=$(blkid -s UUID -o value /dev/auroravg/auroralv)
-echo "UUID=$uuid /mnt/auroralv xfs defaults 0 0" >> /etc/fstab
+umount /mnt/dataf9 >/dev/null 2>&1 || true
+sed -i '\#/mnt/dataf9#d' /etc/fstab
+lvremove -ff /dev/vgf9/dataf9 >/dev/null 2>&1 || true
+vgremove -ff vgf9 >/dev/null 2>&1 || true
+pvremove -ff -y /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb1 >/dev/null 2>&1 || true
+wipefs -a /dev/sdb >/dev/null 2>&1 || true
+parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100%
+partprobe /dev/sdb || true
+udevadm settle
+pvcreate -ff -y /dev/sdb1
+vgcreate vgf9 /dev/sdb1
+lvcreate -n dataf9 -L 320M vgf9
+mkfs.xfs -f /dev/vgf9/dataf9
+mkdir -p /mnt/dataf9
+uuid=$(blkid -s UUID -o value /dev/vgf9/dataf9)
+echo "UUID=$uuid /mnt/dataf9 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
 ---
 
-## Question 22 - Recommended Tuned Profile (client) - 4 pts
+## Question 11 - Client Rootless Container (client) - 5 pts
 
 ```bash
-tuned-adm profile "$(tuned-adm recommend)"
+id podf9 >/dev/null 2>&1 || useradd -m podf9
+echo 'podf9:cinder9' | chpasswd
+loginctl enable-linger podf9
+su - podf9
+podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true
+podman rm -f webf9 >/dev/null 2>&1 || true
+podman run -d --name webf9 localhost/rhcsa-httpd-base:latest
+```
+
+---
+
+## Question 12 - Server IPv4 Networking (server) - 5 pts
+
+```bash
+# On server:
+CONN="System eth1"
+nmcli connection modify "System eth1" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+hostnamectl set-hostname server-f.exam9.lab
+```
+
+---
+
+## Question 13 - Server RPM Repositories (server) - 4 pts
+
+```bash
+# On server:
+cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
+[rhcsa9-exam-baseos]
+name=RHCSA9 F BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+[rhcsa9-exam-appstream]
+name=RHCSA9 F AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+```
+
+---
+
+## Question 14 - Server User and Sudo (server) - 4 pts
+
+```bash
+# On server:
+getent group srvf9 >/dev/null || groupadd srvf9
+id svcf9 >/dev/null 2>&1 || useradd -m svcf9
+echo 'svcf9:cinder9' | chpasswd
+gpasswd -a svcf9 srvf9
+echo '%srvf9 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/srvf9-systemctl
+chmod 0440 /etc/sudoers.d/srvf9-systemctl
+bash -c 'visudo -cf /etc/sudoers.d/srvf9-systemctl >/dev/null'
+```
+
+---
+
+## Question 15 - Server Web Service (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/www/html
+echo RHCSA9-F > /var/www/html/exam-f.html
+restorecon -v /var/www/html/exam-f.html || true
+cat > /etc/httpd/conf.d/exam-f.conf <<'EOF'
+Listen 8305
+EOF
+semanage port -a -t http_port_t -p tcp 8305 2>/dev/null
+firewall-cmd --permanent --add-port=8305/tcp
+firewall-cmd --reload
+systemctl enable --now httpd
+systemctl restart httpd
+```
+
+---
+
+## Question 16 - Server Persistent Journal (server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
+systemctl restart systemd-journald
+journalctl --flush
+```
+
+---
+
+## Question 17 - Server Systemd Timer (server) - 4 pts
+
+```bash
+# On server:
+cat > /usr/local/sbin/auditf9.sh <<'EOF'
+#!/bin/bash
+echo server-f >> /var/log/auditf9.log
+EOF
+chmod +x /usr/local/sbin/auditf9.sh
+cat > /etc/systemd/system/auditf9.service <<'EOF'
+[Unit]
+Description=Server F audit marker
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/auditf9.sh
+EOF
+cat > /etc/systemd/system/auditf9.timer <<'EOF'
+[Unit]
+Description=Run server F audit marker
+[Timer]
+OnCalendar=*:0/10
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now auditf9.timer
+```
+
+---
+
+## Question 18 - Server Boot Target and Directory (server) - 4 pts
+
+```bash
+# On server:
+systemctl set-default multi-user.target
+getent group srvf9 >/dev/null || groupadd srvf9
+mkdir -p /srv/server-f9
+chown root:srvf9 /srv/server-f9
+chmod 2770 /srv/server-f9
+```
+
+---
+
+## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+
+```bash
+# On server:
+mkdir -p /exports/rhcsa9-f
+echo exam-f > /exports/rhcsa9-f/README
+cat > /etc/exports.d/rhcsa9-f.exports <<'EOF'
+/exports/rhcsa9-f 192.168.122.0/24(rw,sync,no_root_squash)
+EOF
+systemctl enable --now nfs-server
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --reload
+exportfs -arv
+# On client:
+mkdir -p /mnt/rhcsa9-f
+grep -Eq '^server:/exports/rhcsa9-f[[:space:]]+/mnt/rhcsa9-f[[:space:]]+nfs' /etc/fstab || echo 'server:/exports/rhcsa9-f /mnt/rhcsa9-f nfs defaults,_netdev 0 0' >> /etc/fstab
+mount -a
+```
+
+---
+
+## Question 20 - Client Server SSH Key (client + server) - 4 pts
+
+```bash
+# On server:
+id copyf9 >/dev/null 2>&1 || useradd -m copyf9
+echo 'copyf9:cinder9' | chpasswd
+# On client:
+test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa9-exam >/dev/null 2>&1
+ssh-copy-id -i /root/.ssh/id_ed25519.pub copyf9@server
+```
+
+---
+
+## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+
+```bash
+echo RHCSA9-F > /root/exam-f-copy.txt
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-f-copy.txt copyf9@server:/home/copyf9/exam-f-copy.txt
+```
+
+---
+
+## Question 22 - Client Server Time Sync (client + server) - 4 pts
+
+```bash
+# On server:
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+# On client:
+cat > /etc/chrony.conf <<'EOF'
+server server iburst
+makestep 1.0 3
+EOF
+systemctl enable --now chronyd
 ```

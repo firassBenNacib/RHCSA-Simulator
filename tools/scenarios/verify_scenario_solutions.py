@@ -199,6 +199,32 @@ def split_top_level_and_clauses(command: str) -> list[str]:
     return clauses
 
 
+def strip_quoted_shell_text(command: str) -> str:
+    rendered: list[str] = []
+    in_single = False
+    in_double = False
+    escaped = False
+    for ch in command:
+        if escaped:
+            rendered.append(" " if in_single or in_double else ch)
+            escaped = False
+            continue
+        if ch == "\\" and not in_single:
+            rendered.append(" " if in_double else ch)
+            escaped = True
+            continue
+        if ch == "'" and not in_double:
+            in_single = not in_single
+            rendered.append(ch)
+            continue
+        if ch == '"' and not in_single:
+            in_double = not in_double
+            rendered.append(ch)
+            continue
+        rendered.append(" " if in_single or in_double else ch)
+    return "".join(rendered)
+
+
 def shell_token_spans(command: str) -> list[tuple[int, int, str]]:
     spans: list[tuple[int, int, str]] = []
     i = 0
@@ -1295,7 +1321,10 @@ def run_exam_checks(manifest: dict, timeout: int) -> tuple[int, int, list[str]]:
         # one shell so variable assignments such as rec="$(...)" remain in
         # scope. Only use the older per-clause server fallback for mixed
         # client/server checks without shell-local state.
-        has_shell_assignment = re.search(r"(^|;\s*|&&\s*|\|\|\s*)[A-Za-z_][A-Za-z0-9_]*=", command) is not None
+        has_shell_assignment = re.search(
+            r"(^|;\s*|&&\s*|\|\|\s*)[A-Za-z_][A-Za-z0-9_]*=",
+            strip_quoted_shell_text(command),
+        ) is not None
         if (not requires_server) or has_shell_assignment:
             failures.append(
                 (

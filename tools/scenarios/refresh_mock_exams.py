@@ -138,7 +138,7 @@ def rhcsa9_check_target_overrides(exam_id: str, checks: list[str], targets: list
             or (exam_id in {"mock-exam-b", "mock-exam-f"} and check.startswith("grep -Eq '^Port 2222$' /etc/ssh/sshd_config"))
             or (exam_id in {"mock-exam-b", "mock-exam-f"} and 'port port="2222" protocol="tcp" accept' in check)
             or (exam_id in {"mock-exam-a", "mock-exam-c", "mock-exam-e"} and "systemd-journald" in check)
-            or (exam_id == "mock-exam-d" and any(token in check for token in ("/etc/issue", "/etc/motd", "systemctl get-default", "systemctl is-enabled rsyslog", "systemctl is-enabled postfix", "rpm -q tree", "rpm -q dos2unix")))
+            or (exam_id == "mock-exam-d" and any(token in check for token in ("/etc/issue", "/etc/motd", "systemctl get-default", "systemctl is-enabled rsyslog", "systemctl is-enabled postfix")))
         ):
             updated[index] = "server"
             continue
@@ -161,8 +161,518 @@ def install_replay_key_with_ssh_copy_id(source_user: str, dest_user: str, *, por
     ]
 
 
+def ssh_server_check(command: str) -> str:
+    escaped = command.replace("'", "'\"'\"'")
+    return f"ssh server bash -lc 'set -euo pipefail; {escaped}'"
+
+
+def repo_commands(label: str) -> list[str]:
+    return [
+        "cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'",
+        "[rhcsa9-exam-baseos]",
+        f"name=RHCSA9 {label} BaseOS",
+        "baseurl=http://server/repo/BaseOS/",
+        "enabled=1",
+        "gpgcheck=0",
+        "",
+        "[rhcsa9-exam-appstream]",
+        f"name=RHCSA9 {label} AppStream",
+        "baseurl=http://server/repo/AppStream/",
+        "enabled=1",
+        "gpgcheck=0",
+        "EOF",
+        "dnf clean all",
+    ]
+
+
+STRICT_RHCSA9_REPO_CHECK = (
+    "test -f /etc/yum.repos.d/rhcsa9-exam.repo && "
+    "grep -Eq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d/rhcsa9-exam.repo && "
+    "grep -Eq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d/rhcsa9-exam.repo && "
+    "[ \"$(grep -Ec '^enabled=1$' /etc/yum.repos.d/rhcsa9-exam.repo)\" -ge 2 ] && "
+    "[ \"$(grep -Ec '^gpgcheck=0$' /etc/yum.repos.d/rhcsa9-exam.repo)\" -ge 2 ]"
+)
+
+
+def rhcsa9_network_commands(ip: str, hostname: str) -> list[str]:
+    return [
+        "CONN=\"System eth1\"",
+        f"nmcli connection modify \"$CONN\" ipv4.addresses {ip}/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+        f"hostnamectl set-hostname {hostname}",
+    ]
+
+
+def rhcsa9_network_check(ip: str, hostname: str) -> str:
+    return (
+        f"hostnamectl --static | grep -qx {hostname} && "
+        "CONN=\"System eth1\"; "
+        f"nmcli -g ipv4.addresses connection show \"$CONN\" | grep -Fqx {ip}/24 && "
+        "nmcli -g ipv4.gateway connection show \"$CONN\" | grep -Fqx 192.168.122.1 && "
+        "nmcli -g ipv4.dns connection show \"$CONN\" | grep -Fq 192.168.122.3"
+    )
+
+
+def rhcsa9_root_step(letter: str) -> tuple[str, str, list[str]]:
+    return block(
+        "Root Recovery",
+        "On client, recover root access from the console and set the root password to cinder9.",
+        [
+            "# At the boot menu, edit the selected kernel entry.",
+            "# Append rw init=/bin/bash to the linux line and boot with Ctrl+x.",
+            "passwd root",
+            "# enter: cinder9",
+            "touch /.autorelabel",
+            "exec /sbin/init",
+        ],
+    )
+
+
+def rhcsa9_client_network_step(letter: str, ip: str) -> tuple[str, str, list[str]]:
+    hostname = f"client-{letter}.exam9.lab"
+    return block(
+        "Client IPv4 Networking",
+        f"On client, configure persistent IPv4 networking.\n\nIP address: {ip}/24\nGateway: 192.168.122.1\nDNS: 192.168.122.3\nHostname: {hostname}",
+        rhcsa9_network_commands(ip, hostname),
+    )
+
+
+def rhcsa9_server_network_step(letter: str) -> tuple[str, str, list[str]]:
+    hostname = f"server-{letter}.exam9.lab"
+    return block(
+        "Server IPv4 Networking",
+        f"On server, configure persistent IPv4 networking.\n\nIP address: 192.168.122.3/24\nGateway: 192.168.122.1\nDNS: 192.168.122.3\nHostname: {hostname}",
+        ["# On server:", *rhcsa9_network_commands("192.168.122.3", hostname)],
+    )
+
+
+def rhcsa9_client_repo_step(letter: str) -> tuple[str, str, list[str]]:
+    return block(
+        "Client RPM Repositories",
+        "On client, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        repo_commands(letter.upper()),
+    )
+
+
+def rhcsa9_server_repo_step(letter: str) -> tuple[str, str, list[str]]:
+    return block(
+        "Server RPM Repositories",
+        "On server, configure enabled BaseOS and AppStream repositories from http://server/repo/BaseOS/ and http://server/repo/AppStream/ with GPG checks disabled.",
+        ["# On server:", *repo_commands(letter.upper())],
+    )
+
+
+def rhcsa9_package_step(letter: str) -> tuple[str, str, list[str]]:
+    remove_pkg = "dos2unix" if letter in {"a", "c", "e", "g"} else "tcpdump"
+    install_pkg = "tree" if letter in {"a", "d", "g"} else "lsof"
+    return block(
+        "Client Package Management",
+        f"On client, install {install_pkg} from the configured repositories and remove {remove_pkg} if it is installed.",
+        [
+            f"dnf install -y {install_pkg}",
+            f"dnf remove -y {remove_pkg} || true",
+        ],
+    )
+
+
+def rhcsa9_users_step(letter: str) -> tuple[str, str, list[str]]:
+    group = f"ops{letter}9"
+    users = [f"ana{letter}9", f"dev{letter}9", f"audit{letter}9"]
+    return block(
+        "Client Users and Group",
+        f"On client, create group {group}. Create users {users[0]}, {users[1]}, and {users[2]}; {users[2]} must use /sbin/nologin. Set each password to cinder9 and add {users[0]} and {users[1]} to {group}.",
+        [
+            f"getent group {group} >/dev/null || groupadd {group}",
+            f"id {users[0]} >/dev/null 2>&1 || useradd -m {users[0]}",
+            f"id {users[1]} >/dev/null 2>&1 || useradd -m {users[1]}",
+            f"id {users[2]} >/dev/null 2>&1 || useradd -M -s /sbin/nologin {users[2]}",
+            f"usermod -s /sbin/nologin {users[2]}",
+            f"printf '{users[0]}:cinder9\\n{users[1]}:cinder9\\n{users[2]}:cinder9\\n' | chpasswd",
+            f"gpasswd -a {users[0]} {group}",
+            f"gpasswd -a {users[1]} {group}",
+        ],
+    )
+
+
+def rhcsa9_password_sudo_step(letter: str) -> tuple[str, str, list[str]]:
+    user = f"ana{letter}9"
+    group = f"ops{letter}9"
+    return block(
+        "Client Password Aging and Sudo",
+        f"On client, set maximum password age 60 days and warning period 7 days for {user}. Allow members of {group} to run /usr/bin/systemctl with sudo without a password.",
+        [
+            f"chage -M 60 -W 7 {user}",
+            f"echo '%{group} ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/{group}-systemctl",
+            f"chmod 0440 /etc/sudoers.d/{group}-systemctl",
+            f"bash -c 'visudo -cf /etc/sudoers.d/{group}-systemctl >/dev/null'",
+        ],
+    )
+
+
+def rhcsa9_shared_dir_step(letter: str) -> tuple[str, str, list[str]]:
+    group = f"ops{letter}9"
+    path = f"/srv/{group}"
+    return block(
+        "Client Shared Directory",
+        f"On client, create {path} owned by root:{group} with permissions 2770 and a default ACL granting {group} full access.",
+        [
+            f"mkdir -p {path}",
+            f"chown root:{group} {path}",
+            f"chmod 2770 {path}",
+            f"setfacl -m d:g:{group}:rwx {path}",
+        ],
+    )
+
+
+def rhcsa9_script_step(letter: str) -> tuple[str, str, list[str]]:
+    script = f"/usr/local/bin/report-{letter}9"
+    output = f"/root/report-{letter}9.txt"
+    return block(
+        "Client Report Script",
+        f"On client, create executable script {script} that writes the active state of sshd, chronyd, and firewalld to {output}.",
+        [
+            f"cat > {script} <<'SCRIPT'",
+            "#!/bin/bash",
+            f": > {output}",
+            "for service in sshd chronyd firewalld; do",
+            f"  systemctl is-active \"$service\" >> {output} || true",
+            "done",
+            "SCRIPT",
+            f"chmod +x {script}",
+            script,
+        ],
+    )
+
+
+def rhcsa9_swap_step(letter: str) -> tuple[str, str, list[str]]:
+    swapfile = f"/swap{letter}9"
+    return block(
+        "Client Swap Persistence",
+        f"On client, create a 512 MiB swap file at {swapfile}, activate it immediately, and make it persistent.",
+        [
+            f"swapoff {swapfile} >/dev/null 2>&1 || true",
+            f"sed -i '\\#{swapfile}#d' /etc/fstab",
+            f"rm -f {swapfile}",
+            f"dd if=/dev/zero of={swapfile} bs=1M count=512",
+            f"chmod 0600 {swapfile}",
+            f"mkswap {swapfile}",
+            f"echo '{swapfile} swap swap defaults 0 0' >> /etc/fstab",
+            f"swapon {swapfile}",
+        ],
+    )
+
+
+def rhcsa9_lvm_step(letter: str) -> tuple[str, str, list[str]]:
+    vg = f"vg{letter}9"
+    lv = f"data{letter}9"
+    mountpoint = f"/mnt/{lv}"
+    return block(
+        "Client LVM Mount",
+        f"On client, create volume group {vg} on /dev/sdb, create logical volume {lv} with size 320 MiB, format it as XFS, and mount it persistently at {mountpoint}.",
+        [
+            f"umount {mountpoint} >/dev/null 2>&1 || true",
+            f"sed -i '\\#{mountpoint}#d' /etc/fstab",
+            f"lvremove -ff /dev/{vg}/{lv} >/dev/null 2>&1 || true",
+            f"vgremove -ff {vg} >/dev/null 2>&1 || true",
+            "pvremove -ff -y /dev/sdb1 >/dev/null 2>&1 || true",
+            "wipefs -a /dev/sdb1 >/dev/null 2>&1 || true",
+            "wipefs -a /dev/sdb >/dev/null 2>&1 || true",
+            "parted -s /dev/sdb -- mklabel gpt mkpart primary 1MiB 100%",
+            "partprobe /dev/sdb || true",
+            "udevadm settle",
+            "pvcreate -ff -y /dev/sdb1",
+            f"vgcreate {vg} /dev/sdb1",
+            f"lvcreate -n {lv} -L 320M {vg}",
+            f"mkfs.xfs -f /dev/{vg}/{lv}",
+            f"mkdir -p {mountpoint}",
+            f"uuid=$(blkid -s UUID -o value /dev/{vg}/{lv})",
+            f"echo \"UUID=$uuid {mountpoint} xfs defaults 0 0\" >> /etc/fstab",
+            "mount -a",
+        ],
+    )
+
+
+def rhcsa9_container_step(letter: str) -> tuple[str, str, list[str]]:
+    user = f"pod{letter}9"
+    name = f"web{letter}9"
+    return block(
+        "Client Rootless Container",
+        f"On client, create user {user}, enable lingering for that user, and run a rootless container named {name} from localhost/rhcsa-httpd-base:latest.",
+        [
+            f"id {user} >/dev/null 2>&1 || useradd -m {user}",
+            f"echo '{user}:cinder9' | chpasswd",
+            f"loginctl enable-linger {user}",
+            f"runuser -l {user} -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar >/dev/null 2>&1 || true'",
+            f"runuser -l {user} -c 'podman rm -f {name} >/dev/null 2>&1 || true'",
+            f"runuser -l {user} -c 'podman run -d --name {name} localhost/rhcsa-httpd-base:latest'",
+        ],
+    )
+
+
+def rhcsa9_server_user_step(letter: str) -> tuple[str, str, list[str]]:
+    group = f"srv{letter}9"
+    user = f"svc{letter}9"
+    return block(
+        "Server User and Sudo",
+        f"On server, create group {group}, create user {user} with password cinder9, add {user} to {group}, and allow {group} to run /usr/bin/systemctl with sudo without a password.",
+        [
+            "# On server:",
+            f"getent group {group} >/dev/null || groupadd {group}",
+            f"id {user} >/dev/null 2>&1 || useradd -m {user}",
+            f"echo '{user}:cinder9' | chpasswd",
+            f"gpasswd -a {user} {group}",
+            f"echo '%{group} ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/{group}-systemctl",
+            f"chmod 0440 /etc/sudoers.d/{group}-systemctl",
+            f"bash -c 'visudo -cf /etc/sudoers.d/{group}-systemctl >/dev/null'",
+        ],
+    )
+
+
+def rhcsa9_server_http_step(letter: str, port: int) -> tuple[str, str, list[str]]:
+    return block(
+        "Server Web Service",
+        f"On server, publish /var/www/html/exam-{letter}.html containing RHCSA9-{letter.upper()}, configure httpd to listen on TCP port {port}, label the port for httpd, and open it permanently in firewalld.",
+        [
+            "# On server:",
+            "mkdir -p /var/www/html",
+            f"echo RHCSA9-{letter.upper()} > /var/www/html/exam-{letter}.html",
+            f"restorecon -v /var/www/html/exam-{letter}.html || true",
+            f"cat > /etc/httpd/conf.d/exam-{letter}.conf <<'EOF'\nListen {port}\nEOF",
+            f"semanage port -a -t http_port_t -p tcp {port} 2>/dev/null || semanage port -m -t http_port_t -p tcp {port}",
+            f"firewall-cmd --permanent --add-port={port}/tcp",
+            "firewall-cmd --reload",
+            "systemctl enable --now httpd",
+            "systemctl restart httpd",
+        ],
+    )
+
+
+def rhcsa9_server_journal_step(letter: str) -> tuple[str, str, list[str]]:
+    return block(
+        "Server Persistent Journal",
+        "On server, enable persistent systemd journal storage and restart systemd-journald.",
+        [
+            "# On server:",
+            "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
+            "cat > /etc/systemd/journald.conf.d/99-persistent.conf <<'EOF'",
+            "[Journal]",
+            "Storage=persistent",
+            "EOF",
+            "systemctl restart systemd-journald",
+            "journalctl --flush",
+        ],
+    )
+
+
+def rhcsa9_server_timer_step(letter: str, minutes: int) -> tuple[str, str, list[str]]:
+    timer = f"audit{letter}9"
+    return block(
+        "Server Systemd Timer",
+        f"On server, create and enable {timer}.timer so it runs every {minutes} minutes and appends server-{letter} to /var/log/{timer}.log.",
+        [
+            "# On server:",
+            f"cat > /usr/local/sbin/{timer}.sh <<'EOF'",
+            "#!/bin/bash",
+            f"echo server-{letter} >> /var/log/{timer}.log",
+            "EOF",
+            f"chmod +x /usr/local/sbin/{timer}.sh",
+            f"cat > /etc/systemd/system/{timer}.service <<'EOF'",
+            "[Unit]",
+            f"Description=Server {letter.upper()} audit marker",
+            "",
+            "[Service]",
+            "Type=oneshot",
+            f"ExecStart=/usr/local/sbin/{timer}.sh",
+            "EOF",
+            f"cat > /etc/systemd/system/{timer}.timer <<'EOF'",
+            "[Unit]",
+            f"Description=Run server {letter.upper()} audit marker",
+            "",
+            "[Timer]",
+            f"OnCalendar=*:0/{minutes}",
+            "Persistent=true",
+            "",
+            "[Install]",
+            "WantedBy=timers.target",
+            "EOF",
+            "systemctl daemon-reload",
+            f"systemctl enable --now {timer}.timer",
+        ],
+    )
+
+
+def rhcsa9_server_policy_step(letter: str) -> tuple[str, str, list[str]]:
+    path = f"/srv/server-{letter}9"
+    group = f"srv{letter}9"
+    return block(
+        "Server Boot Target and Directory",
+        f"On server, set the default boot target to multi-user.target and create {path} owned by root:{group} with permissions 2770.",
+        [
+            "# On server:",
+            "systemctl set-default multi-user.target",
+            f"getent group {group} >/dev/null || groupadd {group}",
+            f"mkdir -p {path}",
+            f"chown root:{group} {path}",
+            f"chmod 2770 {path}",
+        ],
+    )
+
+
+def rhcsa9_both_nfs_step(letter: str) -> tuple[str, str, list[str]]:
+    export_path = f"/exports/rhcsa9-{letter}"
+    mountpoint = f"/mnt/rhcsa9-{letter}"
+    return block(
+        "Client Server NFS Mount",
+        f"On server, export {export_path} to 192.168.122.0/24. On client, mount server:{export_path} persistently at {mountpoint}.",
+        [
+            "# On server:",
+            f"mkdir -p {export_path}",
+            f"echo exam-{letter} > {export_path}/README",
+            f"cat > /etc/exports.d/rhcsa9-{letter}.exports <<'EOF'",
+            f"{export_path} 192.168.122.0/24(rw,sync,no_root_squash)",
+            "EOF",
+            "systemctl enable --now nfs-server",
+            "firewall-cmd --permanent --add-service=nfs",
+            "firewall-cmd --permanent --add-service=mountd",
+            "firewall-cmd --permanent --add-service=rpc-bind",
+            "firewall-cmd --reload",
+            "exportfs -arv",
+            "# On client:",
+            f"mkdir -p {mountpoint}",
+            f"grep -Eq '^server:{export_path}[[:space:]]+{mountpoint}[[:space:]]+nfs' /etc/fstab || echo 'server:{export_path} {mountpoint} nfs defaults,_netdev 0 0' >> /etc/fstab",
+            "mount -a",
+        ],
+    )
+
+
+def rhcsa9_both_ssh_step(letter: str) -> tuple[str, str, list[str]]:
+    user = f"copy{letter}9"
+    return block(
+        "Client Server SSH Key",
+        f"On server, create user {user} with password cinder9. On client, configure key-based SSH login for root to {user}@server.",
+        [
+            "# On server:",
+            f"id {user} >/dev/null 2>&1 || useradd -m {user}",
+            f"echo '{user}:cinder9' | chpasswd",
+            "# On client:",
+            "test -f /root/.ssh/id_ed25519 || ssh-keygen -t ed25519 -N '' -f /root/.ssh/id_ed25519 -C rhcsa9-exam >/dev/null 2>&1",
+            f"ssh-copy-id -i /root/.ssh/id_ed25519.pub {user}@server",
+        ],
+    )
+
+
+def rhcsa9_both_copy_step(letter: str) -> tuple[str, str, list[str]]:
+    user = f"copy{letter}9"
+    return block(
+        "Client Server Secure Copy",
+        f"On client, create /root/exam-{letter}-copy.txt containing RHCSA9-{letter.upper()} and copy it to server:/home/{user}/exam-{letter}-copy.txt.",
+        [
+            f"echo RHCSA9-{letter.upper()} > /root/exam-{letter}-copy.txt",
+            f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-{letter}-copy.txt {user}@server:/home/{user}/exam-{letter}-copy.txt",
+        ],
+    )
+
+
+def rhcsa9_both_chrony_step(letter: str) -> tuple[str, str, list[str]]:
+    return block(
+        "Client Server Time Sync",
+        "On server, enable chronyd for the lab network. On client, configure chronyd to use server as its only time source.",
+        [
+            "# On server:",
+            "systemctl enable --now chronyd",
+            "firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true",
+            "firewall-cmd --reload >/dev/null 2>&1 || true",
+            "# On client:",
+            "cat > /etc/chrony.conf <<'EOF'",
+            "server server iburst",
+            "makestep 1.0 3",
+            "EOF",
+            "systemctl enable --now chronyd",
+        ],
+    )
+
+
+def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]], list[str], bool] | None:
+    if not re.fullmatch(r"mock-exam-[a-h]", exam_id):
+        return None
+    letter = exam_id.rsplit("-", 1)[1]
+    seed = ord(letter) - ord("a")
+    client_ip = f"192.168.122.{40 + seed}"
+    port = 8300 + seed
+    minutes = 5 + seed
+    user = f"pod{letter}9"
+    container = f"web{letter}9"
+    group = f"ops{letter}9"
+    server_group = f"srv{letter}9"
+    server_user = f"svc{letter}9"
+    copy_user = f"copy{letter}9"
+    vg = f"vg{letter}9"
+    lv = f"data{letter}9"
+    timer = f"audit{letter}9"
+    export_path = f"/exports/rhcsa9-{letter}"
+    mountpoint = f"/mnt/rhcsa9-{letter}"
+    server_dir = f"/srv/server-{letter}9"
+    script = f"/usr/local/bin/report-{letter}9"
+    output = f"/root/report-{letter}9.txt"
+
+    blocks = [
+        rhcsa9_root_step(letter),
+        rhcsa9_client_network_step(letter, client_ip),
+        rhcsa9_client_repo_step(letter),
+        rhcsa9_package_step(letter),
+        rhcsa9_users_step(letter),
+        rhcsa9_password_sudo_step(letter),
+        rhcsa9_shared_dir_step(letter),
+        rhcsa9_script_step(letter),
+        rhcsa9_swap_step(letter),
+        rhcsa9_lvm_step(letter),
+        rhcsa9_container_step(letter),
+        rhcsa9_server_network_step(letter),
+        rhcsa9_server_repo_step(letter),
+        rhcsa9_server_user_step(letter),
+        rhcsa9_server_http_step(letter, port),
+        rhcsa9_server_journal_step(letter),
+        rhcsa9_server_timer_step(letter, minutes),
+        rhcsa9_server_policy_step(letter),
+        rhcsa9_both_nfs_step(letter),
+        rhcsa9_both_ssh_step(letter),
+        rhcsa9_both_copy_step(letter),
+        rhcsa9_both_chrony_step(letter),
+    ]
+    checks = [
+        "passwd -S root | awk '$2 != \"LK\" {found=1} END {exit !found}'",
+        rhcsa9_network_check(client_ip, f"client-{letter}.exam9.lab"),
+        STRICT_RHCSA9_REPO_CHECK,
+        ("rpm -q tree >/dev/null" if letter in {"a", "d", "g"} else "rpm -q lsof >/dev/null"),
+        f"getent group {group} >/dev/null && id -nG ana{letter}9 | tr ' ' '\\n' | grep -qx {group} && id -nG dev{letter}9 | tr ' ' '\\n' | grep -qx {group} && getent passwd audit{letter}9 | awk -F: '$7 == \"/sbin/nologin\" {{found=1}} END {{exit !found}}'",
+        f"chage -l ana{letter}9 | grep -Eq 'Maximum.*60' && chage -l ana{letter}9 | grep -Eq 'warning.*7' && grep -Eq '^%{group}[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/{group}-systemctl",
+        f"stat -c '%U:%G:%a' /srv/{group} | grep -qx root:{group}:2770 && getfacl -p /srv/{group} | grep -Eq '^default:group:{group}:rwx$'",
+        f"test -x {script} && {script} >/dev/null && test -s {output}",
+        f"swapon --show=NAME --noheadings | grep -qx '/swap{letter}9' && awk '$1 == \"/swap{letter}9\" && $2 == \"swap\" && $3 == \"swap\" {{found=1}} END {{exit !found}}' /etc/fstab",
+        f"lvs /dev/{vg}/{lv} >/dev/null 2>&1 && findmnt -no TARGET /mnt/{lv} | grep -qx /mnt/{lv} && awk '$2 == \"/mnt/{lv}\" && $3 == \"xfs\" {{found=1}} END {{exit !found}}' /etc/fstab",
+        f"runuser -l {user} -c 'podman ps --format {{{{.Names}}}}' | grep -qx {container} && loginctl show-user {user} | grep -Eq '^Linger=yes$'",
+        ssh_server_check(rhcsa9_network_check("192.168.122.3", f"server-{letter}.exam9.lab")),
+        ssh_server_check(STRICT_RHCSA9_REPO_CHECK),
+        ssh_server_check(f"getent group {server_group} >/dev/null && id -nG {server_user} | tr ' ' '\\n' | grep -qx {server_group} && grep -Eq '^%{server_group}[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/{server_group}-systemctl"),
+        ssh_server_check(f"grep -Fxq RHCSA9-{letter.upper()} /var/www/html/exam-{letter}.html && grep -Eq '^Listen[[:space:]]+{port}$' /etc/httpd/conf.d/exam-{letter}.conf && semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,]){port}([, ]|$)/ {{found=1}} END {{exit !found}}' && firewall-cmd --permanent --query-port={port}/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"),
+        ssh_server_check(JOURNALD_PERSISTENT_CHECK),
+        ssh_server_check(f"systemctl is-enabled {timer}.timer | grep -qx enabled && grep -Eq '^OnCalendar=\\*:0/{minutes}$' /etc/systemd/system/{timer}.timer && grep -Fxq 'echo server-{letter} >> /var/log/{timer}.log' /usr/local/sbin/{timer}.sh"),
+        ssh_server_check(f"systemctl get-default | grep -qx multi-user.target && stat -c '%U:%G:%a' {server_dir} | grep -qx root:{server_group}:2770"),
+        f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx 'server:{export_path} {mountpoint}' && grep -Eq '^server:{export_path}[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && {ssh_server_check(f'grep -Eq \"^{export_path}[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/rhcsa9-{letter}.exports && systemctl is-active nfs-server | grep -qx active')}",
+        f"runuser -l root -c 'ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {copy_user}@server true'",
+        ssh_server_check(f"grep -Fxq RHCSA9-{letter.upper()} /home/{copy_user}/exam-{letter}-copy.txt"),
+        f"grep -Eq '^server[[:space:]]+server[[:space:]]+iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && {ssh_server_check('systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active')}",
+    ]
+    return blocks, checks, True
+
+
 def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: list[str], password_recovery: bool, blocks: list[tuple[str, str, list[str]]], checks: list[str]) -> None:
     track = discover_track(exam_id)
+    if track == "rhcsa9":
+        balanced = rhcsa9_balanced_exam(exam_id)
+        if balanced is not None:
+            blocks, checks, password_recovery = balanced
+            description = "A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, services, storage, NFS, SSH, and rootless containers across client and server."
+            objective_tags = ["boot-and-recovery", "networking-and-firewall", "software-management", "users-sudo-ssh", "storage-lvm", "containers"]
     data = load_exam(exam_id)
     exam = data["content"]["exam"]
     data["title"] = title
@@ -194,6 +704,11 @@ def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: 
     if track == "rhcsa9":
         check_targets = rhcsa9_check_target_overrides(exam_id, exam["checks"], check_targets)
     exam["check_targets"] = check_targets
+    exam["target_balance"] = {
+        "client_only": task_targets.count("client"),
+        "server_only": task_targets.count("server"),
+        "client_server": task_targets.count("both"),
+    }
     save_exam(exam_id, data)
 
 

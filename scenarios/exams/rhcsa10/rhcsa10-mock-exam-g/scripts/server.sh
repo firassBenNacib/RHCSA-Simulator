@@ -6,18 +6,6 @@ source /usr/local/lib/rhcsa-scenario-helpers.sh
 mkdir -p /root/.repo-backup-server-exam-g
 rhcsa_reset_repo_directory /root/.repo-backup-server-exam-g
 
-# --- NFS exports ---
-mkdir -p /exports/direct
-echo 'exam g direct' > /exports/direct/welcome.txt
-chown -R nobody:nobody /exports/direct
-
-mkdir -p /exports/autofs/projects
-echo 'exam g autofs' > /exports/autofs/projects/welcome.txt
-chown -R nobody:nobody /exports/autofs/projects
-
-cat > /etc/exports.d/exam-g.exports <<'EOFX'
-/exports/direct 192.168.122.0/24(rw,sync,no_root_squash)
-/exports/autofs/projects 192.168.122.0/24(rw,sync,no_root_squash)
-EOFX
-systemctl enable --now nfs-server >/dev/null 2>&1 || true
-exportfs -arv >/dev/null 2>&1 || true
+# --- NFS cleanup ---
+rm -f /etc/exports.d/exam-g.exports /etc/exports.d/exam-g-integrated.exports
+exportfs -ar >/dev/null 2>&1 || true

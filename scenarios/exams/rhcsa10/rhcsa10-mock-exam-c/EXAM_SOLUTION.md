@@ -319,7 +319,7 @@ mount -a
 
 ---
 
-## Question 21 - Add a hosts entry for serverc.exam10.lab and save the output of http://s (client + server) - 4 pts
+## Question 21 - Add a hosts entry for serverc.exam10.lab and save the output of http://s (client) - 4 pts
 
 ```bash
 grep -Eq '^192\.168\.122\.3[[:space:]]+serverc\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts
