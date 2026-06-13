@@ -21,7 +21,7 @@ Service and logging focus: custom systemd service, rsyslog routing, firewall ser
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - set hostname to clientd.exam10.lab and map serverd.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Set hostname to clientd.exam10.lab and map serverd.exam10.lab to 192.168 (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clientd.exam10.lab
@@ -50,7 +50,7 @@ ln -s /root/d-original /root/d-soft
 
 ---
 
-## Question 04 - create and enable serverdtimer.timer so it appends SERVER-D to /var/log/ (server) - 5 pts
+## Question 04 - Create and enable serverdtimer.timer so it appends SERVER-D to /var/log/ (server) - 5 pts
 
 ```bash
 # On server:
@@ -116,7 +116,7 @@ setsebool -P httpd_can_network_connect on
 
 ---
 
-## Question 08 - enable persistent systemd journal storage (server) - 5 pts
+## Question 08 - Enable persistent systemd journal storage (server) - 5 pts
 
 ```bash
 # On server:
@@ -131,7 +131,7 @@ journalctl --flush
 
 ---
 
-## Question 09 - make chronyd available as the lab time source. On client, configure chro (client + server) - 5 pts
+## Question 09 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 5 pts
 
 ```bash
 # On server:
@@ -148,7 +148,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 10 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 5 pts
+## Question 10 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -184,7 +184,7 @@ dnf clean all
 
 ---
 
-## Question 11 - publish /var/www/html/server-d.html containing RHCSA10-D and serve httpd (server) - 5 pts
+## Question 11 - Publish /var/www/html/server-d.html containing RHCSA10-D and serve httpd (server) - 5 pts
 
 ```bash
 # On server:
@@ -203,7 +203,7 @@ systemctl restart httpd
 
 ---
 
-## Question 12 - route local5 log messages to /var/log/server-d-local5.log and write a te (server) - 5 pts
+## Question 12 - Route local5 log messages to /var/log/server-d-local5.log and write a te (server) - 5 pts
 
 ```bash
 # On server:
@@ -229,7 +229,7 @@ passwd userd10
 
 ---
 
-## Question 14 - allow members of serverd10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 14 - Allow members of serverd10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
 # On server:
@@ -240,7 +240,7 @@ chmod 0440 /etc/sudoers.d/serverd10-systemctl
 
 ---
 
-## Question 15 - create group serverd10 and user srvd10 with password cinder9, then add t (server) - 4 pts
+## Question 15 - Create group serverd10 and user srvd10 with password cinder9, then add t (server) - 4 pts
 
 ```bash
 # On server:
@@ -273,7 +273,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/d-shell-users.txt
 
 ---
 
-## Question 18 - create /root/exam-d-report.txt containing REPORT-D and copy it to server (client) - 4 pts
+## Question 18 - Create /root/exam-d-report.txt containing REPORT-D and copy it to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-D > /root/exam-d-report.txt
@@ -292,7 +292,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log' | crontab -u userd10
 
 ---
 
-## Question 20 - export /exports/exam-d to the 192.168.122.0/24 network. On client, mount (client + server) - 4 pts
+## Question 20 - Export /exports/exam-d to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -315,7 +315,7 @@ mount -a
 
 ---
 
-## Question 21 - set the default boot target to multi-user.target without rebooting (server) - 4 pts
+## Question 21 - Set the default boot target to multi-user.target without rebooting (server) - 4 pts
 
 ```bash
 # On server:

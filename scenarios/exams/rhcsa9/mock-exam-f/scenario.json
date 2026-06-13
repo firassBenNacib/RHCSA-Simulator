@@ -1,7 +1,7 @@
 {
   "id": "mock-exam-f",
   "title": "Mock Exam F",
-  "description": "A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.",
+  "description": "A 22-task RHCSA practice mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.",
   "objective_tags": [
     "networking-and-firewall",
     "users-sudo-ssh",
@@ -27,28 +27,28 @@
   "content": {
     "exam": {
       "tasks": [
-        "Configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.38\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: client.exam-f.lab",
-        "Add a persistent hosts entry so db.exam-f.lab resolves to 192.168.122.3.",
-        "Configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.",
-        "Configure chronyd on client so it synchronizes only with server and starts automatically at boot.",
+        "On client, configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.38\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS: 192.168.122.3\nHOSTNAME: client.exam-f.lab",
+        "On client, add a persistent hosts entry so db.exam-f.lab resolves to 192.168.122.3.",
+        "On server, configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.",
+        "On client, configure chronyd on client so it synchronizes only with server and starts automatically at boot.",
         "On server, configure sshd to listen on TCP port 2222 and keep both password and public key authentication enabled.",
         "On server, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
-        "Set the default inactive period for newly created local users to 14 days.",
-        "Create user pine560 with UID 4560, no home directory, shell /sbin/nologin, and password cinder9.",
-        "Create user elio with a home directory and password cinder9.",
-        "Allow elio to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.",
-        "As elio on client, generate an ED25519 SSH key pair with no passphrase.",
-        "Create user backupf on server with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.",
-        "Install elio's public key for backupf on server and verify passwordless SSH access on port 2222.",
+        "On client, set the default inactive period for newly created local users to 14 days.",
+        "On client, create user pine560 with UID 4560, no home directory, shell /sbin/nologin, and password cinder9.",
+        "On client, create user elio with a home directory and password cinder9.",
+        "On client, allow elio to restart firewalld on client through sudo without a password prompt. Use a sudoers drop-in.",
+        "On client, as elio on client, generate an ED25519 SSH key pair with no passphrase.",
+        "On server, create user backupf on server with a home directory and password cinder9. Create /home/backupf/inbox and make backupf the owner.",
+        "On server, install elio's public key for backupf on server and verify passwordless SSH access on port 2222.",
         "On client, use rsync over SSH port 2222 as elio to copy /opt/exam-f/aurora-report.txt to /home/backupf/inbox/report.txt on server.",
-        "Set a personal umask of 027 for elio.",
-        "Find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.",
-        "Extract lines containing comet from /usr/share/dict/words into /root/comet-lines.",
-        "Create /root/usr-local-f.tar.gz containing /usr/local.",
-        "Create executable script /usr/local/bin/aurora-report that writes the active state of each unit listed in /usr/local/share/exam-f/units.lst to /root/aurora-units.txt.",
-        "On /dev/sdb, create a 704 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
-        "On /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB and a logical volume auroralv of 50 extents. Format it with xfs and mount it persistently on /mnt/auroralv.",
-        "Apply the recommended tuned profile and leave it active."
+        "On client, set a personal umask of 027 for elio.",
+        "On client, find all files under /opt/exam-f/find that are owned by seekerf and were modified within the last 24 hours. Copy them to /root/seekerf-files while preserving the source directory structure.",
+        "On client, extract lines containing comet from /usr/share/dict/words into /root/comet-lines.",
+        "On client, create /root/usr-local-f.tar.gz containing /usr/local.",
+        "On client, create executable script /usr/local/bin/aurora-report that writes the active state of each unit listed in /usr/local/share/exam-f/units.lst to /root/aurora-units.txt.",
+        "On client, on /dev/sdb, create a 704 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "On client, on /dev/sdc, create a volume group auroravg with a physical extent size of 8 MiB and a logical volume auroralv of 50 extents. Format it with xfs and mount it persistently on /mnt/auroralv.",
+        "On client, apply the recommended tuned profile and leave it active."
       ],
       "task_titles": [
         "Client Network",
@@ -66,12 +66,12 @@
         "Passwordless SSH",
         "Rsync Transfer",
         "User Umask",
-        "Find And Copy",
+        "Find and Copy",
         "Grep Filter",
         "Archive",
         "Shell Script",
         "Swap Space",
-        "Create And Mount LV",
+        "Create and Mount LV",
         "Recommended Tuned Profile"
       ],
       "task_points": [
@@ -133,19 +133,13 @@
         ],
         [
           "# Run on server",
-          "python - <<'EOF'",
-          "from pathlib import Path",
-          "import re",
-          "p = Path('/etc/ssh/sshd_config')",
-          "text = p.read_text() if p.exists() else ''",
-          "for key in ['Port', 'PasswordAuthentication', 'PubkeyAuthentication']:",
-          "    text = re.sub(rf'^\\\\s*#?{key}\\\\s+.*$', '', text, flags=re.M)",
-          "text += '\\nPort 22\\nPort 2222\\nPasswordAuthentication yes\\nPubkeyAuthentication yes\\n'",
-          "p.write_text(text)",
-          "EOF",
-          "semanage port -a -t ssh_port_t -p tcp 2222 || semanage port -m -t ssh_port_t -p tcp 2222",
-          "sshd -t",
-          "systemctl reload sshd || systemctl restart sshd"
+          "vim /etc/ssh/sshd_config",
+          "Port 22",
+          "Port 2222",
+          "PasswordAuthentication yes",
+          "PubkeyAuthentication yes",
+          "semanage port -l | grep -Eq '^ssh_port_t\\b.*\\b2222\\b' || semanage port -a -t ssh_port_t -p tcp 2222",
+          "systemctl restart sshd"
         ],
         [
           "# Run on server",
@@ -156,13 +150,11 @@
           "useradd -D -f 14"
         ],
         [
-          "id pine560 >/dev/null 2>&1 || useradd -M -u 4560 -s /sbin/nologin pine560",
-          "usermod -u 4560 -s /sbin/nologin pine560",
-          "rm -rf /home/pine560",
+          "useradd -M -u 4560 -s /sbin/nologin pine560",
           "echo cinder9 | passwd --stdin pine560"
         ],
         [
-          "id elio >/dev/null 2>&1 || useradd -m elio",
+          "useradd elio",
           "echo cinder9 | passwd --stdin elio"
         ],
         [
@@ -170,14 +162,16 @@
           "elio ALL=(root) NOPASSWD: /usr/bin/systemctl restart firewalld"
         ],
         [
-          "install -d -m 700 -o elio -g elio /home/elio/.ssh",
+          "mkdir -p /home/elio/.ssh",
+          "chown elio:elio /home/elio/.ssh",
+          "chmod 0700 /home/elio/.ssh",
           "test -f /home/elio/.ssh/id_ed25519 || runuser -u elio -- ssh-keygen -t ed25519 -N '' -f /home/elio/.ssh/id_ed25519 -C elio-exam-replay >/dev/null 2>&1",
           "chmod 0600 /home/elio/.ssh/id_ed25519",
           "chmod 0644 /home/elio/.ssh/id_ed25519.pub"
         ],
         [
           "# Run on server",
-          "id backupf >/dev/null 2>&1 || useradd -m backupf",
+          "useradd backupf",
           "echo cinder9 | passwd --stdin backupf",
           "mkdir -p /home/backupf/inbox",
           "chown backupf:backupf /home/backupf/inbox",
@@ -212,7 +206,7 @@
           "#!/bin/bash",
           "> /root/aurora-units.txt",
           "for unit in $(cat /usr/local/share/exam-f/units.lst); do",
-          "  systemctl is-active \"$unit\" >> /root/aurora-units.txt || true",
+          "  systemctl is-active \"$unit\" >> /root/aurora-units.txt",
           "done",
           "SCRIPT",
           "chmod +x /usr/local/bin/aurora-report",
@@ -220,35 +214,18 @@
         ],
         [
           "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 705MiB",
-          "blockdev --rereadpt /dev/sdb || true",
-          "partprobe /dev/sdb || true",
-          "partx -u /dev/sdb || partx -a /dev/sdb || true",
-          "udevadm settle",
-          "for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done",
-          "test -b /dev/sdb1",
+          "partprobe /dev/sdb",
           "mkswap /dev/sdb1",
           "swapon /dev/sdb1",
           "uuid=$(blkid -s UUID -o value /dev/sdb1)",
           "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab"
         ],
         [
-          "umount /mnt/reviewa /mnt/reviewb /mnt/reviewc /mnt/summitlv /mnt/auroralv /mnt/deltalv /mnt/reviewh >/dev/null 2>&1 || true",
-          "swapoff /dev/sdc1 >/dev/null 2>&1 || true",
-          "for vg in reviewvga reviewvgb reviewvgc summitvg auroravg deltavg reviewvgh; do vgchange -an \"$vg\" >/dev/null 2>&1 || true; vgremove -ff \"$vg\" >/dev/null 2>&1 || true; done",
-          "pvremove -ff -y /dev/sdc1 >/dev/null 2>&1 || true",
-          "wipefs -a /dev/sdc1 >/dev/null 2>&1 || true",
-          "wipefs -a /dev/sdc >/dev/null 2>&1 || true",
-          "sed -i -E '\\# /mnt/(reviewa|reviewb|reviewc|summitlv|auroralv|deltalv|reviewh) #d' /etc/fstab",
           "parted -s /dev/sdc -- mklabel gpt mkpart primary 1MiB 100% set 1 lvm on",
-          "blockdev --rereadpt /dev/sdc || true",
-          "partprobe /dev/sdc || true",
-          "partx -u /dev/sdc || partx -a /dev/sdc || true",
-          "udevadm settle",
-          "for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdc1 && break; blockdev --rereadpt /dev/sdc || true; partprobe /dev/sdc || true; partx -u /dev/sdc || partx -a /dev/sdc || true; udevadm settle; sleep 1; done",
-          "test -b /dev/sdc1",
+          "partprobe /dev/sdc",
           "pvcreate /dev/sdc1",
           "vgcreate -s 8M auroravg /dev/sdc1",
-          "lvcreate -y -W y -n auroralv -l 50 auroravg",
+          "lvcreate -n auroralv -l 50 auroravg",
           "mkfs.xfs -f /dev/auroravg/auroralv",
           "mkdir -p /mnt/auroralv",
           "uuid=$(blkid -s UUID -o value /dev/auroravg/auroralv)",
@@ -256,19 +233,78 @@
           "mount -a"
         ],
         [
-          "rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\"",
-          "test -n \"$rec\"",
-          "tuned-adm profile \"$rec\""
+          "tuned-adm profile \"$(tuned-adm recommend)\""
         ]
       ],
       "checks": [
-        "hostnamectl --static | grep -qx 'client.exam-f.lab' && grep -Fqx '192.168.122.3 db.exam-f.lab' /etc/hosts",
+        "hostnamectl --static | grep -qx 'client.aurora.lab' && grep -Fqx '192.168.122.3 db.aurora.lab' /etc/hosts",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^Port 2222$' /etc/ssh/sshd_config && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
-        "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$7}' | grep -qx '4560:/sbin/nologin' && test ! -d /home/pine560 && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
+        "useradd -D | grep -Eq 'INACTIVE=14' && getent passwd pine560 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4560::/sbin/nologin' && grep -Eq '^elio .*NOPASSWD: /usr/bin/systemctl restart firewalld$' /etc/sudoers.d/elio-firewalld && grep -Fqx 'umask 027' /home/elio/.bash_profile",
         "runuser -l elio -c 'ssh -p 2222 -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null backupf@server true' && test -f /home/backupf/inbox/report.txt",
         "test -f /root/seekerf-files/opt/exam-f/find/a/file1.txt && grep -q 'comet' /root/comet-lines && test -f /root/usr-local-f.tar.gz && /usr/local/bin/aurora-report >/dev/null && test -s /root/aurora-units.txt",
-        "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\" && test -n \"$rec\" && tuned-adm active | grep -Eq \"(^|[[:space:]:])${rec}($|[[:space:]])\""
-      ]
+        "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && findmnt -no TARGET,SOURCE,FSTYPE /mnt/auroralv | grep -Eq '^/mnt/auroralv /dev/mapper/auroravg-auroralv xfs$' && rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "server",
+        "client",
+        "server",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "server",
+        "both",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "server",
+        "client",
+        "server",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "server",
+        "both",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "target_balance": {
+        "client_only": 16,
+        "server_only": 5,
+        "client_server": 1
+      }
     }
   }
 }

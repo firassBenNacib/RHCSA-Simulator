@@ -1,4 +1,4 @@
-# Lab 01: Networking And Hostname
+# Lab 01: Networking and Hostname
 
 ## Lab Tasks
 ## Overview
@@ -6,10 +6,11 @@
 |---|---|
 | Scenario ID | `lab-01-networking-hostname` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | networking-and-firewall |
 
-Configure persistent networking and hostname settings on client in RHCSA style.
+Configure persistent networking and hostname settings on client in RHCSA practice.
 
 ### Systems
 - client
@@ -21,19 +22,19 @@ Configure persistent networking and hostname settings on client in RHCSA style.
 
 ## Task 01 - Client Network Configuration (client) - 10 pts
 
-Configure the active client connection with the following persistent settings:
+On client, configure the active client connection with the following persistent settings:
 
 - **IP Address:** 192.168.122.25
 - **Netmask:** 255.255.255.0
 - **Gateway:** 192.168.122.1
-- **DNS Server:** 192.168.122.3
+- **Dns:** 192.168.122.3
 - **Hostname:** client.netlab.local
 
 ---
 
 ## Task 02 - Static Host Entry (client) - 10 pts
 
-Add a persistent hosts entry with the following value:
+On client, add a persistent hosts entry with the following value:
 
 - **Hostname:** repo.netlab.local
 - **Address:** 192.168.122.3

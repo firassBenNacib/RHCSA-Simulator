@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-28-selinux-custom-docroot` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | selinux-and-default-perms, networking-and-firewall |
 

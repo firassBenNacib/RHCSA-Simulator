@@ -50,6 +50,18 @@
           "useradd -D -e 2030-12-31",
           "useradd -D"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

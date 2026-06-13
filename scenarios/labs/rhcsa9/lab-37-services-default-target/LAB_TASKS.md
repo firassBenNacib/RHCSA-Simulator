@@ -6,12 +6,14 @@
 |---|---|
 | Scenario ID | `lab-37-services-default-target` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time, boot-and-recovery |
 
 Manage the default target and key services on server.
 
 ### Systems
+- client
 - server
 
 ## General Instructions
@@ -19,12 +21,12 @@ Manage the default target and key services on server.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Set the default boot target on server (server) - 10 pts
+## Task 01 - Set the default boot target on server (client) - 10 pts
 
-Configure server to boot into multi-user.target by default.
+On client, configure server to boot into multi-user.target by default.
 
 ---
 
 ## Task 02 - Manage rsyslog and postfix on server (server) - 20 pts
 
-Ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it.
+On server, ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it.

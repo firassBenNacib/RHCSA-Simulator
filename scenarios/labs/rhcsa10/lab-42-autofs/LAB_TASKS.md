@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-42-autofs` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 35 minutes |
 | Objectives | filesystems-and-autofs |
 
@@ -20,18 +21,18 @@ Configure automount for NFS exports.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - create the autofs parent mount point /remote10 (client) - 10 pts
+## Task 01 - Create the autofs parent mount point /remote10 (client) - 10 pts
 
 On client, create the autofs parent mount point /remote10.
 
 ---
 
-## Task 02 - configure /remote10/projects to automount server:/exports/autofs/project (client) - 10 pts
+## Task 02 - Configure /remote10/projects to automount server:/exports/autofs/project (client + server) - 10 pts
 
 On client, configure /remote10/projects to automount server:/exports/autofs/projects.
 
 ---
 
-## Task 03 - enable and start autofs (client) - 10 pts
+## Task 03 - Enable and start autofs (client) - 10 pts
 
 On client, enable and start autofs.

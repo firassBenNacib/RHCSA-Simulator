@@ -26,7 +26,7 @@
       "tasks": [
         "On client, create user relay32 and set the password to cinder9.",
         "On server, create user vault32 and set the password to cinder9.",
-        "Configure key-based SSH authentication so that user relay32 on client can log in to vault32@server without a password prompt."
+        "On client, configure key-based SSH authentication so that user relay32 on client can log in to vault32@server without a password prompt."
       ],
       "hints": [
         "Generate the key as the source user.",
@@ -67,7 +67,23 @@
           "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519",
           "ssh-copy-id -o StrictHostKeyChecking=no vault32@server"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "server",
+        "both"
+      ],
+      "solution_targets": [
+        "client",
+        "server",
+        "both"
+      ],
+      "check_targets": [
+        "client",
+        "server",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

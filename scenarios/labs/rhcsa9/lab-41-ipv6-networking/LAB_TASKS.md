@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-41-ipv6-networking` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | networking-and-firewall |
 
@@ -21,17 +22,17 @@ Configure persistent IPv6 networking and hostname resolution on the client syste
 
 ## Task 01 - IPv6 Address Configuration (client) - 10 pts
 
-Configure the active client connection with the following persistent IPv6 settings:
+On client, configure the active client connection with the following persistent IPv6 settings:
 
 - **IPv6 Address:** fd00:122:41::25/64
 - **IPv6 Gateway:** fd00:122:41::1
-- **DNS Server:** fd00:122:41::53
+- **Dns:** fd00:122:41::53
 
 ---
 
-## Task 02 - Hostname And IPv6 Host Entry (client) - 10 pts
+## Task 02 - Hostname and IPv6 Host Entry (client) - 10 pts
 
-Set the following persistent identity and resolution settings on client:
+On client, set the following persistent identity and resolution settings on client:
 
 - **Hostname:** client.ipv6lab.local
 - **Static host entry:** server.ipv6lab.local

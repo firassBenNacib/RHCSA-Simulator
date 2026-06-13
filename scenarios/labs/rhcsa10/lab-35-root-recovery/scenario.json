@@ -35,7 +35,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "From the console, interrupt boot and enter emergency recovery mode",
+        "from the console, interrupt boot and enter emergency recovery mode",
         "Set the root password to cinder9",
         "Relabel the system if SELinux requires it"
       ],
@@ -56,6 +56,19 @@
           "touch /.autorelabel",
           "reboot"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client"
       ]
     }
   },

@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-29-firewalld-rich-rule` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | networking-and-firewall |
 
@@ -21,10 +22,10 @@ Use a persistent rich rule to restrict access to a custom port by source network
 
 ## Task 01 - Configure a persistent firewalld rich rule that (client) - 10 pts
 
-Configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24.
+On client, configure a persistent firewalld rich rule that allows TCP port 2222 only from the source network 192.168.122.0/24.
 
 ---
 
 ## Task 02 - Reload firewalld and verify that the rule is active (client) - 10 pts
 
-Reload firewalld and verify that the rule is active.
+On client, reload firewalld and verify that the rule is active.

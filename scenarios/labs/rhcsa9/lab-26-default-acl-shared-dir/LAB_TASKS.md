@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-26-default-acl-shared-dir` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | filesystems-and-autofs, selinux-and-default-perms |
 
@@ -21,16 +22,16 @@ Use a default ACL for a named user without creating an unnecessary home director
 
 ## Task 01 - Create the collab26 group and probe26 user (client) - 10 pts
 
-Create the group collab26 and the user probe26 without a home directory. Set the password of probe26 to cinder9.
+On client, create the group collab26 and the user probe26 without a home directory. Set the password of probe26 to cinder9.
 
 ---
 
 ## Task 02 - Create the shared directory with setgid semantics (client) - 10 pts
 
-Create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.
+On client, create the directory /shared/collab26 with owner root, group collab26, and permissions 2770.
 
 ---
 
 ## Task 03 - Create the default ACL for probe26 (client) - 10 pts
 
-Configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26.
+On client, configure a default ACL so that user probe26 receives rwx permissions on new files and directories created under /shared/collab26.

@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "create group share10",
-        "create /srv/share10 owned by root:share10",
-        "set permissions so group members can write and only owners can delete th"
+        "Create group share10",
+        "Create /srv/share10 owned by root:share10",
+        "Set permissions so group members can write and only owners can delete th"
       ],
       "task_points": [
         10,
@@ -57,6 +57,21 @@
         [
           "chmod 3770 /srv/share10"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "server"
       ]
     }
   },

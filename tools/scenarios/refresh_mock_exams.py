@@ -5,6 +5,14 @@ import json
 from pathlib import Path
 
 from scenario_solution_normalizer import normalize_command_list
+from rhcsa_scenarios.targets import (
+    infer_check_target,
+    infer_solution_target,
+    infer_task_target,
+    normalize_authored_wording,
+    normalize_title_capitalization,
+    prefix_task_target,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 EXAMS_DIR = ROOT / "scenarios" / "exams"
@@ -68,14 +76,28 @@ def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: 
     data = load_exam(exam_id)
     exam = data["content"]["exam"]
     data["title"] = title
-    data["description"] = description
+    data["description"] = normalize_authored_wording(description).replace("A 22 task", "A 22-task")
     data["objective_tags"] = objective_tags
     data["flags"]["password_recovery"] = password_recovery
-    exam["task_titles"] = [item[0] for item in blocks]
-    exam["tasks"] = [item[1] for item in blocks]
-    exam["solution_commands"] = [normalize_command_list(item[2]) for item in blocks]
+    command_groups = [normalize_command_list(item[2]) for item in blocks]
+    task_targets = [infer_task_target(item[1], command_groups[index]) for index, item in enumerate(blocks)]
+    exam["task_titles"] = [normalize_title_capitalization(item[0]) for item in blocks]
+    exam["tasks"] = [
+        prefix_task_target(item[1], task_targets[index])
+        for index, item in enumerate(blocks)
+    ]
+    exam["solution_commands"] = command_groups
     exam["task_points"] = POINTS
-    exam["checks"] = checks
+    exam["checks"] = [normalize_authored_wording(check) for check in checks]
+    exam["task_targets"] = task_targets
+    exam["solution_targets"] = [
+        infer_solution_target(command_groups[index], task_targets[index])
+        for index in range(len(command_groups))
+    ]
+    exam["check_targets"] = [
+        infer_check_target(check, requires_server=bool(data.get("flags", {}).get("requires_server", False)))
+        for check in exam["checks"]
+    ]
     save_exam(exam_id, data)
 
 
@@ -83,7 +105,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-a",
         title="Mock Exam A",
-        description="A 22 task RHCSA style mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.",
+        description="A 22 task RHCSA practice mock exam focused on recovery, repositories, Apache, sudo delegation, storage, and rootless containers.",
         objective_tags=["boot-and-recovery", "networking-and-firewall", "users-sudo-ssh", "storage-lvm", "containers"],
         password_recovery=True,
         blocks=[
@@ -261,7 +283,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-b",
         title="Mock Exam B",
-        description="A 22 task RHCSA style mock exam emphasizing chrony, SSH hardening, user defaults, and storage administration.",
+        description="A 22 task RHCSA practice mock exam emphasizing chrony, SSH hardening, user defaults, and storage administration.",
         objective_tags=["networking-and-firewall", "users-sudo-ssh", "processes-logs-tuning", "storage-lvm"],
         password_recovery=False,
         blocks=[
@@ -419,7 +441,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-c",
         title="Mock Exam C",
-        description="A 22 task RHCSA style mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.",
+        description="A 22 task RHCSA practice mock exam centered on recovery, boot persistence, NFS, ACLs, journald, and rootless containers.",
         objective_tags=["boot-and-recovery", "filesystems-and-autofs", "users-sudo-ssh", "storage-lvm", "containers"],
         password_recovery=True,
         blocks=[
@@ -556,7 +578,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-d",
         title="Mock Exam D",
-        description="A 22 task RHCSA style mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.",
+        description="A 22 task RHCSA practice mock exam focused on repository hygiene, account defaults, server service state, and logical volume provisioning.",
         objective_tags=["networking-and-firewall", "users-sudo-ssh", "software-management", "storage-lvm"],
         password_recovery=False,
         blocks=[
@@ -707,7 +729,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-e",
         title="Mock Exam E",
-        description="A 22 task RHCSA style mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.",
+        description="A 22 task RHCSA practice mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.",
         objective_tags=["networking-and-firewall", "software-management", "filesystems-and-autofs", "users-sudo-ssh", "storage-lvm"],
         password_recovery=False,
         blocks=[
@@ -872,7 +894,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-f",
         title="Mock Exam F",
-        description="A 22 task RHCSA style mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.",
+        description="A 22 task RHCSA practice mock exam centered on chrony, SSH hardening, account defaults, rsync, and storage administration.",
         objective_tags=["networking-and-firewall", "users-sudo-ssh", "processes-logs-tuning", "storage-lvm"],
         password_recovery=False,
         blocks=[
@@ -1022,7 +1044,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-g",
         title="Mock Exam G",
-        description="A 22 task RHCSA style mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.",
+        description="A 22 task RHCSA practice mock exam combining recovery, NFS, sticky directories, SSH key transfer, process handling, and rootless containers.",
         objective_tags=["boot-and-recovery", "filesystems-and-autofs", "users-sudo-ssh", "storage-lvm", "containers"],
         password_recovery=True,
         blocks=[
@@ -1163,7 +1185,7 @@ def main() -> int:
     apply_blocks(
         "mock-exam-h",
         title="Mock Exam H",
-        description="A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.",
+        description="A 22 task RHCSA practice mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.",
         objective_tags=["networking-and-firewall", "software-management", "users-sudo-ssh", "processes-logs-tuning", "storage-lvm", "containers"],
         password_recovery=False,
         blocks=[

@@ -1,4 +1,4 @@
-# Lab 05: Users Groups And Sudo
+# Lab 05: Users Groups and Sudo
 
 ## Lab Solution
 ## Overview
@@ -6,12 +6,14 @@
 |---|---|
 | Scenario ID | `lab-05-users-groups-sudo` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 40 minutes |
 | Objectives | users-sudo-ssh |
 
 Create local users on server with minimal useradd usage and delegated sudo rules.
 
 ### Systems
+- client
 - server
 
 ## General Instructions
@@ -19,7 +21,7 @@ Create local users on server with minimal useradd usage and delegated sudo rules
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create opsrune and the required users (server) - 10 pts
+## Task 01 - Create opsrune and the required users (client) - 10 pts
 
 ```bash
 groupadd opsrune
@@ -31,7 +33,7 @@ useradd -M -s /sbin/nologin sarahx
 
 ---
 
-## Task 02 - Set the interactive user passwords to cinder9 (server) - 10 pts
+## Task 02 - Set the interactive user passwords to cinder9 (client) - 10 pts
 
 ```bash
 passwd brenor
@@ -41,7 +43,7 @@ passwd quillan
 
 ---
 
-## Task 03 - Create the required sudo rules (server) - 10 pts
+## Task 03 - Create the required sudo rules (client) - 10 pts
 
 ```bash
 visudo

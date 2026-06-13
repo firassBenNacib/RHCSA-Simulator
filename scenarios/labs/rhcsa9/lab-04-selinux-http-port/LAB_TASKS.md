@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-04-selinux-http-port` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | selinux-and-default-perms |
 
@@ -21,16 +22,16 @@ Fix Apache so it listens on a nonstandard port without disabling SELinux.
 
 ## Task 01 - Configure Apache on client so it listens on TCP (client) - 10 pts
 
-Configure Apache on client so it listens on TCP port 9082 and starts automatically at boot.
+On client, configure Apache on client so it listens on TCP port 9082 and starts automatically at boot.
 
 ---
 
 ## Task 02 - Allow TCP port 9082 through the firewall permanently (client) - 10 pts
 
-Allow TCP port 9082 through the firewall permanently.
+On client, allow TCP port 9082 through the firewall permanently.
 
 ---
 
 ## Task 03 - Make the SELinux changes needed so Apache serves (client) - 10 pts
 
-Make the SELinux changes needed so Apache serves the existing /var/www/html content on that port.
+On client, make the SELinux changes needed so Apache serves the existing /var/www/html content on that port.

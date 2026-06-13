@@ -1,4 +1,4 @@
-# Lab 10: ACL And Permissions
+# Lab 10: ACL and Permissions
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-10-acl-permissions` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms |
 

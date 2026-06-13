@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-44-filesystem-label-mount` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |
 
@@ -21,16 +22,16 @@ Create an ext4 filesystem by label and mount it persistently.
 
 ## Task 01 - Create the 600 MiB partition on /dev/sdb (client) - 10 pts
 
-On /dev/sdb, create a GPT partition of 600 MiB for an ext4 filesystem.
+On client, on /dev/sdb, create a GPT partition of 600 MiB for an ext4 filesystem.
 
 ---
 
 ## Task 02 - Format and mount the filesystem by label (client) - 10 pts
 
-Format the new partition with the filesystem label DATA44 and mount it at /data44.
+On client, format the new partition with the filesystem label DATA44 and mount it at /data44.
 
 ---
 
 ## Task 03 - Persist the LABEL mount in fstab (client) - 10 pts
 
-Configure the mount persistently in /etc/fstab by using LABEL=DATA44.
+On client, configure the mount persistently in /etc/fstab by using LABEL=DATA44.

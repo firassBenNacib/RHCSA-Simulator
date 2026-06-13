@@ -24,9 +24,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure journald on client so logs are stored persistently across reboots.",
-        "Create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
-        "Ensure the rsyslog service is active after your changes."
+        "On client, configure journald on client so logs are stored persistently across reboots.",
+        "On client, create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
+        "On client, ensure the rsyslog service is active after your changes."
       ],
       "hints": [
         "Persistent journald storage requires the correct directory and a valid [Journal] configuration section.",
@@ -65,7 +65,23 @@
           "systemctl restart rsyslog",
           "systemctl enable rsyslog"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

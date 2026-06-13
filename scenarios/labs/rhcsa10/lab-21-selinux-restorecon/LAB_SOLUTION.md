@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-21-selinux-restorecon` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |
 

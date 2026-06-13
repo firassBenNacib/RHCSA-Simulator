@@ -1,7 +1,7 @@
 {
   "id": "mock-exam-e",
   "title": "Mock Exam E",
-  "description": "A 22 task RHCSA style mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.",
+  "description": "A 22-task RHCSA practice mock exam focused on offline repositories, Apache document roots, ACLs, NFS, and storage maintenance.",
   "objective_tags": [
     "networking-and-firewall",
     "software-management",
@@ -28,28 +28,28 @@
   "content": {
     "exam": {
       "tasks": [
-        "Configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: client.exam-e.lab",
-        "Add a persistent hosts entry so registry.exam-e.lab resolves to 192.168.122.3.",
-        "Configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.",
-        "Configure the same repository file on server.",
-        "Configure Apache on client so it serves /srv/harbor-web on TCP port 8181.\n\nRequirements:\n- Start automatically at boot.\n- Open the port permanently in the firewall.\n- Apply the SELinux changes needed for the custom document root and port.",
-        "Create group harborops and create users lena and ivor with harborops as a supplementary group at creation time. Set the password of both users to cinder9.",
-        "Set password aging for ivor to maximum 30 days, minimum 2 days, and warning 7 days.",
-        "Create /srv/harbor-drop owned by root:harborops with mode 2770 and a default ACL that grants harborops rwx on new files and directories.",
-        "Create user harborremote without a home directory, with shell /sbin/nologin, and set its password to cinder9.",
-        "Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
-        "Queue a one-time at job as user ivor that appends the message \"exam-e tick\" to /root/exam-e-at.log in 2 minutes.",
-        "Persistently mount server:/exports/harborhome on /mnt/harborhome using /etc/fstab.",
+        "On client, configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.37\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS: 192.168.122.3\nHOSTNAME: client.exam-e.lab",
+        "On client, add a persistent hosts entry so registry.exam-e.lab resolves to 192.168.122.3.",
+        "On client, configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.",
+        "On server, configure the same repository file on server.",
+        "On client, configure Apache on client so it serves /srv/harbor-web on TCP port 8181.\n\nRequirements:\n- Start automatically at boot.\n- Open the port permanently in the firewall.\n- Apply the SELinux changes needed for the custom document root and port.",
+        "On client, create group harborops and create users lena and ivor with harborops as a supplementary group at creation time. Set the password of both users to cinder9.",
+        "On client, set password aging for ivor to maximum 30 days, minimum 2 days, and warning 7 days.",
+        "On client, create /srv/harbor-drop owned by root:harborops with mode 2770 and a default ACL that grants harborops rwx on new files and directories.",
+        "On client, create user harborremote without a home directory, with shell /sbin/nologin, and set its password to cinder9.",
+        "On client, configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
+        "On client, queue a one-time at job as user ivor that appends the message \"exam-e tick\" to /root/exam-e-at.log in 2 minutes.",
+        "On client, persistently mount server:/exports/harborhome on /mnt/harborhome using /etc/fstab.",
         "On server, enable persistent systemd journal storage and restart systemd-journald.",
-        "Append a login message for ivor to ~/.bash_profile that prints \"exam-e access\" when ivor logs in.",
-        "Create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.",
-        "Find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.",
-        "Extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.",
-        "Create /root/var-tmp-harbor.tar.bz2 containing /var/tmp.",
-        "Create executable script /usr/local/bin/harbor-check that writes the active state of each service listed in /usr/local/share/exam-e/services.lst to /root/harbor-services.txt.",
-        "On /dev/sdb, create a 640 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
-        "Resize /dev/reviewvge/reviewe so the final size is 360 MiB without losing the existing filesystem data.",
-        "Apply the recommended tuned profile and leave it active."
+        "On client, append a login message for ivor to ~/.bash_profile that prints \"exam-e access\" when ivor logs in.",
+        "On client, create user maple551 with UID 4551, no home directory, shell /sbin/nologin, and password cinder9.",
+        "On client, find all files under /opt/exam-e/find that are owned by scoutte and were modified within the last 24 hours. Copy them to /root/scoutte-files while preserving the source directory structure.",
+        "On client, extract lines containing beacon from /usr/share/dict/words into /root/beacon-lines.",
+        "On client, create /root/var-tmp-harbor.tar.bz2 containing /var/tmp.",
+        "On client, create executable script /usr/local/bin/harbor-check that writes the active state of each service listed in /usr/local/share/exam-e/services.lst to /root/harbor-services.txt.",
+        "On client, on /dev/sdb, create a 640 MiB swap partition.\n\nRequirements:\n- Enable it immediately.\n- Configure it persistently.",
+        "On client, resize /dev/reviewvge/reviewe so the final size is 360 MiB without losing the existing filesystem data.",
+        "On client, apply the recommended tuned profile and leave it active."
       ],
       "task_titles": [
         "Client Network",
@@ -67,7 +67,7 @@
         "Persistent Journal",
         "Per-User Login Message",
         "Fixed UID User",
-        "Find And Copy",
+        "Find and Copy",
         "Grep Filter",
         "Archive",
         "Shell Script",
@@ -147,27 +147,23 @@
           "dnf install -y httpd",
           "mkdir -p /srv/harbor-web",
           "echo 'exam-e portal' > /srv/harbor-web/index.html",
-          "grep -Rqs '^Listen 8181$' /etc/httpd/conf /etc/httpd/conf.d || echo 'Listen 8181' > /etc/httpd/conf.d/harborgrid-listen.conf",
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8181",
           "cat > /etc/httpd/conf.d/harborgrid.conf <<'EOF'",
           "<VirtualHost *:8181>",
           "    DocumentRoot \"/srv/harbor-web\"",
           "</VirtualHost>",
-          "<Directory \"/srv/harbor-web\">",
-          "    Require all granted",
-          "</Directory>",
           "EOF",
-          "semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?' || semanage fcontext -m -t httpd_sys_content_t '/srv/harbor-web(/.*)?'",
+          "semanage fcontext -a -t httpd_sys_content_t '/srv/harbor-web(/.*)?'",
           "restorecon -Rv /srv/harbor-web",
-          "semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181",
           "firewall-cmd --permanent --add-port=8181/tcp",
           "firewall-cmd --reload",
-          "systemctl enable httpd",
-          "systemctl restart httpd"
+          "systemctl enable --now httpd"
         ],
         [
-          "getent group harborops >/dev/null || groupadd harborops",
-          "id lena >/dev/null 2>&1 || useradd -m -G harborops lena",
-          "id ivor >/dev/null 2>&1 || useradd -m -G harborops ivor",
+          "groupadd harborops",
+          "useradd -G harborops lena",
+          "useradd -G harborops ivor",
           "echo cinder9 | passwd --stdin lena",
           "echo cinder9 | passwd --stdin ivor"
         ],
@@ -181,9 +177,7 @@
           "setfacl -d -m g:harborops:rwx /srv/harbor-drop"
         ],
         [
-          "id harborremote >/dev/null 2>&1 || useradd -M -s /sbin/nologin harborremote",
-          "usermod -s /sbin/nologin harborremote",
-          "rm -rf /home/harborremote",
+          "useradd -M -s /sbin/nologin harborremote",
           "echo cinder9 | passwd --stdin harborremote"
         ],
         [
@@ -194,8 +188,9 @@
           "EOF"
         ],
         [
-          "systemctl enable --now atd",
-          "runuser -l ivor -c 'echo \"echo exam-e tick >> /root/exam-e-at.log\" | at now + 2 minutes'"
+          "su - ivor",
+          "echo \"echo exam-e tick >> /root/exam-e-at.log\" | at now + 2 minutes",
+          "systemctl enable --now atd"
         ],
         [
           "mkdir -p /mnt/harborhome",
@@ -218,9 +213,7 @@
           "echo 'echo exam-e access' >> /home/ivor/.bash_profile"
         ],
         [
-          "id maple551 >/dev/null 2>&1 || useradd -M -u 4551 -s /sbin/nologin maple551",
-          "usermod -u 4551 -s /sbin/nologin maple551",
-          "rm -rf /home/maple551",
+          "useradd -M -u 4551 -s /sbin/nologin maple551",
           "echo cinder9 | passwd --stdin maple551"
         ],
         [
@@ -238,7 +231,7 @@
           "#!/bin/bash",
           "> /root/harbor-services.txt",
           "for svc in $(cat /usr/local/share/exam-e/services.lst); do",
-          "  systemctl is-active \"$svc\" >> /root/harbor-services.txt || true",
+          "  systemctl is-active \"$svc\" >> /root/harbor-services.txt",
           "done",
           "SCRIPT",
           "chmod +x /usr/local/bin/harbor-check",
@@ -246,12 +239,7 @@
         ],
         [
           "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 641MiB",
-          "blockdev --rereadpt /dev/sdb || true",
-          "partprobe /dev/sdb || true",
-          "partx -u /dev/sdb || partx -a /dev/sdb || true",
-          "udevadm settle",
-          "for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done",
-          "test -b /dev/sdb1",
+          "partprobe /dev/sdb",
           "mkswap /dev/sdb1",
           "swapon /dev/sdb1",
           "uuid=$(blkid -s UUID -o value /dev/sdb1)",
@@ -262,19 +250,78 @@
           "resize2fs /dev/reviewvge/reviewe"
         ],
         [
-          "rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\"",
-          "test -n \"$rec\"",
-          "tuned-adm profile \"$rec\""
+          "tuned-adm profile \"$(tuned-adm recommend)\""
         ]
       ],
       "checks": [
         "hostnamectl --static | grep -qx 'client.exam-e.lab' && grep -Fqx '192.168.122.3 registry.exam-e.lab' /etc/hosts && curl -fsS http://server/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://server/repo/AppStream/repodata/repomd.xml >/dev/null",
         "curl -fsS http://localhost:8181 | grep -Fq 'exam-e portal' && findmnt -no TARGET,SOURCE /mnt/harborhome | grep -Eq '^/mnt/harborhome server:/exports/harborhome$'",
-        "getent group harborops >/dev/null && id -nG lena | tr ' ' '\\n' | grep -qx harborops && id -nG ivor | tr ' ' '\\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $7}' | grep -qx '/sbin/nologin' && test ! -d /home/harborremote && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo exam-e access' /home/ivor/.bash_profile && files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
-        "getent passwd maple551 | awk -F: '{print $3\":\"$7}' | grep -qx '4551:/sbin/nologin' && test ! -d /home/maple551 && test -f /root/scoutte-files/opt/exam-e/find/a/file1.txt && grep -q 'beacon' /root/beacon-lines && test -f /root/var-tmp-harbor.tar.bz2 && /usr/local/bin/harbor-check >/dev/null && test -s /root/harbor-services.txt",
+        "getent group harborops >/dev/null && id -nG lena | tr ' ' '\\n' | grep -qx harborops && id -nG ivor | tr ' ' '\\n' | grep -qx harborops && chage -l ivor | grep -Eq 'Maximum.*30' && getfacl -p /srv/harbor-drop | grep -Fq 'default:group:harborops:rwx' && getent passwd harborremote | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/harborgrid.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/harborgrid.conf && atq | grep -q ivor && grep -Fqx 'echo exam-e access' /home/ivor/.bash_profile && files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
+        "getent passwd maple551 | awk -F: '{print $3\":\"$6\":\"$7}' | grep -qx '4551::/sbin/nologin' && test -f /root/scoutte-files/opt/exam-e/find/a/file1.txt && grep -q 'beacon' /root/beacon-lines && test -f /root/var-tmp-harbor.tar.bz2 && /usr/local/bin/harbor-check >/dev/null && test -s /root/harbor-services.txt",
         "swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewe\" && $2==\"reviewvge\" && $3>=359 && $3<=361{f=1} END{exit !f}'",
-        "rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\"; test -n \"$rec\" && tuned-adm active | grep -Eq \"(^|[[:space:]:])${rec}($|[[:space:]])\""
-      ]
+        "rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "both",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "both",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "both",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "target_balance": {
+        "client_only": 19,
+        "server_only": 2,
+        "client_server": 1
+      }
     }
   }
 }

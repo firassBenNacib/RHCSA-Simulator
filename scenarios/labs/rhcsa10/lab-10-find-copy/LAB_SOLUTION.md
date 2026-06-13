@@ -1,4 +1,4 @@
-# RHCSA 10 Lab 10: Find And Copy
+# RHCSA 10 Lab 10: Find and Copy
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-10-find-copy` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | essential-tools |
 

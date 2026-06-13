@@ -1,7 +1,7 @@
 {
   "id": "lab-01-networking-hostname",
-  "title": "Lab 01: Networking And Hostname",
-  "description": "Configure persistent networking and hostname settings on client in RHCSA style",
+  "title": "Lab 01: Networking and Hostname",
+  "description": "Configure persistent networking and hostname settings on client in RHCSA practice",
   "objective_tags": [
     "networking-and-firewall"
   ],
@@ -23,8 +23,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure the active client connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS Server: 192.168.122.3\nHostname: client.netlab.local",
-        "Add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3"
+        "On client, configure the active client connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS: 192.168.122.3\nHostname: client.netlab.local",
+        "On client, add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3"
       ],
       "hints": [
         "Use nmcli or nmtui for the network profile.",
@@ -58,7 +58,20 @@
           "vim /etc/hosts",
           "192.168.122.3 repo.netlab.local"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

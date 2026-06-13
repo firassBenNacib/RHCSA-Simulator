@@ -40,9 +40,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "create /var/www/html/rhcsa10-boot.html containing BOOT10",
-        "enable httpd and allow the http service permanently in firewalld",
-        "save the server web page output to /root/rhcsa10-boot-check.txt"
+        "Create /var/www/html/rhcsa10-boot.html containing BOOT10",
+        "Enable httpd and allow the http service permanently in firewalld",
+        "Save the server web page output to /root/rhcsa10-boot-check.txt"
       ],
       "task_points": [
         10,
@@ -65,6 +65,21 @@
         [
           "curl -fsS http://server/rhcsa10-boot.html > /root/rhcsa10-boot-check.txt"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server",
+        "client"
+      ],
+      "solution_targets": [
+        "server",
+        "server",
+        "client"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "client"
       ]
     }
   },

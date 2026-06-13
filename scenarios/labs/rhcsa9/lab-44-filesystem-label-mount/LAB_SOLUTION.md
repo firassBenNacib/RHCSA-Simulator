@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-44-filesystem-label-mount` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |
 

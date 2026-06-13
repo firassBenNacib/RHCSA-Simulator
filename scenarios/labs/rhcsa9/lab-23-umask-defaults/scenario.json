@@ -24,8 +24,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the user veil23 and set its password to cinder9.",
-        "Configure the umask for user veil23 so that new regular files are created with mode 0640 and new directories are created with mode 0750 whenever the user logs in."
+        "On client, create the user veil23 and set its password to cinder9.",
+        "On client, configure the umask for user veil23 so that new regular files are created with mode 0640 and new directories are created with mode 0750 whenever the user logs in."
       ],
       "hints": [
         "Use a user login startup file.",
@@ -57,7 +57,20 @@
           "umask 027",
           "chown veil23:veil23 /home/veil23/.bashrc"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

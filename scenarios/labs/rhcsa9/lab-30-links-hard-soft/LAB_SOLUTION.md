@@ -1,4 +1,4 @@
-# Lab 30: Hard And Soft Links
+# Lab 30: Hard and Soft Links
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-30-links-hard-soft` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 

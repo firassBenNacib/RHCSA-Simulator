@@ -1,4 +1,4 @@
-# Lab 09: Tar Archive With Bzip2
+# Lab 09: Tar Archive with Bzip2
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-09-archive-bzip2` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 
@@ -21,4 +22,4 @@ Create a compressed archive in bzip2 format.
 
 ## Task 01 - Create /root/myetcbackup.tar.bz2 containing the (client) - 10 pts
 
-Create /root/myetcbackup.tar.bz2 containing the /etc directory.
+On client, create /root/myetcbackup.tar.bz2 containing the /etc directory.

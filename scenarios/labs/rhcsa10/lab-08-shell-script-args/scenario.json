@@ -50,6 +50,18 @@
           "chmod +x /usr/local/bin/rhcsa10-user-report",
           "/usr/local/bin/rhcsa10-user-report root"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-27-at-job` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |
 

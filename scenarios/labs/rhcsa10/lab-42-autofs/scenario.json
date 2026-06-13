@@ -41,9 +41,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "create the autofs parent mount point /remote10",
-        "configure /remote10/projects to automount server:/exports/autofs/project",
-        "enable and start autofs"
+        "Create the autofs parent mount point /remote10",
+        "Configure /remote10/projects to automount server:/exports/autofs/project",
+        "Enable and start autofs"
       ],
       "task_points": [
         10,
@@ -62,6 +62,21 @@
           "systemctl enable --now autofs",
           "ls /remote10/projects || true"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "both",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "both",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

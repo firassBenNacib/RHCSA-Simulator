@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-36-nfs-direct-mount` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | filesystems-and-autofs, storage-lvm |
 

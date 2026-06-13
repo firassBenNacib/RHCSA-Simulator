@@ -1,4 +1,4 @@
-# Lab 09: Tar Archive With Bzip2
+# Lab 09: Tar Archive with Bzip2
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-09-archive-bzip2` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 

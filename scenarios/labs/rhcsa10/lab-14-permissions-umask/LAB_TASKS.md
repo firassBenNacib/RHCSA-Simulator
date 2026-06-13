@@ -1,4 +1,4 @@
-# RHCSA 10 Lab 14: Permissions And Umask
+# RHCSA 10 Lab 14: Permissions and Umask
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-14-permissions-umask` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |
 

@@ -24,8 +24,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Install the tuned package if it is not already present and activate the tuned profile throughput-performance on server.",
-        "Start the command sleep 3600 in the background on server and save its PID in /root/sleep35.pid.",
+        "On server, install the tuned package if it is not already present and activate the tuned profile throughput-performance on server.",
+        "On server, start the command sleep 3600 in the background on server and save its PID in /root/sleep35.pid.",
         "On server, adjust the nice value of that process so it becomes 5."
       ],
       "hints": [
@@ -65,7 +65,23 @@
           "# On server",
           "renice -n 5 -p \"$(cat /root/sleep35.pid)\""
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "server"
       ]
     }
-  }
+  },
+  "scope": "server"
 }

@@ -1,6 +1,6 @@
 {
   "id": "lab-46-container-inspect",
-  "title": "Lab 46: Container Load And Inspect",
+  "title": "Lab 46: Container Load and Inspect",
   "description": "Load a provided container image into user storage and inspect its metadata with podman",
   "objective_tags": [
     "containers"
@@ -23,10 +23,10 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user scope46 and set the password to cinder9.",
-        "As user scope46, load the image archive /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage.",
-        "As user scope46, inspect localhost/rhcsa-httpd-base:latest and write the configured working directory to /home/scope46/workdir.txt.",
-        "If the image has no explicit configured user, write root to /home/scope46/user.txt. Otherwise write the configured user value."
+        "On client, create user scope46 and set the password to cinder9.",
+        "On client, as user scope46, load the image archive /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage.",
+        "On client, as user scope46, inspect localhost/rhcsa-httpd-base:latest and write the configured working directory to /home/scope46/workdir.txt.",
+        "On client, if the image has no explicit configured user, write root to /home/scope46/user.txt. Otherwise write the configured user value."
       ],
       "hints": [
         "Use podman image inspect with --format."
@@ -66,7 +66,26 @@
           "echo \"${u:-root}\" > /home/scope46/user.txt",
           "chown scope46:scope46 /home/scope46/user.txt"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

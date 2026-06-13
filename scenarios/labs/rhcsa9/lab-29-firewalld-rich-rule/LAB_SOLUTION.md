@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-29-firewalld-rich-rule` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | networking-and-firewall |
 

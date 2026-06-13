@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-26-persistent-journal` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 20 minutes |
 | Objectives | processes-logs-tuning |
 
@@ -19,12 +20,12 @@ Preserve systemd journal logs.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - configure persistent systemd journal storage (server) - 10 pts
+## Task 01 - Configure persistent systemd journal storage (server) - 10 pts
 
 On server, configure persistent systemd journal storage.
 
 ---
 
-## Task 02 - restart systemd-journald and flush current journal data to persistent st (server) - 10 pts
+## Task 02 - Restart systemd-journald and flush current journal data to persistent st (server) - 10 pts
 
 On server, restart systemd-journald and flush current journal data to persistent storage.

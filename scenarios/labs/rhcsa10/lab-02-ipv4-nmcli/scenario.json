@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "configure the active lab connection with IPv4 address 192.168.122.45/24",
-        "set gateway 192.168.122.1 and DNS server 192.168.122.3",
-        "ensure the connection uses manual IPv4 configuration and autoconnects"
+        "Configure the active lab connection with IPv4 address 192.168.122.45/24",
+        "Set gateway 192.168.122.1 and DNS server 192.168.122.3",
+        "Ensure the connection uses manual IPv4 configuration and autoconnects"
       ],
       "task_points": [
         10,
@@ -60,6 +60,21 @@
           "nmcli connection modify \"System eth1\" ipv4.method manual connection.autoconnect yes",
           "nmcli connection up \"System eth1\""
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

@@ -1,6 +1,6 @@
 {
   "id": "lab-42-process-kill-renice",
-  "title": "Lab 42: Process Kill And Renice",
+  "title": "Lab 42: Process Kill and Renice",
   "description": "Identify a running process, terminate it, and adjust the scheduling priority of another one",
   "objective_tags": [
     "processes-logs-tuning"
@@ -24,7 +24,7 @@
     "lab": {
       "tasks": [
         "On client, user worker42 has a CPU-bound process whose PID is stored in /home/worker42/cpu.pid. Terminate that process.",
-        "User worker42 also has a long-running sleep process whose PID is stored in /home/worker42/sleep.pid. Change the nice value of that process to 10."
+        "On client, user worker42 also has a long-running sleep process whose PID is stored in /home/worker42/sleep.pid. Change the nice value of that process to 10."
       ],
       "hints": [
         "Use kill or pkill for the first process and renice for the second one."
@@ -49,7 +49,20 @@
         [
           "renice 10 -p \"$(cat /home/worker42/sleep.pid)\""
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-47-documentation` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 

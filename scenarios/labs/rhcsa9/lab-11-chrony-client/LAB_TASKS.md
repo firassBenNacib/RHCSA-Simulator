@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-11-chrony-client` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time |
 

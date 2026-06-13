@@ -1,4 +1,4 @@
-# Lab 42: Process Kill And Renice
+# Lab 42: Process Kill and Renice
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-42-process-kill-renice` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | processes-logs-tuning |
 
@@ -27,4 +28,4 @@ On client, user worker42 has a CPU-bound process whose PID is stored in /home/wo
 
 ## Task 02 - Change the long-running sleep process to nice 10 (client) - 10 pts
 
-User worker42 also has a long-running sleep process whose PID is stored in /home/worker42/sleep.pid. Change the nice value of that process to 10.
+On client, user worker42 also has a long-running sleep process whose PID is stored in /home/worker42/sleep.pid. Change the nice value of that process to 10.

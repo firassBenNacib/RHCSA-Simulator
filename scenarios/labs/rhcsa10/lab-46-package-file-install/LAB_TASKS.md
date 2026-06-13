@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-46-package-file-install` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 20 minutes |
 | Objectives | software-management |
 

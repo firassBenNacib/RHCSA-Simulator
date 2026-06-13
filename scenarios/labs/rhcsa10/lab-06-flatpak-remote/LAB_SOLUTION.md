@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-06-flatpak-remote` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 20 minutes |
 | Objectives | software-management |
 

@@ -40,9 +40,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "set the persistent hostname to server10.lab.example",
-        "set the persistent hostname to client10.lab.example",
-        "add a persistent hosts entry mapping server10.lab.example to 192.168.122"
+        "Set the persistent hostname to server10.lab.example",
+        "Set the persistent hostname to client10.lab.example",
+        "Add a persistent hosts entry mapping server10.lab.example to 192.168.122"
       ],
       "task_points": [
         10,
@@ -62,6 +62,21 @@
           "hostnamectl --static",
           "getent hosts server10.lab.example"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "server",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "server",
+        "client",
+        "client"
       ]
     }
   },

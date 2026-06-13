@@ -353,10 +353,32 @@ Results = @()
 
 $results = @()
 $requiresServer = [bool]$manifest.Flags.RequiresServer
+$checkTargets = @($manifest.Content.Exam.CheckTargets)
 $checkIndex = 0
 foreach ($command in $checks) {
 $checkIndex++
 $commandText = [string]$command
+$explicitTarget = if ($checkIndex -le $checkTargets.Count) { [string]$checkTargets[$checkIndex - 1] } else { '' }
+if ($explicitTarget -in @('client', 'server')) {
+$targetCommand = $commandText
+if ($explicitTarget -eq 'server') {
+$resolved = Resolve-ExamCheckClause -Clause $commandText
+$targetCommand = [string]$resolved.Command
+}
+$targetResult = Invoke-ExamCheckCapture -Target $explicitTarget -Command $targetCommand -ProjectRoot $ProjectRoot
+$results += [PSCustomObject]@{
+Index = $checkIndex
+Target = $explicitTarget
+OriginalCommand = $commandText
+Command = $targetCommand
+ExitCode = [int]$targetResult.ExitCode
+Passed = ([int]$targetResult.ExitCode -eq 0)
+StdOut = @($targetResult.StdOut)
+StdErr = @($targetResult.StdErr)
+}
+continue
+}
+
 $clientResult = Invoke-ExamCheckCapture -Target 'client' -Command $commandText -ProjectRoot $ProjectRoot
 if ([int]$clientResult.ExitCode -eq 0) {
 $results += [PSCustomObject]@{

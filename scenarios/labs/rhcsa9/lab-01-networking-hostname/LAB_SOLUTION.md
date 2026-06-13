@@ -1,4 +1,4 @@
-# Lab 01: Networking And Hostname
+# Lab 01: Networking and Hostname
 
 ## Lab Solution
 ## Overview
@@ -6,10 +6,11 @@
 |---|---|
 | Scenario ID | `lab-01-networking-hostname` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | networking-and-firewall |
 
-Configure persistent networking and hostname settings on client in RHCSA style.
+Configure persistent networking and hostname settings on client in RHCSA practice.
 
 ### Systems
 - client

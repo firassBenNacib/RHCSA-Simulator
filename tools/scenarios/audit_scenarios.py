@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from rhcsa_scenarios.targets import VALID_SCOPES, VALID_TARGETS, normalize_scope, normalize_target, scope_from_targets
+
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIOS_DIR = ROOT / "scenarios"
@@ -94,6 +96,11 @@ def task_lengths_ok(path: Path, scenario: dict[str, Any], findings: list[Finding
         for key in ("task_titles", "task_points", "solution_commands"):
             if len(lab[key]) != expected:
                 findings.append(Finding(path, f"lab field '{key}' length does not match tasks"))
+        for key in ("task_targets", "solution_targets"):
+            if key in lab and len(lab[key]) != expected:
+                findings.append(Finding(path, f"lab field '{key}' length does not match tasks"))
+        if "check_targets" in lab and len(lab["check_targets"]) != len(lab.get("checks", [])):
+            findings.append(Finding(path, "lab field 'check_targets' length does not match checks"))
     if "exam" in content:
         exam = content["exam"]
         tasks = exam["tasks"]
@@ -101,6 +108,11 @@ def task_lengths_ok(path: Path, scenario: dict[str, Any], findings: list[Finding
         for key in ("task_titles", "task_points", "solution_commands"):
             if len(exam[key]) != expected:
                 findings.append(Finding(path, f"exam field '{key}' length does not match tasks"))
+        for key in ("task_targets", "solution_targets"):
+            if key in exam and len(exam[key]) != expected:
+                findings.append(Finding(path, f"exam field '{key}' length does not match tasks"))
+        if "check_targets" in exam and len(exam["check_targets"]) != len(exam.get("checks", [])):
+            findings.append(Finding(path, "exam field 'check_targets' length does not match checks"))
         if len(tasks) not in (22, 23):
             findings.append(Finding(path, "exam must contain 22 or 23 tasks"))
         if sum(int(point) for point in exam["task_points"]) != 100:
@@ -164,6 +176,65 @@ def audit_solution_style(path: Path, scenario: dict[str, Any], findings: list[Fi
 
     if DIRECT_SUDOERS_RE.search(combined_solution_text) and not DIRECT_SUDOERS_RE.search(tasks_text):
         findings.append(Finding(path, "solution edits /etc/sudoers directly without task requiring it"))
+
+
+def audit_target_metadata(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    content = scenario.get("content", {})
+    for mode in ("lab", "exam"):
+        block = content.get(mode)
+        if not isinstance(block, dict):
+            continue
+        tasks = block.get("tasks", [])
+        checks = block.get("checks", [])
+        for key, expected in (("task_targets", len(tasks)), ("solution_targets", len(tasks)), ("check_targets", len(checks))):
+            values = block.get(key)
+            if not isinstance(values, list):
+                findings.append(Finding(path, f"{mode} must include {key} metadata"))
+                continue
+            if len(values) != expected:
+                findings.append(Finding(path, f"{mode} {key} length must be {expected}"))
+                continue
+            invalid = sorted({str(value) for value in values if normalize_target(value, default="") not in VALID_TARGETS})
+            if invalid:
+                findings.append(Finding(path, f"{mode} {key} has invalid target(s): {', '.join(invalid)}"))
+
+        if mode == "lab":
+            raw_scope = scenario.get("scope")
+            scope = normalize_scope(raw_scope, default="")
+            if raw_scope is None:
+                findings.append(Finding(path, "lab scenario must include scope metadata"))
+            elif scope not in VALID_SCOPES:
+                findings.append(Finding(path, f"lab scope has invalid value: {raw_scope}"))
+            else:
+                expected_scope = scope_from_targets(
+                    block.get("task_targets", []),
+                    requires_server=bool(scenario.get("flags", {}).get("requires_server", False)),
+                )
+                if scope != expected_scope:
+                    findings.append(Finding(path, f"lab scope should be {expected_scope}, not {scope}"))
+
+        if mode == "exam":
+            for index, task in enumerate(tasks, start=1):
+                if not re.match(r"^\s*On\s+(client|server)\b", str(task)):
+                    findings.append(Finding(path, f"exam task {index} must begin with 'On client' or 'On server'"))
+
+
+def audit_wording_style(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    text = scenario_text(scenario)
+    if re.search(r"\bRHCSA style\b", text, re.I):
+        findings.append(Finding(path, "avoid generic 'RHCSA style' wording"))
+    if re.search(r"\bDNS Server\s*:", text, re.I):
+        findings.append(Finding(path, "use 'DNS:' for resolver settings instead of 'DNS Server:'"))
+    if re.search(r"\b(And|With|Of|To|From|For|On|In)\b", str(scenario.get("title", ""))):
+        findings.append(Finding(path, "scenario title should use sentence-style connector capitalization"))
+    for mode in ("lab", "exam"):
+        block = scenario.get("content", {}).get(mode)
+        if not isinstance(block, dict):
+            continue
+        for title in block.get("task_titles", []):
+            if re.search(r"\b(And|With|Of|To|From|For|On|In)\b", str(title)):
+                findings.append(Finding(path, f"{mode} task title '{title}' should use sentence-style connector capitalization"))
+                break
 
 
 def audit_rhcsa10_exam_strictness(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
@@ -388,6 +459,8 @@ def main() -> int:
         labs.append((path, scenario))
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
+        audit_target_metadata(path, scenario, findings)
+        audit_wording_style(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
         audit_rhcsa10_lab_scope(path, scenario, findings)
         audit_rhcsa10_timer_calendar(path, scenario, findings)
@@ -399,6 +472,8 @@ def main() -> int:
         exams.append((path, scenario))
         audit_identity(path, scenario, seen_ids, findings)
         task_lengths_ok(path, scenario, findings)
+        audit_target_metadata(path, scenario, findings)
+        audit_wording_style(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
         audit_rhcsa10_exam_roles(path, scenario, findings)
         audit_rhcsa10_exam_target_balance(path, scenario, findings)

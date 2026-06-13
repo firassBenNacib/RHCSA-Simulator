@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-17-resize-logical-volume` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | storage-lvm |
 
@@ -21,4 +22,4 @@ Extend an existing logical volume without losing data.
 
 ## Task 01 - Resize logical volume /dev/reviewvg/reviewlv so the (client) - 10 pts
 
-Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot.
+On client, resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot.

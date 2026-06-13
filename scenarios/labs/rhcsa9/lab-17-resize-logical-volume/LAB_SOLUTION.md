@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-17-resize-logical-volume` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | storage-lvm |
 

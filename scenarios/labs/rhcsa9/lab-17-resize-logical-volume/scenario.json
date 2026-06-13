@@ -23,7 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot."
+        "On client, resize logical volume /dev/reviewvg/reviewlv so the final size is 320 MiB and the existing filesystem remains usable after reboot."
       ],
       "hints": [
         "The logical volume already exists and is mounted on /mnt/reviewlv.",
@@ -51,7 +51,17 @@
           "# if the filesystem is xfs, run xfs_growfs /mnt/reviewlv",
           "df -hT /mnt/reviewlv"
         ]
+      ],
+      "task_targets": [
+        "client"
+      ],
+      "solution_targets": [
+        "client"
+      ],
+      "check_targets": [
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

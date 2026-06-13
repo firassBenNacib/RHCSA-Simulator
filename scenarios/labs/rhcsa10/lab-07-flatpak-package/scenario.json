@@ -36,7 +36,7 @@
       ],
       "task_titles": [
         "Ensure the system Flatpak remote rhcsa10 exists and points to file:///op",
-        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system "
+        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system"
       ],
       "task_points": [
         10,
@@ -49,6 +49,18 @@
         [
           "flatpak install --system -y rhcsa10 org.rhcsa.Tools"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

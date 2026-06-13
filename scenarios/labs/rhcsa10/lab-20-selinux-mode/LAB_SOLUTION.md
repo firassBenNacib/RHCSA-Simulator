@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-20-selinux-mode` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | selinux-and-default-perms |
 

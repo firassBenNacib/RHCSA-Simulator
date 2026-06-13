@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-06-shared-setgid-directory` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | filesystems-and-autofs, selinux-and-default-perms |
 
@@ -21,10 +22,10 @@ Build a collaborative directory that uses both setgid and sticky semantics.
 
 ## Task 01 - Create the shared analysts directory (client) - 10 pts
 
-Create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.
+On client, create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.
 
 ---
 
 ## Task 02 - Enable setgid and sticky behavior on the directory (client) - 10 pts
 
-Configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it.
+On client, configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it.

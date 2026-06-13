@@ -24,9 +24,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.",
-        "Keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.",
-        "Do not edit or remove /srv/lab28/site/index.html."
+        "On client, configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.",
+        "On client, keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.",
+        "On client, do not edit or remove /srv/lab28/site/index.html."
       ],
       "hints": [
         "This lab needs both a file-context change and a port-label change.",
@@ -71,7 +71,23 @@
         [
           "systemctl enable --now httpd"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

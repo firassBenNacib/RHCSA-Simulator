@@ -36,8 +36,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "add TCP port 8010 as an http_port_t SELinux port",
-        "configure firewalld to allow TCP port 8010 permanently"
+        "Add TCP port 8010 as an http_port_t SELinux port",
+        "Configure firewalld to allow TCP port 8010 permanently"
       ],
       "task_points": [
         10,
@@ -52,6 +52,18 @@
           "firewall-cmd --reload",
           "semanage port -l | grep http_port_t"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server"
       ]
     }
   },

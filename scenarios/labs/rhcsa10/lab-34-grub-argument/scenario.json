@@ -43,6 +43,15 @@
           "grubby --update-kernel=ALL --args='audit_backlog_limit=8192'",
           "grub2-mkconfig -o /boot/grub2/grub.cfg"
         ]
+      ],
+      "task_targets": [
+        "client"
+      ],
+      "solution_targets": [
+        "client"
+      ],
+      "check_targets": [
+        "client"
       ]
     }
   },

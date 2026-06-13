@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-16-swap-space` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | storage-lvm |
 
@@ -21,4 +22,4 @@ Add a persistent swap partition on an extra disk.
 
 ## Task 01 - Create a 400 MiB swap partition on /dev/sdb, enable (client) - 10 pts
 
-Create a 400 MiB swap partition on /dev/sdb, enable it, and make it persistent.
+On client, create a 400 MiB swap partition on /dev/sdb, enable it, and make it persistent.

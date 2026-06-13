@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-08-shell-script-args` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | shell-scripting |
 

@@ -1,4 +1,4 @@
-# Lab 13: Text Filtering With Grep
+# Lab 13: Text Filtering with Grep
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-13-grep-filter` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 

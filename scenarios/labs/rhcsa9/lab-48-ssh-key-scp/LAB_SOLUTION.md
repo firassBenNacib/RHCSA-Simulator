@@ -1,4 +1,4 @@
-# Lab 48: SSH Key Authentication And SCP
+# Lab 48: SSH Key Authentication and SCP
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-48-ssh-key-scp` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -20,7 +21,7 @@ Use a key pair and scp between the two lab hosts.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Ensure bridge48 exists on both systems (client) - 10 pts
+## Task 01 - Ensure bridge48 exists on both systems (client + server) - 10 pts
 
 ```bash
 # On client
@@ -49,7 +50,7 @@ exit
 
 ---
 
-## Task 03 - Enable passwordless SSH from client to server (client) - 10 pts
+## Task 03 - Enable passwordless SSH from client to server (client + server) - 10 pts
 
 ```bash
 su - bridge48
@@ -58,7 +59,7 @@ ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@server
 
 ---
 
-## Task 04 - Copy the payload with scp (server) - 10 pts
+## Task 04 - Copy the payload with scp (client + server) - 10 pts
 
 ```bash
 # On client

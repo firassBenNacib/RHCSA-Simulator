@@ -23,7 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Apply the recommended tuned profile and leave it active after reboot."
+        "On client, apply the recommended tuned profile and leave it active after reboot."
       ],
       "hints": [
         "Use tuned-adm recommend to see the target profile."
@@ -49,7 +49,17 @@
           "tuned-adm profile \"$rec\"",
           "tuned-adm active"
         ]
+      ],
+      "task_targets": [
+        "client"
+      ],
+      "solution_targets": [
+        "client"
+      ],
+      "check_targets": [
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

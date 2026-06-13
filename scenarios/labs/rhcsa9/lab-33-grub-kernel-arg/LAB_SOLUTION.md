@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-33-grub-kernel-arg` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | boot-and-recovery |
 

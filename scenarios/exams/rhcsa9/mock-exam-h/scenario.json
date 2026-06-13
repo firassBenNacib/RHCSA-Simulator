@@ -1,7 +1,7 @@
 {
   "id": "mock-exam-h",
   "title": "Mock Exam H",
-  "description": "A 22 task RHCSA style mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.",
+  "description": "A 22-task RHCSA practice mock exam covering repositories, SELinux HTTP changes, chrony, package work, and container inspection.",
   "objective_tags": [
     "networking-and-firewall",
     "software-management",
@@ -29,28 +29,28 @@
   "content": {
     "exam": {
       "tasks": [
-        "Configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.40\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS SERVER: 192.168.122.3\nHOSTNAME: client.exam-h.lab",
-        "Add a persistent hosts entry so registry.exam-h.lab resolves to 192.168.122.3.",
-        "Configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.",
-        "Configure the same repository file on server.",
-        "Configure Apache on client so it serves the existing site on TCP port 8181.\n\nRequirements:\n- Start automatically at boot.\n- Open the port permanently in the firewall.\n- Apply the SELinux change required for the new port.",
-        "Configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
-        "Create user agingh without a home directory, with shell /sbin/nologin, and set its password to cinder9.",
-        "Set password aging for agingh to minimum 2 days, maximum 30 days, warning 7 days, and force a password change at the next login.",
-        "Create /srv/silver-drop as a sticky directory with ownership root:root and mode 1777.",
-        "Configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.",
-        "Configure chronyd on client so it synchronizes only with server and starts automatically at boot.",
+        "On client, configure networking on client with the following settings:\n\nIP ADDRESS: 192.168.122.40\nNETMASK: 255.255.255.0\nGATEWAY: 192.168.122.1\nDNS: 192.168.122.3\nHOSTNAME: client.exam-h.lab",
+        "On client, add a persistent hosts entry so registry.exam-h.lab resolves to 192.168.122.3.",
+        "On client, configure a repository file on client with BaseOS and AppStream served from server, enabled, and with gpgcheck disabled.",
+        "On server, configure the same repository file on server.",
+        "On client, configure Apache on client so it serves the existing site on TCP port 8181.\n\nRequirements:\n- Start automatically at boot.\n- Open the port permanently in the firewall.\n- Apply the SELinux change required for the new port.",
+        "On client, configure pwquality so passwords require a minimum length of 12 and at least 3 character classes.",
+        "On client, create user agingh without a home directory, with shell /sbin/nologin, and set its password to cinder9.",
+        "On client, set password aging for agingh to minimum 2 days, maximum 30 days, warning 7 days, and force a password change at the next login.",
+        "On client, create /srv/silver-drop as a sticky directory with ownership root:root and mode 1777.",
+        "On server, configure chronyd on server so it serves time to 192.168.122.0/24 and starts automatically at boot.",
+        "On client, configure chronyd on client so it synchronizes only with server and starts automatically at boot.",
         "On client, add a permanent rich firewall rule allowing TCP port 2222 only from 192.168.122.0/24.",
-        "Set the default inactive period for newly created local users to 10 days.",
+        "On client, set the default inactive period for newly created local users to 10 days.",
         "On client, find all files under /opt/exam-h/find that are owned by watcherh and were modified within the last 24 hours, then copy them to /root/watcherh-files while preserving the source directory structure.",
-        "Extract lines containing silver from /usr/share/dict/words into /root/silver-lines.",
-        "Create /root/usr-local-h.tar.gz containing /usr/local.",
-        "On /dev/sdb, create a 672 MiB swap partition and configure it persistently.",
-        "Resize /dev/reviewvgh/reviewh so the final size is 320 MiB without losing the existing file system or data.",
-        "Configure client to boot into multi-user.target by default. Ensure rsyslog is enabled and running. If postfix is installed, disable it and stop it.",
-        "Use the prepared local repositories to install the packages tree and dos2unix on client. Remove dos2unix and leave tree installed.",
-        "Create user inspecth with password cinder9 if it does not already exist. As that user, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage and write the configured working directory of localhost/rhcsa-httpd-base:latest to /home/inspecth/workdir.txt.",
-        "Apply the recommended tuned profile and leave it active."
+        "On client, extract lines containing silver from /usr/share/dict/words into /root/silver-lines.",
+        "On client, create /root/usr-local-h.tar.gz containing /usr/local.",
+        "On client, on /dev/sdb, create a 672 MiB swap partition and configure it persistently.",
+        "On client, resize /dev/reviewvgh/reviewh so the final size is 320 MiB without losing the existing file system or data.",
+        "On client, configure client to boot into multi-user.target by default. Ensure rsyslog is enabled and running. If postfix is installed, disable it and stop it.",
+        "On client, use the prepared local repositories to install the packages tree and dos2unix on client. Remove dos2unix and leave tree installed.",
+        "On client, create user inspecth with password cinder9 if it does not already exist. As that user, load /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage and write the configured working directory of localhost/rhcsa-httpd-base:latest to /home/inspecth/workdir.txt.",
+        "On client, apply the recommended tuned profile and leave it active."
       ],
       "task_titles": [
         "Client Network",
@@ -66,13 +66,13 @@
         "Chrony Client",
         "Firewalld Rich Rule",
         "Useradd Defaults",
-        "Find And Copy",
+        "Find and Copy",
         "Grep Filter",
         "Archive",
         "Swap Space",
         "Resize Existing LV",
-        "Boot Target And Services",
-        "Install And Remove Packages",
+        "Boot Target and Services",
+        "Install and Remove Packages",
         "Inspect Container Image",
         "Recommended Tuned Profile"
       ],
@@ -146,15 +146,12 @@
         ],
         [
           "dnf install -y httpd",
-          "grep -Rqs '^Listen 8181$' /etc/httpd/conf /etc/httpd/conf.d || echo 'Listen 8181' > /etc/httpd/conf.d/silverpeak-listen.conf",
+          "vim /etc/httpd/conf/httpd.conf",
+          "Listen 8181",
           "firewall-cmd --permanent --add-port=8181/tcp",
           "firewall-cmd --reload",
-          "semanage port -a -t http_port_t -p tcp 8181 || semanage port -m -t http_port_t -p tcp 8181",
-          "mkdir -p /var/www/html",
-          "test -s /var/www/html/index.html || echo 'exam-h portal' > /var/www/html/index.html",
-          "restorecon -Rv /var/www/html >/dev/null 2>&1 || true",
-          "systemctl enable httpd",
-          "systemctl restart httpd"
+          "semanage port -a -t http_port_t -p tcp 8181",
+          "systemctl enable --now httpd"
         ],
         [
           "mkdir -p /etc/security/pwquality.conf.d",
@@ -164,9 +161,7 @@
           "EOF"
         ],
         [
-          "id agingh >/dev/null 2>&1 || useradd -M -s /sbin/nologin agingh",
-          "usermod -s /sbin/nologin agingh",
-          "rm -rf /home/agingh",
+          "useradd -M -s /sbin/nologin agingh",
           "echo cinder9 | passwd --stdin agingh"
         ],
         [
@@ -217,12 +212,7 @@
         ],
         [
           "parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 673MiB",
-          "blockdev --rereadpt /dev/sdb || true",
-          "partprobe /dev/sdb || true",
-          "partx -u /dev/sdb || partx -a /dev/sdb || true",
-          "udevadm settle",
-          "for attempt in 1 2 3 4 5 6 7 8 9 10; do test -b /dev/sdb1 && break; blockdev --rereadpt /dev/sdb || true; partprobe /dev/sdb || true; partx -u /dev/sdb || partx -a /dev/sdb || true; udevadm settle; sleep 1; done",
-          "test -b /dev/sdb1",
+          "partprobe /dev/sdb",
           "mkswap /dev/sdb1",
           "swapon /dev/sdb1",
           "uuid=$(blkid -s UUID -o value /dev/sdb1)",
@@ -235,7 +225,7 @@
         [
           "systemctl set-default multi-user.target",
           "systemctl enable --now rsyslog",
-          "if systemctl list-unit-files postfix.service 2>/dev/null | grep -q '^postfix.service'; then systemctl disable --now postfix; fi"
+          "systemctl disable --now postfix"
         ],
         [
           "dnf install -y tree dos2unix",
@@ -250,19 +240,78 @@
           "exit"
         ],
         [
-          "rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\"",
-          "test -n \"$rec\"",
-          "tuned-adm profile \"$rec\""
+          "tuned-adm profile \"$(tuned-adm recommend)\""
         ]
       ],
       "checks": [
         "hostnamectl --static | grep -qx 'client.exam-h.lab' && grep -Fqx '192.168.122.3 registry.exam-h.lab' /etc/hosts && curl -fsS http://server/repo/BaseOS/repodata/repomd.xml >/dev/null && curl -fsS http://server/repo/AppStream/repodata/repomd.xml >/dev/null",
-        "curl -fsS http://localhost:8181 >/dev/null && grep -Eq '^http_port_t\\b.*\\b8181\\b' <<< \"$(semanage port -l)\" && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
-        "grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $7}' | grep -qx '/sbin/nologin' && test ! -d /home/agingh && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'",
+        "curl -fsS http://localhost:8181 >/dev/null && semanage port -l | grep -Eq '^http_port_t\\b.*\\b8181\\b' && firewall-cmd --list-rich-rules | grep -Fq 'port port=\"2222\" protocol=\"tcp\" accept'",
+        "grep -Eq '^minlen\\s*=\\s*12$' /etc/security/pwquality.conf.d/silverpeak.conf && grep -Eq '^minclass\\s*=\\s*3$' /etc/security/pwquality.conf.d/silverpeak.conf && getent passwd agingh | awk -F: '{print $6\":\"$7}' | grep -qx ':/sbin/nologin' && chage -l agingh | grep -Eq 'Minimum.*2' && chage -l agingh | grep -Eq 'Maximum.*30' && chage -l agingh | grep -Eq 'warning.*7' && chage -l agingh | grep -Eq 'password must be changed|must be changed' && useradd -D | grep -Eq 'INACTIVE=10' && stat -c '%a %U:%G' /srv/silver-drop | grep -qx '1777 root:root'",
         "grep -Eq '^server server iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled",
-        "test -f /root/watcherh-files/opt/exam-h/find/a/file1.txt && grep -q 'silver' /root/silver-lines && test -f /root/usr-local-h.tar.gz && swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewh\" && $2==\"reviewvgh\" && $3>=319 && $3<=321{f=1} END{exit !f}' && systemctl get-default | grep -qx multi-user.target && systemctl is-enabled rsyslog | grep -qx enabled && (! rpm -q postfix >/dev/null 2>&1 || systemctl is-enabled postfix | grep -qx disabled) && rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null 2>&1",
-        "runuser -l inspecth -c 'podman image exists localhost/rhcsa-httpd-base:latest' && test -s /home/inspecth/workdir.txt && rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\" && test -n \"$rec\" && tuned-adm active | grep -Eq \"(^|[[:space:]:])${rec}($|[[:space:]])\""
-      ]
+        "test -f /root/watcherh-files/opt/exam-h/find/a/file1.txt && grep -q 'silver' /root/silver-lines && test -f /root/usr-local-h.tar.gz && swapon --show=NAME --noheadings | grep -qx '/dev/sdb1' && lvs --noheadings -o lv_name,vg_name,lv_size --units m --nosuffix | awk '$1==\"reviewh\" && $2==\"reviewvgh\" && $3>=319 && $3<=321{f=1} END{exit !f}' && systemctl get-default | grep -qx multi-user.target && systemctl is-enabled rsyslog | grep -qx enabled && systemctl is-enabled postfix | grep -qx disabled && rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null 2>&1",
+        "runuser -l inspecth -c 'podman image exists localhost/rhcsa-httpd-base:latest' && test -s /home/inspecth/workdir.txt && rec=\"$(tuned-adm recommend | awk '{print $1}')\"; act=\"$(tuned-adm active | sed -E 's/.*: ([^ ]+).*/\\1/')\"; test -n \"$rec\" && test \"$act\" = \"$rec\""
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "server",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client",
+        "client",
+        "client",
+        "client"
+      ],
+      "target_balance": {
+        "client_only": 20,
+        "server_only": 2,
+        "client_server": 0
+      }
     }
   }
 }

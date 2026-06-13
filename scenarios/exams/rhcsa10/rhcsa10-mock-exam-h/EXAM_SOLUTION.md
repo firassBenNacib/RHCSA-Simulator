@@ -21,7 +21,7 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168 (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clienth.exam10.lab
@@ -40,7 +40,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168 (server) - 5 pts
+## Question 03 - Set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168 (server) - 5 pts
 
 ```bash
 # On server:
@@ -50,7 +50,7 @@ grep -Eq '^192\.168\.122\.4[[:space:]]+clienth\.exam10\.lab$' /etc/hosts || echo
 
 ---
 
-## Question 04 - create /root/exam-h-report.txt containing REPORT-H and copy it to server (client) - 5 pts
+## Question 04 - Create /root/exam-h-report.txt containing REPORT-H and copy it to server (client + server) - 5 pts
 
 ```bash
 echo REPORT-H > /root/exam-h-report.txt
@@ -61,7 +61,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 05 - create and enable serverhtimer.timer so it appends SERVER-H to /var/log/ (server) - 5 pts
+## Question 05 - Create and enable serverhtimer.timer so it appends SERVER-H to /var/log/ (server) - 5 pts
 
 ```bash
 # On server:
@@ -130,7 +130,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt
 
 ---
 
-## Question 10 - configure persistent systemd journal storage (server) - 5 pts
+## Question 10 - Configure persistent systemd journal storage (server) - 5 pts
 
 ```bash
 # On server:
@@ -145,7 +145,7 @@ journalctl --flush
 
 ---
 
-## Question 11 - create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 5 pts
+## Question 11 - Create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 5 pts
 
 ```bash
 # On server:
@@ -188,7 +188,7 @@ systemctl get-default
 
 ---
 
-## Question 15 - route local6 log messages to /var/log/examh-local6.log and write a test (server) - 4 pts
+## Question 15 - Route local6 log messages to /var/log/examh-local6.log and write a test (server) - 4 pts
 
 ```bash
 # On server:
@@ -226,7 +226,7 @@ dnf remove -y tcpdump
 
 ---
 
-## Question 17 - make chronyd available as the lab time source. On client, configure chro (client + server) - 4 pts
+## Question 17 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -243,7 +243,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 18 - publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd (server) - 4 pts
+## Question 18 - Publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd (server) - 4 pts
 
 ```bash
 # On server:
@@ -262,7 +262,7 @@ systemctl restart httpd
 
 ---
 
-## Question 19 - On client and server, create enabled BaseOS and AppStream repository def (client + server) - 4 pts
+## Question 19 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -307,7 +307,7 @@ chmod 440 /etc/sudoers.d/teamh10
 
 ---
 
-## Question 21 - allow members of serverh10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 21 - Allow members of serverh10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
 
 ```bash
 # On server:

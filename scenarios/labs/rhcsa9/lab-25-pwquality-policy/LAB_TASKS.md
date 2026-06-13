@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-25-pwquality-policy` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -21,4 +22,4 @@ Use a pwquality drop-in to enforce a stronger local password policy.
 
 ## Task 01 - Create the pwquality drop-in without editing PAM (client) - 30 pts
 
-Create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12, at least 3 character classes, and no more than 2 repeated characters in sequence. Do not edit any PAM service file for this task.
+On client, create a persistent password quality policy in /etc/security/pwquality.conf.d so that local passwords require a minimum length of 12, at least 3 character classes, and no more than 2 repeated characters in sequence. Do not edit any PAM service file for this task.

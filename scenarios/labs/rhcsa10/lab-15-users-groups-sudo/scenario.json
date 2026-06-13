@@ -1,6 +1,6 @@
 {
   "id": "lab-15-users-groups-sudo",
-  "title": "RHCSA 10 Lab 15: Users Groups And Sudo",
+  "title": "RHCSA 10 Lab 15: Users Groups and Sudo",
   "description": "Create local identities and delegate limited administrative access",
   "objective_tags": [
     "users-sudo-ssh"
@@ -59,6 +59,21 @@
           "echo '%ops10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/ops10",
           "chmod 440 /etc/sudoers.d/ops10"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

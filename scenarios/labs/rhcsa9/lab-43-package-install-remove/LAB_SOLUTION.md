@@ -1,4 +1,4 @@
-# Lab 43: Package Install And Remove
+# Lab 43: Package Install and Remove
 
 ## Lab Solution
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-43-package-install-remove` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | software-scheduling-time |
 

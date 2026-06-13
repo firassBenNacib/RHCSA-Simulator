@@ -1,6 +1,6 @@
 {
   "id": "lab-14-permissions-umask",
-  "title": "RHCSA 10 Lab 14: Permissions And Umask",
+  "title": "RHCSA 10 Lab 14: Permissions and Umask",
   "description": "Manage default permissions",
   "objective_tags": [
     "selinux-and-default-perms"
@@ -57,6 +57,21 @@
         [
           "chmod 750 /srv/rhcsa10-private"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

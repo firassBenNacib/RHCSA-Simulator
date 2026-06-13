@@ -51,6 +51,18 @@
           "/usr/local/bin/rhcsa10-lines",
           "cat /root/rhcsa10-lines.txt"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

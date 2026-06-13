@@ -1,6 +1,6 @@
 {
   "id": "lab-13-grep-filter",
-  "title": "Lab 13: Text Filtering With Grep",
+  "title": "Lab 13: Text Filtering with Grep",
   "description": "Extract matching lines from a seeded words file",
   "objective_tags": [
     "essential-tools"
@@ -23,7 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "From /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines."
+        "On client, from /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines."
       ],
       "hints": [
         "The words file for this lab is preseeded if it was not present before."
@@ -44,7 +44,17 @@
         [
           "grep \"ich\" /usr/share/dict/words > /root/lines"
         ]
+      ],
+      "task_targets": [
+        "client"
+      ],
+      "solution_targets": [
+        "client"
+      ],
+      "check_targets": [
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

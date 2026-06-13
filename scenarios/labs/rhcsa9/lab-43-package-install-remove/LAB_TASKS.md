@@ -1,4 +1,4 @@
-# Lab 43: Package Install And Remove
+# Lab 43: Package Install and Remove
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-43-package-install-remove` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | software-scheduling-time |
 
@@ -22,4 +23,4 @@ Install packages from the prepared local repositories and remove the one that is
 
 ## Task 01 - Install tree and remove dos2unix (client) - 20 pts
 
-Use the prepared local repositories on client to install tree, then remove dos2unix so tree remains installed.
+On client, use the prepared local repositories on client to install tree, then remove dos2unix so tree remains installed.

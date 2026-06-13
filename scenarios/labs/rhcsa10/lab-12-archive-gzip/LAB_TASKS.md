@@ -1,4 +1,4 @@
-# RHCSA 10 Lab 12: Archive With Gzip
+# RHCSA 10 Lab 12: Archive with Gzip
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-12-archive-gzip` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 20 minutes |
 | Objectives | essential-tools |
 

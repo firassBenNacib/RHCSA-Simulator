@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-04-selinux-http-port` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | selinux-and-default-perms |
 

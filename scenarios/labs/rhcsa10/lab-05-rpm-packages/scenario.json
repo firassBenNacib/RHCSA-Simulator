@@ -51,6 +51,18 @@
           "rpm -q lsof",
           "rpm -q tcpdump || true"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
   },

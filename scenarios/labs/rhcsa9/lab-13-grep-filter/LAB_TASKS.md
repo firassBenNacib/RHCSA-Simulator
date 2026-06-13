@@ -1,4 +1,4 @@
-# Lab 13: Text Filtering With Grep
+# Lab 13: Text Filtering with Grep
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-13-grep-filter` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 15 minutes |
 | Objectives | essential-tools |
 
@@ -21,4 +22,4 @@ Extract matching lines from a seeded words file.
 
 ## Task 01 - Extract the ich matches into /root/lines (client) - 10 pts
 
-From /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines.
+On client, from /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines.

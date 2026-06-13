@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-45-restorecon-httpd` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms |
 
@@ -27,4 +28,4 @@ On server, the file /var/www/html/index45.html has the wrong SELinux context. Re
 
 ## Task 02 - Enable httpd on server with SELinux enforcing (server) - 15 pts
 
-Ensure the httpd service is enabled and running on server. SELinux must remain enforcing.
+On server, ensure the httpd service is enabled and running on server. SELinux must remain enforcing.

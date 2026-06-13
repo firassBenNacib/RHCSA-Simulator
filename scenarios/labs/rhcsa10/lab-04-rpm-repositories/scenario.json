@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "configure a persistent BaseOS repository. BaseOS URL: http://server/repo",
-        "configure a persistent AppStream repository. AppStream URL: http://serve",
-        "disable GPG checks for both RHCSA10 repositories and verify both reposit"
+        "Configure a persistent BaseOS repository. BaseOS URL: http://server/repo",
+        "Configure a persistent AppStream repository. AppStream URL: http://serve",
+        "Disable GPG checks for both RHCSA10 repositories and verify both reposit"
       ],
       "task_points": [
         10,
@@ -58,6 +58,21 @@
           "dnf clean all",
           "dnf repolist --enabled"
         ]
+      ],
+      "task_targets": [
+        "both",
+        "both",
+        "client"
+      ],
+      "solution_targets": [
+        "both",
+        "both",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
   },

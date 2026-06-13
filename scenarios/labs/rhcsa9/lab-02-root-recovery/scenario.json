@@ -23,9 +23,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Recover root access on client from the console and set the root password to cinder9.",
-        "After the system boots normally, confirm that SELinux relabeling completed and root can log in again.",
-        "Leave SSH password authentication working for root and admin."
+        "On client, recover root access on client from the console and set the root password to cinder9.",
+        "On client, after the system boots normally, confirm that SELinux relabeling completed and root can log in again.",
+        "On client, leave SSH password authentication working for root and admin."
       ],
       "hints": [
         "Use the boot menu edit path with rw init=/bin/bash.",
@@ -68,7 +68,23 @@
           "PermitRootLogin yes",
           "systemctl restart sshd"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }

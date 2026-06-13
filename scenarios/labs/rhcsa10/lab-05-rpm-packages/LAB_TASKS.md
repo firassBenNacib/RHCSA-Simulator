@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-05-rpm-packages` |
 | Mode | Lab |
+| Scope | client-server |
 | Time limit | 20 minutes |
 | Objectives | software-management |
 

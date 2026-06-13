@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-22-selinux-port` |
 | Mode | Lab |
+| Scope | server |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms, networking-and-firewall |
 
@@ -19,12 +20,12 @@ Manage SELinux port labels.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - add TCP port 8010 as an http_port_t SELinux port (server) - 10 pts
+## Task 01 - Add TCP port 8010 as an http_port_t SELinux port (server) - 10 pts
 
 On server, add TCP port 8010 as an http_port_t SELinux port.
 
 ---
 
-## Task 02 - configure firewalld to allow TCP port 8010 permanently (server) - 20 pts
+## Task 02 - Configure firewalld to allow TCP port 8010 permanently (server) - 20 pts
 
 On server, configure firewalld to allow TCP port 8010 permanently.

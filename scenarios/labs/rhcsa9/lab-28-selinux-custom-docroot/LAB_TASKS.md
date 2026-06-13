@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-28-selinux-custom-docroot` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 35 minutes |
 | Objectives | selinux-and-default-perms, networking-and-firewall |
 
@@ -21,16 +22,16 @@ Serve an existing custom document root on a non-default port with SELinux enforc
 
 ## Task 01 - Serve the custom document root on port 8088 (client) - 10 pts
 
-Configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.
+On client, configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.
 
 ---
 
 ## Task 02 - Apply the required SELinux and firewall changes (client) - 10 pts
 
-Keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.
+On client, keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.
 
 ---
 
 ## Task 03 - Leave the provided content intact (client) - 10 pts
 
-Do not edit or remove /srv/lab28/site/index.html.
+On client, do not edit or remove /srv/lab28/site/index.html.

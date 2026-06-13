@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-24-password-aging-defaults` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 30 minutes |
 | Objectives | users-sudo-ssh |
 
@@ -21,16 +22,16 @@ Configure stronger new-user aging defaults, including inactive days.
 
 ## Task 01 - Set password aging defaults in login.defs (client) - 10 pts
 
-Configure the system defaults for newly created local users so that the maximum password age is 60 days, the minimum age is 7 days, and the warning period is 10 days.
+On client, configure the system defaults for newly created local users so that the maximum password age is 60 days, the minimum age is 7 days, and the warning period is 10 days.
 
 ---
 
 ## Task 02 - Set the useradd inactive default (client) - 10 pts
 
-Configure the default inactive period for newly created local users to 15 days.
+On client, configure the default inactive period for newly created local users to 15 days.
 
 ---
 
 ## Task 03 - Create drift24 with the inherited defaults (client) - 10 pts
 
-Create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy.
+On client, create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy.

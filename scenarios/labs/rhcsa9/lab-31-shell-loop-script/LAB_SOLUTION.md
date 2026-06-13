@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-31-shell-loop-script` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | shell-scripting |
 

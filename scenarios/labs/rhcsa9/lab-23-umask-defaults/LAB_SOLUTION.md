@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-23-umask-defaults` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | selinux-and-default-perms, users-sudo-ssh |
 

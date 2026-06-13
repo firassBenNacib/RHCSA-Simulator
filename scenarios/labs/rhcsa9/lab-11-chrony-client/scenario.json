@@ -58,7 +58,20 @@
           "server server iburst",
           "systemctl enable --now chronyd"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "client"
+      ],
+      "solution_targets": [
+        "server",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "server"
       ]
     }
-  }
+  },
+  "scope": "client-server"
 }

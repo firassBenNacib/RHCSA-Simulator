@@ -1,4 +1,4 @@
-# Lab 12: Find And Copy With Structure
+# Lab 12: Find and Copy with Structure
 
 ## Lab Tasks
 ## Overview
@@ -6,6 +6,7 @@
 |---|---|
 | Scenario ID | `lab-12-find-copy-preserve` |
 | Mode | Lab |
+| Scope | client |
 | Time limit | 25 minutes |
 | Objectives | essential-tools |
 
@@ -21,4 +22,4 @@ Locate recent files owned by a user and copy them while preserving directories.
 
 ## Task 01 - Copy matching natfind files with structure preserved (client) - 10 pts
 
-Find all regular files owned by natfind and modified in the last 24 hours under /opt/lab12/source, then copy them to /root/natfind-files while preserving the original directory structure.
+On client, find all regular files owned by natfind and modified in the last 24 hours under /opt/lab12/source, then copy them to /root/natfind-files while preserving the original directory structure.

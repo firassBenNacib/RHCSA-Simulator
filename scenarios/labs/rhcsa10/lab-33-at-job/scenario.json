@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "create user at10 and set password cinder9",
-        "enable and start atd",
-        "as at10, schedule a job that appends AT10 to /home/at10/at10.log two min"
+        "Create user at10 and set password cinder9",
+        "Enable and start atd",
+        "As at10, schedule a job that appends AT10 to /home/at10/at10.log two min"
       ],
       "task_points": [
         10,
@@ -60,6 +60,21 @@
           "echo 'echo AT10 >> /home/at10/at10.log' | at now + 2 minutes",
           "atq"
         ]
+      ],
+      "task_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "solution_targets": [
+        "server",
+        "server",
+        "server"
+      ],
+      "check_targets": [
+        "server",
+        "server",
+        "server"
       ]
     }
   },

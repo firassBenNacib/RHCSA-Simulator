@@ -24,8 +24,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.",
-        "Configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it."
+        "On client, create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.",
+        "On client, configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it."
       ],
       "hints": [
         "A collaborative drop directory often needs both setgid and sticky semantics.",
@@ -58,7 +58,20 @@
           "chmod g+s /shared/analysts",
           "chmod +t /shared/analysts"
         ]
+      ],
+      "task_targets": [
+        "client",
+        "client"
+      ],
+      "solution_targets": [
+        "client",
+        "client"
+      ],
+      "check_targets": [
+        "client",
+        "client"
       ]
     }
-  }
+  },
+  "scope": "client"
 }
