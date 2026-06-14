@@ -690,7 +690,7 @@ def apply_blocks(exam_id: str, *, title: str, description: str, objective_tags: 
     exam["task_points"] = POINTS
     exam["checks"] = [
         normalize_authored_wording(check)
-        for check in split_exam_checks(checks)
+        for check in checks
     ]
     exam["task_targets"] = task_targets
     exam["solution_targets"] = [
