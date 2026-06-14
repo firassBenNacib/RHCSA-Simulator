@@ -24,6 +24,8 @@ Add persistent swap space.
 
 ```bash
 parted -s /dev/sdb mklabel gpt mkpart primary linux-swap 1MiB 513MiB
+partprobe /dev/sdb || true
+udevadm settle
 mkswap /dev/sdb1
 ```
 

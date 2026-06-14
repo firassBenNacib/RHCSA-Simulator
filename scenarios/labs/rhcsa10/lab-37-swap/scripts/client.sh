@@ -10,3 +10,5 @@ fi
 sed -i '\#^/dev/sdb1[[:space:]]#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
+udevadm settle
