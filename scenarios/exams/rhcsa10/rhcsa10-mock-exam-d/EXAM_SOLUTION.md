@@ -21,9 +21,10 @@ Service and logging focus: custom systemd service, rsyslog routing, firewall ser
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientd.exam10.lab and map serverd.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
 
 ```bash
+echo 'root:cinder9' | chpasswd
 hostnamectl set-hostname clientd.exam10.lab
 echo '192.168.122.3 serverd.exam10.lab' >> /etc/hosts
 ```
@@ -131,7 +132,7 @@ journalctl --flush
 
 ---
 
-## Question 09 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 5 pts
+## Question 09 - Make chronyd available as the lab time source (client + server) - 5 pts
 
 ```bash
 # On server:
@@ -322,7 +323,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log' | crontab -u userd10
 
 ---
 
-## Question 20 - Export /exports/exam-d to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 20 - Export /exports/exam-d to the 192.168.122.0/24 network (client + server) - 4 pts
 
 ```bash
 # On server:

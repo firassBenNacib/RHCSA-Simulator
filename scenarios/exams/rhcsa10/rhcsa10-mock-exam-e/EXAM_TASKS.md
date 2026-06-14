@@ -21,9 +21,9 @@ Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, N
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
 
-On client, set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.
+On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.
 
 ---
 
@@ -129,7 +129,7 @@ On server, route local5 log messages to /var/log/server-e-local5.log and write a
 
 ---
 
-## Question 19 - Export /exports/exam-e to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 19 - Export /exports/exam-e to the 192.168.122.0/24 network (client + server) - 4 pts
 
 On server, export /exports/exam-e to the 192.168.122.0/24 network. On client, mount server:/exports/exam-e persistently at /mnt/eprojects.
 

@@ -21,9 +21,9 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
 
-On client, set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.
+On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.
 
 ---
 
@@ -117,7 +117,7 @@ On client, install lsof and ensure tcpdump is removed.
 
 ---
 
-## Question 17 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 4 pts
+## Question 17 - Make chronyd available as the lab time source (client + server) - 4 pts
 
 On server, make chronyd available as the lab time source. On client, configure chronyd with server as its only time source.
 

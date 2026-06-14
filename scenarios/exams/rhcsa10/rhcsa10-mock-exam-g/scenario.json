@@ -29,7 +29,7 @@
     "exam": {
       "tasks": [
         "On client, the root password has been lost. Boot into emergency mode and reset the root password to cinder9.",
-        "On client, set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mapping 192.168.122.3 to serverg.exam10.lab.",
+        "On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mapping 192.168.122.3 to serverg.exam10.lab.",
         "On client, configure the connection \"System eth1\" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.",
         "On client, add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.",
         "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
@@ -61,7 +61,7 @@
       ],
       "checks": [
         "echo cinder9 | su - root -c 'whoami' 2>/dev/null | grep -qx root",
-        "hostnamectl --static | grep -qx clientg.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverg\\.exam10\\.lab$' /etc/hosts",
+        "echo cinder9 | su - root -c whoami 2>/dev/null | grep -qx root && hostnamectl --static | grep -qx clientg.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+serverg\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.66/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "grep -q 'audit_backlog_limit=8192' /proc/cmdline || grubby --info=DEFAULT | grep -q 'audit_backlog_limit=8192'",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
@@ -91,18 +91,18 @@
         "Create users on both client and server before configuring SSH keys."
       ],
       "task_titles": [
-        "The root password has been lost. Boot into emergency mode and reset the",
-        "Set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mappi",
+        "The root password has been lost",
+        "Recover root access and configure the client hostname",
         "Configure the connection \"System eth1\" with static IPv4: address 192.168",
         "Add the kernel boot argument audit_backlog_limit=8192 to the default GRU",
         "Create enabled BaseOS and AppStream repository definitions with BaseOS a",
         "Add a system-level Flatpak remote named examgflatpak pointing to file://",
         "Set the server login message in /etc/motd to Authorized exam-g server",
-        "Create group devg10. Create users grant10 and hazel10 with devg10 as a s",
+        "Create group devg10",
         "Create directory /srv/devg10 owned by root:devg10 with permissions 1770",
         "Create user noaccess70 with no home directory and login shell /sbin/nolo",
         "Set password aging for grant10: maximum 35 days, minimum 5 days, warning",
-        "Create user copy10 with UID 5010 and password cinder9 on the client. Als",
+        "Create user copy10 with UID 5010 and password cinder9 on the client",
         "As copy10, generate an SSH key pair (no passphrase) and distribute the p",
         "Schedule an at job for user hazel10 that runs: echo \"exam-g task\" >> /ho",
         "Configure persistent systemd journal storage on the server",
@@ -113,7 +113,7 @@
         "Create and enable servergtimer.timer so it appends SERVER-G to /var/log/",
         "Create a 500 MiB swap partition on /dev/sdb, format it as swap, and enab",
         "Create physical volume on /dev/sdc, volume group vgg10, logical volume d",
-        "Export /exports/exam-g to the 192.168.122.0/24 network. on client, mount"
+        "Export /exports/exam-g to the 192.168.122.0/24 network"
       ],
       "task_points": [
         5,
@@ -150,6 +150,7 @@
           "# exit; reboot"
         ],
         [
+          "echo 'root:cinder9' | chpasswd",
           "hostnamectl set-hostname clientg.exam10.lab",
           "echo '192.168.122.3 serverg.exam10.lab' >> /etc/hosts"
         ],

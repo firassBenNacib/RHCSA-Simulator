@@ -139,6 +139,9 @@ def task_title(task: str) -> str:
     for prefix in ("On client and server, ", "On server and client, ", "On client, ", "On server, ", "As root, "):
         if line.startswith(prefix):
             line = line[len(prefix):]
+    first_sentence = re.split(r"\.\s+", line, maxsplit=1)[0].strip()
+    if 12 <= len(first_sentence) <= 72:
+        line = first_sentence
     line = line[:72].strip()
     if line:
         line = line[0].upper() + line[1:]
@@ -982,17 +985,90 @@ def _both_repo_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
+ROOT_RECOVERY_CHECK = "echo cinder9 | su - root -c whoami 2>/dev/null | grep -qx root"
+
+
+def _ensure_client_root_recovery(tasks: list[Any], checks: list[str], commands: list[list[str]]) -> None:
+    existing_index = next(
+        (
+            index
+            for index, task in enumerate(tasks)
+            if "recover root access" in str(task).lower() or "root password recovery" in str(task).lower()
+        ),
+        None,
+    )
+    if existing_index is not None:
+        task_text = str(tasks[existing_index]).strip()
+        match = re.match(
+            r"On client, recover root access from the console and set the root password to cinder9\.\s+Then\s+(.+)$",
+            task_text,
+            flags=re.I | re.S,
+        )
+        if match:
+            remainder = match.group(1).strip()
+            tasks[existing_index] = (
+                "On client, recover root access and configure the client hostname. "
+                "Set the root password to cinder9. "
+                f"Then {remainder[0].lower()}{remainder[1:] if len(remainder) > 1 else ''}"
+            )
+        return
+
+    target_index = next(
+        (
+            index
+            for index, task in enumerate(tasks)
+            if re.search(r"\bon client\b", str(task), re.I)
+            and re.search(r"\bhostname\b", str(task), re.I)
+        ),
+        0,
+    )
+
+    original_task = str(tasks[target_index]).strip()
+    normalized_task = re.sub(r"^\s*On client,\s*", "", original_task, flags=re.I)
+    tasks[target_index] = (
+        "On client, recover root access and configure the client hostname. "
+        "Set the root password to cinder9. "
+        f"Then {normalized_task[0].lower()}{normalized_task[1:] if len(normalized_task) > 1 else ''}"
+    )
+    if target_index < len(checks):
+        checks[target_index] = f"{ROOT_RECOVERY_CHECK} && {checks[target_index]}"
+    if target_index < len(commands):
+        commands[target_index] = [
+            "echo 'root:cinder9' | chpasswd",
+            *commands[target_index],
+        ]
+
+
 def _server_hostname_step(letter: str) -> tuple[str, str, list[str]]:
+    network_check = (
+        'connection_name="System eth1"; '
+        'nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || '
+        'connection_name="$(private_dev="$(ip -o -4 addr show | awk \'$4 ~ /^192\\.168\\.122\\./ {print $2; exit}\')"; '
+        'nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" \'$2 == private_dev {print $1; exit}\')"; '
+        'test -n "$connection_name" && '
+        "nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.3/24' && "
+        "nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && "
+        "nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && "
+        "nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual"
+    )
     return (
-        f"On server, set hostname to server{letter}.exam10.lab and map client{letter}.exam10.lab to 192.168.122.4.",
+        "On server, configure the server hostname and persistent IPv4 networking. "
+        f"Set hostname to server{letter}.exam10.lab, map client{letter}.exam10.lab to 192.168.122.4, "
+        "and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, "
+        "and DNS resolver 192.168.122.3.",
         _ssh_server_check(
             f"hostnamectl --static | grep -qx server{letter}.exam10.lab && "
-            f"awk '$1 == \"192.168.122.4\" {{for (i = 2; i <= NF; i++) if ($i == \"client{letter}.exam10.lab\") found = 1}} END {{exit !found}}' /etc/hosts"
+            f"awk '$1 == \"192.168.122.4\" {{for (i = 2; i <= NF; i++) if ($i == \"client{letter}.exam10.lab\") found = 1}} END {{exit !found}}' /etc/hosts && "
+            f"{network_check}"
         ),
         [
             "# On server:",
             f"hostnamectl set-hostname server{letter}.exam10.lab",
             f"grep -Eq '^192\\.168\\.122\\.4[[:space:]]+client{letter}\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 client{letter}.exam10.lab' >> /etc/hosts",
+            'connection_name="System eth1"',
+            'nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || connection_name="$(private_dev="$(ip -o -4 addr show | awk \'$4 ~ /^192\\.168\\.122\\./ {print $2; exit}\')"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" \'$2 == private_dev {print $1; exit}\')"',
+            'nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes',
+            'nmcli connection up "$connection_name"',
         ],
     )
 
@@ -2887,6 +2963,7 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
 
     _apply_rhcsa10_exam_diversity(exam_id, tasks, checks, commands)
     _apply_rhcsa10_exam_target_balance(exam_id, tasks, checks, commands)
+    _ensure_client_root_recovery(tasks, checks, commands)
 
     for index, task in enumerate(tasks):
         task_text = str(task)
@@ -2951,6 +3028,7 @@ def _update_exam_manifest(manifest_path: Path) -> None:
         )
     manifest.setdefault("flags", {})
     manifest["flags"]["requires_server"] = True
+    manifest["flags"]["password_recovery"] = True
     manifest["vm_scripts"] = _write_scenario_scripts(
         scenario_root,
         {

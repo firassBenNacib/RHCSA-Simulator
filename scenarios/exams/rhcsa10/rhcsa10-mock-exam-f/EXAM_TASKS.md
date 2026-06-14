@@ -21,9 +21,9 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
 
-On client, set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168.122.3.
+On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set hostname to clientf.exam10.lab and map serverf.exam10.lab to 192.168.122.3.
 
 ---
 
@@ -105,7 +105,7 @@ On client, create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc
 
 ---
 
-## Question 15 - Export /exports/exam-f to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 15 - Export /exports/exam-f to the 192.168.122.0/24 network (client + server) - 4 pts
 
 On server, export /exports/exam-f to the 192.168.122.0/24 network. On client, mount server:/exports/exam-f persistently at /mnt/fprojects.
 

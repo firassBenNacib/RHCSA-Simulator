@@ -24,13 +24,13 @@
   ],
   "rhel_major": 10,
   "flags": {
-    "password_recovery": false,
+    "password_recovery": true,
     "requires_server": true
   },
   "content": {
     "exam": {
       "tasks": [
-        "On client, set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
+        "On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168.122.3.",
         "On client, configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
         "On client, create a labeled XFS filesystem on /dev/sdc1 and mount it persistently at /mnt/exame-label.",
@@ -60,7 +60,7 @@
         "Flatpak and systemd timer tasks belong to the RHCSA 10 track."
       ],
       "checks": [
-        "hostnamectl --static | grep -qx cliente.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servere\\.exam10\\.lab$' /etc/hosts",
+        "echo cinder9 | su - root -c whoami 2>/dev/null | grep -qx root && hostnamectl --static | grep -qx cliente.exam10.lab && grep -Eq '^192\\.168\\.122\\.3[[:space:]]+servere\\.exam10\\.lab$' /etc/hosts",
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.64/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
         "findmnt -no TARGET /mnt/exame-label | grep -qx /mnt/exame-label && blkid -s LABEL -o value /dev/sdc1 | grep -qx EXAME10 && awk '$1 == \"LABEL=EXAME10\" && $2 == \"/mnt/exame-label\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",
@@ -88,7 +88,7 @@
         "Work through each question independently and verify before moving on."
       ],
       "task_titles": [
-        "Set hostname to cliente.exam10.lab and map servere.exam10.lab to 192.168",
+        "Recover root access and configure the client hostname",
         "Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.1",
         "Create enabled BaseOS and AppStream repository definitions with BaseOS a",
         "Create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a",
@@ -106,7 +106,7 @@
         "Create /srv/servere10 owned by root:servere10 with mode 2770",
         "Activate the throughput-performance tuned profile",
         "Route local5 log messages to /var/log/server-e-local5.log and write a te",
-        "Export /exports/exam-e to the 192.168.122.0/24 network. on client, mount",
+        "Export /exports/exam-e to the 192.168.122.0/24 network",
         "Create /root/exam-e-report.txt containing REPORT-E and copy it to server",
         "Install lsof and ensure tcpdump is removed",
         "Enable persistent systemd journal storage",
@@ -139,6 +139,7 @@
       ],
       "solution_commands": [
         [
+          "echo 'root:cinder9' | chpasswd",
           "hostnamectl set-hostname cliente.exam10.lab",
           "echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts"
         ],

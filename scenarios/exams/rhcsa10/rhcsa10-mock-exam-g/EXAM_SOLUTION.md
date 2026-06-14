@@ -21,7 +21,7 @@ Recovery + server administration focus: root password recovery, server-side logi
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - The root password has been lost. Boot into emergency mode and reset the (client) - 5 pts
+## Question 01 - The root password has been lost (client) - 5 pts
 
 ```bash
 # Reboot, interrupt GRUB, append rd.break to kernel line
@@ -34,9 +34,10 @@ touch /.autorelabel
 
 ---
 
-## Question 02 - Set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mappi (client) - 5 pts
+## Question 02 - Recover root access and configure the client hostname (client) - 5 pts
 
 ```bash
+echo 'root:cinder9' | chpasswd
 hostnamectl set-hostname clientg.exam10.lab
 echo '192.168.122.3 serverg.exam10.lab' >> /etc/hosts
 ```
@@ -116,7 +117,7 @@ echo 'Authorized exam-g server' > /etc/motd
 
 ---
 
-## Question 08 - Create group devg10. Create users grant10 and hazel10 with devg10 as a s (client) - 5 pts
+## Question 08 - Create group devg10 (client) - 5 pts
 
 ```bash
 getent group devg10 >/dev/null || groupadd devg10
@@ -155,7 +156,7 @@ echo 'umask 0077' >> /home/grant10/.bashrc
 
 ---
 
-## Question 12 - Create user copy10 with UID 5010 and password cinder9 on the client. Als (client + server) - 4 pts
+## Question 12 - Create user copy10 with UID 5010 and password cinder9 on the client (client + server) - 4 pts
 
 ```bash
 id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10
@@ -326,7 +327,7 @@ mount -a
 
 ---
 
-## Question 23 - Export /exports/exam-g to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 23 - Export /exports/exam-g to the 192.168.122.0/24 network (client + server) - 4 pts
 
 ```bash
 # On server:

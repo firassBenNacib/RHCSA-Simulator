@@ -96,12 +96,16 @@ dnf clean all
 
 ---
 
-## Question 06 - Set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168 (server) - 5 pts
+## Question 06 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
 ```bash
 # On server:
 hostnamectl set-hostname servera.exam10.lab
 grep -Eq '^192\.168\.122\.4[[:space:]]+clienta\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clienta.exam10.lab' >> /etc/hosts
+connection_name="System eth1"
+nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || connection_name="$(private_dev="$(ip -o -4 addr show | awk '$4 ~ /^192\.168\.122\./ {print $2; exit}')"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" '$2 == private_dev {print $1; exit}')"
+nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection up "$connection_name"
 ```
 
 ---
@@ -303,7 +307,7 @@ journalctl --flush
 
 ---
 
-## Question 22 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 4 pts
+## Question 22 - Make chronyd available as the lab time source (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -350,7 +354,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 23 - Export /exports/exam-a to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 23 - Export /exports/exam-a to the 192.168.122.0/24 network (client + server) - 4 pts
 
 ```bash
 # On server:

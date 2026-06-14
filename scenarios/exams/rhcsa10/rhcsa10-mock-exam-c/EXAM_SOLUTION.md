@@ -21,9 +21,10 @@ Web service and network focus: httpd service setup, custom service port, SELinux
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
 
 ```bash
+echo 'root:cinder9' | chpasswd
 hostnamectl set-hostname clientc.exam10.lab
 echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts
 ```
@@ -63,12 +64,16 @@ systemctl restart httpd
 
 ---
 
-## Question 05 - Set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168 (server) - 5 pts
+## Question 05 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
 ```bash
 # On server:
 hostnamectl set-hostname serverc.exam10.lab
 grep -Eq '^192\.168\.122\.4[[:space:]]+clientc\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clientc.exam10.lab' >> /etc/hosts
+connection_name="System eth1"
+nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || connection_name="$(private_dev="$(ip -o -4 addr show | awk '$4 ~ /^192\.168\.122\./ {print $2; exit}')"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" '$2 == private_dev {print $1; exit}')"
+nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
+nmcli connection up "$connection_name"
 ```
 
 ---
@@ -296,7 +301,7 @@ systemctl enable --now serverctimer.timer
 
 ---
 
-## Question 20 - Export /exports/exam-c to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 20 - Export /exports/exam-c to the 192.168.122.0/24 network (client + server) - 4 pts
 
 ```bash
 # On server:
