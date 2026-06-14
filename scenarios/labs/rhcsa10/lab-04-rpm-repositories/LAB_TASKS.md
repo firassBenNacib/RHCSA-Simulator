@@ -21,13 +21,13 @@ Configure BaseOS and AppStream repositories.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure a persistent BaseOS repository. BaseOS URL: http://server/repo (client) - 10 pts
+## Task 01 - Configure a persistent BaseOS repository (client) - 10 pts
 
 On client, configure a persistent BaseOS repository. BaseOS URL: http://server/repo/BaseOS/.
 
 ---
 
-## Task 02 - Configure a persistent AppStream repository. AppStream URL: http://serve (client) - 10 pts
+## Task 02 - Configure a persistent AppStream repository (client) - 10 pts
 
 On client, configure a persistent AppStream repository. AppStream URL: http://server/repo/AppStream/.
 

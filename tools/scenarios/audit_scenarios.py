@@ -350,6 +350,54 @@ def audit_rhcsa10_exam_target_balance(path: Path, scenario: dict[str, Any], find
             )
 
 
+def _exam_target_texts(exam: dict[str, Any], target: str) -> list[str]:
+    tasks = [str(task) for task in exam.get("tasks", [])]
+    targets = [str(value) for value in exam.get("task_targets", [])]
+    return [
+        task
+        for task, task_target in zip(tasks, targets)
+        if task_target == target or task_target == "both"
+    ]
+
+
+def _has_ipv4_task(texts: list[str]) -> bool:
+    joined = "\n".join(texts)
+    return has_pattern(joined, r"\bipv4\b", r"\bip address\b", r"\beth1\b", r"192\.168\.122\.")
+
+
+def _has_repo_task(texts: list[str]) -> bool:
+    joined = "\n".join(texts)
+    return has_pattern(joined, r"\bbaseos\b.*\bappstream\b", r"\brpm repositories\b", r"\brepository definitions\b")
+
+
+def audit_exam_required_coverage(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "exam" not in scenario.get("content", {}):
+        return
+    tracks = scenario_tracks(scenario)
+    if not ({"rhcsa9", "rhcsa10"} & set(tracks)):
+        return
+
+    exam = scenario["content"]["exam"]
+    tasks = [str(task) for task in exam.get("tasks", [])]
+    targets = [str(value) for value in exam.get("task_targets", [])]
+    if len(tasks) not in {22, 23}:
+        findings.append(Finding(path, f"exam should have 22 or 23 tasks, found {len(tasks)}"))
+    if len(tasks) != len(targets):
+        findings.append(Finding(path, "exam task_targets length must match tasks"))
+        return
+
+    text = "\n".join(tasks)
+    if not bool(scenario.get("flags", {}).get("password_recovery")) or not has_pattern(text, r"recover root access", r"root password recovery"):
+        findings.append(Finding(path, "exam must include root password recovery"))
+
+    client_tasks = _exam_target_texts(exam, "client")
+    server_tasks = _exam_target_texts(exam, "server")
+    if not (_has_ipv4_task(client_tasks) and _has_ipv4_task(server_tasks)):
+        findings.append(Finding(path, "exam must include IPv4 networking tasks on client and server"))
+    if not (_has_repo_task(client_tasks) and _has_repo_task(server_tasks)):
+        findings.append(Finding(path, "exam must include RPM repository tasks on client and server"))
+
+
 def audit_rhcsa9_exam_check_granularity(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa9" not in scenario_tracks(scenario) or "exam" not in scenario.get("content", {}):
         return
@@ -574,6 +622,7 @@ def main() -> int:
         audit_rhcsa10_exam_target_balance(path, scenario, findings)
         audit_rhcsa9_exam_check_granularity(path, scenario, findings)
         audit_rhcsa9_exam_target_balance(path, scenario, findings)
+        audit_exam_required_coverage(path, scenario, findings)
         audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
@@ -613,8 +662,17 @@ def main() -> int:
             )
         )
 
+    exam_counts = {"rhcsa9": 0, "rhcsa10": 0}
+    for _path, scenario in exams:
+        for track in scenario_tracks(scenario):
+            if track in exam_counts:
+                exam_counts[track] += 1
+    for track, count in exam_counts.items():
+        if count != 8:
+            findings.append(Finding(SCENARIOS_DIR / "exams" / track, f"expected 8 {track.upper()} exams, found {count}"))
+
     recurring_limits = {
-        "root recovery": ({"rhcsa9": 8, "rhcsa10": 6}, lambda text: has_pattern(text, r"root recovery", r"password recovery")),
+        "root recovery": ({"rhcsa9": 8, "rhcsa10": 8}, lambda text: has_pattern(text, r"root recovery", r"recover root access", r"password recovery")),
         "repo on both hosts": (
             {"rhcsa9": 8, "rhcsa10": 8},
             lambda text: (

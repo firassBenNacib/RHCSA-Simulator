@@ -63,9 +63,9 @@ On client and server, create enabled BaseOS and AppStream repository definitions
 
 ---
 
-## Question 06 - Set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168 (server) - 5 pts
+## Question 06 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
-On server, set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168.122.4.
+On server, configure the server hostname and persistent IPv4 networking. Set hostname to servera.exam10.lab, map clienta.exam10.lab to 192.168.122.4, and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, and DNS resolver 192.168.122.3.
 
 ---
 
@@ -159,12 +159,12 @@ On server, enable persistent systemd journal storage.
 
 ---
 
-## Question 22 - Make chronyd available as the lab time source. on client, configure chro (client + server) - 4 pts
+## Question 22 - Make chronyd available as the lab time source (client + server) - 4 pts
 
 On server, make chronyd available as the lab time source. On client, configure chronyd with server as its only time source.
 
 ---
 
-## Question 23 - Export /exports/exam-a to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 23 - Export /exports/exam-a to the 192.168.122.0/24 network (client + server) - 4 pts
 
 On server, export /exports/exam-a to the 192.168.122.0/24 network. On client, mount server:/exports/exam-a persistently at /mnt/aprojects.

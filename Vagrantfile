@@ -30,8 +30,8 @@ end
 PROJECT_PROFILE = load_project_profile(PROJECT_PROFILE_PATH)
 RHCSA_PROFILE = (PROJECT_PROFILE || ENV.fetch("RHCSA_PROFILE", "rhel10")).downcase
 DEFAULT_ISO_BY_PROFILE = {
-  "rhel9" => "rhel-9.7-x86_64-dvd.iso",
-  "rhel10" => "rhel-10.1-x86_64-dvd.iso"
+  "rhel9" => "rhel-9.8-x86_64-dvd.iso",
+  "rhel10" => "rhel-10.2-x86_64-dvd.iso"
 }
 ISO_GLOB_BY_PROFILE = {
   "rhel9" => "rhel-9.*-x86_64-dvd.iso",

@@ -21,9 +21,9 @@ Web service and network focus: httpd service setup, custom service port, SELinux
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168 (client) - 5 pts
+## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
 
-On client, set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168.122.3.
+On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set hostname to clientc.exam10.lab and map serverc.exam10.lab to 192.168.122.3.
 
 ---
 
@@ -45,9 +45,9 @@ On client, configure httpd to listen on TCP port 8102 and make the port usable b
 
 ---
 
-## Question 05 - Set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168 (server) - 5 pts
+## Question 05 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
-On server, set hostname to serverc.exam10.lab and map clientc.exam10.lab to 192.168.122.4.
+On server, configure the server hostname and persistent IPv4 networking. Set hostname to serverc.exam10.lab, map clientc.exam10.lab to 192.168.122.4, and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, and DNS resolver 192.168.122.3.
 
 ---
 
@@ -135,7 +135,7 @@ On server, create and enable serverctimer.timer so it appends SERVER-C to /var/l
 
 ---
 
-## Question 20 - Export /exports/exam-c to the 192.168.122.0/24 network. on client, mount (client + server) - 4 pts
+## Question 20 - Export /exports/exam-c to the 192.168.122.0/24 network (client + server) - 4 pts
 
 On server, export /exports/exam-c to the 192.168.122.0/24 network. On client, mount server:/exports/exam-c persistently at /mnt/cprojects.
 

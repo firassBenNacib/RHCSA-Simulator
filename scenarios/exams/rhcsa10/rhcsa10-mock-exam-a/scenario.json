@@ -33,7 +33,7 @@
         "On client, configure the network connection for eth1 on client with the following settings:\n\nIP Address: 192.168.122.60/24\nGateway: 192.168.122.1\nDNS: 192.168.122.3\nMethod: manual\nAutoconnect: yes",
         "On client, configure the bootloader on client so every installed kernel boots with the kernel argument audit_backlog_limit=8192.\n\nRequirements:\n- The change must persist across reboots.\n- Do not rely on a one-time GRUB edit.",
         "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
-        "On server, set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168.122.4.",
+        "On server, configure the server hostname and persistent IPv4 networking. Set hostname to servera.exam10.lab, map clienta.exam10.lab to 192.168.122.4, and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, and DNS resolver 192.168.122.3.",
         "On client, add a system-level Flatpak remote named examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.",
         "On client, create group opsa10 on client.\nCreate users anna10 and atlas10 with opsa10 as a supplementary group.\nSet passwords for both users to cinder9.",
         "On client, allow members of %opsa10 to run /usr/bin/systemctl without a password prompt.",
@@ -58,7 +58,7 @@
         "Configure the network connection for eth1 on client with the following s",
         "Configure the bootloader on client so every installed kernel boots with",
         "Create enabled BaseOS and AppStream repository definitions with BaseOS a",
-        "Set hostname to servera.exam10.lab and map clienta.exam10.lab to 192.168",
+        "Configure the server hostname and persistent IPv4 networking",
         "Add a system-level Flatpak remote named examaflatpak pointing to file://",
         "Create group opsa10 on client",
         "Allow members of %opsa10 to run /usr/bin/systemctl without a password pr",
@@ -74,8 +74,8 @@
         "Persistently enable the SELinux boolean httpd_can_network_connect",
         "Create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se",
         "Enable persistent systemd journal storage",
-        "Make chronyd available as the lab time source. on client, configure chro",
-        "Export /exports/exam-a to the 192.168.122.0/24 network. on client, mount"
+        "Make chronyd available as the lab time source",
+        "Export /exports/exam-a to the 192.168.122.0/24 network"
       ],
       "task_points": [
         5,
@@ -113,7 +113,7 @@
         "connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v d=\"$private_dev\" '$2 == d {print $1; exit}')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '192.168.122.60/24' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '192.168.122.1' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '192.168.122.3' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual",
         "grubby --info=ALL | grep -q 'audit_backlog_limit=8192'",
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
-        "ssh server bash -lc 'set -euo pipefail; hostnamectl --static | grep -qx servera.exam10.lab && awk '\"'\"'$1 == \"192.168.122.4\" {for (i = 2; i <= NF; i++) if ($i == \"clienta.exam10.lab\") found = 1} END {exit !found}'\"'\"' /etc/hosts'",
+        "ssh server bash -lc 'set -euo pipefail; hostnamectl --static | grep -qx servera.exam10.lab && awk '\"'\"'$1 == \"192.168.122.4\" {for (i = 2; i <= NF; i++) if ($i == \"clienta.exam10.lab\") found = 1} END {exit !found}'\"'\"' /etc/hosts && connection_name=\"System eth1\"; nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '\"'\"'$4 ~ /^192\\.168\\.122\\./ {print $2; exit}'\"'\"')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '\"'\"'$2 == private_dev {print $1; exit}'\"'\"')\"; test -n \"$connection_name\" && nmcli -g ipv4.addresses connection show \"$connection_name\" | grep -qx '\"'\"'192.168.122.3/24'\"'\"' && nmcli -g ipv4.gateway connection show \"$connection_name\" | grep -qx '\"'\"'192.168.122.1'\"'\"' && nmcli -g ipv4.dns connection show \"$connection_name\" | grep -qx '\"'\"'192.168.122.3'\"'\"' && nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual'",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examaflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}' && flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
         "getent group opsa10 >/dev/null && id -nG anna10 | tr ' ' '\\n' | grep -qx opsa10 && id -nG atlas10 | tr ' ' '\\n' | grep -qx opsa10",
         "grep -ERq '^%opsa10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
@@ -167,7 +167,11 @@
         [
           "# On server:",
           "hostnamectl set-hostname servera.exam10.lab",
-          "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienta\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 clienta.exam10.lab' >> /etc/hosts"
+          "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienta\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 clienta.exam10.lab' >> /etc/hosts",
+          "connection_name=\"System eth1\"",
+          "nmcli -g NAME connection show \"$connection_name\" >/dev/null 2>&1 || connection_name=\"$(private_dev=\"$(ip -o -4 addr show | awk '$4 ~ /^192\\.168\\.122\\./ {print $2; exit}')\"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev=\"$private_dev\" '$2 == private_dev {print $1; exit}')\"",
+          "nmcli connection modify \"$connection_name\" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes",
+          "nmcli connection up \"$connection_name\""
         ],
         [
           "flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo",

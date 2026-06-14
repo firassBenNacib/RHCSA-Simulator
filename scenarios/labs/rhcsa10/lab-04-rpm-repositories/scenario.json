@@ -39,8 +39,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure a persistent BaseOS repository. BaseOS URL: http://server/repo",
-        "Configure a persistent AppStream repository. AppStream URL: http://serve",
+        "Configure a persistent BaseOS repository",
+        "Configure a persistent AppStream repository",
         "Disable GPG checks for both RHCSA10 repositories and verify both reposit",
         "Configure matching BaseOS and AppStream repositories with GPG checks dis"
       ],
