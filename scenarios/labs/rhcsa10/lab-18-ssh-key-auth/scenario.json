@@ -21,8 +21,9 @@
     "lab": {
       "tasks": [
         "On client, create user key10 and set password cinder9.",
-        "On client, create /home/key10/.ssh/authorized_keys with the provided public key text ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10.",
-        "On client, set secure ownership and permissions on the SSH directory and authorized_keys file."
+        "On server, create user key10 and set password cinder9.",
+        "On client, generate an ED25519 SSH key pair for key10 with no passphrase.",
+        "On client, configure key-based SSH authentication so key10 can log in to key10@server without a password prompt."
       ],
       "hints": [
         "The .ssh directory should be 700.",
@@ -30,18 +31,21 @@
       ],
       "checks": [
         "getent passwd key10 >/dev/null",
-        "grep -Fqx 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' /home/key10/.ssh/authorized_keys",
-        "stat -c '%U:%a' /home/key10/.ssh /home/key10/.ssh/authorized_keys | grep -qx 'key10:700' && stat -c '%U:%a' /home/key10/.ssh/authorized_keys | grep -qx 'key10:600'"
+        "# server getent passwd key10 >/dev/null",
+        "test -f /home/key10/.ssh/id_ed25519.pub && stat -c '%U:%a' /home/key10/.ssh | grep -qx 'key10:700'",
+        "runuser -l key10 -c 'ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null key10@server true'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Create user key10 and set password cinder9",
-        "Create /home/key10/.ssh/authorized_keys with the provided public key tex",
-        "Set secure ownership and permissions on the SSH directory and authorized"
+        "Create user key10 and set password cinder9",
+        "Generate an ED25519 SSH key pair for key10 with no passphrase",
+        "Configure key-based SSH authentication so key10 can log in to key10@serv"
       ],
       "task_points": [
+        10,
         10,
         10,
         10
@@ -52,27 +56,34 @@
           "echo 'key10:cinder9' | chpasswd"
         ],
         [
-          "install -d -m 700 -o key10 -g key10 /home/key10/.ssh",
-          "echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' > /home/key10/.ssh/authorized_keys"
+          "# On server",
+          "useradd -m key10",
+          "echo 'key10:cinder9' | chpasswd"
         ],
         [
-          "chown key10:key10 /home/key10/.ssh/authorized_keys",
-          "chmod 600 /home/key10/.ssh/authorized_keys",
-          "restorecon -RF /home/key10/.ssh"
+          "su - key10",
+          "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"
+        ],
+        [
+          "su - key10",
+          "ssh-copy-id -i ~/.ssh/id_ed25519.pub key10@server"
         ]
       ],
       "task_targets": [
         "client",
+        "server",
         "client",
-        "client"
+        "both"
       ],
       "solution_targets": [
         "client",
+        "server",
         "client",
-        "client"
+        "both"
       ],
       "check_targets": [
         "client",
+        "server",
         "client",
         "client"
       ]

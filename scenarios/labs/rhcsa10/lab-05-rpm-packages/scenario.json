@@ -20,8 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Install the lsof package.",
-        "Remove the tcpdump package if it is installed."
+        "On client, install the lsof package.",
+        "On client, remove the tcpdump package if it is installed.",
+        "On server, install the lsof package."
       ],
       "hints": [
         "Use dnf for package changes.",
@@ -29,18 +30,21 @@
       ],
       "checks": [
         "rpm -q lsof >/dev/null",
-        "(! rpm -q tcpdump >/dev/null 2>&1) && (rpm -q lsof >/dev/null && ! rpm -q tcpdump >/dev/null 2>&1)"
+        "! rpm -q tcpdump >/dev/null 2>&1",
+        "# server rpm -q lsof >/dev/null"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
         "Install the lsof package",
-        "Remove the tcpdump package if it is installed"
+        "Remove the tcpdump package if it is installed",
+        "Install the lsof package"
       ],
       "task_points": [
         10,
-        20
+        10,
+        10
       ],
       "solution_commands": [
         [
@@ -48,26 +52,33 @@
         ],
         [
           "dnf remove -y tcpdump",
-          "rpm -q lsof",
           "rpm -q tcpdump || true"
+        ],
+        [
+          "# On server",
+          "dnf install -y lsof"
         ]
       ],
       "task_targets": [
         "client",
-        "client"
+        "client",
+        "server"
       ],
       "solution_targets": [
         "client",
-        "client"
+        "client",
+        "server"
       ],
       "check_targets": [
         "client",
-        "client"
+        "client",
+        "server"
       ]
     }
   },
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "scope": "client-server"
 }

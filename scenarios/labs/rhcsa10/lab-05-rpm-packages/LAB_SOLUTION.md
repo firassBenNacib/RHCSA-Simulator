@@ -29,10 +29,18 @@ dnf install -y lsof
 
 ---
 
-## Task 02 - Remove the tcpdump package if it is installed (client) - 20 pts
+## Task 02 - Remove the tcpdump package if it is installed (client) - 10 pts
 
 ```bash
 dnf remove -y tcpdump
-rpm -q lsof
 rpm -q tcpdump || true
+```
+
+---
+
+## Task 03 - Install the lsof package (server) - 10 pts
+
+```bash
+# On server
+dnf install -y lsof
 ```

@@ -20,14 +20,16 @@
   "content": {
     "lab": {
       "tasks": [
-        "Ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/flatpak/repo.",
-        "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation."
+        "On server, install Flatpak repository tooling and rebuild the metadata under /opt/rhcsa/flatpak/repo.",
+        "On client, ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/flatpak/repo.",
+        "On client, install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation."
       ],
       "hints": [
         "Flatpak installs can be scoped with --system.",
         "Use flatpak list --app to verify installed applications."
       ],
       "checks": [
+        "# server test -s /opt/rhcsa/flatpak/repo/summary",
         "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
         "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
       ],
@@ -35,14 +37,23 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
+        "Install Flatpak repository tooling and rebuild the metadata under /opt/r",
         "Ensure the system Flatpak remote rhcsa10 exists and points to file:///op",
         "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system"
       ],
       "task_points": [
         10,
+        10,
         10
       ],
       "solution_commands": [
+        [
+          "# On server",
+          "dnf install -y flatpak ostree",
+          "install -d -m 755 /opt/rhcsa/flatpak/repo",
+          "ostree init --repo=/opt/rhcsa/flatpak/repo --mode=archive-z2",
+          "flatpak build-update-repo /opt/rhcsa/flatpak/repo"
+        ],
         [
           "flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo"
         ],
@@ -51,21 +62,25 @@
         ]
       ],
       "task_targets": [
+        "server",
         "client",
         "client"
       ],
       "solution_targets": [
+        "server",
         "client",
         "client"
       ],
       "check_targets": [
+        "server",
         "client",
         "client"
       ]
     }
   },
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "scope": "client-server"
 }

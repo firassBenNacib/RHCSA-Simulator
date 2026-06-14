@@ -27,3 +27,13 @@ Install software from a local RPM file.
 dnf install -y --disablerepo='*' --enablerepo=rhcsa-baseos --enablerepo=rhcsa-appstream tree
 rpm -q tree
 ```
+
+---
+
+## Task 02 - Install the tree package from the local repositories (server) - 10 pts
+
+```bash
+# On server
+dnf install -y tree
+rpm -q tree
+```

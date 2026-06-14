@@ -426,11 +426,17 @@ def audit_rhcsa9_lab_scope(path: Path, scenario: dict[str, Any], findings: list[
 def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
         return
-    scope = scenario.get("scope")
+    scope = normalize_scope(scenario.get("scope"), default="")
     if scope not in {"client", "server", "client-server"}:
         findings.append(Finding(path, "RHCSA10 lab must include scope as client, server, or client-server"))
         return
-    if scope != "client" and not scenario.get("flags", {}).get("requires_server", False):
+    actual_scope = target_derived_lab_scope(scenario)
+    if scope != actual_scope:
+        findings.append(Finding(path, f"RHCSA10 lab scope should be {actual_scope}, not {scope}"))
+    requires_server = bool(scenario.get("flags", {}).get("requires_server", False))
+    if actual_scope == "client" and requires_server:
+        findings.append(Finding(path, "RHCSA10 client-only lab must not set requires_server=true"))
+    if actual_scope != "client" and not requires_server:
         findings.append(Finding(path, f"RHCSA10 lab scope {scope} must require server"))
 
 
@@ -580,15 +586,15 @@ def main() -> int:
     for path, scenario in labs:
         if "rhcsa10" not in scenario_tracks(scenario):
             continue
-        scope = scenario.get("scope")
-        if scope in rhcsa10_lab_scopes:
-            rhcsa10_lab_scopes[scope] += 1
+        actual_scope = target_derived_lab_scope(scenario)
+        if actual_scope in rhcsa10_lab_scopes:
+            rhcsa10_lab_scopes[actual_scope] += 1
     expected_rhcsa10_lab_scopes = {"client": 22, "server": 14, "client-server": 12}
     if rhcsa10_lab_scopes != expected_rhcsa10_lab_scopes:
         findings.append(
             Finding(
                 SCENARIOS_DIR / "labs" / "rhcsa10",
-                f"expected RHCSA10 lab scopes {expected_rhcsa10_lab_scopes}, found {rhcsa10_lab_scopes}",
+                f"expected RHCSA10 lab target scopes {expected_rhcsa10_lab_scopes}, found {rhcsa10_lab_scopes}",
             )
         )
 
