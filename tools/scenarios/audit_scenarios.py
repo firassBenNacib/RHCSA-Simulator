@@ -440,6 +440,20 @@ def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list
         findings.append(Finding(path, f"RHCSA10 lab scope {scope} must require server"))
 
 
+def audit_rhcsa10_lab_script_targets(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
+        return
+    vm_scripts = scenario.get("vm_scripts")
+    if not isinstance(vm_scripts, dict) or not vm_scripts:
+        return
+    scope = normalize_scope(scenario.get("scope"), default="")
+    script_targets = {str(target) for target in vm_scripts}
+    if scope == "server" and "server" not in script_targets:
+        findings.append(Finding(path, "RHCSA10 server lab vm_scripts must include server"))
+    if scope == "client" and "client" not in script_targets:
+        findings.append(Finding(path, "RHCSA10 client lab vm_scripts must include client"))
+
+
 def audit_rhcsa10_timer_calendar(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario):
         return
@@ -543,6 +557,7 @@ def main() -> int:
         audit_solution_style(path, scenario, findings)
         audit_rhcsa9_lab_scope(path, scenario, findings)
         audit_rhcsa10_lab_scope(path, scenario, findings)
+        audit_rhcsa10_lab_script_targets(path, scenario, findings)
         audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
