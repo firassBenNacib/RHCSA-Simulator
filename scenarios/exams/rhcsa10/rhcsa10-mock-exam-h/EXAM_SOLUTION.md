@@ -21,7 +21,7 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -31,7 +31,7 @@ echo '192.168.122.3 serverh.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -41,17 +41,17 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168 (server) - 5 pts
+## Question 03 - Set hostname (server) - 5 pts
 
 ```bash
 # On server:
 hostnamectl set-hostname serverh.exam10.lab
-grep -Eq '^192\.168\.122\.4[[:space:]]+clienth\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clienth.exam10.lab' >> /etc/hosts
+grep -Eq '^192\.168\.122\.67[[:space:]]+clienth\.exam10\.lab$' /etc/hosts || echo '192.168.122.67 clienth.exam10.lab' >> /etc/hosts
 ```
 
 ---
 
-## Question 04 - Create /root/exam-h-report.txt containing REPORT-H and copy it to server (client + server) - 5 pts
+## Question 04 - Copy exam report to server (client + server) - 5 pts
 
 ```bash
 echo REPORT-H > /root/exam-h-report.txt
@@ -62,7 +62,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 05 - Create and enable serverhtimer.timer so it appends SERVER-H to /var/log/ (server) - 5 pts
+## Question 05 - Configure systemd timer (server) - 5 pts
 
 ```bash
 # On server:
@@ -96,7 +96,7 @@ systemctl enable --now serverhtimer.timer
 
 ---
 
-## Question 06 - Create group teamh10, create user userh10, set password cinder9, and add (client) - 5 pts
+## Question 06 - Create user and group (client) - 5 pts
 
 ```bash
 groupadd teamh10
@@ -107,7 +107,7 @@ passwd userh10
 
 ---
 
-## Question 07 - Set maximum password age for userh10 to 52 days and warning period to 7 (client) - 5 pts
+## Question 07 - Configure password aging (client) - 5 pts
 
 ```bash
 chage -M 52 -W 7 userh10
@@ -115,7 +115,7 @@ chage -M 52 -W 7 userh10
 
 ---
 
-## Question 08 - Persistently enable httpd_can_network_connect (client) - 5 pts
+## Question 08 - Persist SELinux boolean (client) - 5 pts
 
 ```bash
 setsebool -P httpd_can_network_connect on
@@ -131,7 +131,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt
 
 ---
 
-## Question 10 - Configure persistent systemd journal storage (server) - 5 pts
+## Question 10 - Enable persistent journal (server) - 5 pts
 
 ```bash
 # On server:
@@ -158,7 +158,7 @@ chmod 2770 /srv/serverh10
 
 ---
 
-## Question 12 - Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10 (client) - 5 pts
+## Question 12 - Schedule cron job (client) - 5 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log' | crontab -u userh10 -
@@ -189,7 +189,7 @@ systemctl get-default
 
 ---
 
-## Question 15 - Route local6 log messages to /var/log/examh-local6.log and write a test (server) - 4 pts
+## Question 15 - Route rsyslog messages (server) - 4 pts
 
 ```bash
 # On server:
@@ -227,7 +227,7 @@ dnf remove -y tcpdump
 
 ---
 
-## Question 17 - Make chronyd available as the lab time source (client + server) - 4 pts
+## Question 17 - Configure chrony time source (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -274,7 +274,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 18 - Publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd (server) - 4 pts
+## Question 18 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -293,7 +293,7 @@ systemctl restart httpd
 
 ---
 
-## Question 19 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 4 pts
+## Question 19 - Configure BaseOS and AppStream repositories (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -338,7 +338,7 @@ chmod 440 /etc/sudoers.d/teamh10
 
 ---
 
-## Question 21 - Allow members of serverh10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 21 - Configure sudo access (server) - 4 pts
 
 ```bash
 # On server:
@@ -349,7 +349,7 @@ chmod 0440 /etc/sudoers.d/serverh10-systemctl
 
 ---
 
-## Question 22 - Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
+## Question 22 - Create gzip archive (client) - 4 pts
 
 ```bash
 tar -czf /root/h-etc.tar.gz /etc/hosts /etc/fstab

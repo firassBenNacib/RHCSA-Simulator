@@ -26,12 +26,12 @@ Create physical volume /dev/sdb.
 
 ---
 
-## Task 02 - Create volume group vg10 (client) - 10 pts
+## Task 02 - Create volume group (client) - 10 pts
 
 Create volume group vg10.
 
 ---
 
-## Task 03 - Create a 384 MiB logical volume lvdata formatted with XFS and mounted at (client) - 10 pts
+## Task 03 - Configure LVM storage (client) - 10 pts
 
 Create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently.

@@ -32,8 +32,8 @@
         "client should use a single server line for this lab."
       ],
       "checks": [
-        "systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^server server iburst$' /etc/chrony.d /etc/chrony.conf",
-        "# server systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^allow 192.168.122.0/24$' /etc/chrony.d /etc/chrony.conf"
+        "# server systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^allow 192.168.122.0/24$' /etc/chrony.d /etc/chrony.conf",
+        "systemctl is-enabled chronyd | grep -qx enabled && grep -Rqs '^server server iburst$' /etc/chrony.d /etc/chrony.conf"
       ],
       "solution_outline": [
         "Update chrony on server with an allow rule and enable the service.",
@@ -68,8 +68,8 @@
         "client"
       ],
       "check_targets": [
-        "client",
-        "server"
+        "server",
+        "client"
       ]
     }
   },

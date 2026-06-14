@@ -22,7 +22,7 @@ Serve an existing custom document root on a non-default port with SELinux enforc
 
 ## Task 01 - Serve the custom document root on port 8088 (client) - 10 pts
 
-On client, configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.
+On client, configure Apache to serve content from /srv/lab28/site on TCP port 8088.
 
 ---
 

@@ -21,7 +21,7 @@ Service and logging focus: custom systemd service, rsyslog routing, firewall ser
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -31,7 +31,7 @@ echo '192.168.122.3 serverd.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.63/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -41,7 +41,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create /root/d-original, hard link /root/d-hard, and symlink /root/d-sof (client) - 5 pts
+## Question 03 - Create /root/d-original, hard link /root/d-hard, and symlink (client) - 5 pts
 
 ```bash
 echo link > /root/d-original
@@ -51,7 +51,7 @@ ln -s /root/d-original /root/d-soft
 
 ---
 
-## Question 04 - Create and enable serverdtimer.timer so it appends SERVER-D to /var/log/ (server) - 5 pts
+## Question 04 - Configure systemd timer (server) - 5 pts
 
 ```bash
 # On server:
@@ -109,7 +109,7 @@ restorecon -v /var/www/html/d.html
 
 ---
 
-## Question 07 - Persistently enable httpd_can_network_connect (client) - 5 pts
+## Question 07 - Persist SELinux boolean (client) - 5 pts
 
 ```bash
 setsebool -P httpd_can_network_connect on
@@ -117,7 +117,7 @@ setsebool -P httpd_can_network_connect on
 
 ---
 
-## Question 08 - Enable persistent systemd journal storage (server) - 5 pts
+## Question 08 - Enable persistent journal (server) - 5 pts
 
 ```bash
 # On server:
@@ -132,7 +132,7 @@ journalctl --flush
 
 ---
 
-## Question 09 - Make chronyd available as the lab time source (client + server) - 5 pts
+## Question 09 - Configure chrony time source (client + server) - 5 pts
 
 ```bash
 # On server:
@@ -179,7 +179,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 10 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
+## Question 10 - Configure BaseOS and AppStream repositories (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -215,7 +215,7 @@ dnf clean all
 
 ---
 
-## Question 11 - Publish /var/www/html/server-d.html containing RHCSA10-D and serve httpd (server) - 5 pts
+## Question 11 - Publish web content (server) - 5 pts
 
 ```bash
 # On server:
@@ -234,7 +234,7 @@ systemctl restart httpd
 
 ---
 
-## Question 12 - Route local5 log messages to /var/log/server-d-local5.log and write a te (server) - 5 pts
+## Question 12 - Route rsyslog messages (server) - 5 pts
 
 ```bash
 # On server:
@@ -249,7 +249,7 @@ sleep 1
 
 ---
 
-## Question 13 - Create group teamd10, create user userd10, set password cinder9, and add (client) - 4 pts
+## Question 13 - Create user and group (client) - 4 pts
 
 ```bash
 groupadd teamd10
@@ -260,7 +260,7 @@ passwd userd10
 
 ---
 
-## Question 14 - Allow members of serverd10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 14 - Configure sudo access (server) - 4 pts
 
 ```bash
 # On server:
@@ -271,7 +271,7 @@ chmod 0440 /etc/sudoers.d/serverd10-systemctl
 
 ---
 
-## Question 15 - Create group serverd10 and user srvd10 with password cinder9, then add t (server) - 4 pts
+## Question 15 - Create user and group (server) - 4 pts
 
 ```bash
 # On server:
@@ -283,7 +283,7 @@ echo 'srvd10:cinder9' | chpasswd
 
 ---
 
-## Question 16 - Create /usr/local/bin/d-who that prints the primary group for the suppli (client) - 4 pts
+## Question 16 - Create user lookup script (client) - 4 pts
 
 ```bash
 cat > /usr/local/bin/d-who <<'EOF'
@@ -304,7 +304,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/d-shell-users.txt
 
 ---
 
-## Question 18 - Create /root/exam-d-report.txt containing REPORT-D and copy it to server (client + server) - 4 pts
+## Question 18 - Copy exam report to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-D > /root/exam-d-report.txt
@@ -315,7 +315,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 19 - Create a cron job for userd10 that writes EXAM10 to /home/userd10/exam10 (client) - 4 pts
+## Question 19 - Schedule cron job (client) - 4 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log' | crontab -u userd10 -
@@ -323,7 +323,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userd10/exam10.log' | crontab -u userd10
 
 ---
 
-## Question 20 - Export /exports/exam-d to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 20 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:

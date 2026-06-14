@@ -36,7 +36,7 @@
       ],
       "task_titles": [
         "Create /root/rhcsa10-shell-users.txt",
-        "Populate it with account names from /etc/passwd whose shell ends in sh,"
+        "Populate it with account names from /etc/passwd whose shell ends in sh"
       ],
       "task_points": [
         10,

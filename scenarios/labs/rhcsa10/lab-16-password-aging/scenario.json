@@ -38,7 +38,7 @@
       ],
       "task_titles": [
         "Create user aging10 and set password cinder9",
-        "Set maximum password age to 60 days",
+        "Configure password aging",
         "Set password warning period to 7 days"
       ],
       "task_points": [

@@ -639,7 +639,7 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
         rhcsa9_both_chrony_step(letter),
     ]
     checks = [
-        "passwd -S root | awk '$2 != \"LK\" {found=1} END {exit !found}'",
+        "echo cinder9 | su - root -c 'whoami' 2>/dev/null | grep -qx root",
         rhcsa9_network_check(client_ip, f"client-{letter}.exam9.lab"),
         STRICT_RHCSA9_REPO_CHECK,
         ("rpm -q tree >/dev/null" if letter in {"a", "d", "g"} else "rpm -q lsof >/dev/null"),

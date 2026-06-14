@@ -23,7 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, recover root access on client from the console and set the root password to cinder9.",
+        "On client, recover root access from the console and set the root password to cinder9.",
         "On client, after the system boots normally, confirm that SELinux relabeling completed and root can log in again.",
         "On client, leave SSH password authentication working for root and admin."
       ],

@@ -26,7 +26,7 @@
     "lab": {
       "tasks": [
         "On client, ensure the user mesh39 exists on both client and server, and set the password on both systems to cinder9.",
-        "On client, as user mesh39 on client, generate an ED25519 SSH key pair with no passphrase.",
+        "On client, as user mesh39, generate an ED25519 SSH key pair with no passphrase.",
         "On client, configure passwordless SSH access for mesh39 from client to server using public key authentication.",
         "On client, using rsync over SSH, copy the directory /home/mesh39/client-data/ from client to /home/mesh39/server-data/ on server."
       ],

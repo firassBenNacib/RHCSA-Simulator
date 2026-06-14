@@ -42,7 +42,7 @@
       ],
       "task_titles": [
         "Create the autofs parent mount point /remote10",
-        "Configure /remote10/projects to automount server:/exports/autofs/project",
+        "Configure NFS export and mount",
         "Enable and start autofs"
       ],
       "task_points": [

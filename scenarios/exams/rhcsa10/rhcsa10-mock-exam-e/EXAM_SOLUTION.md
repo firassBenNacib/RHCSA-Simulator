@@ -21,7 +21,7 @@ Storage and boot focus: labeled filesystem persistence, kernel arguments, LVM, N
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -31,7 +31,7 @@ echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.64/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -41,7 +41,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
+## Question 03 - Configure BaseOS and AppStream repositories (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -77,7 +77,7 @@ dnf clean all
 
 ---
 
-## Question 04 - Create a labeled XFS filesystem on /dev/sdc1 and mount it persistently a (client) - 5 pts
+## Question 04 - Create a labeled XFS filesystem on /dev/sdc1 and mount it persistently (client) - 5 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary xfs 1MiB 513MiB
@@ -101,7 +101,7 @@ grubby --info=ALL | grep audit_backlog_limit
 
 ---
 
-## Question 06 - Create group teame10, create user usere10, set password cinder9, and add (client) - 5 pts
+## Question 06 - Create user and group (client) - 5 pts
 
 ```bash
 groupadd teame10
@@ -112,7 +112,7 @@ passwd usere10
 
 ---
 
-## Question 07 - Create group servere10 and user srve10 with password cinder9, then add t (server) - 5 pts
+## Question 07 - Create user and group (server) - 5 pts
 
 ```bash
 # On server:
@@ -124,7 +124,7 @@ echo 'srve10:cinder9' | chpasswd
 
 ---
 
-## Question 08 - Allow members of servere10 to run /usr/bin/systemctl with sudo without a (server) - 5 pts
+## Question 08 - Configure sudo access (server) - 5 pts
 
 ```bash
 # On server:
@@ -135,7 +135,7 @@ chmod 0440 /etc/sudoers.d/servere10-systemctl
 
 ---
 
-## Question 09 - Create /usr/local/bin/e-who that prints the primary group for the suppli (client) - 4 pts
+## Question 09 - Create user lookup script (client) - 4 pts
 
 ```bash
 cat > /usr/local/bin/e-who <<'EOF'
@@ -156,7 +156,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/e-shell-users.txt
 
 ---
 
-## Question 11 - Create gzip archive /root/e-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
+## Question 11 - Create gzip archive (client) - 4 pts
 
 ```bash
 tar -czf /root/e-etc.tar.gz /etc/hosts /etc/fstab
@@ -165,7 +165,7 @@ tar -tzf /root/e-etc.tar.gz
 
 ---
 
-## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink /root/e-sof (client) - 4 pts
+## Question 12 - Create /root/e-original, hard link /root/e-hard, and symlink (client) - 4 pts
 
 ```bash
 echo link > /root/e-original
@@ -175,7 +175,7 @@ ln -s /root/e-original /root/e-soft
 
 ---
 
-## Question 13 - Create and enable serveretimer.timer so it appends SERVER-E to /var/log/ (server) - 4 pts
+## Question 13 - Configure systemd timer (server) - 4 pts
 
 ```bash
 # On server:
@@ -223,7 +223,7 @@ mount -a
 
 ---
 
-## Question 15 - Publish /var/www/html/server-e.html containing RHCSA10-E and serve httpd (server) - 4 pts
+## Question 15 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -263,7 +263,7 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Question 18 - Route local5 log messages to /var/log/server-e-local5.log and write a te (server) - 4 pts
+## Question 18 - Route rsyslog messages (server) - 4 pts
 
 ```bash
 # On server:
@@ -278,7 +278,7 @@ sleep 1
 
 ---
 
-## Question 19 - Export /exports/exam-e to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 19 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -301,7 +301,7 @@ mount -a
 
 ---
 
-## Question 20 - Create /root/exam-e-report.txt containing REPORT-E and copy it to server (client + server) - 4 pts
+## Question 20 - Copy exam report to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-E > /root/exam-e-report.txt
@@ -335,7 +335,7 @@ dnf remove -y tcpdump
 
 ---
 
-## Question 22 - Enable persistent systemd journal storage (server) - 4 pts
+## Question 22 - Enable persistent journal (server) - 4 pts
 
 ```bash
 # On server:
@@ -350,7 +350,7 @@ journalctl --flush
 
 ---
 
-## Question 23 - Add a hosts entry for servere.exam10.lab and save the output of http://s (client) - 4 pts
+## Question 23 - Save web service response (client) - 4 pts
 
 ```bash
 grep -Eq '^192\.168\.122\.3[[:space:]]+servere\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts

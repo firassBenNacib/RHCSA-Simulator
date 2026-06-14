@@ -50,7 +50,7 @@ EOF
 
 ---
 
-## Task 03 - Disable GPG checks for both RHCSA10 repositories and verify both reposit (client) - 10 pts
+## Task 03 - Disable GPG checks for both RHCSA10 repositories and verify both (client) - 10 pts
 
 ```bash
 sed -i 's/^gpgcheck=.*/gpgcheck=0/' /etc/yum.repos.d/rhcsa10.repo
@@ -60,7 +60,7 @@ dnf repolist --enabled
 
 ---
 
-## Task 04 - Configure matching BaseOS and AppStream repositories with GPG checks dis (server) - 10 pts
+## Task 04 - Configure BaseOS and AppStream repositories (server) - 10 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10.repo <<'EOF'

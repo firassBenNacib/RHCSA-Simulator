@@ -25,7 +25,7 @@
     "lab": {
       "tasks": [
         "On server, the file /var/www/html/index45.html has the wrong SELinux context. Restore the default context.",
-        "On server, ensure the httpd service is enabled and running on server. SELinux must remain enforcing."
+        "On server, ensure the httpd service is enabled and running. SELinux must remain enforcing."
       ],
       "hints": [
         "Use the default file-context policy instead of a custom override.",

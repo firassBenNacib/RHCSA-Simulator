@@ -35,7 +35,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Install the local tree RPM from /var/www/html/repo or the mounted ISO wi",
+        "Install the local tree RPM from /var/www/html/repo or the mounted ISO",
         "Install the tree package from the local repositories"
       ],
       "task_points": [

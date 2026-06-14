@@ -42,7 +42,7 @@
         "Create user key10 and set password cinder9",
         "Create user key10 and set password cinder9",
         "Generate an ED25519 SSH key pair for key10 with no passphrase",
-        "Configure key-based SSH authentication so key10 can log in to key10@serv"
+        "Configure key-based SSH authentication so key10 can log in to"
       ],
       "task_points": [
         10,

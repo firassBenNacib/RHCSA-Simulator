@@ -20,7 +20,7 @@ Add persistent swap space.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create a 512 MiB swap partition on /dev/sdb (client) - 10 pts
+## Task 01 - Configure persistent swap (client) - 10 pts
 
 Create a 512 MiB swap partition on /dev/sdb.
 

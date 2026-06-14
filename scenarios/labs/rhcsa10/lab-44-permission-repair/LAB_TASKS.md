@@ -26,7 +26,7 @@ On server, create /srv/repair10/report.txt.
 
 ---
 
-## Task 02 - Make the file readable and writable by owner and group, and unreadable b (server) - 10 pts
+## Task 02 - Make the file readable and writable by owner and group, and unreadable (server) - 10 pts
 
 On server, make the file readable and writable by owner and group, and unreadable by others.
 

@@ -21,7 +21,7 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -31,7 +31,7 @@ echo '192.168.122.3 serverf.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.65/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -41,7 +41,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create /root/exam-f-report.txt containing REPORT-F and copy it to server (client + server) - 5 pts
+## Question 03 - Copy exam report to server (client + server) - 5 pts
 
 ```bash
 echo REPORT-F > /root/exam-f-report.txt
@@ -52,7 +52,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 04 - Create a 500 MiB swap partition on /dev/sdc and make it active and persi (client) - 5 pts
+## Question 04 - Configure persistent swap (client) - 5 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB
@@ -75,7 +75,7 @@ tuned-adm profile throughput-performance
 
 ---
 
-## Question 06 - Create system Flatpak remote examfflatpak pointing to file:///opt/rhcsa/ (client) - 5 pts
+## Question 06 - Configure Flatpak remote examfflatpak (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examfflatpak file:///opt/rhcsa/flatpak/repo
@@ -83,7 +83,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examfflatpak file://
 
 ---
 
-## Question 07 - Ensure org.rhcsa.Tools is not installed after configuring examfflatpak (client) - 5 pts
+## Question 07 - Remove Flatpak application (client) - 5 pts
 
 ```bash
 flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
@@ -91,7 +91,7 @@ flatpak uninstall --system -y org.rhcsa.Tools >/dev/null 2>&1 || true
 
 ---
 
-## Question 08 - Enable persistent systemd journal storage (server) - 5 pts
+## Question 08 - Enable persistent journal (server) - 5 pts
 
 ```bash
 # On server:
@@ -115,7 +115,7 @@ chmod 440 /etc/sudoers.d/teamf10
 
 ---
 
-## Question 10 - Create group teamf10, create user userf10, set password cinder9, and add (client) - 5 pts
+## Question 10 - Create user and group (client) - 5 pts
 
 ```bash
 groupadd teamf10
@@ -126,7 +126,7 @@ passwd userf10
 
 ---
 
-## Question 11 - Create a cron job for userf10 that writes EXAM10 to /home/userf10/exam10 (client) - 5 pts
+## Question 11 - Schedule cron job (client) - 5 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log' | crontab -u userf10 -
@@ -134,7 +134,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userf10/exam10.log' | crontab -u userf10
 
 ---
 
-## Question 12 - Create /usr/local/bin/f-who that prints the primary group for the suppli (client) - 5 pts
+## Question 12 - Create user lookup script (client) - 5 pts
 
 ```bash
 cat > /usr/local/bin/f-who <<'EOF'
@@ -157,7 +157,7 @@ systemctl get-default
 
 ---
 
-## Question 14 - Create gzip archive /root/f-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
+## Question 14 - Create gzip archive (client) - 4 pts
 
 ```bash
 tar -czf /root/f-etc.tar.gz /etc/hosts /etc/fstab
@@ -166,7 +166,7 @@ tar -tzf /root/f-etc.tar.gz
 
 ---
 
-## Question 15 - Export /exports/exam-f to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 15 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -189,7 +189,7 @@ mount -a
 
 ---
 
-## Question 16 - Create and enable serverftimer.timer so it appends SERVER-F to /var/log/ (server) - 4 pts
+## Question 16 - Configure systemd timer (server) - 4 pts
 
 ```bash
 # On server:
@@ -223,7 +223,7 @@ systemctl enable --now serverftimer.timer
 
 ---
 
-## Question 17 - Publish /var/www/html/server-f.html containing RHCSA10-F and serve httpd (server) - 4 pts
+## Question 17 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -242,7 +242,7 @@ systemctl restart httpd
 
 ---
 
-## Question 18 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 4 pts
+## Question 18 - Configure BaseOS and AppStream repositories (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -278,7 +278,7 @@ dnf clean all
 
 ---
 
-## Question 19 - Set maximum password age for userf10 to 50 days and warning period to 7 (client) - 4 pts
+## Question 19 - Configure password aging (client) - 4 pts
 
 ```bash
 chage -M 50 -W 7 userf10
@@ -286,7 +286,7 @@ chage -M 50 -W 7 userf10
 
 ---
 
-## Question 20 - Route local6 log messages to /var/log/server-f-local6.log and write a te (server) - 4 pts
+## Question 20 - Route rsyslog messages (server) - 4 pts
 
 ```bash
 # On server:
@@ -313,7 +313,7 @@ chmod 2770 /srv/serverf10
 
 ---
 
-## Question 22 - Create group serverf10 and user srvf10 with password cinder9, then add t (server) - 4 pts
+## Question 22 - Create user and group (server) - 4 pts
 
 ```bash
 # On server:

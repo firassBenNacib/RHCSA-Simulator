@@ -21,7 +21,7 @@ Install and remove Flatpak applications from a configured remote.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Install Flatpak repository tooling and rebuild the metadata under /opt/r (server) - 10 pts
+## Task 01 - Install Flatpak repository tooling and rebuild the metadata under (server) - 10 pts
 
 ```bash
 # On server
@@ -33,7 +33,7 @@ flatpak build-update-repo /opt/rhcsa/flatpak/repo
 
 ---
 
-## Task 02 - Ensure the system Flatpak remote rhcsa10 exists and points to file:///op (client) - 10 pts
+## Task 02 - Configure Flatpak remote rhcsa10 (client) - 10 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo

@@ -20,7 +20,7 @@ Create a shell script that loops over input.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /usr/local/bin/rhcsa10-lines (client) - 10 pts
+## Task 01 - Create user lookup script (client) - 10 pts
 
 ```bash
 cat > /usr/local/bin/rhcsa10-lines <<'EOF'
@@ -36,7 +36,7 @@ EOF
 
 ---
 
-## Task 02 - Make the script executable, read /etc/passwd, and overwrite /root/rhcsa1 (client) - 10 pts
+## Task 02 - Make the script executable, read /etc/passwd, and overwrite (client) - 10 pts
 
 ```bash
 chmod +x /usr/local/bin/rhcsa10-lines

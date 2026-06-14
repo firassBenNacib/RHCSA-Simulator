@@ -21,7 +21,7 @@ Software and permissions focus: offline package installation, shared directories
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -31,7 +31,7 @@ echo '192.168.122.3 serverb.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.61/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -41,7 +41,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 03 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
+## Question 03 - Configure BaseOS and AppStream repositories (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -111,7 +111,7 @@ chmod 3770 /srv/teamb10
 
 ---
 
-## Question 06 - Create group teamb10, create user userb10, set password cinder9, and add (client) - 5 pts
+## Question 06 - Create user and group (client) - 5 pts
 
 ```bash
 getent group teamb10 >/dev/null || groupadd teamb10
@@ -131,7 +131,7 @@ usermod -u 6102 -s /sbin/nologin auditorb10
 
 ---
 
-## Question 08 - Set maximum password age for userb10 to 46 days and warning period to 7 (client) - 5 pts
+## Question 08 - Configure password aging (client) - 5 pts
 
 ```bash
 chage -M 46 -W 7 userb10
@@ -139,7 +139,7 @@ chage -M 46 -W 7 userb10
 
 ---
 
-## Question 09 - Create /usr/local/bin/b-who that prints the primary group for the suppli (client) - 5 pts
+## Question 09 - Create user lookup script (client) - 5 pts
 
 ```bash
 cat > /usr/local/bin/b-who <<'EOF'
@@ -152,7 +152,7 @@ chmod +x /usr/local/bin/b-who
 
 ---
 
-## Question 10 - Create /root/exam-b-report.txt containing REPORT-B and copy it to server (client + server) - 5 pts
+## Question 10 - Copy exam report to server (client + server) - 5 pts
 
 ```bash
 echo REPORT-B > /root/exam-b-report.txt
@@ -163,7 +163,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 11 - Create gzip archive /root/b-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 5 pts
+## Question 11 - Create gzip archive (client) - 5 pts
 
 ```bash
 tar -czf /root/b-etc.tar.gz /etc/hosts /etc/fstab
@@ -172,7 +172,7 @@ tar -tzf /root/b-etc.tar.gz
 
 ---
 
-## Question 12 - Create /root/b-original, hard link /root/b-hard, and symlink /root/b-sof (client) - 5 pts
+## Question 12 - Create /root/b-original, hard link /root/b-hard, and symlink (client) - 5 pts
 
 ```bash
 echo link > /root/b-original
@@ -182,7 +182,7 @@ ln -s /root/b-original /root/b-soft
 
 ---
 
-## Question 13 - Create and enable serverbtimer.timer so it appends SERVER-B to /var/log/ (server) - 4 pts
+## Question 13 - Configure systemd timer (server) - 4 pts
 
 ```bash
 # On server:
@@ -230,7 +230,7 @@ mount -a
 
 ---
 
-## Question 15 - Publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd (server) - 4 pts
+## Question 15 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -249,7 +249,7 @@ systemctl restart httpd
 
 ---
 
-## Question 16 - Create group serverb10 and user srvb10 with password cinder9, then add t (server) - 4 pts
+## Question 16 - Create user and group (server) - 4 pts
 
 ```bash
 # On server:
@@ -261,7 +261,7 @@ echo 'srvb10:cinder9' | chpasswd
 
 ---
 
-## Question 17 - Allow members of serverb10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 17 - Configure sudo access (server) - 4 pts
 
 ```bash
 # On server:
@@ -272,7 +272,7 @@ chmod 0440 /etc/sudoers.d/serverb10-systemctl
 
 ---
 
-## Question 18 - Enable persistent systemd journal storage (server) - 4 pts
+## Question 18 - Enable persistent journal (server) - 4 pts
 
 ```bash
 # On server:
@@ -287,7 +287,7 @@ journalctl --flush
 
 ---
 
-## Question 19 - Route local5 log messages to /var/log/server-b-local5.log and write a te (server) - 4 pts
+## Question 19 - Route rsyslog messages (server) - 4 pts
 
 ```bash
 # On server:
@@ -302,7 +302,7 @@ sleep 1
 
 ---
 
-## Question 20 - Export /exports/exam-b to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 20 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:

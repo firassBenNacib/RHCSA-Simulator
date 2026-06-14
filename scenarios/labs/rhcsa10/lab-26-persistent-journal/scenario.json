@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create the persistent systemd journal directory",
-        "Configure systemd-journald to store logs persistently and flush current"
+        "Enable persistent journal",
+        "Enable persistent journal"
       ],
       "task_points": [
         10,

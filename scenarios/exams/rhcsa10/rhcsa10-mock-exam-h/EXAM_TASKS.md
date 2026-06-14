@@ -21,49 +21,49 @@ A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers,
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set hostname to clienth.exam10.lab and map serverh.exam10.lab to 192.168.122.3.
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 On client, configure System eth1 with IPv4 address 192.168.122.67/24, gateway 192.168.122.1, and DNS 192.168.122.3.
 
 ---
 
-## Question 03 - Set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168 (server) - 5 pts
+## Question 03 - Set hostname (server) - 5 pts
 
-On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.4.
+On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.67.
 
 ---
 
-## Question 04 - Create /root/exam-h-report.txt containing REPORT-H and copy it to server (client + server) - 5 pts
+## Question 04 - Copy exam report to server (client + server) - 5 pts
 
 On client, create /root/exam-h-report.txt containing REPORT-H and copy it to server:/root/exam-h-report.txt.
 
 ---
 
-## Question 05 - Create and enable serverhtimer.timer so it appends SERVER-H to /var/log/ (server) - 5 pts
+## Question 05 - Configure systemd timer (server) - 5 pts
 
 On server, create and enable serverhtimer.timer so it appends SERVER-H to /var/log/serverhtimer.log every 10 minutes.
 
 ---
 
-## Question 06 - Create group teamh10, create user userh10, set password cinder9, and add (client) - 5 pts
+## Question 06 - Create user and group (client) - 5 pts
 
 On client, create group teamh10, create user userh10, set password cinder9, and add the user to teamh10.
 
 ---
 
-## Question 07 - Set maximum password age for userh10 to 52 days and warning period to 7 (client) - 5 pts
+## Question 07 - Configure password aging (client) - 5 pts
 
 On client, set maximum password age for userh10 to 52 days and warning period to 7 days.
 
 ---
 
-## Question 08 - Persistently enable httpd_can_network_connect (client) - 5 pts
+## Question 08 - Persist SELinux boolean (client) - 5 pts
 
 On client, persistently enable httpd_can_network_connect.
 
@@ -75,7 +75,7 @@ On client, write users whose shell ends with sh to /root/h-shell-users.txt.
 
 ---
 
-## Question 10 - Configure persistent systemd journal storage (server) - 5 pts
+## Question 10 - Enable persistent journal (server) - 5 pts
 
 On server, configure persistent systemd journal storage.
 
@@ -87,7 +87,7 @@ On server, create /srv/serverh10 owned by root:serverh10 with mode 2770.
 
 ---
 
-## Question 12 - Create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10 (client) - 5 pts
+## Question 12 - Schedule cron job (client) - 5 pts
 
 On client, create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.
 
@@ -105,7 +105,7 @@ On client, set the default target to multi-user.target without rebooting.
 
 ---
 
-## Question 15 - Route local6 log messages to /var/log/examh-local6.log and write a test (server) - 4 pts
+## Question 15 - Route rsyslog messages (server) - 4 pts
 
 On server, route local6 log messages to /var/log/examh-local6.log and write a test message.
 
@@ -117,19 +117,19 @@ On client, install lsof and ensure tcpdump is removed.
 
 ---
 
-## Question 17 - Make chronyd available as the lab time source (client + server) - 4 pts
+## Question 17 - Configure chrony time source (client + server) - 4 pts
 
 On server, make chronyd available as the lab time source. On client, configure chronyd with server as its only time source.
 
 ---
 
-## Question 18 - Publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd (server) - 4 pts
+## Question 18 - Publish web content (server) - 4 pts
 
 On server, publish /var/www/html/server-h.html containing RHCSA10-H and serve httpd on TCP port 8207.
 
 ---
 
-## Question 19 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 4 pts
+## Question 19 - Configure BaseOS and AppStream repositories (client + server) - 4 pts
 
 On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
@@ -141,12 +141,12 @@ On client, allow %teamh10 to run /usr/bin/systemctl without a password.
 
 ---
 
-## Question 21 - Allow members of serverh10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 21 - Configure sudo access (server) - 4 pts
 
 On server, allow members of serverh10 to run /usr/bin/systemctl with sudo without a password.
 
 ---
 
-## Question 22 - Create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fs (client) - 4 pts
+## Question 22 - Create gzip archive (client) - 4 pts
 
 On client, create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab.

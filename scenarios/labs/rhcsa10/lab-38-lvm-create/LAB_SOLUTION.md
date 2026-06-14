@@ -30,7 +30,7 @@ pvcreate -ff -y /dev/sdb
 
 ---
 
-## Task 02 - Create volume group vg10 (client) - 10 pts
+## Task 02 - Create volume group (client) - 10 pts
 
 ```bash
 vgcreate vg10 /dev/sdb
@@ -38,7 +38,7 @@ vgcreate vg10 /dev/sdb
 
 ---
 
-## Task 03 - Create a 384 MiB logical volume lvdata formatted with XFS and mounted at (client) - 10 pts
+## Task 03 - Configure LVM storage (client) - 10 pts
 
 ```bash
 lvcreate -L 384M -n lvdata vg10

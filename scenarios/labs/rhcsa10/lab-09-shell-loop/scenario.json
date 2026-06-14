@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/bin/rhcsa10-lines",
-        "Make the script executable, read /etc/passwd, and overwrite /root/rhcsa1"
+        "Create user lookup script",
+        "Make the script executable, read /etc/passwd, and overwrite"
       ],
       "task_points": [
         10,

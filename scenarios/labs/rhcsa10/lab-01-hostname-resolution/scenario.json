@@ -42,7 +42,7 @@
       "task_titles": [
         "Set the persistent hostname to server10.lab.example",
         "Set the persistent hostname to client10.lab.example",
-        "Add a persistent hosts entry mapping server10.lab.example to 192.168.122"
+        "Add a persistent hosts entry mapping server10.lab.example to"
       ],
       "task_points": [
         10,

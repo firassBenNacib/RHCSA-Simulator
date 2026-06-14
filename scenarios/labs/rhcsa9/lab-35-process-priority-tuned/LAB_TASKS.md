@@ -22,13 +22,13 @@ Tune server and adjust the nice level of a long-running process there.
 
 ## Task 01 - Activate the tuned profile on server (server) - 10 pts
 
-On server, install the tuned package if it is not already present and activate the tuned profile throughput-performance on server.
+On server, install the tuned package if it is not already present and activate the tuned profile throughput-performance.
 
 ---
 
 ## Task 02 - Start the long-running sleep process on server (server) - 10 pts
 
-On server, start the command sleep 3600 in the background on server and save its PID in /root/sleep35.pid.
+On server, start the command sleep 3600 in the background and save its PID in /root/sleep35.pid.
 
 ---
 

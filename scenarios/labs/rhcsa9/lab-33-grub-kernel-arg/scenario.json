@@ -23,7 +23,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, configure the bootloader on client so that every installed kernel boots persistently with the kernel argument audit_backlog_limit=8192 without manual GRUB editing during startup."
+        "On client, configure the bootloader so that every installed kernel boots persistently with the kernel argument audit_backlog_limit=8192 without manual GRUB editing during startup."
       ],
       "hints": [
         "Use a persistent bootloader tool rather than a one-time edit at the GRUB menu.",

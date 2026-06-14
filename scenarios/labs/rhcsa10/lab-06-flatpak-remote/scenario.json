@@ -41,9 +41,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure BaseOS and AppStream repositories for Flatpak package access w",
+        "Configure BaseOS and AppStream repositories",
         "Install the flatpak package if it is not already installed",
-        "Configure a system Flatpak remote named rhcsa10 that points to file:///o"
+        "Configure Flatpak remote rhcsa10"
       ],
       "task_points": [
         10,

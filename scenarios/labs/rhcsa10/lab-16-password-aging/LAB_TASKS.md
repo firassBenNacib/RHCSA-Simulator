@@ -26,7 +26,7 @@ Create user aging10 and set password cinder9.
 
 ---
 
-## Task 02 - Set maximum password age to 60 days (client) - 10 pts
+## Task 02 - Configure password aging (client) - 10 pts
 
 Set maximum password age to 60 days.
 

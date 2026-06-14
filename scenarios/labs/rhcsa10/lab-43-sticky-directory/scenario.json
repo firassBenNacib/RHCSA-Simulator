@@ -39,7 +39,7 @@
       "task_titles": [
         "Create group share10",
         "Create /srv/share10 owned by root:share10",
-        "Set permissions so group members can write and only owners can delete th"
+        "Set permissions so group members can write and only owners can delete"
       ],
       "task_points": [
         10,

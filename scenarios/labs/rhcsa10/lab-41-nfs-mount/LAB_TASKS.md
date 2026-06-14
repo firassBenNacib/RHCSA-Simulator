@@ -27,7 +27,7 @@ On client, create mount point /mnt/serverdirect10.
 
 ---
 
-## Task 02 - Mount server:/exports/direct at /mnt/serverdirect10 (client + server) - 10 pts
+## Task 02 - Configure NFS export and mount (client + server) - 10 pts
 
 On client, mount server:/exports/direct at /mnt/serverdirect10.
 

@@ -29,7 +29,7 @@ On client, ensure user bridge48 exists on both client and server, and set the pa
 
 ## Task 02 - Generate the ED25519 key pair (client) - 10 pts
 
-On client, as user bridge48 on client, generate an ED25519 SSH key pair with no passphrase.
+On client, as user bridge48, generate an ED25519 SSH key pair with no passphrase.
 
 ---
 

@@ -21,7 +21,7 @@ Configure system Flatpak repository access.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure BaseOS and AppStream repositories for Flatpak package access w (server) - 10 pts
+## Task 01 - Configure BaseOS and AppStream repositories (server) - 10 pts
 
 ```bash
 # On server
@@ -50,7 +50,7 @@ dnf install -y flatpak
 
 ---
 
-## Task 03 - Configure a system Flatpak remote named rhcsa10 that points to file:///o (client) - 10 pts
+## Task 03 - Configure Flatpak remote rhcsa10 (client) - 10 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo

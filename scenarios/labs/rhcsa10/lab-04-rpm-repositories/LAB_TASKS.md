@@ -33,12 +33,12 @@ On client, configure a persistent AppStream repository. AppStream URL: http://se
 
 ---
 
-## Task 03 - Disable GPG checks for both RHCSA10 repositories and verify both reposit (client) - 10 pts
+## Task 03 - Disable GPG checks for both RHCSA10 repositories and verify both (client) - 10 pts
 
 On client, disable GPG checks for both RHCSA10 repositories and verify both repositories are enabled.
 
 ---
 
-## Task 04 - Configure matching BaseOS and AppStream repositories with GPG checks dis (server) - 10 pts
+## Task 04 - Configure BaseOS and AppStream repositories (server) - 10 pts
 
 On server, configure matching BaseOS and AppStream repositories with GPG checks disabled.

@@ -21,7 +21,7 @@ Install software from a local RPM file.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Install the local tree RPM from /var/www/html/repo or the mounted ISO wi (client) - 10 pts
+## Task 01 - Install the local tree RPM from /var/www/html/repo or the mounted ISO (client) - 10 pts
 
 ```bash
 dnf install -y --disablerepo='*' --enablerepo=rhcsa-baseos --enablerepo=rhcsa-appstream tree

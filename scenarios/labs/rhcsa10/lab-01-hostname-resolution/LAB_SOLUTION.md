@@ -38,7 +38,7 @@ hostnamectl set-hostname client10.lab.example
 
 ---
 
-## Task 03 - Add a persistent hosts entry mapping server10.lab.example to 192.168.122 (client) - 10 pts
+## Task 03 - Add a persistent hosts entry mapping server10.lab.example to (client) - 10 pts
 
 ```bash
 echo '192.168.122.3 server10.lab.example' >> /etc/hosts

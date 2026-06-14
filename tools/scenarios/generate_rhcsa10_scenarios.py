@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -139,13 +140,65 @@ def task_title(task: str) -> str:
     for prefix in ("On client and server, ", "On server and client, ", "On client, ", "On server, ", "As root, "):
         if line.startswith(prefix):
             line = line[len(prefix):]
+    specific = specific_task_title(line)
+    if specific:
+        return normalize_title_capitalization(specific)
     first_sentence = re.split(r"\.\s+", line, maxsplit=1)[0].strip()
     if 12 <= len(first_sentence) <= 72:
         line = first_sentence
-    line = line[:72].strip()
+    line = textwrap.shorten(line, width=72, placeholder="", break_long_words=False, break_on_hyphens=False)
+    line = line.rstrip(" ,;:-_/.")
     if line:
         line = line[0].upper() + line[1:]
     return normalize_title_capitalization(line)
+
+
+def specific_task_title(line: str) -> str:
+    lowered = line.lower()
+    patterns = [
+        (r"recover root access", "Recover root password"),
+        (r"set the hostname|set hostname", "Set hostname"),
+        (r"configure (the )?(network connection|system eth1|eth1)", "Configure eth1 networking"),
+        (r"(bootloader|kernel boot argument|default grub)", "Persist kernel boot argument"),
+        (r"baseos.*appstream.*repositor", "Configure BaseOS and AppStream repositories"),
+        (r"flatpak remote(?: named)?\s+([a-z0-9_-]+).*?(pointing to|file://)", None),
+        (r"install org\.rhcsa\.tools", "Install Flatpak application"),
+        (r"ensure org\.rhcsa\.tools is not installed", "Remove Flatpak application"),
+        (r"allow members of .*sudo|allow .* to run .*sudo", "Configure sudo access"),
+        (r"password aging|maximum password age", "Configure password aging"),
+        (r"(/usr/local/bin/[a-z0-9_-]+|primary group)", "Create user lookup script"),
+        (r"write all usernames", "List shell users"),
+        (r"exam-[a-h]-report.*copy|copy it to", "Copy exam report to server"),
+        (r"save the output of https?://", "Save web service response"),
+        (r"distribute the public key|generate an ssh key pair.*copy", "Configure SSH key authentication"),
+        (r"publish /var/www/html", "Publish web content"),
+        (r"create and enable .*\.timer", "Configure systemd timer"),
+        (r"create volume group", "Create volume group"),
+        (r"create group .* user .* add|create group .* and user", "Create user and group"),
+        (r"httpd_can_network_connect", "Persist SELinux boolean"),
+        (r"persistent systemd journal|journald", "Enable persistent journal"),
+        (r"chronyd|chrony", "Configure chrony time source"),
+        (r"export /exports|server:/exports", "Configure NFS export and mount"),
+        (r"gzip archive|tar\.gz", "Create gzip archive"),
+        (r"cron job", "Schedule cron job"),
+        (r"at job", "Schedule at job"),
+        (r"swap partition", "Configure persistent swap"),
+        (r"physical volume.*logical volume|logical volume", "Configure LVM storage"),
+        (r"route local[0-9]", "Route rsyslog messages"),
+    ]
+    for pattern, title in patterns:
+        match = re.search(pattern, lowered)
+        if not match:
+            continue
+        if title is None and "flatpak remote" in pattern:
+            remote = match.group(1) if match.groups() else ""
+            return f"Configure Flatpak remote {remote}" if remote else "Configure Flatpak remote"
+        return title or ""
+    return ""
+
+
+def exam_client_ip(letter: str) -> str:
+    return f"192.168.122.{60 + ord(letter) - ord('a')}"
 
 
 def _lab_client_scripts() -> dict[str, str]:
@@ -1040,6 +1093,7 @@ def _ensure_client_root_recovery(tasks: list[Any], checks: list[str], commands: 
 
 
 def _server_hostname_step(letter: str) -> tuple[str, str, list[str]]:
+    client_ip = exam_client_ip(letter)
     network_check = (
         'connection_name="System eth1"; '
         'nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || '
@@ -1053,18 +1107,18 @@ def _server_hostname_step(letter: str) -> tuple[str, str, list[str]]:
     )
     return (
         "On server, configure the server hostname and persistent IPv4 networking. "
-        f"Set hostname to server{letter}.exam10.lab, map client{letter}.exam10.lab to 192.168.122.4, "
+        f"Set hostname to server{letter}.exam10.lab, map client{letter}.exam10.lab to {client_ip}, "
         "and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, "
         "and DNS resolver 192.168.122.3.",
         _ssh_server_check(
             f"hostnamectl --static | grep -qx server{letter}.exam10.lab && "
-            f"awk '$1 == \"192.168.122.4\" {{for (i = 2; i <= NF; i++) if ($i == \"client{letter}.exam10.lab\") found = 1}} END {{exit !found}}' /etc/hosts && "
+            f"awk '$1 == \"{client_ip}\" {{for (i = 2; i <= NF; i++) if ($i == \"client{letter}.exam10.lab\") found = 1}} END {{exit !found}}' /etc/hosts && "
             f"{network_check}"
         ),
         [
             "# On server:",
             f"hostnamectl set-hostname server{letter}.exam10.lab",
-            f"grep -Eq '^192\\.168\\.122\\.4[[:space:]]+client{letter}\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 client{letter}.exam10.lab' >> /etc/hosts",
+            f"grep -Eq '^{re.escape(client_ip)}[[:space:]]+client{letter}\\.exam10\\.lab$' /etc/hosts || echo '{client_ip} client{letter}.exam10.lab' >> /etc/hosts",
             'connection_name="System eth1"',
             'nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || connection_name="$(private_dev="$(ip -o -4 addr show | awk \'$4 ~ /^192\\.168\\.122\\./ {print $2; exit}\')"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" \'$2 == private_dev {print $1; exit}\')"',
             'nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes',
@@ -1332,6 +1386,9 @@ def _apply_target_metadata(block: dict[str, Any], requires_server: bool = False,
 
 def _clean_exam_task_wording(task: Any) -> str:
     text = normalize_authored_wording(task)
+    for target in ("client", "server"):
+        if re.match(rf"^\s*On {target},", text, re.I):
+            text = re.sub(rf"\s+on (the )?{target}\b", "", text, flags=re.I)
     text = text.replace(" by using a sudoers drop-in", "")
     text = text.replace(" by using a sudoers drop-in file", "")
     text = text.replace("Use a sudoers drop-in file.", "")
@@ -1626,20 +1683,21 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
         )
 
     if exam_id == "rhcsa10-mock-exam-h":
+        client_ip = exam_client_ip("h")
         _replace_exam_step(
             tasks,
             checks,
             commands,
             2,
-            "On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.4.",
+            f"On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to {client_ip}.",
             _ssh_server_check(
                 "hostnamectl --static | grep -qx serverh.exam10.lab && "
-                "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts"
+                f"grep -Eq '^{re.escape(client_ip)}[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts"
             ),
             [
                 "# On server:",
                 "hostnamectl set-hostname serverh.exam10.lab",
-                "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts || echo '192.168.122.4 clienth.exam10.lab' >> /etc/hosts",
+                f"grep -Eq '^{re.escape(client_ip)}[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts || echo '{client_ip} clienth.exam10.lab' >> /etc/hosts",
             ],
         )
         _replace_exam_step(
@@ -2707,7 +2765,12 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
                         "echo 'Authorized exam-g server' > /etc/motd",
                     ]
 
-            if "Create user copy10" in task_text and "same UID 5010" in task_text:
+            if "create user copy10" in task_text.lower() and "same uid 5010" in task_text.lower():
+                if index < len(checks):
+                    checks[index] = (
+                        "id -u copy10 | grep -qx 5010 && "
+                        f"{_ssh_server_check('id -u copy10 | grep -qx 5010')}"
+                    )
                 if index < len(commands):
                     commands[index] = [
                         "id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10",
@@ -3001,6 +3064,12 @@ def _update_exam_manifest(manifest_path: Path) -> None:
     manifest["rhel_major"] = 10
     manifest["supported_modes"] = ["exam"]
     manifest.setdefault("content", {})["exam"] = _repair_exam_progression(str(manifest["id"]), exam_block)
+    if str(manifest["id"]) == "rhcsa10-mock-exam-a":
+        manifest["description"] = (
+            "A 23-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak management, "
+            "systemd timers, LVM storage, firewall, SELinux, shell scripting, and chrony time "
+            "synchronisation across client and server."
+        )
     if str(manifest["id"]) == "rhcsa10-mock-exam-b":
         manifest["description"] = (
             "Software and permissions focus: offline package installation, shared directories, "

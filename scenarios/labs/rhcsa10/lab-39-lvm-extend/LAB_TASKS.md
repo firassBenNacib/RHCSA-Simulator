@@ -20,18 +20,18 @@ Extend an existing logical volume and filesystem.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create volume group grow10 on /dev/sdb (client) - 10 pts
+## Task 01 - Create volume group (client) - 10 pts
 
 Create volume group grow10 on /dev/sdb.
 
 ---
 
-## Task 02 - Create logical volume growlv with size 384 MiB and XFS filesystem mounte (client) - 10 pts
+## Task 02 - Configure LVM storage (client) - 10 pts
 
 Create logical volume growlv with size 384 MiB and XFS filesystem mounted at /mnt/grow10.
 
 ---
 
-## Task 03 - Extend the logical volume and filesystem to at least 512 MiB (client) - 10 pts
+## Task 03 - Configure LVM storage (client) - 10 pts
 
 Extend the logical volume and filesystem to at least 512 MiB.

@@ -22,7 +22,7 @@ Recover root access through the bootloader and restore normal access on client.
 
 ## Task 01 - Recover root access on client from the console (client) - 10 pts
 
-On client, recover root access on client from the console and set the root password to cinder9.
+On client, recover root access from the console and set the root password to cinder9.
 
 ---
 

@@ -37,8 +37,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Install Flatpak repository tooling and rebuild the metadata under /opt/r",
-        "Ensure the system Flatpak remote rhcsa10 exists and points to file:///op",
+        "Install Flatpak repository tooling and rebuild the metadata under",
+        "Configure Flatpak remote rhcsa10",
         "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system"
       ],
       "task_points": [
