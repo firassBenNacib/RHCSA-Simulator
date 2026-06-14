@@ -16,18 +16,18 @@
   "vm_scripts": {},
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, create /root/myetcbackup.tar.bz2 containing the /etc directory."
+        "On server, create /root/myetcbackup.tar.bz2 containing the /etc directory."
       ],
       "hints": [
         "Use tar with bzip2 compression directly."
       ],
       "checks": [
-        "tar -tjf /root/myetcbackup.tar.bz2 | grep -Eq '^etc/$|^etc/'"
+        "# server tar -tjf /root/myetcbackup.tar.bz2 | grep -Eq '^etc/$|^etc/'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -44,15 +44,15 @@
         ]
       ],
       "task_targets": [
-        "client"
+        "server"
       ],
       "solution_targets": [
-        "client"
+        "server"
       ],
       "check_targets": [
-        "client"
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

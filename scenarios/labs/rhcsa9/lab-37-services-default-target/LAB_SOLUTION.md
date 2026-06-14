@@ -10,7 +10,7 @@
 | Time limit | 20 minutes |
 | Objectives | software-scheduling-time, boot-and-recovery |
 
-Manage the default target and key services on server.
+Manage the default target on client and key services on server.
 
 ### Systems
 - client
@@ -21,7 +21,7 @@ Manage the default target and key services on server.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Set the default boot target on server (client) - 10 pts
+## Task 01 - Set the default boot target on client (client) - 10 pts
 
 ```bash
 systemctl set-default multi-user.target

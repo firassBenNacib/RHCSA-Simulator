@@ -14,22 +14,22 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, apply the recommended tuned profile and leave it active after reboot."
+        "On server, apply the recommended tuned profile and leave it active after reboot."
       ],
       "hints": [
         "Use tuned-adm recommend to see the target profile."
       ],
       "checks": [
-        "rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\"; test -n \"$rec\" && tuned-adm active | grep -Eq \"(^|[[:space:]:])${rec}($|[[:space:]])\""
+        "# server rec=\"$(tuned-adm recommend | awk 'NF{print $1; exit}')\"; test -n \"$rec\" && tuned-adm active | grep -Eq \"(^|[[:space:]:])${rec}($|[[:space:]])\""
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -51,15 +51,15 @@
         ]
       ],
       "task_targets": [
-        "client"
+        "server"
       ],
       "solution_targets": [
-        "client"
+        "server"
       ],
       "check_targets": [
-        "client"
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

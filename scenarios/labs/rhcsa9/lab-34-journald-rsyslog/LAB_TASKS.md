@@ -6,7 +6,7 @@
 |---|---|
 | Scenario ID | `lab-34-journald-rsyslog` |
 | Mode | Lab |
-| Scope | client |
+| Scope | client-server |
 | Time limit | 25 minutes |
 | Objectives | processes-logs-tuning, software-scheduling-time |
 
@@ -14,24 +14,25 @@ Configure persistent journal storage and a custom rsyslog drop-in for authentica
 
 ### Systems
 - client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure journald on client so logs are stored (client) - 10 pts
+## Task 01 - Client Journald Persistence (client) - 10 pts
 
 On client, configure journald on client so logs are stored persistently across reboots.
 
 ---
 
-## Task 02 - Create the drop-in file (client) - 10 pts
+## Task 02 - Server Rsyslog Authpriv Rule (server) - 10 pts
 
-On client, create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.
+On server, create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.
 
 ---
 
-## Task 03 - Ensure the rsyslog service is active after your (client) - 10 pts
+## Task 03 - Server Rsyslog Service (server) - 10 pts
 
-On client, ensure the rsyslog service is active after your changes.
+On server, ensure the rsyslog service is active after your changes.

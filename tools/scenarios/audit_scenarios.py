@@ -404,6 +404,25 @@ def audit_rhcsa9_exam_target_balance(path: Path, scenario: dict[str, Any], findi
         findings.append(Finding(path, "RHCSA9 exam must include RPM repositories on client and server"))
 
 
+def target_derived_lab_scope(scenario: dict[str, Any]) -> str:
+    lab = scenario["content"]["lab"]
+    return scope_from_targets(lab.get("task_targets", []), requires_server=False)
+
+
+def audit_rhcsa9_lab_scope(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa9" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
+        return
+    scope = normalize_scope(scenario.get("scope"), default="")
+    actual_scope = target_derived_lab_scope(scenario)
+    if scope != actual_scope:
+        findings.append(Finding(path, f"RHCSA9 lab scope should be {actual_scope}, not {scope}"))
+    requires_server = bool(scenario.get("flags", {}).get("requires_server", False))
+    if actual_scope == "client" and requires_server:
+        findings.append(Finding(path, "RHCSA9 client-only lab must not set requires_server=true"))
+    if actual_scope != "client" and not requires_server:
+        findings.append(Finding(path, f"RHCSA9 {actual_scope} lab must set requires_server=true"))
+
+
 def audit_rhcsa10_lab_scope(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa10" not in scenario_tracks(scenario) or "lab" not in scenario.get("content", {}):
         return
@@ -516,6 +535,7 @@ def main() -> int:
         audit_target_metadata(path, scenario, findings)
         audit_wording_style(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_rhcsa9_lab_scope(path, scenario, findings)
         audit_rhcsa10_lab_scope(path, scenario, findings)
         audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
@@ -541,6 +561,21 @@ def main() -> int:
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]
     if len(server_labs) < 12:
         findings.append(Finding(SCENARIOS_DIR / "labs", f"expected at least 12 labs requiring server, found {len(server_labs)}"))
+    rhcsa9_lab_scopes = {"client": 0, "server": 0, "client-server": 0}
+    for path, scenario in labs:
+        if "rhcsa9" not in scenario_tracks(scenario):
+            continue
+        actual_scope = target_derived_lab_scope(scenario)
+        if actual_scope in rhcsa9_lab_scopes:
+            rhcsa9_lab_scopes[actual_scope] += 1
+    expected_rhcsa9_lab_scopes = {"client": 22, "server": 14, "client-server": 12}
+    if rhcsa9_lab_scopes != expected_rhcsa9_lab_scopes:
+        findings.append(
+            Finding(
+                SCENARIOS_DIR / "labs" / "rhcsa9",
+                f"expected RHCSA9 lab target scopes {expected_rhcsa9_lab_scopes}, found {rhcsa9_lab_scopes}",
+            )
+        )
     rhcsa10_lab_scopes = {"client": 0, "server": 0, "client-server": 0}
     for path, scenario in labs:
         if "rhcsa10" not in scenario_tracks(scenario):

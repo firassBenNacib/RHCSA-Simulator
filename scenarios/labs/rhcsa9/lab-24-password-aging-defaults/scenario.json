@@ -14,27 +14,27 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, configure the system defaults for newly created local users so that the maximum password age is 60 days, the minimum age is 7 days, and the warning period is 10 days.",
-        "On client, configure the default inactive period for newly created local users to 15 days.",
-        "On client, create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy."
+        "On server, configure the system defaults for newly created local users so that the maximum password age is 60 days, the minimum age is 7 days, and the warning period is 10 days.",
+        "On server, configure the default inactive period for newly created local users to 15 days.",
+        "On server, create the user drift24, set its password to cinder9, and ensure the user inherits the default password aging policy."
       ],
       "hints": [
         "PASS_MAX_DAYS, PASS_MIN_DAYS, and PASS_WARN_AGE live in /etc/login.defs.",
         "Use useradd -D to set and verify the inactive default."
       ],
       "checks": [
-        "grep -Eq '^PASS_MAX_DAYS[[:space:]]+60$' /etc/login.defs && grep -Eq '^PASS_MIN_DAYS[[:space:]]+7$' /etc/login.defs && grep -Eq '^PASS_WARN_AGE[[:space:]]+10$' /etc/login.defs",
-        "useradd -D | grep -Eq '^INACTIVE=15$'",
-        "getent passwd drift24 >/dev/null && chage -l drift24 | grep -Eq '^Maximum number of days between password change[[:space:]]*:[[:space:]]*60$' && chage -l drift24 | grep -Eq '^Minimum number of days between password change[[:space:]]*:[[:space:]]*7$' && chage -l drift24 | grep -Eq '^Number of days of warning before password expires[[:space:]]*:[[:space:]]*10$'"
+        "# server grep -Eq '^PASS_MAX_DAYS[[:space:]]+60$' /etc/login.defs && grep -Eq '^PASS_MIN_DAYS[[:space:]]+7$' /etc/login.defs && grep -Eq '^PASS_WARN_AGE[[:space:]]+10$' /etc/login.defs",
+        "# server useradd -D | grep -Eq '^INACTIVE=15$'",
+        "# server getent passwd drift24 >/dev/null && chage -l drift24 | grep -Eq '^Maximum number of days between password change[[:space:]]*:[[:space:]]*60$' && chage -l drift24 | grep -Eq '^Minimum number of days between password change[[:space:]]*:[[:space:]]*7$' && chage -l drift24 | grep -Eq '^Number of days of warning before password expires[[:space:]]*:[[:space:]]*10$'"
       ],
       "solution_outline": [
         "Update login.defs with the requested values.",
@@ -67,21 +67,21 @@
         ]
       ],
       "task_targets": [
-        "client",
-        "client",
-        "client"
+        "server",
+        "server",
+        "server"
       ],
       "solution_targets": [
-        "client",
-        "client",
-        "client"
+        "server",
+        "server",
+        "server"
       ],
       "check_targets": [
-        "client",
-        "client",
-        "client"
+        "server",
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

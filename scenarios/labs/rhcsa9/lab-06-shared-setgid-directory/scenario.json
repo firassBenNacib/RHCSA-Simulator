@@ -15,25 +15,25 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.",
-        "On client, configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it."
+        "On server, create the group analystsx and the directory /shared/analysts with owner root, group analystsx, and access limited to root and members of analystsx.",
+        "On server, configure /shared/analysts so new files inherit the analystsx group and only the file owner, the directory owner, or root can remove entries from it."
       ],
       "hints": [
         "A collaborative drop directory often needs both setgid and sticky semantics.",
         "Set the sticky bit with +t, not g+t."
       ],
       "checks": [
-        "getent group analystsx >/dev/null && stat -c '%F %U:%G' /shared/analysts | grep -qx 'directory root:analystsx'",
-        "stat -c %a /shared/analysts | grep -qx '3770' && stat -c %A /shared/analysts | grep -qx 'drwxrws--T'"
+        "# server getent group analystsx >/dev/null && stat -c '%F %U:%G' /shared/analysts | grep -qx 'directory root:analystsx'",
+        "# server stat -c %a /shared/analysts | grep -qx '3770' && stat -c %A /shared/analysts | grep -qx 'drwxrws--T'"
       ],
       "solution_outline": [
         "Create the group and directory tree.",
@@ -60,18 +60,18 @@
         ]
       ],
       "task_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "solution_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "check_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

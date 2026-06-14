@@ -14,25 +14,25 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, create user ferro if it does not exist and set its password to cinder9.",
-        "On client, configure a cron job for ferro that runs every 2 minutes and logs the message \"Lab 07 running\" with logger."
+        "On server, create user ferro if it does not exist and set its password to cinder9.",
+        "On server, configure a cron job for ferro that runs every 2 minutes and logs the message \"Lab 07 running\" with logger."
       ],
       "hints": [
         "Use crontab -e -u ferro.",
         "Leave crond enabled and running."
       ],
       "checks": [
-        "getent passwd ferro >/dev/null && passwd -S ferro | awk '{exit !($2 ~ /^P/)}'",
-        "crontab -l -u ferro 2>/dev/null | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"' && systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
+        "# server getent passwd ferro >/dev/null && passwd -S ferro | awk '{exit !($2 ~ /^P/)}'",
+        "# server crontab -l -u ferro 2>/dev/null | grep -Fqx '*/2 * * * * logger \"Lab 07 running\"' && systemctl is-enabled crond | grep -qx enabled && systemctl is-active crond | grep -qx active"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -58,18 +58,18 @@
         ]
       ],
       "task_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "solution_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "check_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

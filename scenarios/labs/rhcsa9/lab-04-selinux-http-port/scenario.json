@@ -14,33 +14,33 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, configure Apache on client so it listens on TCP port 9082 and starts automatically at boot.",
-        "On client, allow TCP port 9082 through the firewall permanently.",
-        "On client, make the SELinux changes needed so Apache serves the existing /var/www/html content on that port."
+        "On server, configure Apache on server so it listens on TCP port 9082 and starts automatically at boot.",
+        "On server, allow TCP port 9082 through the firewall permanently.",
+        "On server, make the SELinux changes needed so Apache serves the existing /var/www/html content on that port."
       ],
       "hints": [
         "Do not disable SELinux.",
         "Do not move the existing document root."
       ],
       "checks": [
-        "grep -Eq '^Listen 9082$' /etc/httpd/conf/httpd.conf && systemctl is-enabled httpd | grep -qx enabled",
-        "firewall-cmd --permanent --query-port=9082/tcp",
-        "curl -fsS http://localhost:9082 >/dev/null && systemctl is-active httpd | grep -qx active && semanage port -l | grep -Eq '^http_port_t\\b.*\\b9082\\b'"
+        "# server grep -Eq '^Listen 9082$' /etc/httpd/conf/httpd.conf && systemctl is-enabled httpd | grep -qx enabled",
+        "# server firewall-cmd --permanent --query-port=9082/tcp",
+        "# server curl -fsS http://localhost:9082 >/dev/null && systemctl is-active httpd | grep -qx active && semanage port -l | grep -Eq '^http_port_t\\b.*\\b9082\\b'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
       ],
       "task_titles": [
-        "Configure Apache on client so it listens on TCP...",
+        "Configure Apache on server so it listens on TCP...",
         "Allow TCP port 9082 through the firewall permanently",
         "Make the SELinux changes needed so Apache serves..."
       ],
@@ -65,21 +65,21 @@
         ]
       ],
       "task_targets": [
-        "client",
-        "client",
-        "client"
+        "server",
+        "server",
+        "server"
       ],
       "solution_targets": [
-        "client",
-        "client",
-        "client"
+        "server",
+        "server",
+        "server"
       ],
       "check_targets": [
-        "client",
-        "client",
-        "client"
+        "server",
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

@@ -15,25 +15,25 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, create the user veil23 and set its password to cinder9.",
-        "On client, configure the umask for user veil23 so that new regular files are created with mode 0640 and new directories are created with mode 0750 whenever the user logs in."
+        "On server, create the user veil23 and set its password to cinder9.",
+        "On server, configure the umask for user veil23 so that new regular files are created with mode 0640 and new directories are created with mode 0750 whenever the user logs in."
       ],
       "hints": [
         "Use a user login startup file.",
         "Verify the resulting umask by creating a test file and a test directory as the target user."
       ],
       "checks": [
-        "getent passwd veil23 >/dev/null && getent shadow veil23 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
-        "runuser -l veil23 -c 'rm -rf ~/veil23-check && mkdir ~/veil23-check && touch ~/veil23-check/file && mkdir ~/veil23-check/dir && test \"$(stat -c %a ~/veil23-check/file)\" = 640 && test \"$(stat -c %a ~/veil23-check/dir)\" = 750'"
+        "# server getent passwd veil23 >/dev/null && getent shadow veil23 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null",
+        "# server runuser -l veil23 -c 'rm -rf ~/veil23-check && mkdir ~/veil23-check && touch ~/veil23-check/file && mkdir ~/veil23-check/dir && test \"$(stat -c %a ~/veil23-check/file)\" = 640 && test \"$(stat -c %a ~/veil23-check/dir)\" = 750'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -59,18 +59,18 @@
         ]
       ],
       "task_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "solution_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "check_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

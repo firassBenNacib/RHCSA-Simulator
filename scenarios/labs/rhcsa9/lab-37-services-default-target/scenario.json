@@ -1,7 +1,7 @@
 {
   "id": "lab-37-services-default-target",
   "title": "Lab 37: Services and Default Target",
-  "description": "Manage the default target and key services on server.",
+  "description": "Manage the default target on client and key services on server.",
   "objective_tags": [
     "software-scheduling-time",
     "boot-and-recovery"
@@ -25,15 +25,15 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, configure server to boot into multi-user.target by default.",
+        "On client, configure the system to boot into multi-user.target by default.",
         "On server, ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it."
       ],
       "hints": [
-        "This lab belongs on server, not client.",
+        "The default target task belongs on client.",
         "Treat postfix as conditional: only act if it is installed."
       ],
       "checks": [
-        "# server systemctl get-default | grep -qx multi-user.target",
+        "systemctl get-default | grep -qx multi-user.target",
         "# server systemctl is-enabled rsyslog | grep -qx enabled && systemctl is-active rsyslog | grep -qx active && sh -lc 'rpm -q postfix >/dev/null 2>&1 || exit 0; systemctl is-enabled postfix 2>/dev/null | grep -qx disabled'"
       ],
       "solution_outline": [
@@ -41,7 +41,7 @@
         "Enable and start rsyslog, then disable postfix only if the package is present."
       ],
       "task_titles": [
-        "Set the default boot target on server",
+        "Set the default boot target on client",
         "Manage rsyslog and postfix on server"
       ],
       "task_points": [

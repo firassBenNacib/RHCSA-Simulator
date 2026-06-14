@@ -76,7 +76,7 @@
       "solution_targets": [
         "client",
         "server",
-        "both"
+        "client"
       ],
       "check_targets": [
         "client",
