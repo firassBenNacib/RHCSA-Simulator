@@ -397,6 +397,40 @@ def audit_exam_required_coverage(path: Path, scenario: dict[str, Any], findings:
     if not (_has_repo_task(client_tasks) and _has_repo_task(server_tasks)):
         findings.append(Finding(path, "exam must include RPM repository tasks on client and server"))
 
+    checks = [str(check) for check in exam.get("checks", [])]
+    check_targets = [str(value) for value in exam.get("check_targets", [])]
+    for index, (task, target) in enumerate(zip(tasks, targets)):
+        task_lower = task.lower()
+        if not (
+            target == "both"
+            and "create user" in task_lower
+            and "same uid" in task_lower
+            and "client" in task_lower
+            and "server" in task_lower
+        ):
+            continue
+        check = checks[index] if index < len(checks) else ""
+        check_target = check_targets[index] if index < len(check_targets) else ""
+        if check_target != "both" or "ssh" not in check.lower() or "id -u" not in check.lower():
+            findings.append(Finding(path, f"exam task {index + 1} creates same-UID user on both hosts but does not verify both hosts"))
+
+
+def audit_check_target_consistency(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    content = scenario.get("content", {})
+    mode = "lab" if "lab" in content else "exam" if "exam" in content else ""
+    if not mode:
+        return
+    block = content[mode]
+    checks = [str(check) for check in block.get("checks", [])]
+    check_targets = [str(target) for target in block.get("check_targets", [])]
+    for index, check in enumerate(checks):
+        target = check_targets[index] if index < len(check_targets) else ""
+        check_lower = check.lower().strip()
+        if (check_lower.startswith("# server") or re.match(r"^ssh\s+\S*server\S*\b", check_lower)) and target not in {"server", "both"}:
+            findings.append(Finding(path, f"{mode} check {index + 1} runs on server but check_targets marks {target or 'missing'}"))
+        if target == "server" and not (check_lower.startswith("# server") or re.match(r"^ssh\s+\S*server\S*\b", check_lower)):
+            findings.append(Finding(path, f"{mode} check {index + 1} is marked server but does not run on server"))
+
 
 def audit_rhcsa9_exam_check_granularity(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
     if "rhcsa9" not in scenario_tracks(scenario) or "exam" not in scenario.get("content", {}):
@@ -618,6 +652,7 @@ def main() -> int:
         audit_target_metadata(path, scenario, findings)
         audit_wording_style(path, scenario, findings)
         audit_solution_style(path, scenario, findings)
+        audit_check_target_consistency(path, scenario, findings)
         audit_rhcsa10_exam_roles(path, scenario, findings)
         audit_rhcsa10_exam_target_balance(path, scenario, findings)
         audit_rhcsa9_exam_check_granularity(path, scenario, findings)

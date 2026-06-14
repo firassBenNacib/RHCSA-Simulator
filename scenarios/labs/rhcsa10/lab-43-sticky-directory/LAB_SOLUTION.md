@@ -37,7 +37,7 @@ chown root:share10 /srv/share10
 
 ---
 
-## Task 03 - Set permissions so group members can write and only owners can delete th (server) - 10 pts
+## Task 03 - Set permissions so group members can write and only owners can delete (server) - 10 pts
 
 ```bash
 chmod 3770 /srv/share10

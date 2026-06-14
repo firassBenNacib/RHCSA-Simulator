@@ -34,7 +34,7 @@ touch /.autorelabel
 
 ---
 
-## Question 02 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 02 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -44,7 +44,7 @@ echo '192.168.122.3 serverg.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 03 - Configure the connection "System eth1" with static IPv4: address 192.168 (client) - 5 pts
+## Question 03 - Configure the connection "System eth1" with static IPv4: address (client) - 5 pts
 
 ```bash
 nmcli connection modify "System eth1" ipv4.addresses 192.168.122.66/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -53,7 +53,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 04 - Add the kernel boot argument audit_backlog_limit=8192 to the default GRU (client) - 5 pts
+## Question 04 - Persist kernel boot argument (client) - 5 pts
 
 ```bash
 grubby --args='audit_backlog_limit=8192' --update-kernel=DEFAULT
@@ -62,7 +62,7 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 
 ---
 
-## Question 05 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
+## Question 05 - Configure BaseOS and AppStream repositories (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -98,7 +98,7 @@ dnf clean all
 
 ---
 
-## Question 06 - Add a system-level Flatpak remote named examgflatpak pointing to file:// (client) - 5 pts
+## Question 06 - Configure Flatpak remote examgflatpak (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo
@@ -139,7 +139,7 @@ chmod 1770 /srv/devg10
 
 ---
 
-## Question 10 - Create user noaccess70 with no home directory and login shell /sbin/nolo (client) - 4 pts
+## Question 10 - Create user noaccess70 with no home directory and login shell (client) - 4 pts
 
 ```bash
 useradd -M -s /sbin/nologin noaccess70
@@ -147,7 +147,7 @@ useradd -M -s /sbin/nologin noaccess70
 
 ---
 
-## Question 11 - Set password aging for grant10: maximum 35 days, minimum 5 days, warning (client) - 4 pts
+## Question 11 - Configure password aging (client) - 4 pts
 
 ```bash
 chage -M 35 -m 5 -W 7 grant10
@@ -156,7 +156,7 @@ echo 'umask 0077' >> /home/grant10/.bashrc
 
 ---
 
-## Question 12 - Create user copy10 with UID 5010 and password cinder9 on the client (client + server) - 4 pts
+## Question 12 - Create user copy10 with UID 5010 and password cinder9 (client + server) - 4 pts
 
 ```bash
 id copy10 >/dev/null 2>&1 || useradd -u 5010 copy10
@@ -168,7 +168,7 @@ echo 'copy10:cinder9' | chpasswd
 
 ---
 
-## Question 13 - As copy10, generate an SSH key pair (no passphrase) and distribute the p (client + server) - 4 pts
+## Question 13 - Configure SSH key authentication (client + server) - 4 pts
 
 ```bash
 # On client:
@@ -182,7 +182,7 @@ exit
 
 ---
 
-## Question 14 - Schedule an at job for user hazel10 that runs: echo "exam-g task" >> /ho (client) - 4 pts
+## Question 14 - Schedule at job (client) - 4 pts
 
 ```bash
 systemctl enable --now atd
@@ -193,7 +193,7 @@ chown hazel10:hazel10 /home/hazel10/at-result.txt
 
 ---
 
-## Question 15 - Configure persistent systemd journal storage on the server (server) - 4 pts
+## Question 15 - Enable persistent journal (server) - 4 pts
 
 ```bash
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
@@ -207,7 +207,7 @@ journalctl --flush
 
 ---
 
-## Question 16 - Route local5 log messages to /var/log/server-g-local5.log and write a te (server) - 4 pts
+## Question 16 - Route rsyslog messages (server) - 4 pts
 
 ```bash
 # On server:
@@ -234,7 +234,7 @@ chmod 2770 /srv/serverg10
 
 ---
 
-## Question 18 - Create group serverg10 and user srvg10 with password cinder9, then add t (server) - 4 pts
+## Question 18 - Create user and group (server) - 4 pts
 
 ```bash
 # On server:
@@ -246,7 +246,7 @@ echo 'srvg10:cinder9' | chpasswd
 
 ---
 
-## Question 19 - Publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd (server) - 4 pts
+## Question 19 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -265,7 +265,7 @@ systemctl restart httpd
 
 ---
 
-## Question 20 - Create and enable servergtimer.timer so it appends SERVER-G to /var/log/ (server) - 4 pts
+## Question 20 - Configure systemd timer (server) - 4 pts
 
 ```bash
 # On server:
@@ -299,7 +299,7 @@ systemctl enable --now servergtimer.timer
 
 ---
 
-## Question 21 - Create a 500 MiB swap partition on /dev/sdb, format it as swap, and enab (client) - 4 pts
+## Question 21 - Configure persistent swap (client) - 4 pts
 
 ```bash
 parted -s /dev/sdb -- mklabel gpt mkpart primary linux-swap 1MiB 501MiB
@@ -313,7 +313,7 @@ swapon /dev/sdb1
 
 ---
 
-## Question 22 - Create physical volume on /dev/sdc, volume group vgg10, logical volume d (client) - 4 pts
+## Question 22 - Configure LVM storage (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdc
@@ -327,7 +327,7 @@ mount -a
 
 ---
 
-## Question 23 - Export /exports/exam-g to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 23 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:

@@ -24,7 +24,7 @@
     "lab": {
       "tasks": [
         "On client, configure the active client connection with the following persistent IPv6 settings:\n\nIPv6 Address: fd00:122:41::25/64\nIPv6 Gateway: fd00:122:41::1\nDNS: fd00:122:41::53",
-        "On client, set the following persistent identity and resolution settings on client:\n\nHostname: client.ipv6lab.local\nStatic host entry: server.ipv6lab.local\nAddress: fd00:122:41::3"
+        "On client, set the following persistent identity and resolution settings:\n\nHostname: client.ipv6lab.local\nStatic host entry: server.ipv6lab.local\nAddress: fd00:122:41::3"
       ],
       "hints": [
         "Use nmcli so the change survives a reconnect."

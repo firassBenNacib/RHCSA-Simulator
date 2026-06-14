@@ -26,6 +26,6 @@ Create /root/rhcsa10-shell-users.txt.
 
 ---
 
-## Task 02 - Populate it with account names from /etc/passwd whose shell ends in sh, (client) - 10 pts
+## Task 02 - Populate it with account names from /etc/passwd whose shell ends in sh (client) - 10 pts
 
 Populate it with account names from /etc/passwd whose shell ends in sh, sorted alphabetically.

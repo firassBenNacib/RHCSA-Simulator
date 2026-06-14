@@ -21,7 +21,7 @@ Configure time synchronization.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure chronyd as a local time source for the 192.168.122.0/24 networ (server) - 10 pts
+## Task 01 - Configure chrony time source (server) - 10 pts
 
 ```bash
 # On server
@@ -37,7 +37,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Task 02 - Install chrony if needed (client) - 10 pts
+## Task 02 - Configure chrony time source (client) - 10 pts
 
 ```bash
 dnf install -y chrony
@@ -54,7 +54,7 @@ echo 'server server iburst' >> /etc/chrony.conf
 
 ---
 
-## Task 04 - Enable and start chronyd (client) - 10 pts
+## Task 04 - Configure chrony time source (client) - 10 pts
 
 ```bash
 systemctl enable --now chronyd

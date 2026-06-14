@@ -27,7 +27,7 @@ On client, create the autofs parent mount point /remote10.
 
 ---
 
-## Task 02 - Configure /remote10/projects to automount server:/exports/autofs/project (client + server) - 10 pts
+## Task 02 - Configure NFS export and mount (client + server) - 10 pts
 
 On client, configure /remote10/projects to automount server:/exports/autofs/projects.
 

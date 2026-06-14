@@ -35,4 +35,4 @@ On server, create user vault32 and set the password to cinder9.
 
 ## Task 03 - Configure key-based SSH authentication (client + server) - 10 pts
 
-On client, configure key-based SSH authentication so that user relay32 on client can log in to vault32@server without a password prompt.
+On client, configure key-based SSH authentication so that user relay32 can log in to vault32@server without a password prompt.

@@ -29,4 +29,4 @@ On client, configure the system to boot into multi-user.target by default.
 
 ## Task 02 - Manage rsyslog and postfix on server (server) - 20 pts
 
-On server, ensure the rsyslog service is enabled and running on server, and if postfix is installed disable it and stop it.
+On server, ensure the rsyslog service is enabled and running, and if postfix is installed disable it and stop it.

@@ -21,7 +21,7 @@ Web service and network focus: httpd service setup, custom service port, SELinux
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 echo 'root:cinder9' | chpasswd
@@ -31,7 +31,7 @@ echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 02 - Configure System eth1 with IPv4 address 192.168.122.62/24, gateway 192.1 (client) - 5 pts
+## Question 02 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -52,7 +52,7 @@ systemctl enable --now httpd
 
 ---
 
-## Question 04 - Configure httpd to listen on TCP port 8102 and make the port usable by t (client) - 5 pts
+## Question 04 - Configure httpd to listen on TCP port 8102 and make the port usable by (client) - 5 pts
 
 ```bash
 cat > /etc/httpd/conf.d/examc-port.conf <<'EOF'
@@ -64,12 +64,12 @@ systemctl restart httpd
 
 ---
 
-## Question 05 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
+## Question 05 - Set hostname (server) - 5 pts
 
 ```bash
 # On server:
 hostnamectl set-hostname serverc.exam10.lab
-grep -Eq '^192\.168\.122\.4[[:space:]]+clientc\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clientc.exam10.lab' >> /etc/hosts
+grep -Eq '^192\.168\.122\.62[[:space:]]+clientc\.exam10\.lab$' /etc/hosts || echo '192.168.122.62 clientc.exam10.lab' >> /etc/hosts
 connection_name="System eth1"
 nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || connection_name="$(private_dev="$(ip -o -4 addr show | awk '$4 ~ /^192\.168\.122\./ {print $2; exit}')"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" '$2 == private_dev {print $1; exit}')"
 nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -90,7 +90,7 @@ chmod 2770 /srv/serverc10
 
 ---
 
-## Question 07 - Create and enable examctimer.timer that runs every 10 minutes (client) - 5 pts
+## Question 07 - Configure systemd timer (client) - 5 pts
 
 ```bash
 cat > /usr/local/sbin/examctimer.sh <<'EOF'
@@ -139,7 +139,7 @@ firewall-cmd --reload
 
 ---
 
-## Question 10 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 4 pts
+## Question 10 - Configure BaseOS and AppStream repositories (client + server) - 4 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -175,7 +175,7 @@ dnf clean all
 
 ---
 
-## Question 11 - Create system Flatpak remote examcflatpak pointing to file:///opt/rhcsa/ (client) - 4 pts
+## Question 11 - Configure Flatpak remote examcflatpak (client) - 4 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file:///opt/rhcsa/flatpak/repo
@@ -183,7 +183,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify examcflatpak file://
 
 ---
 
-## Question 12 - Install org.rhcsa.Tools from examcflatpak and leave it installed (client) - 4 pts
+## Question 12 - Install Flatpak application (client) - 4 pts
 
 ```bash
 flatpak install --system -y examcflatpak org.rhcsa.Tools
@@ -192,7 +192,7 @@ flatpak list --system --app
 
 ---
 
-## Question 13 - Create group teamc10, create user userc10, set password cinder9, and add (client) - 4 pts
+## Question 13 - Create user and group (client) - 4 pts
 
 ```bash
 groupadd teamc10
@@ -212,7 +212,7 @@ chmod 440 /etc/sudoers.d/teamc10
 
 ---
 
-## Question 15 - Allow members of serverc10 to run /usr/bin/systemctl with sudo without a (server) - 4 pts
+## Question 15 - Configure sudo access (server) - 4 pts
 
 ```bash
 # On server:
@@ -233,7 +233,7 @@ restorecon -v /var/www/html/c.html
 
 ---
 
-## Question 17 - Publish /var/www/html/server-c.html containing RHCSA10-C and serve httpd (server) - 4 pts
+## Question 17 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -252,7 +252,7 @@ systemctl restart httpd
 
 ---
 
-## Question 18 - Enable persistent systemd journal storage (server) - 4 pts
+## Question 18 - Enable persistent journal (server) - 4 pts
 
 ```bash
 # On server:
@@ -267,7 +267,7 @@ journalctl --flush
 
 ---
 
-## Question 19 - Create and enable serverctimer.timer so it appends SERVER-C to /var/log/ (server) - 4 pts
+## Question 19 - Configure systemd timer (server) - 4 pts
 
 ```bash
 # On server:
@@ -301,7 +301,7 @@ systemctl enable --now serverctimer.timer
 
 ---
 
-## Question 20 - Export /exports/exam-c to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 20 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -324,7 +324,7 @@ mount -a
 
 ---
 
-## Question 21 - Add a hosts entry for serverc.exam10.lab and save the output of http://s (client) - 4 pts
+## Question 21 - Save web service response (client) - 4 pts
 
 ```bash
 grep -Eq '^192\.168\.122\.3[[:space:]]+serverc\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 serverc.exam10.lab' >> /etc/hosts
@@ -333,7 +333,7 @@ curl -s http://serverc.exam10.lab:8202/server-c.html > /root/server-c-web-check.
 
 ---
 
-## Question 22 - Route local6 log messages to /var/log/server-c-local6.log and write a te (server) - 4 pts
+## Question 22 - Route rsyslog messages (server) - 4 pts
 
 ```bash
 # On server:
@@ -348,7 +348,7 @@ sleep 1
 
 ---
 
-## Question 23 - Create /root/exam-c-report.txt containing REPORT-C and copy it to server (client + server) - 4 pts
+## Question 23 - Copy exam report to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-C > /root/exam-c-report.txt

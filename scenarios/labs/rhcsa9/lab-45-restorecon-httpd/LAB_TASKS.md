@@ -28,4 +28,4 @@ On server, the file /var/www/html/index45.html has the wrong SELinux context. Re
 
 ## Task 02 - Enable httpd on server with SELinux enforcing (server) - 15 pts
 
-On server, ensure the httpd service is enabled and running on server. SELinux must remain enforcing.
+On server, ensure the httpd service is enabled and running. SELinux must remain enforcing.

@@ -38,7 +38,7 @@
       ],
       "task_titles": [
         "Create /srv/repair10/report.txt",
-        "Make the file readable and writable by owner and group, and unreadable b",
+        "Make the file readable and writable by owner and group, and unreadable",
         "Ensure the parent directory allows group traversal"
       ],
       "task_points": [

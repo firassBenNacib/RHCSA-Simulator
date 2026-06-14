@@ -22,7 +22,7 @@ Create a small shell script that processes arguments and returns the correct exi
 
 ## Task 01 - Create the executable script (client) - 10 pts
 
-On client, create the script file /usr/local/bin/usercheck40 on client.
+On client, create the script file /usr/local/bin/usercheck40.
 
 ---
 

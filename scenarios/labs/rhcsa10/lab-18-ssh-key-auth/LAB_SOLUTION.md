@@ -49,7 +49,7 @@ ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 
 ---
 
-## Task 04 - Configure key-based SSH authentication so key10 can log in to key10@serv (client + server) - 10 pts
+## Task 04 - Configure key-based SSH authentication so key10 can log in to (client + server) - 10 pts
 
 ```bash
 su - key10

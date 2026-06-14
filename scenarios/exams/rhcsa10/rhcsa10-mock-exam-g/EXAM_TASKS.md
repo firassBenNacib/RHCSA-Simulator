@@ -27,31 +27,31 @@ On client, the root password has been lost. Boot into emergency mode and reset t
 
 ---
 
-## Question 02 - Recover root access and configure the client hostname (client) - 5 pts
+## Question 02 - Recover root password (client) - 5 pts
 
 On client, recover root access and configure the client hostname. Set the root password to cinder9. Then set the hostname to clientg.exam10.lab. Add an entry to /etc/hosts mapping 192.168.122.3 to serverg.exam10.lab.
 
 ---
 
-## Question 03 - Configure the connection "System eth1" with static IPv4: address 192.168 (client) - 5 pts
+## Question 03 - Configure the connection "System eth1" with static IPv4: address (client) - 5 pts
 
 On client, configure the connection "System eth1" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.
 
 ---
 
-## Question 04 - Add the kernel boot argument audit_backlog_limit=8192 to the default GRU (client) - 5 pts
+## Question 04 - Persist kernel boot argument (client) - 5 pts
 
 On client, add the kernel boot argument audit_backlog_limit=8192 to the default GRUB entry so it persists across reboots.
 
 ---
 
-## Question 05 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
+## Question 05 - Configure BaseOS and AppStream repositories (client + server) - 5 pts
 
 On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.
 
 ---
 
-## Question 06 - Add a system-level Flatpak remote named examgflatpak pointing to file:// (client) - 5 pts
+## Question 06 - Configure Flatpak remote examgflatpak (client) - 5 pts
 
 On client, add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.
 
@@ -75,43 +75,43 @@ On client, create directory /srv/devg10 owned by root:devg10 with permissions 17
 
 ---
 
-## Question 10 - Create user noaccess70 with no home directory and login shell /sbin/nolo (client) - 4 pts
+## Question 10 - Create user noaccess70 with no home directory and login shell (client) - 4 pts
 
 On client, create user noaccess70 with no home directory and login shell /sbin/nologin.
 
 ---
 
-## Question 11 - Set password aging for grant10: maximum 35 days, minimum 5 days, warning (client) - 4 pts
+## Question 11 - Configure password aging (client) - 4 pts
 
 On client, set password aging for grant10: maximum 35 days, minimum 5 days, warning 7 days. Add umask 0077 to /home/grant10/.bashrc.
 
 ---
 
-## Question 12 - Create user copy10 with UID 5010 and password cinder9 on the client (client + server) - 4 pts
+## Question 12 - Create user copy10 with UID 5010 and password cinder9 (client + server) - 4 pts
 
-On client, create user copy10 with UID 5010 and password cinder9 on the client. Also create user copy10 with the same UID 5010 and password cinder9 on the server.
-
----
-
-## Question 13 - As copy10, generate an SSH key pair (no passphrase) and distribute the p (client + server) - 4 pts
-
-On client, as copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then copy /etc/hostname from the server to /home/copy10/server-hostname on the client.
+On client, create user copy10 with UID 5010 and password cinder9. Also create user copy10 with the same UID 5010 and password cinder9 on the server.
 
 ---
 
-## Question 14 - Schedule an at job for user hazel10 that runs: echo "exam-g task" >> /ho (client) - 4 pts
+## Question 13 - Configure SSH key authentication (client + server) - 4 pts
+
+On client, as copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then copy /etc/hostname from the server to /home/copy10/server-hostname.
+
+---
+
+## Question 14 - Schedule at job (client) - 4 pts
 
 On client, schedule an at job for user hazel10 that runs: echo "exam-g task" >> /home/hazel10/at-result.txt.
 
 ---
 
-## Question 15 - Configure persistent systemd journal storage on the server (server) - 4 pts
+## Question 15 - Enable persistent journal (server) - 4 pts
 
-On server, configure persistent systemd journal storage on the server.
+On server, configure persistent systemd journal storage.
 
 ---
 
-## Question 16 - Route local5 log messages to /var/log/server-g-local5.log and write a te (server) - 4 pts
+## Question 16 - Route rsyslog messages (server) - 4 pts
 
 On server, route local5 log messages to /var/log/server-g-local5.log and write a test message.
 
@@ -123,36 +123,36 @@ On server, create /srv/serverg10 owned by root:serverg10 with mode 2770.
 
 ---
 
-## Question 18 - Create group serverg10 and user srvg10 with password cinder9, then add t (server) - 4 pts
+## Question 18 - Create user and group (server) - 4 pts
 
 On server, create group serverg10 and user srvg10 with password cinder9, then add the user to serverg10.
 
 ---
 
-## Question 19 - Publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd (server) - 4 pts
+## Question 19 - Publish web content (server) - 4 pts
 
 On server, publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd on TCP port 8206.
 
 ---
 
-## Question 20 - Create and enable servergtimer.timer so it appends SERVER-G to /var/log/ (server) - 4 pts
+## Question 20 - Configure systemd timer (server) - 4 pts
 
 On server, create and enable servergtimer.timer so it appends SERVER-G to /var/log/servergtimer.log every 12 minutes.
 
 ---
 
-## Question 21 - Create a 500 MiB swap partition on /dev/sdb, format it as swap, and enab (client) - 4 pts
+## Question 21 - Configure persistent swap (client) - 4 pts
 
 On client, create a 500 MiB swap partition on /dev/sdb, format it as swap, and enable it persistently via /etc/fstab.
 
 ---
 
-## Question 22 - Create physical volume on /dev/sdc, volume group vgg10, logical volume d (client) - 4 pts
+## Question 22 - Configure LVM storage (client) - 4 pts
 
 On client, create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10.
 
 ---
 
-## Question 23 - Export /exports/exam-g to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 23 - Configure NFS export and mount (client + server) - 4 pts
 
 On server, export /exports/exam-g to the 192.168.122.0/24 network. On client, mount server:/exports/exam-g persistently at /mnt/gprojects.

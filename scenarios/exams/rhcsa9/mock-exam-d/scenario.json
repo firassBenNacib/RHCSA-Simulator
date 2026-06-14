@@ -339,7 +339,7 @@
         ]
       ],
       "checks": [
-        "passwd -S root | awk '$2 != \"LK\" {found=1} END {exit !found}'",
+        "echo cinder9 | su - root -c 'whoami' 2>/dev/null | grep -qx root",
         "hostnamectl --static | grep -qx client-d.exam9.lab",
         "CONN=\"System eth1\"; nmcli -g ipv4.addresses connection show \"$CONN\" | grep -Fqx 192.168.122.43/24 && nmcli -g ipv4.gateway connection show \"$CONN\" | grep -Fqx 192.168.122.1 && nmcli -g ipv4.dns connection show \"$CONN\" | grep -Fq 192.168.122.3",
         "test -f /etc/yum.repos.d/rhcsa9-exam.repo",

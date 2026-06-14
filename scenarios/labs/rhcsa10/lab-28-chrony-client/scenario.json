@@ -44,10 +44,10 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure chronyd as a local time source for the 192.168.122.0/24 networ",
-        "Install chrony if needed",
+        "Configure chrony time source",
+        "Configure chrony time source",
         "Configure server as the only NTP source",
-        "Enable and start chronyd"
+        "Configure chrony time source"
       ],
       "task_points": [
         10,

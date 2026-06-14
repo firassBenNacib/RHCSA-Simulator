@@ -26,12 +26,12 @@ Create local group ops10.
 
 ---
 
-## Task 02 - Create user relay10, set the password to cinder9, and make ops10 the use (client) - 10 pts
+## Task 02 - Create user relay10, set the password to cinder9, and make ops10 the (client) - 10 pts
 
 Create user relay10, set the password to cinder9, and make ops10 the user's supplementary group.
 
 ---
 
-## Task 03 - Allow members of ops10 to run /usr/bin/systemctl with sudo without a pas (client) - 10 pts
+## Task 03 - Configure sudo access (client) - 10 pts
 
 Allow members of ops10 to run /usr/bin/systemctl with sudo without a password.

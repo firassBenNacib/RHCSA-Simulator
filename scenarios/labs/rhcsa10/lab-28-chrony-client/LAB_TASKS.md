@@ -21,13 +21,13 @@ Configure time synchronization.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure chronyd as a local time source for the 192.168.122.0/24 networ (server) - 10 pts
+## Task 01 - Configure chrony time source (server) - 10 pts
 
 On server, configure chronyd as a local time source for the 192.168.122.0/24 network.
 
 ---
 
-## Task 02 - Install chrony if needed (client) - 10 pts
+## Task 02 - Configure chrony time source (client) - 10 pts
 
 On client, install chrony if needed.
 
@@ -39,6 +39,6 @@ On client, configure server as the only NTP source.
 
 ---
 
-## Task 04 - Enable and start chronyd (client) - 10 pts
+## Task 04 - Configure chrony time source (client) - 10 pts
 
 On client, enable and start chronyd.

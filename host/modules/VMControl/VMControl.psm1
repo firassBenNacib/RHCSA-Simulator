@@ -128,7 +128,7 @@ function Get-RhcsaOfflineIsoPath {
     }
 
     $major = if ($profileKey -eq 'rhel10') { '10' } else { '9' }
-    $defaultIsoName = if ($major -eq '10') { 'rhel-10.1-x86_64-dvd.iso' } else { 'rhel-9.7-x86_64-dvd.iso' }
+    $defaultIsoName = if ($major -eq '10') { 'rhel-10.2-x86_64-dvd.iso' } else { 'rhel-9.8-x86_64-dvd.iso' }
     $pattern = "rhel-$major.*-x86_64-dvd.iso"
 
     $override = [string]$env:RHCSA_ISO

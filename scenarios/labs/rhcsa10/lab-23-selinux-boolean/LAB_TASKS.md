@@ -20,12 +20,12 @@ Set SELinux booleans persistently.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Enable the httpd_can_network_connect SELinux boolean immediately (server) - 10 pts
+## Task 01 - Persist SELinux boolean (server) - 10 pts
 
 On server, enable the httpd_can_network_connect SELinux boolean immediately.
 
 ---
 
-## Task 02 - Make the httpd_can_network_connect SELinux boolean persistent (server) - 10 pts
+## Task 02 - Persist SELinux boolean (server) - 10 pts
 
 On server, make the httpd_can_network_connect SELinux boolean persistent.

@@ -26,7 +26,7 @@ On server, create user cron10 and set password cinder9.
 
 ---
 
-## Task 02 - Configure a cron job for cron10 that writes CRON10 to /home/cron10/cron1 (server) - 10 pts
+## Task 02 - Schedule cron job (server) - 10 pts
 
 On server, configure a cron job for cron10 that writes CRON10 to /home/cron10/cron10.log every 5 minutes.
 

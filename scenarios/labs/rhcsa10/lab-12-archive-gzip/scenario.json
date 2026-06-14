@@ -33,7 +33,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /root/rhcsa10-etc.tar.gz as a gzip archive containing /etc/hosts"
+        "Create gzip archive"
       ],
       "task_points": [
         10

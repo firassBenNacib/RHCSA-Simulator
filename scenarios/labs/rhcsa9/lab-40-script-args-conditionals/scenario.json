@@ -24,7 +24,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, create the script file /usr/local/bin/usercheck40 on client.",
+        "On client, create the script file /usr/local/bin/usercheck40.",
         "On client, make /usr/local/bin/usercheck40 executable.",
         "On client, if the user exists, print EXISTS: username to standard output and exit with status 0.",
         "On client, if the user does not exist, print MISSING: username to standard output and exit with status 1."

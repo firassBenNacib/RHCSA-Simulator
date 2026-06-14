@@ -35,7 +35,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Start a detached background sleep process and save its PID in /run/rhcsa",
+        "Start a detached background sleep process and save its PID in",
         "Change the process nice value to 8"
       ],
       "task_points": [

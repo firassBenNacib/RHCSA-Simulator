@@ -41,8 +41,8 @@
       "task_titles": [
         "Configure a persistent BaseOS repository",
         "Configure a persistent AppStream repository",
-        "Disable GPG checks for both RHCSA10 repositories and verify both reposit",
-        "Configure matching BaseOS and AppStream repositories with GPG checks dis"
+        "Disable GPG checks for both RHCSA10 repositories and verify both",
+        "Configure BaseOS and AppStream repositories"
       ],
       "task_points": [
         10,

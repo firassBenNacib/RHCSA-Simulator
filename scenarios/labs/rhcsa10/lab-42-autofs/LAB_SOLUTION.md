@@ -29,7 +29,7 @@ mkdir -p /remote10
 
 ---
 
-## Task 02 - Configure /remote10/projects to automount server:/exports/autofs/project (client + server) - 10 pts
+## Task 02 - Configure NFS export and mount (client + server) - 10 pts
 
 ```bash
 echo '/remote10 /etc/auto.remote10' > /etc/auto.master.d/rhcsa10.autofs

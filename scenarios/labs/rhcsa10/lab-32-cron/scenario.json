@@ -38,7 +38,7 @@
       ],
       "task_titles": [
         "Create user cron10 and set password cinder9",
-        "Configure a cron job for cron10 that writes CRON10 to /home/cron10/cron1",
+        "Schedule cron job",
         "Ensure crond is enabled and running"
       ],
       "task_points": [

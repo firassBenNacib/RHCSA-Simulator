@@ -20,7 +20,7 @@ Create and inspect compressed archives.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /root/rhcsa10-etc.tar.gz as a gzip archive containing /etc/hosts (client) - 10 pts
+## Task 01 - Create gzip archive (client) - 10 pts
 
 ```bash
 tar -czf /root/rhcsa10-etc.tar.gz /etc/hosts /etc/fstab

@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/bin/rhcsa10-user-report with the required argument han",
-        "Make the script executable and confirm it prints a supplied user's prima"
+        "Create user lookup script",
+        "Create user lookup script"
       ],
       "task_points": [
         10,

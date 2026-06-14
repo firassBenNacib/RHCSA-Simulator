@@ -22,7 +22,7 @@ Fix Apache so it listens on a nonstandard port without disabling SELinux.
 
 ## Task 01 - Configure Apache on server so it listens on TCP (server) - 10 pts
 
-On server, configure Apache on server so it listens on TCP port 9082 and starts automatically at boot.
+On server, configure Apache so it listens on TCP port 9082 and starts automatically at boot.
 
 ---
 

@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, networking-and-firewall, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A 22-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak management, systemd timers, LVM storage, firewall, SELinux, shell scripting, and chrony time synchronisation across client and server.
+A 23-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak management, systemd timers, LVM storage, firewall, SELinux, shell scripting, and chrony time synchronisation across client and server.
 
 ### Systems
 - client
@@ -21,7 +21,7 @@ A 22-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak managem
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Recover root access on client from the console (client) - 5 pts
+## Question 01 - Recover root password (client) - 5 pts
 
 ```bash
 # Boot into emergency mode: at GRUB, press 'e', append rd.break to the linux line, Ctrl+X
@@ -34,7 +34,7 @@ A 22-task RHCSA 10 mock exam covering boot recovery, networking, Flatpak managem
 
 ---
 
-## Question 02 - Set the hostname on client to clienta.exam10.lab (client) - 5 pts
+## Question 02 - Set hostname (client) - 5 pts
 
 ```bash
 hostnamectl set-hostname clienta.exam10.lab
@@ -43,7 +43,7 @@ echo '192.168.122.3 servera.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 03 - Configure the network connection for eth1 on client with the following s (client) - 5 pts
+## Question 03 - Configure eth1 networking (client) - 5 pts
 
 ```bash
 nmcli connection modify "System eth1" ipv4.addresses 192.168.122.60/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -52,7 +52,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Question 04 - Configure the bootloader on client so every installed kernel boots with (client) - 5 pts
+## Question 04 - Persist kernel boot argument (client) - 5 pts
 
 ```bash
 grubby --update-kernel=ALL --args='audit_backlog_limit=8192'
@@ -60,7 +60,7 @@ grubby --update-kernel=ALL --args='audit_backlog_limit=8192'
 
 ---
 
-## Question 05 - Create enabled BaseOS and AppStream repository definitions with BaseOS a (client + server) - 5 pts
+## Question 05 - Configure BaseOS and AppStream repositories (client + server) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
@@ -96,12 +96,12 @@ dnf clean all
 
 ---
 
-## Question 06 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
+## Question 06 - Set hostname (server) - 5 pts
 
 ```bash
 # On server:
 hostnamectl set-hostname servera.exam10.lab
-grep -Eq '^192\.168\.122\.4[[:space:]]+clienta\.exam10\.lab$' /etc/hosts || echo '192.168.122.4 clienta.exam10.lab' >> /etc/hosts
+grep -Eq '^192\.168\.122\.60[[:space:]]+clienta\.exam10\.lab$' /etc/hosts || echo '192.168.122.60 clienta.exam10.lab' >> /etc/hosts
 connection_name="System eth1"
 nmcli -g NAME connection show "$connection_name" >/dev/null 2>&1 || connection_name="$(private_dev="$(ip -o -4 addr show | awk '$4 ~ /^192\.168\.122\./ {print $2; exit}')"; nmcli -t -f NAME,DEVICE connection show --active | awk -F: -v private_dev="$private_dev" '$2 == private_dev {print $1; exit}')"
 nmcli connection modify "$connection_name" ipv4.addresses 192.168.122.3/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -110,7 +110,7 @@ nmcli connection up "$connection_name"
 
 ---
 
-## Question 07 - Add a system-level Flatpak remote named examaflatpak pointing to file:// (client) - 5 pts
+## Question 07 - Configure Flatpak remote examaflatpak (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo
@@ -120,7 +120,7 @@ flatpak list --system --app
 
 ---
 
-## Question 08 - Create group opsa10 on client (client) - 5 pts
+## Question 08 - Create group opsa10 (client) - 5 pts
 
 ```bash
 groupadd opsa10
@@ -132,7 +132,7 @@ echo cinder9 | passwd --stdin atlas10
 
 ---
 
-## Question 09 - Allow members of %opsa10 to run /usr/bin/systemctl without a password pr (client) - 4 pts
+## Question 09 - Allow members of %opsa10 to run /usr/bin/systemctl without a password (client) - 4 pts
 
 ```bash
 echo '%opsa10 ALL=(ALL) NOPASSWD: /usr/bin/systemctl' > /etc/sudoers.d/opsa10
@@ -141,7 +141,7 @@ chmod 440 /etc/sudoers.d/opsa10
 
 ---
 
-## Question 10 - Set the maximum password age for anna10 to 45 days and the password warn (client) - 4 pts
+## Question 10 - Configure password aging (client) - 4 pts
 
 ```bash
 chage -M 45 -W 7 anna10
@@ -149,7 +149,7 @@ chage -M 45 -W 7 anna10
 
 ---
 
-## Question 11 - Create an executable script /usr/local/bin/a-who on client that accepts (client) - 4 pts
+## Question 11 - Create user lookup script (client) - 4 pts
 
 ```bash
 cat > /usr/local/bin/a-who <<'EOF'
@@ -162,7 +162,7 @@ chmod +x /usr/local/bin/a-who
 
 ---
 
-## Question 12 - Write all usernames whose login shell ends with sh to /root/a-shell-user (client) - 4 pts
+## Question 12 - List shell users (client) - 4 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/a-shell-users.txt
@@ -170,7 +170,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/a-shell-users.txt
 
 ---
 
-## Question 13 - Create /root/exam-a-report.txt containing REPORT-A and copy it to server (client + server) - 4 pts
+## Question 13 - Copy exam report to server (client + server) - 4 pts
 
 ```bash
 echo REPORT-A > /root/exam-a-report.txt
@@ -181,7 +181,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 14 - Publish /var/www/html/server-a.html containing RHCSA10-A and serve httpd (server) - 4 pts
+## Question 14 - Publish web content (server) - 4 pts
 
 ```bash
 # On server:
@@ -200,7 +200,7 @@ systemctl restart httpd
 
 ---
 
-## Question 15 - Create and enable serveratimer.timer so it appends SERVER-A to /var/log/ (server) - 4 pts
+## Question 15 - Configure systemd timer (server) - 4 pts
 
 ```bash
 # On server:
@@ -234,7 +234,7 @@ systemctl enable --now serveratimer.timer
 
 ---
 
-## Question 16 - Create volume group vga10 from /dev/sdb (client) - 4 pts
+## Question 16 - Create volume group (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -248,7 +248,7 @@ mount -a
 
 ---
 
-## Question 17 - Create group servera10 and user srva10 with password cinder9, then add t (server) - 4 pts
+## Question 17 - Create user and group (server) - 4 pts
 
 ```bash
 # On server:
@@ -272,7 +272,7 @@ chmod 2770 /srv/servera10
 
 ---
 
-## Question 19 - Persistently enable the SELinux boolean httpd_can_network_connect (server) - 4 pts
+## Question 19 - Persist SELinux boolean (server) - 4 pts
 
 ```bash
 # On server:
@@ -282,7 +282,7 @@ getsebool httpd_can_network_connect
 
 ---
 
-## Question 20 - Create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (se (client) - 4 pts
+## Question 20 - Create the directory /srv/opsa10 owned by root:opsa10 with mode 3770 (client) - 4 pts
 
 ```bash
 mkdir -p /srv/opsa10
@@ -292,7 +292,7 @@ chmod 3770 /srv/opsa10
 
 ---
 
-## Question 21 - Enable persistent systemd journal storage (server) - 4 pts
+## Question 21 - Enable persistent journal (server) - 4 pts
 
 ```bash
 # On server:
@@ -307,7 +307,7 @@ journalctl --flush
 
 ---
 
-## Question 22 - Make chronyd available as the lab time source (client + server) - 4 pts
+## Question 22 - Configure chrony time source (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -354,7 +354,7 @@ systemctl enable --now chronyd
 
 ---
 
-## Question 23 - Export /exports/exam-a to the 192.168.122.0/24 network (client + server) - 4 pts
+## Question 23 - Configure NFS export and mount (client + server) - 4 pts
 
 ```bash
 # On server:

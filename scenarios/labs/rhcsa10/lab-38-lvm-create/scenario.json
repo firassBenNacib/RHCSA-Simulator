@@ -38,8 +38,8 @@
       ],
       "task_titles": [
         "Create physical volume /dev/sdb",
-        "Create volume group vg10",
-        "Create a 384 MiB logical volume lvdata formatted with XFS and mounted at"
+        "Create volume group",
+        "Configure LVM storage"
       ],
       "task_points": [
         10,

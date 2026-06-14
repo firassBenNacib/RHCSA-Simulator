@@ -24,8 +24,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "On server, install the tuned package if it is not already present and activate the tuned profile throughput-performance on server.",
-        "On server, start the command sleep 3600 in the background on server and save its PID in /root/sleep35.pid.",
+        "On server, install the tuned package if it is not already present and activate the tuned profile throughput-performance.",
+        "On server, start the command sleep 3600 in the background and save its PID in /root/sleep35.pid.",
         "On server, adjust the nice value of that process so it becomes 5."
       ],
       "hints": [

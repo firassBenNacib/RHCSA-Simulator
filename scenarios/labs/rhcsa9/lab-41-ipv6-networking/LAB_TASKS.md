@@ -32,7 +32,7 @@ On client, configure the active client connection with the following persistent 
 
 ## Task 02 - Hostname and IPv6 Host Entry (client) - 10 pts
 
-On client, set the following persistent identity and resolution settings on client:
+On client, set the following persistent identity and resolution settings:
 
 - **Hostname:** client.ipv6lab.local
 - **Static host entry:** server.ipv6lab.local

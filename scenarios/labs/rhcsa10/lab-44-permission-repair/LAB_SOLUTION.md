@@ -29,7 +29,7 @@ touch /srv/repair10/report.txt
 
 ---
 
-## Task 02 - Make the file readable and writable by owner and group, and unreadable b (server) - 10 pts
+## Task 02 - Make the file readable and writable by owner and group, and unreadable (server) - 10 pts
 
 ```bash
 chmod 660 /srv/repair10/report.txt

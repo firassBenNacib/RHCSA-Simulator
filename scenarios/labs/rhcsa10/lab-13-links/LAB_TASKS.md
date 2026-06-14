@@ -32,6 +32,6 @@ Create hard link /root/rhcsa10-hard pointing to the original file.
 
 ---
 
-## Task 03 - Create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-origin (client) - 10 pts
+## Task 03 - Create symbolic link /root/rhcsa10-soft pointing to (client) - 10 pts
 
 Create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-original.

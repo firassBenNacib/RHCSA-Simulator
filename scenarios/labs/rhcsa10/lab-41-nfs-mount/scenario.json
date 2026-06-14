@@ -38,7 +38,7 @@
       ],
       "task_titles": [
         "Create mount point /mnt/serverdirect10",
-        "Mount server:/exports/direct at /mnt/serverdirect10",
+        "Configure NFS export and mount",
         "Make the mount persistent across reboots"
       ],
       "task_points": [

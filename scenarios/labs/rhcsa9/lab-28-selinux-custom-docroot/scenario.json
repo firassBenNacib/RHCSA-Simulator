@@ -24,7 +24,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, configure Apache on client to serve content from /srv/lab28/site on TCP port 8088.",
+        "On client, configure Apache to serve content from /srv/lab28/site on TCP port 8088.",
         "On client, keep SELinux enforcing, configure the correct file context and port label, open the firewall permanently, and enable the service at boot.",
         "On client, do not edit or remove /srv/lab28/site/index.html."
       ],

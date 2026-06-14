@@ -39,6 +39,6 @@ On client, generate an ED25519 SSH key pair for key10 with no passphrase.
 
 ---
 
-## Task 04 - Configure key-based SSH authentication so key10 can log in to key10@serv (client + server) - 10 pts
+## Task 04 - Configure key-based SSH authentication so key10 can log in to (client + server) - 10 pts
 
 On client, configure key-based SSH authentication so key10 can log in to key10@server without a password prompt.
