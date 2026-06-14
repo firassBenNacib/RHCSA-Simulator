@@ -2,4 +2,4 @@
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
-userdel -r key10 >/dev/null 2>&1 || true
+rhcsa_reset_repo_directory /root/.repo-backup-server-flatpak rhcsa-flatpak.repo

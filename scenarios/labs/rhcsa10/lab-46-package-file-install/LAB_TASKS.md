@@ -23,4 +23,10 @@ Install software from a local RPM file.
 
 ## Task 01 - Install the local tree RPM from /var/www/html/repo or the mounted ISO wi (client) - 10 pts
 
-Install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories.
+On client, install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories.
+
+---
+
+## Task 02 - Install the tree package from the local repositories (server) - 10 pts
+
+On server, install the tree package from the local repositories.

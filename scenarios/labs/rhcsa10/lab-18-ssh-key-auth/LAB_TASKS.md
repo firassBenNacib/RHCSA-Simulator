@@ -27,12 +27,18 @@ On client, create user key10 and set password cinder9.
 
 ---
 
-## Task 02 - Create /home/key10/.ssh/authorized_keys with the provided public key tex (client) - 10 pts
+## Task 02 - Create user key10 and set password cinder9 (server) - 10 pts
 
-On client, create /home/key10/.ssh/authorized_keys with the provided public key text ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10.
+On server, create user key10 and set password cinder9.
 
 ---
 
-## Task 03 - Set secure ownership and permissions on the SSH directory and authorized (client) - 10 pts
+## Task 03 - Generate an ED25519 SSH key pair for key10 with no passphrase (client) - 10 pts
 
-On client, set secure ownership and permissions on the SSH directory and authorized_keys file.
+On client, generate an ED25519 SSH key pair for key10 with no passphrase.
+
+---
+
+## Task 04 - Configure key-based SSH authentication so key10 can log in to key10@serv (client + server) - 10 pts
+
+On client, configure key-based SSH authentication so key10 can log in to key10@server without a password prompt.

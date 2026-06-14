@@ -2,4 +2,5 @@
 set -euo pipefail
 source /usr/local/lib/rhcsa-scenario-helpers.sh
 
-userdel -r key10 >/dev/null 2>&1 || true
+dnf install -y flatpak >/dev/null 2>&1 || true
+rm -rf /opt/rhcsa/flatpak/repo

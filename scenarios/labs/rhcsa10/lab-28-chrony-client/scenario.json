@@ -25,6 +25,7 @@
   "content": {
     "lab": {
       "tasks": [
+        "On server, configure chronyd as a local time source for the 192.168.122.0/24 network.",
         "On client, install chrony if needed.",
         "On client, configure server as the only NTP source.",
         "On client, enable and start chronyd."
@@ -34,6 +35,7 @@
         "Use server server iburst."
       ],
       "checks": [
+        "# server systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && grep -Eq '^local stratum 10$' /etc/chrony.conf",
         "rpm -q chrony >/dev/null",
         "grep -Eq '^server server iburst$' /etc/chrony.conf",
         "systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active"
@@ -42,6 +44,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
+        "Configure chronyd as a local time source for the 192.168.122.0/24 networ",
         "Install chrony if needed",
         "Configure server as the only NTP source",
         "Enable and start chronyd"
@@ -49,9 +52,15 @@
       "task_points": [
         10,
         10,
+        10,
         10
       ],
       "solution_commands": [
+        [
+          "# On server",
+          "cat > /etc/chrony.conf <<'EOF'\ndriftfile /var/lib/chrony/drift\nmakestep 1.0 3\nallow 192.168.122.0/24\nlocal stratum 10\nlogdir /var/log/chrony\nEOF",
+          "systemctl enable --now chronyd"
+        ],
         [
           "dnf install -y chrony"
         ],
@@ -65,16 +74,19 @@
         ]
       ],
       "task_targets": [
+        "server",
         "client",
         "client",
         "client"
       ],
       "solution_targets": [
+        "server",
         "client",
         "client",
         "client"
       ],
       "check_targets": [
+        "server",
         "client",
         "client",
         "client"

@@ -23,10 +23,16 @@ Install and remove RPM software.
 
 ## Task 01 - Install the lsof package (client) - 10 pts
 
-Install the lsof package.
+On client, install the lsof package.
 
 ---
 
-## Task 02 - Remove the tcpdump package if it is installed (client) - 20 pts
+## Task 02 - Remove the tcpdump package if it is installed (client) - 10 pts
 
-Remove the tcpdump package if it is installed.
+On client, remove the tcpdump package if it is installed.
+
+---
+
+## Task 03 - Install the lsof package (server) - 10 pts
+
+On server, install the lsof package.

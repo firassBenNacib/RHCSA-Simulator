@@ -402,9 +402,35 @@ mkdir -p /root/.repo-backup-server-lab04
 rhcsa_reset_repo_directory /root/.repo-backup-server-lab04
 """
 
+    scripts["lab-05-rpm-packages"] = h + """
+rhcsa_reset_repo_directory /root/.repo-backup-server-lab05 rhcsa-local.repo
+cat > /etc/yum.repos.d/rhcsa-local.repo <<'EOF'
+[rhcsa-baseos]
+name=RHCSA Local BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa-appstream]
+name=RHCSA Local AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf remove -y lsof >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-06-flatpak-remote"] = h + """
+rhcsa_reset_repo_directory /root/.repo-backup-server-flatpak rhcsa-flatpak.repo
+"""
+
+    scripts["lab-07-flatpak-package"] = h + """
+dnf install -y flatpak >/dev/null 2>&1 || true
+rm -rf /opt/rhcsa/flatpak/repo
+"""
+
     scripts["lab-18-ssh-key-auth"] = h + """
-install -d -m 700 /root/.ssh
-test -f /root/.ssh/id_ed25519_key10 || ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519_key10 -N '' -C 'key10-test' >/dev/null 2>&1
+userdel -r key10 >/dev/null 2>&1 || true
 """
 
     scripts["lab-24-process-priority"] = h + """
@@ -423,15 +449,13 @@ sed -i '/^[[:space:]]*Storage[[:space:]]*=.*persistent/d' /etc/systemd/journald.
 
     scripts["lab-28-chrony-client"] = h + """
 dnf install -y chrony >/dev/null 2>&1 || true
-install -d -m 755 /etc/chrony.d
 cat > /etc/chrony.conf <<'EOF'
 driftfile /var/lib/chrony/drift
+pool 2.rhel.pool.ntp.org iburst
 makestep 1.0 3
-allow 192.168.122.0/24
-local stratum 10
 logdir /var/log/chrony
 EOF
-systemctl enable --now chronyd
+systemctl disable --now chronyd >/dev/null 2>&1 || true
 """
 
     scripts["lab-29-default-target"] = h + """
@@ -459,6 +483,24 @@ cat > /etc/exports.d/lab41.exports <<'EOFX'
 EOFX
 systemctl enable --now nfs-server >/dev/null 2>&1 || true
 exportfs -arv >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-46-package-file-install"] = h + """
+rhcsa_reset_repo_directory /root/.repo-backup-server-lab46 rhcsa-local.repo
+cat > /etc/yum.repos.d/rhcsa-local.repo <<'EOF'
+[rhcsa-baseos]
+name=RHCSA Local BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa-appstream]
+name=RHCSA Local AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf remove -y tree >/dev/null 2>&1 || true
 """
 
     scripts["lab-42-autofs"] = h + """
@@ -1916,18 +1958,70 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             ],
         )
 
+    if lab_id == "lab-05-rpm-packages":
+        return _replace_lab_progression(
+            block,
+            [
+                "On client, install the lsof package.",
+                "On client, remove the tcpdump package if it is installed.",
+                "On server, install the lsof package.",
+            ],
+            [
+                "rpm -q lsof >/dev/null",
+                "! rpm -q tcpdump >/dev/null 2>&1",
+                "# server rpm -q lsof >/dev/null",
+            ],
+            [
+                ["dnf install -y lsof"],
+                ["dnf remove -y tcpdump", "rpm -q tcpdump || true"],
+                ["# On server", "dnf install -y lsof"],
+            ],
+        )
+
+    if lab_id == "lab-06-flatpak-remote":
+        return _replace_lab_progression(
+            block,
+            [
+                "On server, configure BaseOS and AppStream repositories for Flatpak package access with GPG checks disabled.",
+                "On client, install the flatpak package if it is not already installed.",
+                "On client, configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
+            ],
+            [
+                "# server grep -ERq '^\\[rhcsa-flatpak-baseos\\]$' /etc/yum.repos.d && grep -ERq '^\\[rhcsa-flatpak-appstream\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d && [ \"$(grep -Ec '^gpgcheck=0$' /etc/yum.repos.d/rhcsa-flatpak.repo)\" -ge 2 ]",
+                "rpm -q flatpak >/dev/null",
+                "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
+            ],
+            [
+                [
+                    "# On server",
+                    "cat > /etc/yum.repos.d/rhcsa-flatpak.repo <<'EOF'\n[rhcsa-flatpak-baseos]\nname=RHCSA Flatpak BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa-flatpak-appstream]\nname=RHCSA Flatpak AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+                ],
+                ["dnf install -y flatpak"],
+                ["flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo"],
+            ],
+        )
+
     if lab_id == "lab-07-flatpak-package":
         return _replace_lab_progression(
             block,
             [
-                "Ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/flatpak/repo.",
-                "Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation.",
+                "On server, install Flatpak repository tooling and rebuild the metadata under /opt/rhcsa/flatpak/repo.",
+                "On client, ensure the system Flatpak remote rhcsa10 exists and points to file:///opt/rhcsa/flatpak/repo.",
+                "On client, install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation.",
             ],
             [
+                "# server test -s /opt/rhcsa/flatpak/repo/summary",
                 "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'",
                 "flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools",
             ],
             [
+                [
+                    "# On server",
+                    "dnf install -y flatpak ostree",
+                    "install -d -m 755 /opt/rhcsa/flatpak/repo",
+                    "ostree init --repo=/opt/rhcsa/flatpak/repo --mode=archive-z2",
+                    "flatpak build-update-repo /opt/rhcsa/flatpak/repo",
+                ],
                 ["flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo"],
                 ["flatpak install --system -y rhcsa10 org.rhcsa.Tools"],
             ],
@@ -2032,25 +2126,21 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             block,
             [
                 "On client, create user key10 and set password cinder9.",
-                "On client, create /home/key10/.ssh/authorized_keys with the provided public key text ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10.",
-                "On client, set secure ownership and permissions on the SSH directory and authorized_keys file.",
+                "On server, create user key10 and set password cinder9.",
+                "On client, generate an ED25519 SSH key pair for key10 with no passphrase.",
+                "On client, configure key-based SSH authentication so key10 can log in to key10@server without a password prompt.",
             ],
             [
                 "getent passwd key10 >/dev/null",
-                "grep -Fqx 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' /home/key10/.ssh/authorized_keys",
-                "stat -c '%U:%a' /home/key10/.ssh /home/key10/.ssh/authorized_keys | grep -qx 'key10:700' && stat -c '%U:%a' /home/key10/.ssh/authorized_keys | grep -qx 'key10:600'",
+                "# server getent passwd key10 >/dev/null",
+                "test -f /home/key10/.ssh/id_ed25519.pub && stat -c '%U:%a' /home/key10/.ssh | grep -qx 'key10:700'",
+                "runuser -l key10 -c 'ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null key10@server true'",
             ],
             [
                 ["useradd -m key10", "echo 'key10:cinder9' | chpasswd"],
-                [
-                    "install -d -m 700 -o key10 -g key10 /home/key10/.ssh",
-                    "echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' > /home/key10/.ssh/authorized_keys",
-                ],
-                [
-                    "chown key10:key10 /home/key10/.ssh/authorized_keys",
-                    "chmod 600 /home/key10/.ssh/authorized_keys",
-                    "restorecon -RF /home/key10/.ssh",
-                ],
+                ["# On server", "useradd -m key10", "echo 'key10:cinder9' | chpasswd"],
+                ["su - key10", "ssh-keygen -t ed25519 -N \"\" -f ~/.ssh/id_ed25519"],
+                ["su - key10", "ssh-copy-id -i ~/.ssh/id_ed25519.pub key10@server"],
             ],
         )
 
@@ -2085,16 +2175,23 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         return _replace_lab_progression(
             block,
             [
+                "On server, configure chronyd as a local time source for the 192.168.122.0/24 network.",
                 "On client, install chrony if needed.",
                 "On client, configure server as the only NTP source.",
                 "On client, enable and start chronyd.",
             ],
             [
+                "# server systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active && grep -Eq '^allow 192\\.168\\.122\\.0/24$' /etc/chrony.conf && grep -Eq '^local stratum 10$' /etc/chrony.conf",
                 "rpm -q chrony >/dev/null",
                 "grep -Eq '^server server iburst$' /etc/chrony.conf",
                 "systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active",
             ],
             [
+                [
+                    "# On server",
+                    "cat > /etc/chrony.conf <<'EOF'\ndriftfile /var/lib/chrony/drift\nmakestep 1.0 3\nallow 192.168.122.0/24\nlocal stratum 10\nlogdir /var/log/chrony\nEOF",
+                    "systemctl enable --now chronyd",
+                ],
                 ["dnf install -y chrony"],
                 [
                     "sed -i '/^pool /d;/^server /d' /etc/chrony.conf",
@@ -2349,12 +2446,21 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
     if lab_id == "lab-46-package-file-install":
         return _replace_lab_progression(
             block,
-            ["Install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories."],
-            ["command -v tree >/dev/null && rpm -q tree >/dev/null"],
-            [[
-                "dnf install -y --disablerepo='*' --enablerepo=rhcsa-baseos --enablerepo=rhcsa-appstream tree",
-                "rpm -q tree",
-            ]],
+            [
+                "On client, install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories.",
+                "On server, install the tree package from the local repositories.",
+            ],
+            [
+                "command -v tree >/dev/null && rpm -q tree >/dev/null",
+                "# server command -v tree >/dev/null && rpm -q tree >/dev/null",
+            ],
+            [
+                [
+                    "dnf install -y --disablerepo='*' --enablerepo=rhcsa-baseos --enablerepo=rhcsa-appstream tree",
+                    "rpm -q tree",
+                ],
+                ["# On server", "dnf install -y tree", "rpm -q tree"],
+            ],
         )
 
     if lab_id == "lab-47-documentation":

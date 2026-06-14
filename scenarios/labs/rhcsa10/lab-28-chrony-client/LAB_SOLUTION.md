@@ -13,15 +13,31 @@
 Configure time synchronization.
 
 ### Systems
-- client
 - server
+- client
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Install chrony if needed (client) - 10 pts
+## Task 01 - Configure chronyd as a local time source for the 192.168.122.0/24 networ (server) - 10 pts
+
+```bash
+# On server
+cat > /etc/chrony.conf <<'EOF'
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+allow 192.168.122.0/24
+local stratum 10
+logdir /var/log/chrony
+EOF
+systemctl enable --now chronyd
+```
+
+---
+
+## Task 02 - Install chrony if needed (client) - 10 pts
 
 ```bash
 dnf install -y chrony
@@ -29,7 +45,7 @@ dnf install -y chrony
 
 ---
 
-## Task 02 - Configure server as the only NTP source (client) - 10 pts
+## Task 03 - Configure server as the only NTP source (client) - 10 pts
 
 ```bash
 sed -i '/^pool /d;/^server /d' /etc/chrony.conf
@@ -38,7 +54,7 @@ echo 'server server iburst' >> /etc/chrony.conf
 
 ---
 
-## Task 03 - Enable and start chronyd (client) - 10 pts
+## Task 04 - Enable and start chronyd (client) - 10 pts
 
 ```bash
 systemctl enable --now chronyd

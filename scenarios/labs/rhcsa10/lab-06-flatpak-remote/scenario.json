@@ -14,7 +14,8 @@
   ],
   "rhel_major": 10,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
@@ -23,46 +24,56 @@
   "content": {
     "lab": {
       "tasks": [
-        "Install the flatpak package if it is not already installed.",
-        "Configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled."
+        "On server, configure BaseOS and AppStream repositories for Flatpak package access with GPG checks disabled.",
+        "On client, install the flatpak package if it is not already installed.",
+        "On client, configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled."
       ],
       "hints": [
         "Use flatpak remote-add --system.",
         "Use --if-not-exists for idempotent configuration."
       ],
       "checks": [
+        "# server grep -ERq '^\\[rhcsa-flatpak-baseos\\]$' /etc/yum.repos.d && grep -ERq '^\\[rhcsa-flatpak-appstream\\]$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/BaseOS/?$' /etc/yum.repos.d && grep -ERq '^baseurl=http://server/repo/AppStream/?$' /etc/yum.repos.d && [ \"$(grep -Ec '^gpgcheck=0$' /etc/yum.repos.d/rhcsa-flatpak.repo)\" -ge 2 ]",
         "rpm -q flatpak >/dev/null",
-        "(flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}') && (flatpak remotes --system --columns=name 2>/dev/null | grep -qx rhcsa10)"
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"rhcsa10\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
+        "Configure BaseOS and AppStream repositories for Flatpak package access w",
         "Install the flatpak package if it is not already installed",
         "Configure a system Flatpak remote named rhcsa10 that points to file:///o"
       ],
       "task_points": [
         10,
-        20
+        10,
+        10
       ],
       "solution_commands": [
+        [
+          "# On server",
+          "cat > /etc/yum.repos.d/rhcsa-flatpak.repo <<'EOF'\n[rhcsa-flatpak-baseos]\nname=RHCSA Flatpak BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa-flatpak-appstream]\nname=RHCSA Flatpak AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF"
+        ],
         [
           "dnf install -y flatpak"
         ],
         [
-          "flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo",
-          "flatpak remotes --system --columns=name,url"
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/rhcsa/flatpak/repo"
         ]
       ],
       "task_targets": [
+        "server",
         "client",
         "client"
       ],
       "solution_targets": [
+        "server",
         "client",
         "client"
       ],
       "check_targets": [
+        "server",
         "client",
         "client"
       ]

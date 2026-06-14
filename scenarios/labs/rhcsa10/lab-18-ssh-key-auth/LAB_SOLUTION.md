@@ -30,19 +30,28 @@ echo 'key10:cinder9' | chpasswd
 
 ---
 
-## Task 02 - Create /home/key10/.ssh/authorized_keys with the provided public key tex (client) - 10 pts
+## Task 02 - Create user key10 and set password cinder9 (server) - 10 pts
 
 ```bash
-install -d -m 700 -o key10 -g key10 /home/key10/.ssh
-echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIRhcsa10keydemo rhcsa10' > /home/key10/.ssh/authorized_keys
+# On server
+useradd -m key10
+echo 'key10:cinder9' | chpasswd
 ```
 
 ---
 
-## Task 03 - Set secure ownership and permissions on the SSH directory and authorized (client) - 10 pts
+## Task 03 - Generate an ED25519 SSH key pair for key10 with no passphrase (client) - 10 pts
 
 ```bash
-chown key10:key10 /home/key10/.ssh/authorized_keys
-chmod 600 /home/key10/.ssh/authorized_keys
-restorecon -RF /home/key10/.ssh
+su - key10
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+```
+
+---
+
+## Task 04 - Configure key-based SSH authentication so key10 can log in to key10@serv (client + server) - 10 pts
+
+```bash
+su - key10
+ssh-copy-id -i ~/.ssh/id_ed25519.pub key10@server
 ```
