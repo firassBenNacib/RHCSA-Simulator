@@ -433,6 +433,12 @@ rm -rf /opt/rhcsa/flatpak/repo
 userdel -r key10 >/dev/null 2>&1 || true
 """
 
+    scripts["lab-19-firewalld-service"] = h + """
+systemctl disable --now firewalld >/dev/null 2>&1 || true
+firewall-cmd --permanent --remove-service=https >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+"""
+
     scripts["lab-24-process-priority"] = h + """
 if [ -s /run/rhcsa10-sleep.pid ]; then
   kill "$(cat /run/rhcsa10-sleep.pid)" >/dev/null 2>&1 || true
@@ -440,11 +446,21 @@ fi
 rm -f /run/rhcsa10-sleep.pid
 """
 
+    scripts["lab-25-tuned-profile"] = h + """
+systemctl disable --now tuned >/dev/null 2>&1 || true
+tuned-adm profile balanced >/dev/null 2>&1 || true
+"""
+
     scripts["lab-26-persistent-journal"] = h + """
 systemctl restart systemd-journald >/dev/null 2>&1 || true
 rm -rf /var/log/journal
 rm -f /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf /etc/systemd/journald.conf.d/persistent.conf
 sed -i '/^[[:space:]]*Storage[[:space:]]*=.*persistent/d' /etc/systemd/journald.conf 2>/dev/null || true
+"""
+
+    scripts["lab-27-rsyslog-logger"] = h + """
+rm -f /etc/rsyslog.d/rhcsa10.conf /var/log/rhcsa10-local7.log
+systemctl disable --now rsyslog >/dev/null 2>&1 || true
 """
 
     scripts["lab-28-chrony-client"] = h + """
@@ -472,6 +488,16 @@ systemctl daemon-reload
 systemctl disable --now rhcsa10-timer.timer >/dev/null 2>&1 || true
 rm -f /etc/systemd/system/rhcsa10-timer.service /etc/systemd/system/rhcsa10-timer.timer /usr/local/sbin/rhcsa10-timer.sh /var/log/rhcsa10-timer.log
 systemctl daemon-reload
+"""
+
+    scripts["lab-32-cron"] = h + """
+userdel -r cron10 >/dev/null 2>&1 || true
+systemctl disable --now crond >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-33-at-job"] = h + """
+userdel -r at10 >/dev/null 2>&1 || true
+systemctl disable --now atd >/dev/null 2>&1 || true
 """
 
     scripts["lab-41-nfs-mount"] = h + """
@@ -516,6 +542,13 @@ exportfs -arv >/dev/null 2>&1 || true
 
     scripts["lab-45-secure-copy"] = h + """
 systemctl enable --now sshd
+"""
+
+    scripts["lab-48-service-network-boot"] = h + """
+systemctl disable --now httpd >/dev/null 2>&1 || true
+firewall-cmd --permanent --remove-service=http >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+rm -f /var/www/html/rhcsa10-boot.html
 """
 
     return scripts
@@ -1160,11 +1193,14 @@ def _both_chrony_step(letter: str) -> tuple[str, str, list[str]]:
             f"{_ssh_server_check('systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active')}"
         ),
         [
-            "# On server:",
+            *_server_repo_commands(),
+            "dnf install -y chrony",
             "systemctl enable --now chronyd",
             "firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true",
             "firewall-cmd --reload >/dev/null 2>&1 || true",
             "# On client:",
+            *_client_repo_commands(),
+            "dnf install -y chrony",
             "cat > /etc/chrony.conf <<'EOF'\nserver server iburst\nmakestep 1.0 3\nEOF",
             "systemctl enable --now chronyd",
         ],
@@ -1518,7 +1554,7 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
             commands,
             2,
             "On server, set hostname to serverh.exam10.lab and map clienth.exam10.lab to 192.168.122.4.",
-            (
+            _ssh_server_check(
                 "hostnamectl --static | grep -qx serverh.exam10.lab && "
                 "grep -Eq '^192\\.168\\.122\\.4[[:space:]]+clienth\\.exam10\\.lab$' /etc/hosts"
             ),
@@ -1545,18 +1581,7 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
             commands,
             9,
             "On server, configure persistent systemd journal storage.",
-            (
-                "test -d /var/log/journal && "
-                "systemctl is-active systemd-journald | grep -qx active && "
-                "find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f | grep -q . && "
-                "find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f -exec awk '"
-                "FNR == 1 {in_journal=0} "
-                "/^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} "
-                "/^[[:space:]]*\\[/ {in_journal=0} "
-                "in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} "
-                "END {exit !found}"
-                "' {} +"
-            ),
+            _ssh_server_check(JOURNALD_PERSISTENT_CHECK),
             [
                 "# On server:",
                 *JOURNALD_PERSISTENT_COMMANDS,
@@ -1568,7 +1593,7 @@ def _apply_rhcsa10_exam_diversity(exam_id: str, tasks: list[Any], checks: list[s
             commands,
             14,
             "On server, route local6 log messages to /var/log/examh-local6.log and write a test message.",
-            (
+            _ssh_server_check(
                 "grep -Eq '^local6\\.\\*[[:space:]]+/var/log/examh-local6\\.log$' /etc/rsyslog.d/examh-local6.conf && "
                 "systemctl is-active rsyslog | grep -qx active && "
                 "grep -Fq 'exam-h local6' /var/log/examh-local6.log"
@@ -2236,8 +2261,8 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             _replace_lab_progression(
                 block,
                 [
-                    "On server, configure persistent systemd journal storage.",
-                    "On server, restart systemd-journald and flush current journal data to persistent storage.",
+                    "On server, create the persistent systemd journal directory.",
+                    "On server, configure systemd-journald to store logs persistently and flush current journal data.",
                 ],
                 [
                     "test -d /var/log/journal",
@@ -2245,10 +2270,11 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                 ],
                 [
                     [
-                        "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
-                        "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
+                        "mkdir -p /var/log/journal",
                     ],
                     [
+                        "mkdir -p /etc/systemd/journald.conf.d",
+                        "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
                         "systemctl restart systemd-journald",
                         "journalctl --flush",
                     ],
@@ -2617,12 +2643,16 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
                         "echo 'hazel10:cinder9' | chpasswd",
                     ]
 
-            if "As copy10" in task_text and "server-hostname" in task_text:
+            if "as copy10" in task_text.lower() and "server-hostname" in task_text:
                 if index < len(commands):
                     commands[index] = [
-                        "su - copy10 -c 'mkdir -p ~/.ssh && test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa'",
-                        "cp /etc/hostname /home/copy10/server-hostname",
-                        "chown copy10:copy10 /home/copy10/server-hostname",
+                        "# On client:",
+                        "su - copy10",
+                        "mkdir -p ~/.ssh",
+                        "test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa",
+                        "ssh-copy-id -i ~/.ssh/id_rsa.pub copy10@server",
+                        "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_rsa copy10@server:/etc/hostname /home/copy10/server-hostname",
+                        "exit",
                     ]
 
             if "Schedule an at job for user hazel10" in task_text:
