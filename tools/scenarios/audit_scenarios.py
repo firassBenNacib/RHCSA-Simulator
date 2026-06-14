@@ -441,8 +441,8 @@ def audit_rhcsa9_exam_check_granularity(path: Path, scenario: dict[str, Any], fi
     checks = exam.get("checks", [])
     task_targets = exam.get("task_targets", [])
     check_targets = exam.get("check_targets", [])
-    if len(checks) < len(tasks):
-        findings.append(Finding(path, f"RHCSA9 exam should not use broad final checks ({len(checks)} checks for {len(tasks)} tasks)"))
+    if len(checks) != len(tasks):
+        findings.append(Finding(path, f"RHCSA9 exam checks must match task count ({len(checks)} checks for {len(tasks)} tasks)"))
     if "server" in task_targets and not ({str(target) for target in check_targets} & {"server", "both"}):
         findings.append(Finding(path, "RHCSA9 exam has server tasks but no server-targeted checks"))
 
