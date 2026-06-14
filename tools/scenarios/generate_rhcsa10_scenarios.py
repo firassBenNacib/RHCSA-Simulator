@@ -245,17 +245,6 @@ echo RHCSA10 > /var/www/html/rhcsa10.html
 chcon -t user_tmp_t /var/www/html/rhcsa10.html 2>/dev/null || true
 """
 
-    scripts["lab-22-selinux-port"] = h + """
-semanage port -d -t http_port_t -p tcp 8010 >/dev/null 2>&1 || true
-firewall-cmd --permanent --remove-port=8010/tcp >/dev/null 2>&1 || true
-firewall-cmd --reload >/dev/null 2>&1 || true
-"""
-
-    scripts["lab-23-selinux-boolean"] = h + """
-setsebool -P httpd_can_network_connect off >/dev/null 2>&1 || true
-setsebool httpd_can_network_connect off >/dev/null 2>&1 || true
-"""
-
     scripts["lab-24-process-priority"] = h + """
 if [ -s /run/rhcsa10-sleep.pid ]; then
     kill "$(cat /run/rhcsa10-sleep.pid)" >/dev/null 2>&1 || true
@@ -434,6 +423,17 @@ userdel -r key10 >/dev/null 2>&1 || true
 systemctl disable --now firewalld >/dev/null 2>&1 || true
 firewall-cmd --permanent --remove-service=https >/dev/null 2>&1 || true
 firewall-cmd --reload >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-22-selinux-port"] = h + """
+semanage port -d -t http_port_t -p tcp 8010 >/dev/null 2>&1 || true
+firewall-cmd --permanent --remove-port=8010/tcp >/dev/null 2>&1 || true
+firewall-cmd --reload >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-23-selinux-boolean"] = h + """
+setsebool -P httpd_can_network_connect off >/dev/null 2>&1 || true
+setsebool httpd_can_network_connect off >/dev/null 2>&1 || true
 """
 
     scripts["lab-24-process-priority"] = h + """
