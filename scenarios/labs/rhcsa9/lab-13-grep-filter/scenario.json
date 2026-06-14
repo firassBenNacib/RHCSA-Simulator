@@ -14,22 +14,22 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, from /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines."
+        "On server, from /usr/share/dict/words, extract the lines containing ich and save the result to /root/lines."
       ],
       "hints": [
         "The words file for this lab is preseeded if it was not present before."
       ],
       "checks": [
-        "test -s /root/lines && grep -q 'ich' /root/lines && awk 'index($0,\"ich\")==0{exit 1}' /root/lines"
+        "# server test -s /root/lines && grep -q 'ich' /root/lines && awk 'index($0,\"ich\")==0{exit 1}' /root/lines"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -46,15 +46,15 @@
         ]
       ],
       "task_targets": [
-        "client"
+        "server"
       ],
       "solution_targets": [
-        "client"
+        "server"
       ],
       "check_targets": [
-        "client"
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

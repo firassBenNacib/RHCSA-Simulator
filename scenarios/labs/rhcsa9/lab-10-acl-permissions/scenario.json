@@ -14,25 +14,25 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, copy /etc/fstab to /var/tmp/fstab-acl. Set the owner and group to root:root and remove all execute bits.",
-        "On client, give natacl read-write access, deny haracl all access, and allow others read only."
+        "On server, copy /etc/fstab to /var/tmp/fstab-acl. Set the owner and group to root:root and remove all execute bits.",
+        "On server, give natacl read-write access, deny haracl all access, and allow others read only."
       ],
       "hints": [
         "The users natacl and haracl are already present for this lab.",
         "Use setfacl for the named user entries."
       ],
       "checks": [
-        "cmp -s /etc/fstab /var/tmp/fstab-acl",
-        "stat -c '%U:%G' /var/tmp/fstab-acl | grep -qx 'root:root' && ! stat -c '%A' /var/tmp/fstab-acl | grep -q x && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:natacl:rw-' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:haracl:---' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'other::r--'"
+        "# server cmp -s /etc/fstab /var/tmp/fstab-acl",
+        "# server stat -c '%U:%G' /var/tmp/fstab-acl | grep -qx 'root:root' && ! stat -c '%A' /var/tmp/fstab-acl | grep -q x && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:natacl:rw-' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'user:haracl:---' && getfacl -cp /var/tmp/fstab-acl | grep -qx 'other::r--'"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -58,18 +58,18 @@
         ]
       ],
       "task_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "solution_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "check_targets": [
-        "client",
-        "client"
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

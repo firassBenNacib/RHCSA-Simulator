@@ -14,23 +14,23 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, find all regular files owned by natfind and modified in the last 24 hours under /opt/lab12/source, then copy them to /root/natfind-files while preserving the original directory structure."
+        "On server, find all regular files owned by natfind and modified in the last 24 hours under /opt/lab12/source, then copy them to /root/natfind-files while preserving the original directory structure."
       ],
       "hints": [
         "Use find with a time test and --parents or an equivalent method.",
         "Only copy regular files."
       ],
       "checks": [
-        "diff -u <(find /opt/lab12/source -type f -user natfind -mtime -1 | sed 's#^/opt/lab12/source#/root/natfind-files#' | sort) <(find /root/natfind-files -type f | sort)"
+        "# server diff -u <(find /opt/lab12/source -type f -user natfind -mtime -1 | sed 's#^/opt/lab12/source#/root/natfind-files#' | sort) <(find /root/natfind-files -type f | sort)"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -49,15 +49,15 @@
         ]
       ],
       "task_targets": [
-        "client"
+        "server"
       ],
       "solution_targets": [
-        "client"
+        "server"
       ],
       "check_targets": [
-        "client"
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

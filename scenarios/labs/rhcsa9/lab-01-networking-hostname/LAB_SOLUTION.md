@@ -6,14 +6,15 @@
 |---|---|
 | Scenario ID | `lab-01-networking-hostname` |
 | Mode | Lab |
-| Scope | client |
+| Scope | client-server |
 | Time limit | 35 minutes |
 | Objectives | networking-and-firewall |
 
-Configure persistent networking and hostname settings on client in RHCSA practice.
+Configure persistent client networking and a matching server hostname for RHCSA practice.
 
 ### Systems
 - client
+- server
 
 ## General Instructions
 1. Unless a task states otherwise, make all changes persistent across reboots.
@@ -33,7 +34,15 @@ hostnamectl set-hostname client.netlab.local
 
 ---
 
-## Task 02 - Static Host Entry (client) - 10 pts
+## Task 02 - Server Hostname (server) - 10 pts
+
+```bash
+hostnamectl set-hostname repo.netlab.local
+```
+
+---
+
+## Task 03 - Client Static Host Entry (client) - 10 pts
 
 ```bash
 vim /etc/hosts

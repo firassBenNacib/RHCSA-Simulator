@@ -14,7 +14,8 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
@@ -23,36 +24,48 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, use the prepared local repositories on client to install tree, then remove dos2unix so tree remains installed."
+        "On client, use the prepared local repositories to install tree, then remove dos2unix so tree remains installed.",
+        "On server, use the prepared local repositories to install lsof, then remove dos2unix so lsof remains installed."
       ],
       "hints": [
-        "The repositories are already defined for this lab. Focus on package management."
+        "The repositories are already defined for this lab. Focus on package management on each named system."
       ],
       "checks": [
-        "rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null"
+        "rpm -q tree >/dev/null && ! rpm -q dos2unix >/dev/null",
+        "# server rpm -q lsof >/dev/null && ! rpm -q dos2unix >/dev/null"
       ],
       "solution_outline": [],
       "task_titles": [
-        "Install tree and remove dos2unix"
+        "Client Package Install and Remove",
+        "Server Package Install and Remove"
       ],
       "task_points": [
-        20
+        10,
+        10
       ],
       "solution_commands": [
         [
           "dnf install -y tree dos2unix",
           "dnf remove -y dos2unix",
           "rpm -q tree"
+        ],
+        [
+          "dnf install -y lsof dos2unix",
+          "dnf remove -y dos2unix",
+          "rpm -q lsof"
         ]
       ],
       "task_targets": [
-        "client"
+        "client",
+        "server"
       ],
       "solution_targets": [
-        "client"
+        "client",
+        "server"
       ],
       "check_targets": [
-        "client"
+        "client",
+        "server"
       ]
     }
   },

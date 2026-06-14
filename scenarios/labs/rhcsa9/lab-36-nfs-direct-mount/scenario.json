@@ -25,37 +25,44 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, persistently mount the NFS export 192.168.122.3:/exports/direct36 on client at /mnt/direct36.",
-        "On client, use the mount options ro,sync, mount it now, and ensure the file nfs36.txt can be read from the mount point."
+        "On server, create /exports/direct36, place nfs36.txt in it, export it read-only to 192.168.122.0/24, and enable nfs-server.",
+        "On client, mount 192.168.122.3:/exports/direct36 persistently at /mnt/direct36 with ro,sync options and verify nfs36.txt is readable."
       ],
       "hints": [
         "Use /etc/fstab for persistence.",
         "Do not use autofs for this task."
       ],
       "checks": [
-        "grep -Fqx '192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0' /etc/fstab",
-        "mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt"
+        "# server test -f /exports/direct36/nfs36.txt && grep -Eq '^/exports/direct36[[:space:]]+192\\.168\\.122\\.0/24' /etc/exports.d/lab36.exports && systemctl is-active nfs-server | grep -qx active",
+        "grep -Fqx '192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0' /etc/fstab && mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt"
       ],
       "solution_outline": [
         "Configure a direct persistent NFS mount."
       ],
       "task_titles": [
-        "Persistently mount the NFS export...",
-        "Mount the NFS export and read the file"
+        "Server NFS Export",
+        "Client Persistent NFS Mount"
       ],
       "task_points": [
         10,
-        20
+        10
       ],
       "solution_commands": [
         [
-          "mkdir -p /mnt/direct36",
-          "vim /etc/fstab",
-          "192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0"
+          "mkdir -p /exports/direct36",
+          "echo 'direct36' > /exports/direct36/nfs36.txt",
+          "cat > /etc/exports.d/lab36.exports <<'EOF'\n/exports/direct36 192.168.122.0/24(ro,sync,no_root_squash)\nEOF",
+          "systemctl enable --now nfs-server",
+          "firewall-cmd --permanent --add-service=nfs || true",
+          "firewall-cmd --permanent --add-service=mountd || true",
+          "firewall-cmd --permanent --add-service=rpc-bind || true",
+          "firewall-cmd --reload || true",
+          "exportfs -arv"
         ],
         [
-          "# On client",
           "dnf install -y nfs-utils",
+          "mkdir -p /mnt/direct36",
+          "grep -Fqx '192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0' /etc/fstab || echo '192.168.122.3:/exports/direct36 /mnt/direct36 nfs ro,sync 0 0' >> /etc/fstab",
           "systemctl enable --now nfs-client.target || true",
           "mount /mnt/direct36 || mount -a",
           "for attempt in 1 2 3 4 5; do mountpoint -q /mnt/direct36 && test -f /mnt/direct36/nfs36.txt && break; sleep 2; done",
@@ -63,15 +70,15 @@
         ]
       ],
       "task_targets": [
-        "client",
+        "server",
         "client"
       ],
       "solution_targets": [
-        "client",
+        "server",
         "client"
       ],
       "check_targets": [
-        "client",
+        "server",
         "client"
       ]
     }

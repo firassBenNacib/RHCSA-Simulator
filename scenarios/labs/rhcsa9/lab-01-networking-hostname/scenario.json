@@ -1,7 +1,7 @@
 {
   "id": "lab-01-networking-hostname",
   "title": "Lab 01: Networking and Hostname",
-  "description": "Configure persistent networking and hostname settings on client in RHCSA practice",
+  "description": "Configure persistent client networking and a matching server hostname for RHCSA practice",
   "objective_tags": [
     "networking-and-firewall"
   ],
@@ -14,24 +14,28 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
         "On client, configure the active client connection with the following persistent settings:\n\nIP Address: 192.168.122.25\nNetmask: 255.255.255.0\nGateway: 192.168.122.1\nDNS: 192.168.122.3\nHostname: client.netlab.local",
+        "On server, set the persistent hostname to repo.netlab.local.",
         "On client, add a persistent hosts entry with the following value:\n\nHostname: repo.netlab.local\nAddress: 192.168.122.3"
       ],
       "hints": [
-        "Use nmcli or nmtui for the network profile.",
-        "Use hostnamectl for the persistent hostname."
+        "Use nmcli or nmtui for the client network profile.",
+        "Use hostnamectl for the persistent server hostname.",
+        "Use /etc/hosts for the client static host entry."
       ],
       "checks": [
         "hostnamectl --static | grep -qx 'client.netlab.local' && nmcli connection show \"System eth1\" >/dev/null && test \"$(nmcli -g ipv4.addresses connection show \"System eth1\")\" = '192.168.122.25/24' && test \"$(nmcli -g ipv4.gateway connection show \"System eth1\")\" = '192.168.122.1' && test \"$(nmcli -g ipv4.dns connection show \"System eth1\")\" = '192.168.122.3' && test \"$(nmcli -g ipv4.method connection show \"System eth1\")\" = 'manual' && test \"$(nmcli -g connection.autoconnect connection show \"System eth1\")\" = 'yes'",
+        "# server hostnamectl --static | grep -qx 'repo.netlab.local'",
         "grep -Eq '^192\\.168\\.122\\.3[[:space:]]+repo\\.netlab\\.local([[:space:]]|$)' /etc/hosts && getent hosts repo.netlab.local | grep -Eq '^192\\.168\\.122\\.3[[:space:]]+repo\\.netlab\\.local([[:space:]]|$)'"
       ],
       "solution_outline": [
@@ -39,9 +43,11 @@
       ],
       "task_titles": [
         "Client Network Configuration",
-        "Static Host Entry"
+        "Server Hostname",
+        "Client Static Host Entry"
       ],
       "task_points": [
+        10,
         10,
         10
       ],
@@ -55,23 +61,29 @@
           "hostnamectl set-hostname client.netlab.local"
         ],
         [
+          "hostnamectl set-hostname repo.netlab.local"
+        ],
+        [
           "vim /etc/hosts",
           "192.168.122.3 repo.netlab.local"
         ]
       ],
       "task_targets": [
         "client",
+        "server",
         "client"
       ],
       "solution_targets": [
         "client",
+        "server",
         "client"
       ],
       "check_targets": [
         "client",
+        "server",
         "client"
       ]
     }
   },
-  "scope": "client"
+  "scope": "client-server"
 }

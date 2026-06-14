@@ -14,22 +14,22 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
-        "On client, create user tavric with UID 4111 and set its password to cinder9."
+        "On server, create user tavric with UID 4111 and set its password to cinder9."
       ],
       "hints": [
         "Use passwd interactively."
       ],
       "checks": [
-        "id -u tavric | grep -qx '4111' && getent shadow tavric | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null"
+        "# server id -u tavric | grep -qx '4111' && getent shadow tavric | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/' >/dev/null"
       ],
       "solution_outline": [
         "Use persistent configuration only."
@@ -49,15 +49,15 @@
         ]
       ],
       "task_targets": [
-        "client"
+        "server"
       ],
       "solution_targets": [
-        "client"
+        "server"
       ],
       "check_targets": [
-        "client"
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "server"
 }

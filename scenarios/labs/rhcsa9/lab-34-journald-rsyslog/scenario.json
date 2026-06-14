@@ -15,18 +15,19 @@
   ],
   "rhel_major": 9,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,
-    "requires_server": false
+    "requires_server": true
   },
   "content": {
     "lab": {
       "tasks": [
         "On client, configure journald on client so logs are stored persistently across reboots.",
-        "On client, create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
-        "On client, ensure the rsyslog service is active after your changes."
+        "On server, create the drop-in file /etc/rsyslog.d/10-auth34.conf so authpriv messages with priority warning and higher are written to /var/log/auth34.log.",
+        "On server, ensure the rsyslog service is active after your changes."
       ],
       "hints": [
         "Persistent journald storage requires the correct directory and a valid [Journal] configuration section.",
@@ -34,16 +35,16 @@
       ],
       "checks": [
         "files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '/etc/systemd/journald.conf.d/*.conf' \\) -type f 2>/dev/null); test -n \"$files\" && awk 'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}' $files",
-        "grep -Eq '^[[:space:]]*authpriv\\.warning[[:space:]]+/var/log/auth34\\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf",
-        "systemctl is-active rsyslog | grep -qx active && : > /var/log/auth34.log && logger -p authpriv.warning 'lab34 probe' && sleep 3 && grep -Fq 'lab34 probe' /var/log/auth34.log"
+        "# server grep -Eq '^[[:space:]]*authpriv\\.warning[[:space:]]+/var/log/auth34\\.log[[:space:]]*$' /etc/rsyslog.d/10-auth34.conf",
+        "# server systemctl is-active rsyslog | grep -qx active && : > /var/log/auth34.log && logger -p authpriv.warning 'lab34 probe' && sleep 3 && grep -Fq 'lab34 probe' /var/log/auth34.log"
       ],
       "solution_outline": [
         "Configure journald and rsyslog persistently."
       ],
       "task_titles": [
-        "Configure journald on client so logs are stored...",
-        "Create the drop-in file...",
-        "Ensure the rsyslog service is active after your..."
+        "Client Journald Persistence",
+        "Server Rsyslog Authpriv Rule",
+        "Server Rsyslog Service"
       ],
       "task_points": [
         10,
@@ -68,20 +69,20 @@
       ],
       "task_targets": [
         "client",
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "solution_targets": [
         "client",
-        "client",
-        "client"
+        "server",
+        "server"
       ],
       "check_targets": [
         "client",
-        "client",
-        "client"
+        "server",
+        "server"
       ]
     }
   },
-  "scope": "client"
+  "scope": "client-server"
 }
