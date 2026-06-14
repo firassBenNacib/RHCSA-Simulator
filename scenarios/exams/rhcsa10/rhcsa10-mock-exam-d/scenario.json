@@ -183,10 +183,16 @@
         ],
         [
           "# On server:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "dnf install -y chrony",
           "systemctl enable --now chronyd",
           "firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true",
           "firewall-cmd --reload >/dev/null 2>&1 || true",
           "# On client:",
+          "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n[rhcsa10-exam-baseos]\nname=RHCSA10 Exam BaseOS\nbaseurl=http://server/repo/BaseOS/\nenabled=1\ngpgcheck=0\n\n[rhcsa10-exam-appstream]\nname=RHCSA10 Exam AppStream\nbaseurl=http://server/repo/AppStream/\nenabled=1\ngpgcheck=0\nEOF",
+          "dnf clean all",
+          "dnf install -y chrony",
           "cat > /etc/chrony.conf <<'EOF'\nserver server iburst\nmakestep 1.0 3\nEOF",
           "systemctl enable --now chronyd"
         ],

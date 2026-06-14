@@ -204,9 +204,13 @@
           "echo 'copy10:cinder9' | chpasswd"
         ],
         [
-          "su - copy10 -c 'mkdir -p ~/.ssh && test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa'",
-          "cp /etc/hostname /home/copy10/server-hostname",
-          "chown copy10:copy10 /home/copy10/server-hostname"
+          "# On client:",
+          "su - copy10",
+          "mkdir -p ~/.ssh",
+          "test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N \"\" -f ~/.ssh/id_rsa",
+          "ssh-copy-id -i ~/.ssh/id_rsa.pub copy10@server",
+          "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_rsa copy10@server:/etc/hostname /home/copy10/server-hostname",
+          "exit"
         ],
         [
           "systemctl enable --now atd",

@@ -14,7 +14,8 @@
   ],
   "rhel_major": 10,
   "vm_scripts": {
-    "client": "scripts/client.sh"
+    "client": "scripts/client.sh",
+    "server": "scripts/server.sh"
   },
   "flags": {
     "password_recovery": false,

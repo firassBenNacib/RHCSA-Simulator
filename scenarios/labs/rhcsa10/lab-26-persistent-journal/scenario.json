@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "On server, configure persistent systemd journal storage.",
-        "On server, restart systemd-journald and flush current journal data to persistent storage."
+        "On server, create the persistent systemd journal directory.",
+        "On server, configure systemd-journald to store logs persistently and flush current journal data."
       ],
       "hints": [
         "Create /var/log/journal.",
@@ -35,8 +35,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Configure persistent systemd journal storage",
-        "Restart systemd-journald and flush current journal data to persistent st"
+        "Create the persistent systemd journal directory",
+        "Configure systemd-journald to store logs persistently and flush current"
       ],
       "task_points": [
         10,
@@ -44,10 +44,11 @@
       ],
       "solution_commands": [
         [
-          "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",
-          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF"
+          "mkdir -p /var/log/journal"
         ],
         [
+          "mkdir -p /etc/systemd/journald.conf.d",
+          "cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'\n[Journal]\nStorage=persistent\nEOF",
           "systemctl restart systemd-journald",
           "journalctl --flush"
         ]

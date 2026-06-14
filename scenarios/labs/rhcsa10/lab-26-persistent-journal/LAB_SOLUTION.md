@@ -20,21 +20,22 @@ Preserve systemd journal logs.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Configure persistent systemd journal storage (server) - 10 pts
+## Task 01 - Create the persistent systemd journal directory (server) - 10 pts
 
 ```bash
-mkdir -p /var/log/journal /etc/systemd/journald.conf.d
-cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
-[Journal]
-Storage=persistent
-EOF
+mkdir -p /var/log/journal
 ```
 
 ---
 
-## Task 02 - Restart systemd-journald and flush current journal data to persistent st (server) - 10 pts
+## Task 02 - Configure systemd-journald to store logs persistently and flush current (server) - 10 pts
 
 ```bash
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-rhcsa-persistent.conf <<'EOF'
+[Journal]
+Storage=persistent
+EOF
 systemctl restart systemd-journald
 journalctl --flush
 ```

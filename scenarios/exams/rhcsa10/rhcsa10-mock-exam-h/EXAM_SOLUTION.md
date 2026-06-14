@@ -230,10 +230,40 @@ dnf remove -y tcpdump
 
 ```bash
 # On server:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+dnf install -y chrony
 systemctl enable --now chronyd
 firewall-cmd --permanent --add-service=ntp >/dev/null 2>&1 || true
 firewall-cmd --reload >/dev/null 2>&1 || true
 # On client:
+cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'
+[rhcsa10-exam-baseos]
+name=RHCSA10 Exam BaseOS
+baseurl=http://server/repo/BaseOS/
+enabled=1
+gpgcheck=0
+
+[rhcsa10-exam-appstream]
+name=RHCSA10 Exam AppStream
+baseurl=http://server/repo/AppStream/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+dnf install -y chrony
 cat > /etc/chrony.conf <<'EOF'
 server server iburst
 makestep 1.0 3
