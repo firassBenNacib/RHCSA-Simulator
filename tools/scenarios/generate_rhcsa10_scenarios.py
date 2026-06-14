@@ -324,6 +324,8 @@ fi
 sed -i '\\#^/dev/sdb1[[:space:]]#d' /etc/fstab
 wipefs -a /dev/sdb >/dev/null 2>&1 || true
 sgdisk --zap-all /dev/sdb >/dev/null 2>&1 || true
+partprobe /dev/sdb >/dev/null 2>&1 || true
+udevadm settle
 """
 
     scripts["lab-38-lvm-create"] = h + """
@@ -367,11 +369,6 @@ systemctl disable --now autofs >/dev/null 2>&1 || true
 rm -f /etc/auto.remote10 /etc/auto.master.d/rhcsa10.autofs
 automount -u >/dev/null 2>&1 || true
 rm -rf /remote10
-"""
-
-    scripts["lab-43-sticky-directory"] = h + """
-groupdel share10 >/dev/null 2>&1 || true
-rm -rf /srv/share10
 """
 
     scripts["lab-45-secure-copy"] = h + """
@@ -498,6 +495,11 @@ systemctl disable --now crond >/dev/null 2>&1 || true
     scripts["lab-33-at-job"] = h + """
 userdel -r at10 >/dev/null 2>&1 || true
 systemctl disable --now atd >/dev/null 2>&1 || true
+"""
+
+    scripts["lab-43-sticky-directory"] = h + """
+groupdel share10 >/dev/null 2>&1 || true
+rm -rf /srv/share10
 """
 
     scripts["lab-41-nfs-mount"] = h + """
@@ -2314,6 +2316,12 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         checks[2] = _swap_persistence_check()
         commands = [list(command_group) for command_group in block.get("solution_commands", [])]
         if len(commands) >= 3:
+            commands[0] = [
+                "parted -s /dev/sdb mklabel gpt mkpart primary linux-swap 1MiB 513MiB",
+                "partprobe /dev/sdb || true",
+                "udevadm settle",
+                "mkswap /dev/sdb1",
+            ]
             commands[2] = [
                 "uuid=$(blkid -s UUID -o value /dev/sdb1)",
                 "echo \"UUID=$uuid swap swap defaults 0 0\" >> /etc/fstab",
