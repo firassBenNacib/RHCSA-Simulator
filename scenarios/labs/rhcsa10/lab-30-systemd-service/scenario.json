@@ -37,8 +37,8 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to",
-        "Create a oneshot service named rhcsa10-service.service that runs the",
+        "Create service helper script",
+        "Create oneshot service",
         "Enable and start the service"
       ],
       "task_points": [

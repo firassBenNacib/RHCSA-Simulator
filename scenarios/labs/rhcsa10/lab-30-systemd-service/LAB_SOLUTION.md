@@ -20,7 +20,7 @@ Create and enable a custom systemd service.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /usr/local/sbin/rhcsa10-service.sh that writes SERVICE10 to (server) - 10 pts
+## Task 01 - Create service helper script (server) - 10 pts
 
 ```bash
 cat > /usr/local/sbin/rhcsa10-service.sh <<'EOF'
@@ -32,7 +32,7 @@ chmod +x /usr/local/sbin/rhcsa10-service.sh
 
 ---
 
-## Task 02 - Create a oneshot service named rhcsa10-service.service that runs the (server) - 10 pts
+## Task 02 - Create oneshot service (server) - 10 pts
 
 ```bash
 cat > /etc/systemd/system/rhcsa10-service.service <<'EOF'

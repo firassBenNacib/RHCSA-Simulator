@@ -63,15 +63,25 @@ On client and server, create enabled BaseOS and AppStream repository definitions
 
 ---
 
-## Question 06 - Set hostname (server) - 5 pts
+## Question 06 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
-On server, configure the server hostname and persistent IPv4 networking. Set hostname to servera.exam10.lab, map clienta.exam10.lab to 192.168.122.60, and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, and DNS resolver 192.168.122.3.
+On server, configure the server hostname and persistent IPv4 networking:
+
+- **Hostname:** servera.exam10.lab
+- **Hosts entry:** 192.168.122.60 clienta.exam10.lab
+- **Eth1 Address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **DNS resolver:** 192.168.122.3
 
 ---
 
-## Question 07 - Configure Flatpak remote examaflatpak (client) - 5 pts
+## Question 07 - Add a system-level Flatpak remote named examaflatpak (client) - 5 pts
 
-On client, add a system-level Flatpak remote named examaflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.
+On client, add a system-level Flatpak remote named examaflatpak.
+
+- **Remote URL:** file:///opt/rhcsa/flatpak/repo
+- **GPG verification:** disabled
+- **Application state:** org.rhcsa.Tools must be installed.
 
 ---
 

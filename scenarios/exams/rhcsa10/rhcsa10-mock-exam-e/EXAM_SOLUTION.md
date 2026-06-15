@@ -350,7 +350,7 @@ journalctl --flush
 
 ---
 
-## Question 23 - Save web service response (client) - 4 pts
+## Question 23 - Add persistent host entry (client) - 4 pts
 
 ```bash
 grep -Eq '^192\.168\.122\.3[[:space:]]+servere\.exam10\.lab$' /etc/hosts || echo '192.168.122.3 servere.exam10.lab' >> /etc/hosts

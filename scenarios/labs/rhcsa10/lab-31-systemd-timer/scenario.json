@@ -37,9 +37,9 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to",
-        "Create a oneshot service named rhcsa10-timer.service that runs",
-        "Create rhcsa10-timer.timer so it runs every 5 minutes, is persistent"
+        "Create timer helper script",
+        "Create oneshot service",
+        "Configure systemd timer"
       ],
       "task_points": [
         10,

@@ -23,7 +23,7 @@ Configure system Flatpak repository access.
 
 ## Task 01 - Configure BaseOS and AppStream repositories (server) - 10 pts
 
-On server, configure BaseOS and AppStream repositories for Flatpak package access with GPG checks disabled.
+On server, configure enabled BaseOS and AppStream repositories with GPG checks disabled.
 
 ---
 

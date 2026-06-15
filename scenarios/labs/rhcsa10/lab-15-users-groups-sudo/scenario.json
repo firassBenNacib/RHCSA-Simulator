@@ -38,7 +38,7 @@
       ],
       "task_titles": [
         "Create local group ops10",
-        "Create user relay10, set the password to cinder9, and make ops10 the",
+        "Create user relay10, set the password to cinder9, and make ops10",
         "Configure sudo access"
       ],
       "task_points": [

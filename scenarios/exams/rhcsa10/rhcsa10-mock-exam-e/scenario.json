@@ -110,7 +110,7 @@
         "Copy exam report to server",
         "Install lsof and ensure tcpdump is removed",
         "Enable persistent journal",
-        "Save web service response"
+        "Add persistent host entry"
       ],
       "task_points": [
         5,

@@ -96,7 +96,7 @@ dnf clean all
 
 ---
 
-## Question 06 - Set hostname (server) - 5 pts
+## Question 06 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
 ```bash
 # On server:
@@ -110,7 +110,7 @@ nmcli connection up "$connection_name"
 
 ---
 
-## Question 07 - Configure Flatpak remote examaflatpak (client) - 5 pts
+## Question 07 - Add a system-level Flatpak remote named examaflatpak (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examaflatpak file:///opt/rhcsa/flatpak/repo

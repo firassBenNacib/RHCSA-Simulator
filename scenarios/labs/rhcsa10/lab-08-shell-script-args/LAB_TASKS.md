@@ -26,6 +26,6 @@ Create /usr/local/bin/rhcsa10-user-report with the required argument handling.
 
 ---
 
-## Task 02 - Create user lookup script (client) - 10 pts
+## Task 02 - Make the script executable and confirm it prints a supplied user's (client) - 10 pts
 
 Make the script executable and confirm it prints a supplied user's primary group.

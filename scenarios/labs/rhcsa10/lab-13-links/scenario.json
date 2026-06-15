@@ -39,7 +39,7 @@
       "task_titles": [
         "Create /root/rhcsa10-original with the text link source",
         "Create hard link /root/rhcsa10-hard pointing to the original file",
-        "Create symbolic link /root/rhcsa10-soft pointing to"
+        "Create symbolic link"
       ],
       "task_points": [
         10,
