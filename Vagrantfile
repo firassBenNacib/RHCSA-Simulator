@@ -102,11 +102,29 @@ def command_requires_iso?
   !(ARGV.map(&:to_s) & %w[up reload provision]).empty?
 end
 
+def allow_repo_cache_source?
+  ENV.fetch("RHCSA_ALLOW_REPO_CACHE", "").strip.match?(/^(1|true|yes|on)$/i)
+end
+
+def repo_cache_root(profile)
+  File.join(__dir__, ".rhcsa-repo", profile)
+end
+
+def repo_cache_ready?(profile)
+  root = repo_cache_root(profile)
+  File.file?(File.join(root, "BaseOS", "repodata", "repomd.xml")) &&
+    File.file?(File.join(root, "AppStream", "repodata", "repomd.xml"))
+end
+
 def missing_iso_message(profile)
   major = profile == "rhel10" ? "10" : "9"
   expected = DEFAULT_ISO_BY_PROFILE.fetch(profile)
   pattern = ISO_GLOB_BY_PROFILE.fetch(profile)
-  "Missing RHEL #{major} DVD ISO. Download the x86_64 DVD ISO from https://developers.redhat.com/products/rhel/download#downloadsbyrelease, place #{expected} or any #{pattern} in #{__dir__}, or set RHCSA_ISO to a filename or full path."
+  unless allow_repo_cache_source?
+    return "Missing RHEL #{major} DVD ISO. Download the x86_64 DVD ISO from https://developers.redhat.com/products/rhel/download#downloadsbyrelease, place #{expected} or any #{pattern} in #{__dir__}, set RHCSA_ISO to a filename or full path, or run .\\RHCSA.ps1 up to use an imported repo cache."
+  end
+
+  "Missing RHEL #{major} DVD ISO or repo cache. Download the x86_64 DVD ISO from https://developers.redhat.com/products/rhel/download#downloadsbyrelease, place #{expected} or any #{pattern} in #{__dir__}, run .\\RHCSA.ps1 repo import <iso-path>, or set RHCSA_ISO to a filename or full path."
 end
 
 def resolve_iso_path(profile, required:)
@@ -127,7 +145,8 @@ def resolve_iso_path(profile, required:)
   File.expand_path(DEFAULT_ISO_BY_PROFILE.fetch(profile), __dir__)
 end
 
-ISO_PATH = resolve_iso_path(RHCSA_PROFILE, required: command_requires_iso?)
+REPO_CACHE_READY = allow_repo_cache_source? && repo_cache_ready?(RHCSA_PROFILE)
+ISO_PATH = resolve_iso_path(RHCSA_PROFILE, required: command_requires_iso? && !REPO_CACHE_READY)
 ISO_NAME = File.basename(ISO_PATH)
 ISO_MEDIUM = File.file?(ISO_PATH) ? ISO_PATH : "emptydrive"
 BOX_NAME = ENV.fetch("RHCSA_BOX", DEFAULT_BOX_BY_PROFILE.fetch(RHCSA_PROFILE))

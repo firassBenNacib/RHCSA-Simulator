@@ -78,11 +78,11 @@
         ]
       ],
       "task_targets": [
-        "both",
+        "client",
         "server"
       ],
       "solution_targets": [
-        "both",
+        "client",
         "server"
       ],
       "check_targets": [
