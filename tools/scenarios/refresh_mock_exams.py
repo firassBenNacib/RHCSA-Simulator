@@ -463,39 +463,23 @@ def rhcsa9_server_journal_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
-def rhcsa9_server_timer_step(letter: str, minutes: int) -> tuple[str, str, list[str]]:
-    timer = f"audit{letter}9"
+def rhcsa9_server_schedule_step(letter: str, minutes: int) -> tuple[str, str, list[str]]:
+    job = f"audit{letter}9"
     return block(
-        "Server Systemd Timer",
-        f"On server, create and enable {timer}.timer so it runs every {minutes} minutes and appends server-{letter} to /var/log/{timer}.log.",
+        "Server Cron Schedule",
+        f"On server, schedule a root cron job that runs every {minutes} minutes and appends server-{letter} to /var/log/{job}.log.",
         [
             "# On server:",
-            f"cat > /usr/local/sbin/{timer}.sh <<'EOF'",
+            f"cat > /usr/local/sbin/{job}.sh <<'EOF'",
             "#!/bin/bash",
-            f"echo server-{letter} >> /var/log/{timer}.log",
+            f"echo server-{letter} >> /var/log/{job}.log",
             "EOF",
-            f"chmod +x /usr/local/sbin/{timer}.sh",
-            f"cat > /etc/systemd/system/{timer}.service <<'EOF'",
-            "[Unit]",
-            f"Description=Server {letter.upper()} audit marker",
-            "",
-            "[Service]",
-            "Type=oneshot",
-            f"ExecStart=/usr/local/sbin/{timer}.sh",
+            f"chmod +x /usr/local/sbin/{job}.sh",
+            f"cat > /etc/cron.d/{job} <<'EOF'",
+            f"*/{minutes} * * * * root /usr/local/sbin/{job}.sh",
             "EOF",
-            f"cat > /etc/systemd/system/{timer}.timer <<'EOF'",
-            "[Unit]",
-            f"Description=Run server {letter.upper()} audit marker",
-            "",
-            "[Timer]",
-            f"OnCalendar=*:0/{minutes}",
-            "Persistent=true",
-            "",
-            "[Install]",
-            "WantedBy=timers.target",
-            "EOF",
-            "systemctl daemon-reload",
-            f"systemctl enable --now {timer}.timer",
+            f"chmod 644 /etc/cron.d/{job}",
+            "systemctl enable --now crond",
         ],
     )
 
@@ -607,7 +591,7 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
     copy_user = f"copy{letter}9"
     vg = f"vg{letter}9"
     lv = f"data{letter}9"
-    timer = f"audit{letter}9"
+    job = f"audit{letter}9"
     export_path = f"/exports/rhcsa9-{letter}"
     mountpoint = f"/mnt/rhcsa9-{letter}"
     server_dir = f"/srv/server-{letter}9"
@@ -631,7 +615,7 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
         rhcsa9_server_user_step(letter),
         rhcsa9_server_http_step(letter, port),
         rhcsa9_server_journal_step(letter),
-        rhcsa9_server_timer_step(letter, minutes),
+        rhcsa9_server_schedule_step(letter, minutes),
         rhcsa9_server_policy_step(letter),
         rhcsa9_both_nfs_step(letter),
         rhcsa9_both_ssh_step(letter),
@@ -655,7 +639,7 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
         ssh_server_check(f"getent group {server_group} >/dev/null && id -nG {server_user} | tr ' ' '\\n' | grep -qx {server_group} && grep -Eq '^%{server_group}[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/{server_group}-systemctl"),
         ssh_server_check(f"grep -Fxq RHCSA9-{letter.upper()} /var/www/html/exam-{letter}.html && grep -Eq '^Listen[[:space:]]+{port}$' /etc/httpd/conf.d/exam-{letter}.conf && semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,]){port}([, ]|$)/ {{found=1}} END {{exit !found}}' && firewall-cmd --permanent --query-port={port}/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"),
         ssh_server_check(JOURNALD_PERSISTENT_CHECK),
-        ssh_server_check(f"systemctl is-enabled {timer}.timer | grep -qx enabled && grep -Eq '^OnCalendar=\\*:0/{minutes}$' /etc/systemd/system/{timer}.timer && grep -Fxq 'echo server-{letter} >> /var/log/{timer}.log' /usr/local/sbin/{timer}.sh"),
+        ssh_server_check(f"test -x /usr/local/sbin/{job}.sh && grep -Fxq '*/{minutes} * * * * root /usr/local/sbin/{job}.sh' /etc/cron.d/{job} && grep -Fxq 'echo server-{letter} >> /var/log/{job}.log' /usr/local/sbin/{job}.sh && systemctl is-enabled crond | grep -qx enabled"),
         ssh_server_check(f"systemctl get-default | grep -qx multi-user.target && stat -c '%U:%G:%a' {server_dir} | grep -qx root:{server_group}:2770"),
         f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx 'server:{export_path} {mountpoint}' && grep -Eq '^server:{export_path}[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && {ssh_server_check(f'grep -Eq \"^{export_path}[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/rhcsa9-{letter}.exports && systemctl is-active nfs-server | grep -qx active')}",
         f"runuser -l root -c 'ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {copy_user}@server true'",

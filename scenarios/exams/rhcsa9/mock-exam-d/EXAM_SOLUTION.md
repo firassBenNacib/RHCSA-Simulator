@@ -261,7 +261,7 @@ journalctl --flush
 
 ---
 
-## Question 17 - Server Systemd Timer (server) - 4 pts
+## Question 17 - Server Cron Schedule (server) - 4 pts
 
 ```bash
 # On server:
@@ -270,24 +270,11 @@ cat > /usr/local/sbin/auditd9.sh <<'EOF'
 echo server-d >> /var/log/auditd9.log
 EOF
 chmod +x /usr/local/sbin/auditd9.sh
-cat > /etc/systemd/system/auditd9.service <<'EOF'
-[Unit]
-Description=Server D audit marker
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/auditd9.sh
+cat > /etc/cron.d/auditd9 <<'EOF'
+*/8 * * * * root /usr/local/sbin/auditd9.sh
 EOF
-cat > /etc/systemd/system/auditd9.timer <<'EOF'
-[Unit]
-Description=Run server D audit marker
-[Timer]
-OnCalendar=*:0/8
-Persistent=true
-[Install]
-WantedBy=timers.target
-EOF
-systemctl daemon-reload
-systemctl enable --now auditd9.timer
+chmod 644 /etc/cron.d/auditd9
+systemctl enable --now crond
 ```
 
 ---

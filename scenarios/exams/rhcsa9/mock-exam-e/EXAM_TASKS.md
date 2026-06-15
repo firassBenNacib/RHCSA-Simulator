@@ -127,9 +127,9 @@ On server, enable persistent systemd journal storage and restart systemd-journal
 
 ---
 
-## Question 17 - Server Systemd Timer (server) - 4 pts
+## Question 17 - Server Cron Schedule (server) - 4 pts
 
-On server, create and enable audite9.timer so it runs every 9 minutes and appends server-e to /var/log/audite9.log.
+On server, schedule a root cron job that runs every 9 minutes and appends server-e to /var/log/audite9.log.
 
 ---
 
