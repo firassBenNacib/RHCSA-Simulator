@@ -22,7 +22,7 @@ $tokens = @(Get-NonEmptyTokenList -Value @($CommandValue, $ItemValue) + @($Extra
 
 switch ($resolvedArea) {
 'help' {
-if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'leave', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')) {
+if ($tokens.Count -gt 0 -and $tokens[0].ToLowerInvariant() -in @('up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'leave', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')) {
 $nextArea = $tokens[0].ToLowerInvariant()
 if ($nextArea -eq 'leave') {
 $nextArea = 'exit-run'
@@ -32,6 +32,7 @@ return [PSCustomObject]@{ Area = 'help'; Command = $nextArea; Item = $null; Extr
 }
 }
 'up' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'up'; Item = $null; Extra = $tokens; Legacy = $false } }
+'preflight' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'preflight'; Item = $null; Extra = $tokens; Legacy = $false } }
 'resume' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'resume'; Item = $null; Extra = $tokens; Legacy = $false } }
 'pause' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'pause'; Item = $null; Extra = $tokens; Legacy = $false } }
 'down' { return [PSCustomObject]@{ Area = 'baseline'; Command = 'down'; Item = $null; Extra = $tokens; Legacy = $false } }
