@@ -289,6 +289,7 @@ $effectiveProfile = Get-EffectiveProjectProfile
 $effectiveTrack = Get-EffectiveScenarioTrack
 $env:RHCSA_PROFILE = $effectiveProfile
 $env:RHCSA_TRACK = $effectiveTrack
+$env:RHCSA_ALLOW_REPO_CACHE = '1'
 
 if ([string]::IsNullOrWhiteSpace($area) -or (Test-HelpToken -Token $area)) {
 Get-HelpOutput -Scope 'general' | Write-Output
@@ -359,7 +360,7 @@ Format-ResumeOutput -ResumeResult (Resume-LabEnvironment -ProjectRoot $projectRo
 break
 }
 
-Get-RhcsaOfflineIsoPath -ProjectRoot $projectRoot -Profile $effectiveProfile -Required | Out-Null
+Assert-RhcsaOfflineSourceReady -ProjectRoot $projectRoot -Profile $effectiveProfile
 
 Write-Output ''
 Get-RhcsaAsciiBanner | Write-Output

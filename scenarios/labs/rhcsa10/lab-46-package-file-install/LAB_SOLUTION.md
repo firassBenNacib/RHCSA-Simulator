@@ -1,4 +1,4 @@
-# RHCSA 10 Lab 46: Local RPM Install
+# RHCSA 10 Lab 46: Package Install from Local Repositories
 
 ## Lab Solution
 ## Overview
@@ -10,7 +10,7 @@
 | Time limit | 20 minutes |
 | Objectives | software-management |
 
-Install software from a local RPM file.
+Install software from configured local repositories.
 
 ### Systems
 - client
@@ -21,7 +21,7 @@ Install software from a local RPM file.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Install the local tree RPM from /var/www/html/repo or the mounted ISO (client) - 10 pts
+## Task 01 - Install the tree package from the configured offline repositories (client) - 10 pts
 
 ```bash
 dnf install -y --disablerepo='*' --enablerepo=rhcsa-baseos --enablerepo=rhcsa-appstream tree

@@ -9,6 +9,7 @@ Description = 'VM control, Vagrant orchestration, and VirtualBox snapshot manage
 PowerShellVersion = '5.1'
 FunctionsToExport = @(
     'Clear-LabCheckScriptState'
+    'Assert-RhcsaOfflineSourceReady'
     'Confirm-VagrantGuestProvisionReadiness'
     'ConvertFrom-VirtualBoxState'
     'ConvertTo-BashSingleQuotedString'
@@ -21,6 +22,7 @@ FunctionsToExport = @(
     'Get-OptionalVagrantMachineId'
     'Get-RhcsaOfflineIsoPath'
     'Get-RhcsaPreflightStatus'
+    'Get-RhcsaRepoCachePath'
     'Get-ScenarioStatus'
     'Get-SshExecutablePath'
     'Get-VBoxHardDiskCatalog'
@@ -71,6 +73,7 @@ FunctionsToExport = @(
     'Test-IsAssertiveExerciseCheck'
     'Test-LabHypervisorBusy'
     'Test-LocalLabArtifactsPresent'
+    'Test-RhcsaRepoCacheReady'
     'Test-ProcessCommandLineMatchesLab'
     'Test-SshBannerReady'
     'Test-VBoxVmRegistration'

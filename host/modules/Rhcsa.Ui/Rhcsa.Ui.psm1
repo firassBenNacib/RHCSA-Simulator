@@ -782,19 +782,20 @@ param(
 )
 
 if ($null -eq $RepoImportResult) {
-return @((Get-UiHeading -Text 'ISO import skipped' -StyleName 'Warning'))
+return @((Get-UiHeading -Text 'Repo cache import skipped' -StyleName 'Warning'))
 }
 
-$statusStyle = if ([string]$RepoImportResult.Status -eq 'imported') { 'Success' } else { 'Info' }
+$statusStyle = if ([string]$RepoImportResult.Status -in @('cached', 'refreshed')) { 'Success' } else { 'Info' }
 $contentLines = @(
 (Format-UiKeyValue -Key 'Status' -Value ([string]$RepoImportResult.Status) -KeyWidth 12),
 (Format-UiKeyValue -Key 'Profile' -Value ([string]$RepoImportResult.Profile) -KeyWidth 12),
 (Format-UiKeyValue -Key 'Pattern' -Value ([string]$RepoImportResult.Pattern) -KeyWidth 12),
 (Format-UiKeyValue -Key 'Source' -Value ([string]$RepoImportResult.Source) -KeyWidth 12),
-(Format-UiKeyValue -Key 'Destination' -Value ([string]$RepoImportResult.Destination) -KeyWidth 12)
+(Format-UiKeyValue -Key 'Cache' -Value ([string]$RepoImportResult.Destination) -KeyWidth 12),
+(Format-UiKeyValue -Key 'Ready' -Value ([string]$RepoImportResult.CacheReady) -KeyWidth 12)
 )
 
-return @(Format-UiPanel -Title 'ISO Import' -TitleStyle $statusStyle -ContentLines $contentLines -MinWidth 58)
+return @(Format-UiPanel -Title 'Repo Cache' -TitleStyle $statusStyle -ContentLines $contentLines -MinWidth 58)
 }
 
 function Format-PreflightOutput {
@@ -812,6 +813,7 @@ $contentLines = @(
 (Format-UiKeyValue -Key 'Profile' -Value ([string]$PreflightResult.Profile) -KeyWidth 16),
 (Format-UiKeyValue -Key 'Track' -Value ([string]$PreflightResult.Track) -KeyWidth 16),
 (Format-UiKeyValue -Key 'ISO Pattern' -Value ([string]$PreflightResult.ExpectedIsoPattern) -KeyWidth 16),
+(Format-UiKeyValue -Key 'Repo Cache' -Value ([string]$PreflightResult.RepoCache) -KeyWidth 16),
 (Format-UiKeyValue -Key 'Detected ISO' -Value ([string]$PreflightResult.DetectedIsoPath) -KeyWidth 16),
 (Format-UiKeyValue -Key 'Vagrant Box' -Value ([string]$PreflightResult.VagrantBox) -KeyWidth 16),
 (Format-UiKeyValue -Key 'CPU x86-64-v3' -Value ([string]$PreflightResult.CpuX8664V3) -KeyWidth 16),

@@ -31,30 +31,32 @@ firewall-cmd --permanent --add-service=mountd
 firewall-cmd --permanent --add-service=ntp
 firewall-cmd --reload
 
-ROM_DEV="$(lsblk -pnro NAME,TYPE | awk '$2=="rom"{print $1; exit}')"
-if [ -z "${ROM_DEV:-}" ]; then
-  echo "No virtual DVD device found for the attached RHEL ISO." >&2
-  exit 1
-fi
-
 if mountpoint -q "$BOOTSTRAP_ISO_MOUNT"; then
   umount "$BOOTSTRAP_ISO_MOUNT" >/dev/null 2>&1 || true
 fi
 
 mkdir -p /var/www/html/repo
 sed -i '\#/var/www/html/repo #d' /etc/fstab
-ROM_UUID="$(blkid -s UUID -o value "$ROM_DEV" 2>/dev/null || true)"
-REPO_MOUNT_OPTIONS="$(repo_mount_options)"
-if [ -n "${ROM_UUID:-}" ]; then
-  echo "UUID=${ROM_UUID} /var/www/html/repo auto ${REPO_MOUNT_OPTIONS} 0 0" >> /etc/fstab
-else
-  echo "${ROM_DEV} /var/www/html/repo auto ${REPO_MOUNT_OPTIONS} 0 0" >> /etc/fstab
-fi
+if [ ! -d /var/www/html/repo/BaseOS ] || [ ! -d /var/www/html/repo/AppStream ]; then
+  ROM_DEV="$(lsblk -pnro NAME,TYPE | awk '$2=="rom"{print $1; exit}')"
+  if [ -z "${ROM_DEV:-}" ]; then
+    echo "No repo cache or virtual DVD device found for the RHEL package source." >&2
+    exit 1
+  fi
 
-if mountpoint -q /var/www/html/repo; then
-  mount -o "remount,${REPO_MOUNT_OPTIONS}" /var/www/html/repo >/dev/null 2>&1 || true
-else
-  mount /var/www/html/repo >/dev/null 2>&1 || mount_repo_source "$ROM_DEV"
+  ROM_UUID="$(blkid -s UUID -o value "$ROM_DEV" 2>/dev/null || true)"
+  REPO_MOUNT_OPTIONS="$(repo_mount_options)"
+  if [ -n "${ROM_UUID:-}" ]; then
+    echo "UUID=${ROM_UUID} /var/www/html/repo auto ${REPO_MOUNT_OPTIONS} 0 0" >> /etc/fstab
+  else
+    echo "${ROM_DEV} /var/www/html/repo auto ${REPO_MOUNT_OPTIONS} 0 0" >> /etc/fstab
+  fi
+
+  if mountpoint -q /var/www/html/repo; then
+    mount -o "remount,${REPO_MOUNT_OPTIONS}" /var/www/html/repo >/dev/null 2>&1 || true
+  else
+    mount /var/www/html/repo >/dev/null 2>&1 || mount_repo_source "$ROM_DEV"
+  fi
 fi
 
 mkdir -p /exports/direct /exports/indirect /exports/autofs/projects
