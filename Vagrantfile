@@ -239,25 +239,16 @@ Vagrant.configure("2") do |config|
         "--name", DVD_CONTROLLER,
         "--bootable", "off"
       ]
-
-      vb.customize [
-        "storageattach", :id,
-        "--storagectl", DVD_CONTROLLER,
-        "--port", DVD_PORT,
-        "--device", "0",
-        "--type", "dvddrive",
-        "--medium", "emptydrive"
-      ]
-    else
-      vb.customize [
-        "storageattach", :id,
-        "--storagectl", DVD_CONTROLLER,
-        "--port", DVD_PORT,
-        "--device", "0",
-        "--type", "dvddrive",
-        "--medium", ISO_MEDIUM
-      ]
     end
+
+    vb.customize [
+      "storageattach", :id,
+      "--storagectl", DVD_CONTROLLER,
+      "--port", DVD_PORT,
+      "--device", "0",
+      "--type", "dvddrive",
+      "--medium", ISO_MEDIUM
+    ]
 
     if RHCSA_PROFILE == "rhel10"
       vb.customize [
