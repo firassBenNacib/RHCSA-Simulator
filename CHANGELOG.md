@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.3](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.2...v2.1.3) (2026-06-15)
+
+
+### Bug Fixes
+
+* clarify RHCSA10 exam task targets ([fae9480](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fae94807b2a307ae01014eb465e0d2b9c888a3fb))
+* prefer UUID swap persistence ([b27e7f1](https://github.com/firassBenNacib/RHCSA-Simulator/commit/b27e7f1e417acd4d309d8eaffc478769ba97e2ee))
+* validate persistent journald configuration ([#58](https://github.com/firassBenNacib/RHCSA-Simulator/issues/58)) ([02ab1fc](https://github.com/firassBenNacib/RHCSA-Simulator/commit/02ab1fc54fe4eff7eca5239fcc1e8762703e0eff))
+
 ## [2.1.2](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.1...v2.1.2) (2026-06-11)
 
 
