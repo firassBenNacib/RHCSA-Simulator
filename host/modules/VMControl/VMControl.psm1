@@ -521,6 +521,28 @@ function Get-VagrantMachineStatus {
     return @($machineStatus)
 }
 
+function Get-VagrantMachineBoxName {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('server', 'client')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot)
+    )
+
+    $boxMetaPath = Join-Path $ProjectRoot ".vagrant\machines\$MachineName\virtualbox\box_meta"
+    if (-not (Test-Path -LiteralPath $boxMetaPath -PathType Leaf)) {
+        return ''
+    }
+
+    try {
+        $metadata = (Get-Content -LiteralPath $boxMetaPath -Raw) | ConvertFrom-Json
+        return [string]$metadata.name
+    }
+    catch {
+        return ''
+    }
+}
+
 function ConvertFrom-VirtualBoxState {
     param(
         [string]$State
@@ -2726,12 +2748,22 @@ function Get-BaselineStatus {
     $machineStatus = @(Get-VagrantMachineStatus -ProjectRoot $ProjectRoot)
     $machineNames = @('server', 'client')
     $snapshotReady = @{}
+    $boxCompatible = @{}
+    $expectedBoxName = Get-ProjectVagrantBoxName -ProjectRoot $ProjectRoot
+    $allCreatedMachinesUseCurrentProfile = $true
 
     foreach ($machineName in $machineNames) {
         $snapshotReady[$machineName] = $false
+        $boxCompatible[$machineName] = $true
         $idFile = Join-Path $ProjectRoot ".vagrant\machines\$machineName\virtualbox\id"
         if (-not (Test-Path $idFile -PathType Leaf)) {
             continue
+        }
+
+        $actualBoxName = Get-VagrantMachineBoxName -MachineName $machineName -ProjectRoot $ProjectRoot
+        if ([string]::IsNullOrWhiteSpace($actualBoxName) -or [string]$actualBoxName -ne [string]$expectedBoxName) {
+            $boxCompatible[$machineName] = $false
+            $allCreatedMachinesUseCurrentProfile = $false
         }
 
         try {
@@ -2751,6 +2783,10 @@ function Get-BaselineStatus {
     if ($createdCount -eq 0) {
         $state = 'missing'
         $stateText = 'not built'
+    }
+    elseif (-not $allCreatedMachinesUseCurrentProfile) {
+        $state = 'incomplete'
+        $stateText = 'profile mismatch'
     }
     elseif ($snapshotsReady -and $runningCount -eq $machineNames.Count) {
         $state = 'ready'
@@ -2773,6 +2809,10 @@ function Get-BaselineStatus {
         SnapshotReady = [PSCustomObject]@{
             Server = $snapshotReady['server']
             Client = $snapshotReady['client']
+        }
+        BoxCompatible = [PSCustomObject]@{
+            Server = $boxCompatible['server']
+            Client = $boxCompatible['client']
         }
     }
 }
