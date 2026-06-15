@@ -2,6 +2,7 @@
 .vagrant/
 .lab-state/
 .lab-disks/
+.rhcsa-repo/
 .rhcsa-profile.json
 *.box
 output/

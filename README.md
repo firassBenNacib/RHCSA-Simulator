@@ -77,6 +77,14 @@ RHEL ISO downloads require a Red Hat account. Use the official [Red Hat Develope
 
 If multiple same-major DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` to a filename or full path when you want to force a specific ISO.
 
+You can also cache the offline package repositories from an ISO path:
+
+```powershell
+.\RHCSA.ps1 repo import .\rhel-10.2-x86_64-dvd.iso
+```
+
+This creates `.rhcsa-repo/` with the selected track's `BaseOS` and `AppStream` content, so future baseline builds can use the cache when no matching ISO is present in the project root.
+
 ## Installation
 
 Clone the repository:
