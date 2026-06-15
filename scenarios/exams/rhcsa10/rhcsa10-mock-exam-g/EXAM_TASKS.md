@@ -51,9 +51,13 @@ On client and server, create enabled BaseOS and AppStream repository definitions
 
 ---
 
-## Question 06 - Configure Flatpak remote examgflatpak (client) - 5 pts
+## Question 06 - Add a system-level Flatpak remote named examgflatpak (client) - 5 pts
 
-On client, add a system-level Flatpak remote named examgflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled. Install org.rhcsa.Tools from that remote and leave it installed.
+On client, add a system-level Flatpak remote named examgflatpak.
+
+- **Remote URL:** file:///opt/rhcsa/flatpak/repo
+- **GPG verification:** disabled
+- **Application state:** org.rhcsa.Tools must be installed.
 
 ---
 

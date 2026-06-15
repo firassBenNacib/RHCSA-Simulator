@@ -45,9 +45,15 @@ On client, configure httpd to listen on TCP port 8102 and make the port usable b
 
 ---
 
-## Question 05 - Set hostname (server) - 5 pts
+## Question 05 - Configure the server hostname and persistent IPv4 networking (server) - 5 pts
 
-On server, configure the server hostname and persistent IPv4 networking. Set hostname to serverc.exam10.lab, map clientc.exam10.lab to 192.168.122.62, and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, and DNS resolver 192.168.122.3.
+On server, configure the server hostname and persistent IPv4 networking:
+
+- **Hostname:** serverc.exam10.lab
+- **Hosts entry:** 192.168.122.62 clientc.exam10.lab
+- **Eth1 Address:** 192.168.122.3/24
+- **Gateway:** 192.168.122.1
+- **DNS resolver:** 192.168.122.3
 
 ---
 
@@ -141,7 +147,7 @@ On server, export /exports/exam-c to the 192.168.122.0/24 network. On client, mo
 
 ---
 
-## Question 21 - Save web service response (client) - 4 pts
+## Question 21 - Add persistent host entry (client) - 4 pts
 
 On client, add a hosts entry for serverc.exam10.lab and save the output of http://serverc.exam10.lab:8202/server-c.html to /root/server-c-web-check.txt.
 

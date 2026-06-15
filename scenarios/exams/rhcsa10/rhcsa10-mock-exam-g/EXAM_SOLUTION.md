@@ -98,7 +98,7 @@ dnf clean all
 
 ---
 
-## Question 06 - Configure Flatpak remote examgflatpak (client) - 5 pts
+## Question 06 - Add a system-level Flatpak remote named examgflatpak (client) - 5 pts
 
 ```bash
 flatpak remote-add --system --if-not-exists --no-gpg-verify examgflatpak file:///opt/rhcsa/flatpak/repo

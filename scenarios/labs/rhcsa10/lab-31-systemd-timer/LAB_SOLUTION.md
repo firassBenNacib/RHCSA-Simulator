@@ -20,7 +20,7 @@ Create and enable a persistent systemd timer.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Create /usr/local/sbin/rhcsa10-timer.sh so it appends TIMER OK to (server) - 10 pts
+## Task 01 - Create timer helper script (server) - 10 pts
 
 ```bash
 cat > /usr/local/sbin/rhcsa10-timer.sh <<'EOF'
@@ -32,7 +32,7 @@ chmod +x /usr/local/sbin/rhcsa10-timer.sh
 
 ---
 
-## Task 02 - Create a oneshot service named rhcsa10-timer.service that runs (server) - 10 pts
+## Task 02 - Create oneshot service (server) - 10 pts
 
 ```bash
 cat > /etc/systemd/system/rhcsa10-timer.service <<'EOF'
@@ -47,7 +47,7 @@ EOF
 
 ---
 
-## Task 03 - Create rhcsa10-timer.timer so it runs every 5 minutes, is persistent (server) - 10 pts
+## Task 03 - Configure systemd timer (server) - 10 pts
 
 ```bash
 cat > /etc/systemd/system/rhcsa10-timer.timer <<'EOF'

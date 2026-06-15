@@ -147,7 +147,11 @@ def task_title(task: str) -> str:
     if 12 <= len(first_sentence) <= 72:
         line = first_sentence
     line = textwrap.shorten(line, width=72, placeholder="", break_long_words=False, break_on_hyphens=False)
-    line = line.rstrip(" ,;:-_/.")
+    words = line.rstrip(" ,;:-_/.").split()
+    weak_endings = {"to", "with", "and", "the", "following", "from", "at", "for", "of", "in"}
+    while len(words) > 3 and words[-1].strip(" ,;:-_/.").lower() in weak_endings:
+        words.pop()
+    line = " ".join(words)
     if line:
         line = line[0].upper() + line[1:]
     return normalize_title_capitalization(line)
@@ -164,15 +168,23 @@ def specific_task_title(line: str) -> str:
         (r"flatpak remote(?: named)?\s+([a-z0-9_-]+).*?(pointing to|file://)", None),
         (r"install org\.rhcsa\.tools", "Install Flatpak application"),
         (r"ensure org\.rhcsa\.tools is not installed", "Remove Flatpak application"),
+        (r"persistent hosts entry|hosts entry", "Add persistent host entry"),
+        (r"symbolic link .* pointing to", "Create symbolic link"),
+        (r"make .* the primary group", "Create user with primary group"),
+        (r"key-based ssh authentication|log in to", "Configure SSH key authentication"),
+        (r"sleep process.*pid", "Start background process"),
+        (r"rhcsa10-service\.sh", "Create service helper script"),
+        (r"oneshot service named", "Create oneshot service"),
+        (r"rhcsa10-timer\.sh", "Create timer helper script"),
         (r"allow members of .*sudo|allow .* to run .*sudo", "Configure sudo access"),
         (r"password aging|maximum password age", "Configure password aging"),
-        (r"(/usr/local/bin/[a-z0-9_-]+|primary group)", "Create user lookup script"),
+        (r"/usr/local/bin/[a-z0-9_-]+", "Create user lookup script"),
         (r"write all usernames", "List shell users"),
         (r"exam-[a-h]-report.*copy|copy it to", "Copy exam report to server"),
         (r"save the output of https?://", "Save web service response"),
         (r"distribute the public key|generate an ssh key pair.*copy", "Configure SSH key authentication"),
         (r"publish /var/www/html", "Publish web content"),
-        (r"create and enable .*\.timer", "Configure systemd timer"),
+        (r"create .*\.timer|create and enable .*\.timer", "Configure systemd timer"),
         (r"create volume group", "Create volume group"),
         (r"create group .* user .* add|create group .* and user", "Create user and group"),
         (r"httpd_can_network_connect", "Persist SELinux boolean"),
@@ -1106,10 +1118,12 @@ def _server_hostname_step(letter: str) -> tuple[str, str, list[str]]:
         "nmcli -g ipv4.method connection show \"$connection_name\" | grep -qx manual"
     )
     return (
-        "On server, configure the server hostname and persistent IPv4 networking. "
-        f"Set hostname to server{letter}.exam10.lab, map client{letter}.exam10.lab to {client_ip}, "
-        "and configure eth1 with address 192.168.122.3/24, gateway 192.168.122.1, "
-        "and DNS resolver 192.168.122.3.",
+        "On server, configure the server hostname and persistent IPv4 networking:\n\n"
+        f"Hostname: server{letter}.exam10.lab\n"
+        f"Hosts entry: {client_ip} client{letter}.exam10.lab\n"
+        "eth1 address: 192.168.122.3/24\n"
+        "Gateway: 192.168.122.1\n"
+        "DNS resolver: 192.168.122.3",
         _ssh_server_check(
             f"hostnamectl --static | grep -qx server{letter}.exam10.lab && "
             f"awk '$1 == \"{client_ip}\" {{for (i = 2; i <= NF; i++) if ($i == \"client{letter}.exam10.lab\") found = 1}} END {{exit !found}}' /etc/hosts && "
@@ -2143,7 +2157,7 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         return _replace_lab_progression(
             block,
             [
-                "On server, configure BaseOS and AppStream repositories for Flatpak package access with GPG checks disabled.",
+                "On server, configure enabled BaseOS and AppStream repositories with GPG checks disabled.",
                 "On client, install the flatpak package if it is not already installed.",
                 "On client, configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
             ],
@@ -2956,9 +2970,10 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
             remote = f"exam{letter}flatpak"
             add_prefix = "(client) Add" if task_text.lstrip().startswith("(client)") else "On client, add"
             tasks[index] = (
-                f"{add_prefix} a system-level Flatpak remote named {remote} pointing to "
-                "file:///opt/rhcsa/flatpak/repo with GPG verification disabled. "
-                "Install org.rhcsa.Tools from that remote and leave it installed."
+                f"{add_prefix} a system-level Flatpak remote named {remote}.\n\n"
+                "Remote URL: file:///opt/rhcsa/flatpak/repo\n"
+                "GPG verification: disabled\n"
+                "Application state: org.rhcsa.Tools must be installed."
             )
             checks[index] = f"{_flatpak_remote_check(remote)} && {_flatpak_installed_check()}"
             if index < len(commands):
@@ -2976,9 +2991,10 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
             configure_prefix = "(client) Configure" if task_text.lstrip().startswith("(client)") else "On client, configure"
             if exam_id in flatpak_installed_exams:
                 tasks[index] = (
-                    f"{add_prefix} a system-level Flatpak remote named {remote} pointing to "
-                    "file:///opt/rhcsa/flatpak/repo with GPG verification disabled. "
-                    "Install org.rhcsa.Tools from that remote and leave it installed."
+                    f"{add_prefix} a system-level Flatpak remote named {remote}.\n\n"
+                    "Remote URL: file:///opt/rhcsa/flatpak/repo\n"
+                    "GPG verification: disabled\n"
+                    "Application state: org.rhcsa.Tools must be installed."
                 )
                 checks[index] = f"{_flatpak_remote_check(remote)} && {_flatpak_installed_check()}"
                 if index < len(commands):
@@ -2989,8 +3005,10 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
                     ]
             else:
                 tasks[index] = (
-                    f"{configure_prefix} a system-level Flatpak remote named {remote} pointing to "
-                    "file:///opt/rhcsa/flatpak/repo with GPG verification disabled, and ensure org.rhcsa.Tools is not installed."
+                    f"{configure_prefix} a system-level Flatpak remote named {remote}.\n\n"
+                    "Remote URL: file:///opt/rhcsa/flatpak/repo\n"
+                    "GPG verification: disabled\n"
+                    "Application state: org.rhcsa.Tools must not be installed."
                 )
                 checks[index] = f"{_flatpak_remote_check(remote)} && {_flatpak_absent_check()}"
                 if index < len(commands):

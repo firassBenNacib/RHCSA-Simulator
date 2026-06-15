@@ -36,7 +36,7 @@ ln /root/rhcsa10-original /root/rhcsa10-hard
 
 ---
 
-## Task 03 - Create symbolic link /root/rhcsa10-soft pointing to (client) - 10 pts
+## Task 03 - Create symbolic link (client) - 10 pts
 
 ```bash
 ln -s /root/rhcsa10-original /root/rhcsa10-soft

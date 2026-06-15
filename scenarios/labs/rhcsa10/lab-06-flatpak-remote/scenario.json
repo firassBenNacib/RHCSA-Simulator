@@ -24,7 +24,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "On server, configure BaseOS and AppStream repositories for Flatpak package access with GPG checks disabled.",
+        "On server, configure enabled BaseOS and AppStream repositories with GPG checks disabled.",
         "On client, install the flatpak package if it is not already installed.",
         "On client, configure a system Flatpak remote named rhcsa10 that points to file:///opt/rhcsa/flatpak/repo with GPG verification disabled."
       ],
