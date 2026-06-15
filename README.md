@@ -38,6 +38,8 @@ RHCSA Simulator helps you practice Red Hat Certified System Administrator tasks 
 
 The project is designed for hands-on Linux administration practice, not passive reading.
 
+Scenarios are original practice content aligned with public RHCSA objectives. Included solutions are valid ways to reach the checked final state; they are not official Red Hat answers or copied exam material.
+
 ## Features
 
 - RHCSA 9 and RHCSA 10 practice tracks

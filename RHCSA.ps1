@@ -5,7 +5,7 @@ param(
 param($commandName, $parameterName, $wordToComplete)
 $null = $commandName, $parameterName
 
-foreach ($value in @('help', 'up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'reset', 'status', 'check', 'repo', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion', '-h', '--help')) {
+foreach ($value in @('help', 'up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'reset', 'status', 'check', 'repo', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion', '-h', '--help')) {
 if ($value -like "$wordToComplete*") {
 [System.Management.Automation.CompletionResult]::new($value, $value, 'ParameterValue', $value)
 }
@@ -20,7 +20,8 @@ $null = $commandName, $parameterName, $commandAst
 
 $area = [string]$fakeBoundParameters['Area']
 $candidates = switch ($area.ToLowerInvariant()) {
-'help' { @('up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion') }
+'help' { @('up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion') }
+'repo' { @('import') }
 'list' { @('all', 'labs', 'lab', 'exams', 'exam') }
 'profile' { @('RHCSA9', 'RHCSA10') }
 'timer' { @('on', 'off', 'status') }
@@ -588,12 +589,47 @@ Get-HelpOutput -Scope 'repo' | Write-Output
 break
 }
 
+$repoArgs = @()
 if ($item) {
-throw "Unknown repo argument '$item'."
+$repoArgs += $item
+}
+$repoArgs += @($remainingItem)
+
+if ($repoArgs.Count -gt 0 -and (Test-HelpToken -Token $repoArgs[0])) {
+Get-HelpOutput -Scope 'repo' | Write-Output
+break
 }
 
-if ($remainingItem.Count -gt 0) {
-throw "Unknown repo argument '$($remainingItem[0])'."
+if ($repoArgs.Count -gt 0 -and $repoArgs[0].ToLowerInvariant() -eq 'import') {
+if ($repoArgs.Count -eq 2 -and (Test-HelpToken -Token $repoArgs[1])) {
+Get-HelpOutput -Scope 'repo' | Write-Output
+break
+}
+if ($repoArgs.Count -ne 2) {
+throw "Usage: .\RHCSA.ps1 repo import <iso-path>"
+}
+if ($PSBoundParameters.ContainsKey('Id')) {
+throw "Unknown repo import argument '-Id'."
+}
+if ($PSBoundParameters.ContainsKey('Mode')) {
+throw "Unknown repo import argument '-Mode'."
+}
+if ($PSBoundParameters.ContainsKey('Vm')) {
+throw "Unknown repo import argument '-Vm'."
+}
+if ($PSBoundParameters.ContainsKey('Track')) {
+throw "Unknown repo import argument '-Track'."
+}
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
+throw "Unknown repo import argument '-Profile'."
+}
+$importResult = Import-RhcsaOfflineIso -IsoPath $repoArgs[1] -ProjectRoot $projectRoot
+Format-RepoImportOutput -RepoImportResult $importResult | Write-Output
+break
+}
+
+if ($repoArgs.Count -gt 0) {
+throw "Unknown repo argument '$($repoArgs[0])'."
 }
 
 if ($PSBoundParameters.ContainsKey('Id')) {
@@ -618,6 +654,47 @@ throw "Unknown repo argument '-Profile'."
 
 $result = Test-BaselineOfflineRepoHealth -ProjectRoot $projectRoot
 Format-RepoHealthOutput -RepoHealthResult $result | Write-Output
+if (-not $result.Passed) {
+exit 1
+}
+break
+}
+'baseline/preflight' {
+if (($item -and (Test-HelpToken -Token $item)) -or ($remainingItem.Count -eq 1 -and (Test-HelpToken -Token $remainingItem[0]))) {
+Get-HelpOutput -Scope 'preflight' | Write-Output
+break
+}
+
+if ($item) {
+throw "Unknown preflight argument '$item'."
+}
+
+if ($remainingItem.Count -gt 0) {
+throw "Unknown preflight argument '$($remainingItem[0])'."
+}
+
+if ($PSBoundParameters.ContainsKey('Id')) {
+throw "Unknown preflight argument '-Id'."
+}
+
+if ($PSBoundParameters.ContainsKey('Mode')) {
+throw "Unknown preflight argument '-Mode'."
+}
+
+if ($PSBoundParameters.ContainsKey('Vm')) {
+throw "Unknown preflight argument '-Vm'."
+}
+
+if ($PSBoundParameters.ContainsKey('Track')) {
+throw "Unknown preflight argument '-Track'."
+}
+
+if ($PSBoundParameters.ContainsKey('ProjectProfile')) {
+throw "Unknown preflight argument '-Profile'."
+}
+
+$result = Get-RhcsaPreflightStatus -ProjectRoot $projectRoot
+Format-PreflightOutput -PreflightResult $result | Write-Output
 if (-not $result.Passed) {
 exit 1
 }

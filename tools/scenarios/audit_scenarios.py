@@ -13,6 +13,35 @@ from rhcsa_scenarios.targets import VALID_SCOPES, VALID_TARGETS, normalize_scope
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIOS_DIR = ROOT / "scenarios"
 DIRECT_SUDOERS_RE = re.compile(r"(?<!\S)/etc/sudoers(?!\.d(?:/|\b))")
+EXAM_SIMILARITY_REPORT_LIMIT = 3
+SIMILARITY_STOP_WORDS = {
+    "the",
+    "and",
+    "for",
+    "from",
+    "with",
+    "into",
+    "that",
+    "this",
+    "must",
+    "should",
+    "client",
+    "server",
+    "configure",
+    "create",
+    "install",
+    "remove",
+    "enable",
+    "start",
+    "persistent",
+    "persistently",
+    "using",
+    "following",
+    "ipaddr",
+    "namevalue",
+    "pathvalue",
+    "sizevalue",
+}
 
 
 @dataclass
@@ -225,6 +254,18 @@ def audit_wording_style(path: Path, scenario: dict[str, Any], findings: list[Fin
         findings.append(Finding(path, "avoid generic 'RHCSA style' wording"))
     if re.search(r"\bDNS Server\s*:", text, re.I):
         findings.append(Finding(path, "use 'DNS:' for resolver settings instead of 'DNS Server:'"))
+    for line in text.splitlines():
+        normalized = line.strip()
+        if not normalized:
+            continue
+        if re.search(r"\b(exact|same|official)\b.{0,50}\b(real\s+)?(exam|red hat|rhcsa)\b.{0,50}\b(answer|solution|question)s?\b", normalized, re.I):
+            if not re.search(r"\b(not|never|avoid|without|must not|do not|does not)\b", normalized, re.I):
+                findings.append(Finding(path, "avoid claiming exact or official real exam answers"))
+                break
+        if re.search(r"\b(real\s+exam|exam\s+dump)s?\b", normalized, re.I):
+            if not re.search(r"\b(not|never|avoid|without|must not|do not|does not|copied|copy)\b", normalized, re.I):
+                findings.append(Finding(path, "avoid wording that suggests copied real exam material"))
+                break
     if re.search(r"\b(And|With|Of|To|From|For|On|In)\b", str(scenario.get("title", ""))):
         findings.append(Finding(path, "scenario title should use sentence-style connector capitalization"))
     for mode in ("lab", "exam"):
@@ -623,6 +664,48 @@ def identity_signature(scenario: dict[str, Any]) -> tuple[str, ...]:
     return tuple(signals)
 
 
+def normalized_exam_terms(scenario: dict[str, Any]) -> set[str]:
+    exam = scenario.get("content", {}).get("exam", {})
+    if not isinstance(exam, dict):
+        return set()
+
+    text = "\n".join(flatten_strings(exam.get("tasks", [])))
+    text = text.lower()
+    text = re.sub(r"`[^`]+`", " ", text)
+    text = re.sub(r"\b\d+(?:\.\d+){1,3}(?:/\d+)?\b", " ipaddr ", text)
+    text = re.sub(r"\b\d+[kmgt]?i?b?\b", " sizevalue ", text)
+    text = re.sub(r"/[\w./:-]+", " pathvalue ", text)
+    text = re.sub(r"\b[a-z]+[a-h]?(?:9|10)\b", " namevalue ", text)
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+
+    terms = set()
+    for word in text.split():
+        if len(word) <= 2 or word in SIMILARITY_STOP_WORDS:
+            continue
+        terms.add(word)
+    return terms
+
+
+def audit_exam_similarity(exams: list[tuple[Path, dict[str, Any]]]) -> list[tuple[str, str, str, float]]:
+    by_track: dict[str, list[tuple[Path, dict[str, Any], set[str]]]] = {"rhcsa9": [], "rhcsa10": []}
+    for path, scenario in exams:
+        terms = normalized_exam_terms(scenario)
+        for track in scenario_tracks(scenario):
+            if track in by_track:
+                by_track[track].append((path, scenario, terms))
+
+    similarities: list[tuple[str, str, str, float]] = []
+    for track, track_exams in by_track.items():
+        for left_index, (left_path, left, left_terms) in enumerate(track_exams):
+            for right_path, right, right_terms in track_exams[left_index + 1 :]:
+                if not left_terms or not right_terms:
+                    continue
+                union = left_terms | right_terms
+                score = len(left_terms & right_terms) / len(union)
+                similarities.append((track, str(left.get("id", left_path.parent.name)), str(right.get("id", right_path.parent.name)), score))
+    return sorted(similarities, key=lambda row: row[3], reverse=True)
+
+
 def main() -> int:
     findings: list[Finding] = []
     labs: list[tuple[Path, dict[str, Any]]] = []
@@ -705,6 +788,8 @@ def main() -> int:
     for track, count in exam_counts.items():
         if count != 8:
             findings.append(Finding(SCENARIOS_DIR / "exams" / track, f"expected 8 {track.upper()} exams, found {count}"))
+
+    exam_similarity_rows = audit_exam_similarity(exams)
 
     recurring_limits = {
         "root recovery": ({"rhcsa9": 8, "rhcsa10": 8}, lambda text: has_pattern(text, r"root recovery", r"recover root access", r"password recovery")),
@@ -815,6 +900,12 @@ def main() -> int:
     print(f"Meaningful server exams: {meaningful_server_exams}")
     print(f"Identity/security variant exams: {identity_variant_exams}")
     print(f"Permissions/SELinux variant exams: {perms_variant_exams}")
+    if exam_similarity_rows:
+        print("Highest exam similarity:")
+        for track in ("rhcsa9", "rhcsa10"):
+            track_rows = [row for row in exam_similarity_rows if row[0] == track]
+            for _, left_id, right_id, score in track_rows[:EXAM_SIMILARITY_REPORT_LIMIT]:
+                print(f"- {track}: {left_id} vs {right_id}: {score:.2f}")
     return 0
 
 

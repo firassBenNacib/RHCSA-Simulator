@@ -776,6 +776,65 @@ $lines += ('{0} [{1}] {2}' -f (Format-StyledText -Text $statusText -StyleName $s
 return $lines
 }
 
+function Format-RepoImportOutput {
+param(
+[object]$RepoImportResult
+)
+
+if ($null -eq $RepoImportResult) {
+return @((Get-UiHeading -Text 'ISO import skipped' -StyleName 'Warning'))
+}
+
+$statusStyle = if ([string]$RepoImportResult.Status -eq 'imported') { 'Success' } else { 'Info' }
+$contentLines = @(
+(Format-UiKeyValue -Key 'Status' -Value ([string]$RepoImportResult.Status) -KeyWidth 12),
+(Format-UiKeyValue -Key 'Profile' -Value ([string]$RepoImportResult.Profile) -KeyWidth 12),
+(Format-UiKeyValue -Key 'Pattern' -Value ([string]$RepoImportResult.Pattern) -KeyWidth 12),
+(Format-UiKeyValue -Key 'Source' -Value ([string]$RepoImportResult.Source) -KeyWidth 12),
+(Format-UiKeyValue -Key 'Destination' -Value ([string]$RepoImportResult.Destination) -KeyWidth 12)
+)
+
+return @(Format-UiPanel -Title 'ISO Import' -TitleStyle $statusStyle -ContentLines $contentLines -MinWidth 58)
+}
+
+function Format-PreflightOutput {
+param(
+[object]$PreflightResult
+)
+
+if ($null -eq $PreflightResult) {
+return @((Get-UiHeading -Text 'Preflight unavailable' -StyleName 'Warning'))
+}
+
+$statusStyle = if ([bool]$PreflightResult.Passed) { 'Success' } else { 'Warning' }
+$statusText = if ([bool]$PreflightResult.Passed) { 'ready' } else { 'blocked' }
+$contentLines = @(
+(Format-UiKeyValue -Key 'Profile' -Value ([string]$PreflightResult.Profile) -KeyWidth 16),
+(Format-UiKeyValue -Key 'Track' -Value ([string]$PreflightResult.Track) -KeyWidth 16),
+(Format-UiKeyValue -Key 'ISO Pattern' -Value ([string]$PreflightResult.ExpectedIsoPattern) -KeyWidth 16),
+(Format-UiKeyValue -Key 'Detected ISO' -Value ([string]$PreflightResult.DetectedIsoPath) -KeyWidth 16),
+(Format-UiKeyValue -Key 'Vagrant Box' -Value ([string]$PreflightResult.VagrantBox) -KeyWidth 16),
+(Format-UiKeyValue -Key 'CPU x86-64-v3' -Value ([string]$PreflightResult.CpuX8664V3) -KeyWidth 16),
+(Format-UiKeyValue -Key 'Vagrant' -Value ([string]$PreflightResult.Vagrant) -KeyWidth 16),
+(Format-UiKeyValue -Key 'VirtualBox' -Value ([string]$PreflightResult.VirtualBox) -KeyWidth 16),
+(Format-UiKeyValue -Key 'Status' -Value (Format-StyledText -Text $statusText -StyleName $statusStyle) -KeyWidth 16)
+)
+
+if (-not [string]::IsNullOrWhiteSpace([string]$PreflightResult.CpuDetail)) {
+$contentLines += (Format-UiKeyValue -Key 'CPU Detail' -Value ([string]$PreflightResult.CpuDetail) -KeyWidth 16)
+}
+
+if (-not [bool]$PreflightResult.Passed -and $PreflightResult.PSObject.Properties.Match('Blockers').Count -gt 0) {
+$contentLines += ''
+$contentLines += (Format-StyledText -Text 'Blockers:' -StyleName 'Warning')
+foreach ($blocker in @($PreflightResult.Blockers)) {
+$contentLines += ('- {0}' -f [string]$blocker)
+}
+}
+
+return @(Format-UiPanel -Title 'Preflight' -TitleStyle $statusStyle -ContentLines $contentLines -MinWidth 58)
+}
+
 function Format-VmSshOutput {
 param(
 [object]$SessionResult

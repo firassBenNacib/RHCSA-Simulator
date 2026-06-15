@@ -14,6 +14,8 @@ FunctionsToExport = @(
     'Format-DestroyOutput'
     'Format-ExerciseCheckOutput'
     'Format-PaddedCell'
+    'Format-PreflightOutput'
+    'Format-RepoImportOutput'
     'Format-RepoHealthOutput'
     'Format-ScenarioCatalogOutput'
     'Format-ScenarioCatalogTable'

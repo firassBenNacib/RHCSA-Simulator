@@ -66,7 +66,7 @@ else {
 }
 
 if (`$tokens.Count -eq 0) {
-Complete-RhcsaValues -Value @('up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion', 'help')
+Complete-RhcsaValues -Value @('up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion', 'help')
 return
 }
 
@@ -75,7 +75,7 @@ return
 
 switch (`$root) {
 'help' {
-Complete-RhcsaValues -Value @('up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')
+Complete-RhcsaValues -Value @('up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')
 return
 }
 'up' {
@@ -84,6 +84,12 @@ Complete-RhcsaValues -Value @('RHCSA9', 'RHCSA10')
 return
 }
 Complete-RhcsaValues -Value @('-Profile', '-Refresh', '-NoProvision', '-NormalStart', '-HeadlessClient', '-RealisticMode', '-ForceHostCleanup')
+return
+}
+'repo' {
+if (`$tokens.Count -le 1) {
+Complete-RhcsaValues -Value @('import')
+}
 return
 }
 'resume' {

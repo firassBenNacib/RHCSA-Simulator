@@ -37,6 +37,7 @@ param(
 
 switch ("$Area/$Command") {
 'baseline/up' { return '.\RHCSA.ps1 help up' }
+'baseline/preflight' { return '.\RHCSA.ps1 help preflight' }
 'baseline/resume' { return '.\RHCSA.ps1 help resume' }
 'baseline/pause' { return '.\RHCSA.ps1 help pause' }
 'baseline/down' { return '.\RHCSA.ps1 help down' }
@@ -117,7 +118,7 @@ return $lines
 
 function Get-HelpOutputRaw {
 param(
-[ValidateSet('general', 'up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
+[ValidateSet('general', 'up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
 [string]$Scope = 'general'
 )
 
@@ -142,6 +143,16 @@ return @(
 'Examples:',
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up'),
 (Format-UiCommandLine -CommandText '.\RHCSA.ps1 up -NoProvision')
+)
+}
+'preflight' {
+return @(
+(Get-UiHeading -Text 'preflight'),
+(Format-StyledText -Text 'Check the selected profile, ISO, Vagrant box, CPU baseline, Vagrant, and VirtualBox before startup.' -StyleName 'Muted'),
+(Format-HelpUsageLine -CommandText '.\RHCSA.ps1 preflight'),
+'',
+'Example:',
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 preflight')
 )
 }
 'resume' {
@@ -244,11 +255,12 @@ return @(
 'repo' {
 return @(
 (Get-UiHeading -Text 'repo'),
-(Format-StyledText -Text 'Run the offline package repository self-test on server and client.' -StyleName 'Muted'),
-(Format-HelpUsageLine -CommandText '.\RHCSA.ps1 repo'),
+(Format-StyledText -Text 'Run the offline package repository self-test, or import a RHEL DVD ISO into the project root.' -StyleName 'Muted'),
+(Format-HelpUsageLine -CommandText '.\RHCSA.ps1 repo [import <iso-path>]'),
 '',
-'Example:',
-(Format-UiCommandLine -CommandText '.\RHCSA.ps1 repo')
+'Examples:',
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 repo'),
+(Format-UiCommandLine -CommandText '.\RHCSA.ps1 repo import "$HOME\Downloads\rhel-10.2-x86_64-dvd.iso"')
 )
 }
 'reset' {
@@ -348,6 +360,7 @@ return @(
 default {
 $entry = @(
 [PSCustomObject]@{ Name = 'up'; Description = 'Start or verify the clean baseline' }
+[PSCustomObject]@{ Name = 'preflight'; Description = 'Check ISO and host prerequisites before startup' }
 [PSCustomObject]@{ Name = 'resume'; Description = 'Resume paused or powered-off VMs' }
 [PSCustomObject]@{ Name = 'pause'; Description = 'Save VM state for fast resume' }
 [PSCustomObject]@{ Name = 'down'; Description = 'Power off the simulator VMs' }
@@ -356,7 +369,7 @@ $entry = @(
 [PSCustomObject]@{ Name = 'start'; Description = 'Start a lab or exam run' }
 [PSCustomObject]@{ Name = 'exit-run'; Description = 'Exit the active lab or exam context' }
 [PSCustomObject]@{ Name = 'check'; Description = 'Run checks for the active lab or exam' }
-[PSCustomObject]@{ Name = 'repo'; Description = 'Run the offline repo self-test' }
+[PSCustomObject]@{ Name = 'repo'; Description = 'Run the offline repo self-test or import an ISO' }
 [PSCustomObject]@{ Name = 'reset'; Description = 'Reset the active run' }
 [PSCustomObject]@{ Name = 'status'; Description = 'Show baseline, VMs, and active scenario' }
 [PSCustomObject]@{ Name = 'vms'; Description = 'Show VM state' }
@@ -391,7 +404,7 @@ return @(
 
 function Get-HelpOutput {
 param(
-[ValidateSet('general', 'up', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
+[ValidateSet('general', 'up', 'preflight', 'resume', 'pause', 'down', 'destroy', 'list', 'start', 'exit-run', 'check', 'repo', 'reset', 'status', 'vms', 'ssh', 'ssh-config', 'tui', 'profile', 'timer', 'completion')]
 [string]$Scope = 'general'
 )
 
