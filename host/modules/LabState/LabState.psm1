@@ -368,6 +368,7 @@ param(
 )
 
 $state = [ordered]@{
+profile = Get-ProjectProfile -ProjectRoot $ProjectRoot
 snapshot_name = 'base-clean'
 snapshot_mode = $SnapshotMode
 created_at = (Get-Date).ToString('o')

@@ -22,6 +22,20 @@ mount_repo_source() {
   return 1
 }
 
+write_repo_fstab_entry() {
+  local rom_dev="$1"
+  local rom_uuid
+  local options
+
+  options="$(repo_mount_options)"
+  rom_uuid="$(blkid -s UUID -o value "$rom_dev" 2>/dev/null || true)"
+  if [ -n "${rom_uuid:-}" ]; then
+    echo "UUID=${rom_uuid} /var/www/html/repo auto ${options} 0 0" >> /etc/fstab
+  else
+    echo "${rom_dev} /var/www/html/repo auto ${options} 0 0" >> /etc/fstab
+  fi
+}
+
 systemctl enable --now httpd nfs-server chronyd
 
 firewall-cmd --permanent --add-service=http
@@ -31,29 +45,30 @@ firewall-cmd --permanent --add-service=mountd
 firewall-cmd --permanent --add-service=ntp
 firewall-cmd --reload
 
-ROM_DEV="$(lsblk -pnro NAME,TYPE | awk '$2=="rom"{print $1; exit}')"
-if [ -z "${ROM_DEV:-}" ]; then
-  echo "No virtual DVD device found for the attached RHEL ISO." >&2
-  exit 1
-fi
-
 if mountpoint -q "$BOOTSTRAP_ISO_MOUNT"; then
   umount "$BOOTSTRAP_ISO_MOUNT" >/dev/null 2>&1 || true
 fi
 
 mkdir -p /var/www/html/repo
 sed -i '\#/var/www/html/repo #d' /etc/fstab
-ROM_UUID="$(blkid -s UUID -o value "$ROM_DEV" 2>/dev/null || true)"
-REPO_MOUNT_OPTIONS="$(repo_mount_options)"
-if [ -n "${ROM_UUID:-}" ]; then
-  echo "UUID=${ROM_UUID} /var/www/html/repo auto ${REPO_MOUNT_OPTIONS} 0 0" >> /etc/fstab
-else
-  echo "${ROM_DEV} /var/www/html/repo auto ${REPO_MOUNT_OPTIONS} 0 0" >> /etc/fstab
-fi
-
 if mountpoint -q /var/www/html/repo; then
+  ROM_DEV="$(findmnt -n -o SOURCE --target /var/www/html/repo 2>/dev/null || true)"
+  if [ -z "${ROM_DEV:-}" ]; then
+    echo "Mounted repo source could not be identified for /var/www/html/repo." >&2
+    exit 1
+  fi
+
+  REPO_MOUNT_OPTIONS="$(repo_mount_options)"
+  write_repo_fstab_entry "$ROM_DEV"
   mount -o "remount,${REPO_MOUNT_OPTIONS}" /var/www/html/repo >/dev/null 2>&1 || true
-else
+elif [ ! -d /var/www/html/repo/BaseOS ] || [ ! -d /var/www/html/repo/AppStream ]; then
+  ROM_DEV="$(lsblk -pnro NAME,TYPE | awk '$2=="rom"{print $1; exit}')"
+  if [ -z "${ROM_DEV:-}" ]; then
+    echo "No repo cache or virtual DVD device found for the RHEL package source." >&2
+    exit 1
+  fi
+
+  write_repo_fstab_entry "$ROM_DEV"
   mount /var/www/html/repo >/dev/null 2>&1 || mount_repo_source "$ROM_DEV"
 fi
 

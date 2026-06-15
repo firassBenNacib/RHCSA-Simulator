@@ -2626,10 +2626,10 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         )
 
     if lab_id == "lab-46-package-file-install":
-        return _replace_lab_progression(
+        updated = _replace_lab_progression(
             block,
             [
-                "On client, install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories.",
+                "On client, install the tree package from the configured offline repositories without enabling external repositories.",
                 "On server, install the tree package from the local repositories.",
             ],
             [
@@ -2644,6 +2644,11 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                 ["# On server", "dnf install -y tree", "rpm -q tree"],
             ],
         )
+        updated["hints"] = [
+            "Use the configured offline BaseOS and AppStream repositories.",
+            "Do not enable external repositories.",
+        ]
+        return updated
 
     if lab_id == "lab-47-documentation":
         return _replace_lab_progression(

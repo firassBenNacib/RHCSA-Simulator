@@ -255,7 +255,7 @@ return @(
 'repo' {
 return @(
 (Get-UiHeading -Text 'repo'),
-(Format-StyledText -Text 'Run the offline package repository self-test, or import a RHEL DVD ISO into the project root.' -StyleName 'Muted'),
+(Format-StyledText -Text 'Run the offline package repository self-test, or cache BaseOS/AppStream from a RHEL DVD ISO.' -StyleName 'Muted'),
 (Format-HelpUsageLine -CommandText '.\RHCSA.ps1 repo [import <iso-path>]'),
 '',
 'Examples:',

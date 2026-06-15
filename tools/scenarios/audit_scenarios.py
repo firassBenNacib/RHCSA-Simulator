@@ -227,6 +227,19 @@ def audit_target_metadata(path: Path, scenario: dict[str, Any], findings: list[F
             if invalid:
                 findings.append(Finding(path, f"{mode} {key} has invalid target(s): {', '.join(invalid)}"))
 
+        task_targets = block.get("task_targets", [])
+        if isinstance(task_targets, list) and len(task_targets) == len(tasks):
+            for index, (task, target) in enumerate(zip(tasks, task_targets), start=1):
+                task_text = str(task)
+                normalized_target = normalize_target(target, default="")
+                leading_target = re.match(r"^\s*On\s+(client|server)\b", task_text, re.I)
+                if leading_target and normalized_target in {"client", "server"}:
+                    text_target = leading_target.group(1).lower()
+                    if text_target != normalized_target:
+                        findings.append(Finding(path, f"{mode} task {index} text says {text_target} but task_targets says {normalized_target}"))
+                if normalized_target == "both" and not re.search(r"\bclient\b[\s\S]*\bserver\b|\bserver\b[\s\S]*\bclient\b", task_text, re.I):
+                    findings.append(Finding(path, f"{mode} task {index} task_targets says both but task text does not mention both systems"))
+
         if mode == "lab":
             raw_scope = scenario.get("scope")
             scope = normalize_scope(raw_scope, default="")

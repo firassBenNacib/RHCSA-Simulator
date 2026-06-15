@@ -1,7 +1,7 @@
 {
   "id": "lab-46-package-file-install",
-  "title": "RHCSA 10 Lab 46: Local RPM Install",
-  "description": "Install software from a local RPM file",
+  "title": "RHCSA 10 Lab 46: Package Install from Local Repositories",
+  "description": "Install software from configured local repositories",
   "objective_tags": [
     "software-management"
   ],
@@ -20,12 +20,12 @@
   "content": {
     "lab": {
       "tasks": [
-        "On client, install the local tree RPM from /var/www/html/repo or the mounted ISO without enabling external repositories.",
+        "On client, install the tree package from the configured offline repositories without enabling external repositories.",
         "On server, install the tree package from the local repositories."
       ],
       "hints": [
-        "Use find to locate tree*.rpm.",
-        "Use dnf install /path/to/package.rpm."
+        "Use the configured offline BaseOS and AppStream repositories.",
+        "Do not enable external repositories."
       ],
       "checks": [
         "command -v tree >/dev/null && rpm -q tree >/dev/null",
@@ -35,7 +35,7 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Install the local tree RPM from /var/www/html/repo or the mounted ISO",
+        "Install the tree package from the configured offline repositories",
         "Install the tree package from the local repositories"
       ],
       "task_points": [
