@@ -39,7 +39,7 @@
       "task_titles": [
         "Create user at10 and set password cinder9",
         "Enable and start atd",
-        "As at10, schedule a job that appends AT10 to /home/at10/at10.log two"
+        "Schedule at job"
       ],
       "task_points": [
         10,

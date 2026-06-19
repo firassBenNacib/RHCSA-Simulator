@@ -193,6 +193,7 @@ def specific_task_title(line: str) -> str:
         (r"export /exports|server:/exports", "Configure NFS export and mount"),
         (r"gzip archive|tar\.gz", "Create gzip archive"),
         (r"cron job", "Schedule cron job"),
+        (r"schedule a job.*\bat\b|as [a-z0-9_-]+,\s*schedule a job", "Schedule at job"),
         (r"at job", "Schedule at job"),
         (r"swap partition", "Configure persistent swap"),
         (r"physical volume.*logical volume|logical volume", "Configure LVM storage"),
