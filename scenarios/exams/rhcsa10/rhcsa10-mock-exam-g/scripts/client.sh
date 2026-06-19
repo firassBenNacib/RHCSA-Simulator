@@ -21,6 +21,7 @@ groupdel teamg10 >/dev/null 2>&1 || true
 rm -f /etc/sudoers.d/teamg10-systemctl
 
 # --- Exam G find dataset and users ---
+while read -r job; do atrm "$job" >/dev/null 2>&1 || true; done < <(atq 2>/dev/null | awk '$NF == "hazel10" {print $1}')
 userdel -r grant10 >/dev/null 2>&1 || true
 userdel -r hazel10 >/dev/null 2>&1 || true
 userdel -r copy10 >/dev/null 2>&1 || true

@@ -186,9 +186,7 @@ exit
 
 ```bash
 systemctl enable --now atd
-su - hazel10 -c 'echo "echo \"exam-g task\" >> /home/hazel10/at-result.txt" | at now + 1 minute'
-echo 'exam-g task' >> /home/hazel10/at-result.txt
-chown hazel10:hazel10 /home/hazel10/at-result.txt
+runuser -u hazel10 -- bash -lc "printf '%s\n' 'echo \"exam-g task\" >> /home/hazel10/at-result.txt' | at -M now + 2 hours"
 ```
 
 ---
