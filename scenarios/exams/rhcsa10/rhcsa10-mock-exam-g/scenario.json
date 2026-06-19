@@ -41,7 +41,7 @@
         "On client, set password aging for grant10: maximum 35 days, minimum 5 days, warning 7 days. Add umask 0077 to /home/grant10/.bashrc.",
         "On client, create user copy10 with UID 5010 and password cinder9. Also create user copy10 with the same UID 5010 and password cinder9 on the server.",
         "On client, as copy10, generate an SSH key pair (no passphrase) and distribute the public key to copy10@server. Then copy /etc/hostname from the server to /home/copy10/server-hostname.",
-        "On client, schedule an at job for user hazel10 that runs: echo \"exam-g task\" >> /home/hazel10/at-result.txt",
+        "On client, schedule an at job for user hazel10 to run two hours from now. The job must run: echo \"exam-g task\" >> /home/hazel10/at-result.txt",
         "On server, configure persistent systemd journal storage.",
         "On server, route local5 log messages to /var/log/server-g-local5.log and write a test message.",
         "On server, create /srv/serverg10 owned by root:serverg10 with mode 2770.",
@@ -73,7 +73,7 @@
         "chage -l grant10 | grep -Eq 'Maximum.*35' && chage -l grant10 | grep -Eq 'Minimum.*5' && chage -l grant10 | grep -Eq 'warning.*7' && grep -q 'umask 0077' /home/grant10/.bashrc",
         "id -u copy10 | grep -qx 5010 && ssh server bash -lc 'set -euo pipefail; id -u copy10 | grep -qx 5010'",
         "test -f /home/copy10/server-hostname && test -s /home/copy10/server-hostname",
-        "test -f /home/hazel10/at-result.txt || atq 2>/dev/null | grep -q .",
+        "expected_command='echo \"exam-g task\" >> /home/hazel10/at-result.txt'; job_found=0; for job_id in $(atq 2>/dev/null | awk '$NF == \"hazel10\" {print $1}' || true); do at -c \"$job_id\" 2>/dev/null | grep -Fq -- \"$expected_command\" && job_found=1; done; test \"$job_found\" = 1",
         "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
         "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^local5\\.\\*[[:space:]]+/var/log/server-g-local5\\.log$'\"'\"' /etc/rsyslog.d/server-g-local5.conf && systemctl is-active rsyslog | grep -qx active && grep -Fq '\"'\"'server-g-local5'\"'\"' /var/log/server-g-local5.log'",
         "ssh server bash -lc 'set -euo pipefail; getent group serverg10 >/dev/null && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/serverg10 | grep -qx root:serverg10:2770'",
@@ -215,9 +215,7 @@
         ],
         [
           "systemctl enable --now atd",
-          "su - hazel10 -c 'echo \"echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt\" | at now + 1 minute'",
-          "echo 'exam-g task' >> /home/hazel10/at-result.txt",
-          "chown hazel10:hazel10 /home/hazel10/at-result.txt"
+          "runuser -u hazel10 -- bash -lc \"printf '%s\\n' 'echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt' | at -M now + 2 hours\""
         ],
         [
           "mkdir -p /var/log/journal /etc/systemd/journald.conf.d",

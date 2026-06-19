@@ -9,6 +9,7 @@ sys.path.insert(0, str(TOOL_ROOT))
 
 from generate_rhcsa10_scenarios import (  # noqa: E402
     JOURNALD_PERSISTENT_CHECK,
+    _at_job_check,
     _lvm_mount_check,
     _prefix_client_task,
     _swap_persistence_check,
@@ -53,6 +54,20 @@ class Rhcsa10GeneratorTests(unittest.TestCase):
         self.assertIn("\\[Journal\\]", check)
         self.assertIn("Storage[[:space:]]*=", check)
         self.assertNotIn("grep -Eq '^Storage=persistent$' /etc/systemd/journald.conf", check)
+
+    def test_at_job_check_requires_queued_job_payload(self) -> None:
+        check = _at_job_check(
+            "hazel10",
+            'echo "exam-g task" >> /home/hazel10/at-result.txt',
+        )
+
+        self.assertIn("at -c", check)
+        self.assertIn("grep -Fq", check)
+        self.assertIn('awk \'$NF == "hazel10"', check)
+        self.assertIn('test "$job_found" = 1', check)
+        self.assertNotIn("journalctl -u atd", check)
+        self.assertNotIn("stat -c %U /home/hazel10/at-result.txt | grep -qx hazel10", check)
+        self.assertNotIn("test -f /home/hazel10/at-result.txt || atq", check)
 
 
 if __name__ == "__main__":

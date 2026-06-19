@@ -637,6 +637,7 @@ def _exam_scripts(seed: int) -> tuple[str, str]:
     if letter == "g":
         exam_extra_client_reset += """
 # --- Exam G find dataset and users ---
+while read -r job; do atrm "$job" >/dev/null 2>&1 || true; done < <(atq 2>/dev/null | awk '$NF == "hazel10" {print $1}')
 userdel -r grant10 >/dev/null 2>&1 || true
 userdel -r hazel10 >/dev/null 2>&1 || true
 userdel -r copy10 >/dev/null 2>&1 || true
@@ -962,6 +963,17 @@ def _swap_persistence_check(device: str = "/dev/sdb1") -> str:
         '\'$1 !~ /^#/ && $2 == "swap" && $3 == "swap" && '
         '($1 == dev || $1 == "UUID=" uuid || $1 == "/dev/disk/by-uuid/" uuid) '
         "{found=1} END {exit !found}' /etc/fstab"
+    )
+
+
+def _at_job_check(user: str, expected_command: str) -> str:
+    return (
+        f"expected_command='{expected_command}'; "
+        "job_found=0; "
+        f"for job_id in $(atq 2>/dev/null | awk '$NF == \"{user}\" {{print $1}}' || true); do "
+        'at -c "$job_id" 2>/dev/null | grep -Fq -- "$expected_command" && job_found=1; '
+        "done; "
+        'test "$job_found" = 1'
     )
 
 
@@ -2822,13 +2834,20 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
                         "exit",
                     ]
 
-            if "Schedule an at job for user hazel10" in task_text:
+            if "schedule an at job for user hazel10" in task_text.lower():
+                tasks[index] = (
+                    'On client, schedule an at job for user hazel10 to run two hours from now. '
+                    'The job must run: echo "exam-g task" >> /home/hazel10/at-result.txt'
+                )
+                if index < len(checks):
+                    checks[index] = _at_job_check(
+                        "hazel10",
+                        'echo "exam-g task" >> /home/hazel10/at-result.txt',
+                    )
                 if index < len(commands):
                     commands[index] = [
                         "systemctl enable --now atd",
-                        "su - hazel10 -c 'echo \"echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt\" | at now + 1 minute'",
-                        "echo 'exam-g task' >> /home/hazel10/at-result.txt",
-                        "chown hazel10:hazel10 /home/hazel10/at-result.txt",
+                        "runuser -u hazel10 -- bash -lc \"printf '%s\\n' 'echo \\\"exam-g task\\\" >> /home/hazel10/at-result.txt' | at -M now + 2 hours\"",
                     ]
 
             if 'Run the command "sleep 600"' in task_text and "renice" in task_text:
