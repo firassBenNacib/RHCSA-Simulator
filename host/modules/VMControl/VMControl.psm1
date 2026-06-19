@@ -3689,13 +3689,17 @@ function Wait-VagrantGuestSshReady {
     $powerStateStartAttempts = 0
     $missingRegistrationAttempts = 0
     $rhel10BootResetAttempt = [Math]::Min(6, [Math]::Max(1, $MaxAttempts - 2))
+    $hostCleanupParameters = @{ ProjectRoot = $ProjectRoot }
+    if (Test-ForceHostCleanupEnabled) {
+        $hostCleanupParameters['ForceHostCleanup'] = $true
+    }
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
         $vmId = Get-OptionalVagrantMachineId -MachineName $MachineName -ProjectRoot $ProjectRoot
         if ([string]::IsNullOrWhiteSpace($vmId)) {
             $missingRegistrationAttempts += 1
             if ($missingRegistrationAttempts -ge 2) {
-                Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+                Invoke-LabHypervisorLockCleanup @hostCleanupParameters | Out-Null
                 throw "Vagrant machine '$MachineName' is still reported as not created after startup."
             }
         }
@@ -3705,7 +3709,7 @@ function Wait-VagrantGuestSshReady {
             if ([string]::IsNullOrWhiteSpace([string]$vboxState)) {
                 $missingRegistrationAttempts += 1
                 if ($missingRegistrationAttempts -ge 2) {
-                    Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+                    Invoke-LabHypervisorLockCleanup @hostCleanupParameters | Out-Null
                     throw "Vagrant machine '$MachineName' is still reported as not created after startup."
                 }
             }
@@ -4227,7 +4231,7 @@ function Invoke-LabHypervisorLockCleanup {
     if ($killed -gt 0) {
         Start-Sleep -Seconds 2
     }
-    if ($forceCleanup -and (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup)) {
+    if ($forceCleanup -and (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup)) {
         $fallbackNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')
         $fallbackIds = @(
             Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
@@ -4575,7 +4579,11 @@ function Start-BaselineSession {
             $message -match 'Failed to confirm SSH readiness|still reported as not created after startup|Direct SSH command did not return the RHCSA exit marker|VBoxHeadless|VirtualBox VM .* remained locked'
         ) {
             $notices += 'Detected an unstable VirtualBox guest startup. Rebuilding the baseline once.'
-            Remove-LabEnvironment -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+            $cleanupParameters = @{ ProjectRoot = $ProjectRoot }
+            if (Test-ForceHostCleanupEnabled) {
+                $cleanupParameters['ForceHostCleanup'] = $true
+            }
+            Remove-LabEnvironment @cleanupParameters | Out-Null
             $recoveryResult = Start-BaselineSession `
                 -NoProvision:$NoProvision `
                 -NormalStart:$NormalStart `
@@ -4721,7 +4729,11 @@ function Start-ScenarioRun {
                 ) {
                     Disable-Rhel10SavedSnapshotForHost -ProjectRoot $ProjectRoot -Reason $restoreFailureMessage
                 }
-                Remove-LabEnvironment -ProjectRoot $ProjectRoot -ForceHostCleanup | Out-Null
+                $cleanupParameters = @{ ProjectRoot = $ProjectRoot }
+                if (Test-ForceHostCleanupEnabled) {
+                    $cleanupParameters['ForceHostCleanup'] = $true
+                }
+                Remove-LabEnvironment @cleanupParameters | Out-Null
             }
             $baselineResult = Start-BaselineSession -ProjectRoot $ProjectRoot
             Clear-LiveCleanBaselineState -ProjectRoot $ProjectRoot
@@ -5785,7 +5797,7 @@ function Remove-LabEnvironment {
             }
 
             Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
-            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 | Out-Null
+            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 -ForceHostCleanup:$forceCleanup | Out-Null
 
             foreach ($candidate in (Get-LabVBoxVmCandidate -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage)) {
                 Invoke-VBoxVmRemoval -VBoxManagePath $vboxManage -VmId $candidate.Id -ProjectRoot $ProjectRoot
@@ -5834,7 +5846,7 @@ function Remove-LabEnvironment {
             Invoke-OrphanVmFolderCleanup -VBoxMachineFolder $vboxMachineFolder -ProjectName $projectName
             Invoke-OrphanVagrantImportFolderCleanup -VBoxMachineFolder $vboxMachineFolder -RegisteredVm (Get-VBoxVmCatalog -VBoxManagePath $vboxManage)
             Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
-            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 | Out-Null
+            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 -ForceHostCleanup:$forceCleanup | Out-Null
             $remainingVms = @(Get-LabVBoxVmCandidate -ProjectRoot $ProjectRoot -VBoxManagePath $vboxManage)
             if ($remainingVms.Count -gt 0) {
                 $notes += ('VirtualBox still reports lab VM(s): {0}' -f (($remainingVms | ForEach-Object { $_.Name }) -join ', '))
@@ -5876,7 +5888,7 @@ function Remove-LabEnvironment {
 
         if ($remainingPaths.Count -gt 0) {
             Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
-            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 | Out-Null
+            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 -ForceHostCleanup:$forceCleanup | Out-Null
 
             if ($vboxManage) {
                 foreach ($diskFolder in @($labDisksDir, $legacyDisksDir)) {
@@ -5914,14 +5926,10 @@ function Remove-LabEnvironment {
         }
 
         if ($remainingPaths.Count -gt 0 -and ($remainingPaths | Where-Object { $_ -match '\\.lab-disks($|\\|/)' })) {
-            $processNames = if ($forceCleanup) {
-                @('VBoxSVC', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxManage')
+            if ($forceCleanup) {
+                Stop-LabHostProcessByName -Name @('VBoxSVC', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxManage')
+                Start-Sleep -Seconds 2
             }
-            else {
-                @('VBoxSVC')
-            }
-            Stop-LabHostProcessByName -Name $processNames
-            Start-Sleep -Seconds 2
 
             if ($vboxManage) {
                 try {
