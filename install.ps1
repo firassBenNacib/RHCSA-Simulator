@@ -56,6 +56,67 @@ function Save-ReleaseAsset {
     Invoke-WebRequest -Uri $downloadUri -OutFile $Destination -Headers $downloadHeaders
 }
 
+function Get-ReleaseChecksumAsset {
+    param([object]$Release)
+
+    $checksumAsset = $Release.assets |
+        Where-Object { $_.name -match '^(checksums\.txt|SHA256SUMS|sha256sums\.txt)$' } |
+        Select-Object -First 1
+
+    if (-not $checksumAsset) {
+        throw "Release '$($Release.tag_name)' does not include a checksums.txt asset."
+    }
+
+    return $checksumAsset
+}
+
+function Get-ExpectedSha256 {
+    param(
+        [string]$ChecksumText,
+        [string]$AssetName
+    )
+
+    foreach ($line in ($ChecksumText -split "`r?`n")) {
+        $trimmed = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed.StartsWith('#')) {
+            continue
+        }
+
+        $parts = $trimmed -split '\s+'
+        if ($parts.Count -lt 2 -or $parts[0] -notmatch '^[a-fA-F0-9]{64}$') {
+            continue
+        }
+
+        $name = [System.IO.Path]::GetFileName($parts[-1].TrimStart('*'))
+        if ($name -eq $AssetName) {
+            return $parts[0].ToLowerInvariant()
+        }
+    }
+
+    throw "Release checksums do not include '$AssetName'."
+}
+
+function Assert-ReleaseAssetChecksum {
+    param(
+        [object]$Release,
+        [object]$Asset,
+        [string]$FilePath,
+        [string]$TempRoot,
+        [hashtable]$Headers
+    )
+
+    $checksumAsset = Get-ReleaseChecksumAsset -Release $Release
+    $checksumPath = Join-Path $TempRoot $checksumAsset.name
+    Save-ReleaseAsset -Asset $checksumAsset -Destination $checksumPath -Headers $Headers
+    $expected = Get-ExpectedSha256 -ChecksumText (Get-Content -Path $checksumPath -Raw) -AssetName $Asset.name
+    $actual = (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actual -ne $expected) {
+        throw "Checksum verification failed for '$($Asset.name)'. Expected $expected but got $actual."
+    }
+
+    Write-InstallLine "Verified SHA256 checksum for $($Asset.name)"
+}
+
 $projectPath = [System.IO.Path]::GetFullPath($ProjectRoot)
 if (-not (Test-Path (Join-Path $projectPath 'RHCSA.ps1') -PathType Leaf)) {
     throw "ProjectRoot must point to the simulator repository that contains RHCSA.ps1. Current value: $projectPath"
@@ -83,21 +144,27 @@ $asset = $assetInfo.Asset
 $destination = Join-Path $buildPath 'rhcsa-tui.exe'
 Write-InstallLine "Downloading $($asset.name) from $($release.tag_name)"
 
-if ($assetInfo.Kind -eq 'zip') {
-    $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rhcsa-tui-" + [System.Guid]::NewGuid().ToString("N"))
-    $zipPath = Join-Path $tempRoot $asset.name
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rhcsa-tui-" + [System.Guid]::NewGuid().ToString("N"))
+try {
     New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
-    Save-ReleaseAsset -Asset $asset -Destination $zipPath -Headers $headers
-    Expand-Archive -Path $zipPath -DestinationPath $tempRoot -Force
-    $binary = Get-ChildItem -Path $tempRoot -Recurse -Filter 'rhcsa-tui.exe' | Select-Object -First 1
-    if (-not $binary) {
-        throw "The release archive '$($asset.name)' did not contain rhcsa-tui.exe."
+    $downloadPath = Join-Path $tempRoot $asset.name
+    Save-ReleaseAsset -Asset $asset -Destination $downloadPath -Headers $headers
+    Assert-ReleaseAssetChecksum -Release $release -Asset $asset -FilePath $downloadPath -TempRoot $tempRoot -Headers $headers
+
+    if ($assetInfo.Kind -eq 'zip') {
+        Expand-Archive -Path $downloadPath -DestinationPath $tempRoot -Force
+        $binary = Get-ChildItem -Path $tempRoot -Recurse -Filter 'rhcsa-tui.exe' | Select-Object -First 1
+        if (-not $binary) {
+            throw "The release archive '$($asset.name)' did not contain rhcsa-tui.exe."
+        }
+        Copy-Item -Path $binary.FullName -Destination $destination -Force
     }
-    Copy-Item -Path $binary.FullName -Destination $destination -Force
-    Remove-Item -Path $tempRoot -Recurse -Force
+    else {
+        Copy-Item -Path $downloadPath -Destination $destination -Force
+    }
 }
-else {
-    Save-ReleaseAsset -Asset $asset -Destination $destination -Headers $headers
+finally {
+    Remove-Item -Path $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 $launcher = Join-Path $projectPath 'rhcsa-tui.cmd'
