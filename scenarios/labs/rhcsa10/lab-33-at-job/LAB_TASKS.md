@@ -32,6 +32,6 @@ On server, enable and start atd.
 
 ---
 
-## Task 03 - As at10, schedule a job that appends AT10 to /home/at10/at10.log two (server) - 10 pts
+## Task 03 - Schedule at job (server) - 10 pts
 
 On server, as at10, schedule a job that appends AT10 to /home/at10/at10.log two minutes from now.
