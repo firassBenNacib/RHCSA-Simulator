@@ -2,15 +2,11 @@ name: CI
 
 on:
   pull_request:
-    paths-ignore:
-      - "**/*.md"
   push:
     branches:
       - main
       - master
       - feature/**
-    paths-ignore:
-      - "**/*.md"
   workflow_dispatch:
 
 permissions:

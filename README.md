@@ -269,7 +269,7 @@ Start a specific lab:
 Start a mock exam:
 
 ```powershell
-.\RHCSA.ps1 start -Id mock-exam-a -Mode Exam
+.\RHCSA.ps1 start -Id rhcsa10-mock-exam-a -Mode Exam
 ```
 
 Run checks:
