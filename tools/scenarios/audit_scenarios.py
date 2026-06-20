@@ -15,6 +15,11 @@ SCENARIOS_DIR = ROOT / "scenarios"
 DIRECT_SUDOERS_RE = re.compile(r"(?<!\S)/etc/sudoers(?!\.d(?:/|\b))")
 EXAM_SIMILARITY_REPORT_LIMIT = 3
 RHCSA9_EXAM_SIMILARITY_MAX = 0.95
+RHCSA10_EXAM_SIMILARITY_MAX = 0.90
+EXAM_SIMILARITY_MAX_BY_TRACK = {
+    "rhcsa9": RHCSA9_EXAM_SIMILARITY_MAX,
+    "rhcsa10": RHCSA10_EXAM_SIMILARITY_MAX,
+}
 SIMILARITY_STOP_WORDS = {
     "the",
     "and",
@@ -741,6 +746,22 @@ def audit_exam_similarity(exams: list[tuple[Path, dict[str, Any]]]) -> list[tupl
     return sorted(similarities, key=lambda row: row[3], reverse=True)
 
 
+def audit_exam_similarity_limits(exam_similarity_rows: list[tuple[str, str, str, float]]) -> list[Finding]:
+    findings: list[Finding] = []
+    for track, left_id, right_id, score in exam_similarity_rows:
+        max_score = EXAM_SIMILARITY_MAX_BY_TRACK.get(track)
+        if max_score is None:
+            continue
+        if score > max_score:
+            findings.append(
+                Finding(
+                    SCENARIOS_DIR / "exams" / track,
+                    f"{left_id} and {right_id} are too similar ({score:.2f}; max {max_score:.2f})",
+                )
+            )
+    return findings
+
+
 def main() -> int:
     findings: list[Finding] = []
     labs: list[tuple[Path, dict[str, Any]]] = []
@@ -827,14 +848,7 @@ def main() -> int:
             findings.append(Finding(SCENARIOS_DIR / "exams" / track, f"expected 8 {track.upper()} exams, found {count}"))
 
     exam_similarity_rows = audit_exam_similarity(exams)
-    for track, left_id, right_id, score in exam_similarity_rows:
-        if track == "rhcsa9" and score > RHCSA9_EXAM_SIMILARITY_MAX:
-            findings.append(
-                Finding(
-                    SCENARIOS_DIR / "exams" / track,
-                    f"{left_id} and {right_id} are too similar ({score:.2f}; max {RHCSA9_EXAM_SIMILARITY_MAX:.2f})",
-                )
-            )
+    findings.extend(audit_exam_similarity_limits(exam_similarity_rows))
 
     recurring_limits = {
         "root recovery": ({"rhcsa9": 8, "rhcsa10": 8}, lambda text: has_pattern(text, r"root recovery", r"recover root access", r"password recovery")),
