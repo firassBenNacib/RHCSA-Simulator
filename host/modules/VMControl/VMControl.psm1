@@ -3986,7 +3986,7 @@ function Test-ForceHostCleanupEnabled {
         return $true
     }
 
-    return ($env:RHCSA_FORCE_HOST_CLEANUP -match '^(1|true|yes|on)$')
+    return $false
 }
 
 function Get-LabMachineIdList {
@@ -4076,36 +4076,6 @@ function Test-ProcessStillLive {
     }
 }
 
-function Stop-LabHostProcessByName {
-    param(
-        [string[]]$Name
-    )
-
-    $processNames = @($Name | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) } | Select-Object -Unique)
-    if ($processNames.Count -eq 0) {
-        return
-    }
-
-    $stopProcessNames = @($processNames | ForEach-Object { ([string]$_) -replace '\.exe$', '' })
-    Stop-Process -Name $stopProcessNames -Force -ErrorAction SilentlyContinue
-
-    $exeNames = @($processNames | ForEach-Object {
-        $value = [string]$_
-        if ($value.EndsWith('.exe', [System.StringComparison]::OrdinalIgnoreCase)) {
-            $value
-        }
-        else {
-            "$value.exe"
-        }
-    })
-
-    foreach ($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)) {
-        if ([string]$process.Name -in $exeNames) {
-            Invoke-CimMethod -InputObject $process -MethodName Terminate -ErrorAction SilentlyContinue | Out-Null
-        }
-    }
-}
-
 function Stop-LabHostProcessById {
     param(
         [int[]]$ProcessId
@@ -4147,7 +4117,7 @@ function Get-LabRelatedProcessIdSet {
             continue
         }
 
-        $matchesLab = $ForceHostCleanup.IsPresent -or (Test-ProcessCommandLineMatchesLab -CommandLine ([string]$process.CommandLine) -ProjectRoot $ProjectRoot -MachineIds $MachineIds)
+        $matchesLab = Test-ProcessCommandLineMatchesLab -CommandLine ([string]$process.CommandLine) -ProjectRoot $ProjectRoot -MachineIds $MachineIds
         if (-not $matchesLab) {
             continue
         }
@@ -4231,22 +4201,6 @@ function Invoke-LabHypervisorLockCleanup {
     if ($killed -gt 0) {
         Start-Sleep -Seconds 2
     }
-    if ($forceCleanup -and (Test-LabHypervisorBusy -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup)) {
-        $fallbackNames = @('ruby.exe', 'vagrant.exe', 'VBoxManage.exe', 'VBoxSVC.exe', 'VBoxHeadless.exe', 'VirtualBoxVM.exe')
-        $fallbackIds = @(
-            Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-                Where-Object { [string]$_.Name -in $fallbackNames } |
-                ForEach-Object { [int]$_.ProcessId }
-        )
-        if ($fallbackIds.Count -gt 0) {
-            Stop-LabHostProcessById -ProcessId $fallbackIds
-            $killed += $fallbackIds.Count
-        }
-        if ($killed -gt 0) {
-            Start-Sleep -Seconds 2
-        }
-    }
-
     return $killed
 }
 
@@ -5031,10 +4985,7 @@ function Get-LabProjectNameCandidate {
     )
 
     $names = @(
-        $ProjectName,
-        'RHCSA-Simulator',
-        'RHCSA_SIMULATOR',
-        'rhcsa_exam_vms'
+        $ProjectName
     ) | Where-Object {
         -not [string]::IsNullOrWhiteSpace([string]$_)
     } | Select-Object -Unique
@@ -5065,8 +5016,6 @@ function Get-LabVBoxVmCandidate {
     $namePatterns = @(Get-LabProjectNameCandidate -ProjectName $projectName | ForEach-Object {
         '^' + [regex]::Escape([string]$_) + '_(server|client)_'
     })
-    $legacyPattern = '^rhcsa-ex200-(server|client)'
-
     foreach ($machine in $registeredVm) {
         $matchesProjectName = $false
         foreach ($pattern in $namePatterns) {
@@ -5075,7 +5024,7 @@ function Get-LabVBoxVmCandidate {
                 break
             }
         }
-        if ($matchesProjectName -or $machine.Name -match $legacyPattern) {
+        if ($matchesProjectName) {
             if (-not ($candidate | Where-Object { $_.Id -eq $machine.Id })) {
                 $candidate += $machine
             }
@@ -5435,9 +5384,6 @@ function Get-LabVBoxVmFolderCandidate {
         $patterns += "${name}_server_*"
         $patterns += "${name}_client_*"
     }
-    $patterns += 'rhcsa-ex200-server*'
-    $patterns += 'rhcsa-ex200-client*'
-
     $searchRoots = @($VBoxMachineFolder)
     $boxomaticRoot = Join-Path $VBoxMachineFolder 'boxomatic'
     if (Test-Path -LiteralPath $boxomaticRoot -PathType Container) {
@@ -5471,7 +5417,6 @@ function Invoke-LabVBoxVmFolderMediaCleanup {
     $projectFolderPatterns = @(Get-LabProjectNameCandidate -ProjectName $ProjectName | ForEach-Object {
         '\\VirtualBox VMs\\' + [regex]::Escape([string]$_) + '_(server|client)_'
     })
-    $legacyFolderPattern = '\\VirtualBox VMs\\rhcsa-ex200-(server|client)'
     foreach ($hardDisk in @(Get-VBoxHardDiskCatalog -VBoxManagePath $VBoxManagePath)) {
         $location = ([string]$hardDisk.Location).Replace('/', '\')
         $matchesProjectFolder = $false
@@ -5481,7 +5426,7 @@ function Invoke-LabVBoxVmFolderMediaCleanup {
                 break
             }
         }
-        if (-not $matchesProjectFolder -and $location -notmatch $legacyFolderPattern) {
+        if (-not $matchesProjectFolder) {
             continue
         }
 
@@ -5502,30 +5447,9 @@ function Invoke-OrphanVagrantImportFolderCleanup {
         return
     }
 
-    $registeredNames = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
-    foreach ($vm in @($RegisteredVm)) {
-        if (-not [string]::IsNullOrWhiteSpace([string]$vm.Name)) {
-            [void]$registeredNames.Add([string]$vm.Name)
-        }
-    }
-
-    $patterns = @(
-        'generic-rocky9-virtualbox-*',
-        'Rocky-10-Vagrant-Vbox-*',
-        'rockylinux-10-*',
-        'almalinux-10-*'
-    )
-
-    foreach ($pattern in $patterns) {
-        Get-ChildItem -LiteralPath $VBoxMachineFolder -Directory -Filter $pattern -ErrorAction SilentlyContinue |
-            ForEach-Object {
-                if ($registeredNames.Contains($_.Name)) {
-                    return
-                }
-
-                Invoke-LiteralPathRemovalWithRetry -LiteralPath $_.FullName -Recurse -Force -MaxAttempts 10 | Out-Null
-            }
-    }
+    # Vagrant import folders are global VirtualBox artifacts, not project-owned state.
+    # Leave them alone here so destroy/repair cannot remove another project's import.
+    $null = $RegisteredVm
 }
 
 function Test-VBoxFolderArtifactPresent {
@@ -5543,15 +5467,6 @@ function Test-VBoxFolderArtifactPresent {
         $patterns += "$name`_server_*"
         $patterns += "$name`_client_*"
     }
-    $patterns += @(
-        'rhcsa-ex200-server*',
-        'rhcsa-ex200-client*',
-        'generic-rocky9-virtualbox-*',
-        'Rocky-10-Vagrant-Vbox-*',
-        'rockylinux-10-*',
-        'almalinux-10-*'
-    )
-
     $searchRoots = @($VBoxMachineFolder)
     $boxomaticRoot = Join-Path $VBoxMachineFolder 'boxomatic'
     if (Test-Path -LiteralPath $boxomaticRoot -PathType Container) {
@@ -5778,10 +5693,6 @@ function Remove-LabEnvironment {
 
     if ($shouldInspectHypervisor) {
         Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
-        if ($forceCleanup) {
-            Stop-LabHostProcessByName -Name @('ruby', 'vagrant', 'VBoxManage', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxSVC')
-            Start-Sleep -Seconds 2
-        }
     }
 
     Push-Location $ProjectRoot
@@ -5926,10 +5837,8 @@ function Remove-LabEnvironment {
         }
 
         if ($remainingPaths.Count -gt 0 -and ($remainingPaths | Where-Object { $_ -match '\\.lab-disks($|\\|/)' })) {
-            if ($forceCleanup) {
-                Stop-LabHostProcessByName -Name @('VBoxSVC', 'VBoxHeadless', 'VirtualBoxVM', 'VBoxManage')
-                Start-Sleep -Seconds 2
-            }
+            Invoke-LabHypervisorLockCleanup -ProjectRoot $ProjectRoot -ForceHostCleanup:$forceCleanup | Out-Null
+            Wait-LabHypervisorQuiescence -ProjectRoot $ProjectRoot -MaxAttempts 10 -DelaySeconds 1 -ForceHostCleanup:$forceCleanup | Out-Null
 
             if ($vboxManage) {
                 try {

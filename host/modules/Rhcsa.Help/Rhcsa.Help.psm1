@@ -137,7 +137,7 @@ return @(
 [PSCustomObject]@{ Name = '-NormalStart'; Description = 'Compatibility switch; normal behavior is already the default' }
 [PSCustomObject]@{ Name = '-HeadlessClient'; Description = 'Compatibility switch for older workflows' }
 [PSCustomObject]@{ Name = '-RealisticMode'; Description = 'Compatibility switch for older workflows' }
-[PSCustomObject]@{ Name = '-ForceHostCleanup'; Description = 'Kill global Vagrant/VirtualBox lock holders as a last resort' }
+[PSCustomObject]@{ Name = '-ForceHostCleanup'; Description = 'Stop matching lab Vagrant/VirtualBox lock holders as a last resort' }
 )),
 '',
 'Examples:',
@@ -193,7 +193,7 @@ return @(
 '',
 'Options:',
 @(Format-HelpOptionList -Option @(
-[PSCustomObject]@{ Name = '-ForceHostCleanup'; Description = 'Kill global Vagrant/VirtualBox lock holders as a last resort' }
+[PSCustomObject]@{ Name = '-ForceHostCleanup'; Description = 'Stop matching lab Vagrant/VirtualBox lock holders as a last resort' }
 )),
 '',
 'Example:',
