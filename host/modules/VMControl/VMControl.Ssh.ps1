@@ -1039,7 +1039,7 @@ function Invoke-VagrantVmShellCommandCapture {
             }
 
             $combinedOutput = ((@($result.StdOut) + @($result.StdErr)) -join "`n")
-            $canRetry = $attempt -le $RetryCount -and $combinedOutput -match 'Permission denied|Connection refused|Connection reset|timed out|Connection closed|No route to host|Broken pipe|kex_exchange_identification'
+            $canRetry = $attempt -le $RetryCount -and $combinedOutput -match 'Permission denied|Connection refused|Connection reset|timed out|Connection closed|No route to host|Broken pipe|kex_exchange_identification|Direct SSH command did not return the RHCSA exit marker'
             if ($canRetry) {
                 Start-Sleep -Seconds ($RetryDelaySeconds * $attempt)
                 continue
@@ -1161,7 +1161,7 @@ function Invoke-VagrantVmScript {
             }
 
             $combinedOutput = ((@($result.StdOut) + @($result.StdErr)) -join "`n")
-            $canRetry = $attempt -le $RetryCount -and $combinedOutput -match 'Permission denied|Connection refused|Connection reset|timed out|Connection closed|No route to host|Broken pipe|kex_exchange_identification'
+            $canRetry = $attempt -le $RetryCount -and $combinedOutput -match 'Permission denied|Connection refused|Connection reset|timed out|Connection closed|No route to host|Broken pipe|kex_exchange_identification|Direct SSH command did not return the RHCSA exit marker'
             if ($canRetry) {
                 Start-Sleep -Seconds ($RetryDelaySeconds * $attempt)
                 continue
@@ -1223,4 +1223,3 @@ function Invoke-VagrantVmScript {
         Pop-Location
     }
 }
-
