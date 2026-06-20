@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.2.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.2...v2.2.0) (2026-06-20)
+
+
+### Features
+
+* add repo import cache support for ISO-backed offline repositories ([3ac6955](https://github.com/firassBenNacib/RHCSA-Simulator/commit/3ac695504d6e8d75f0877010b639c6ad8b493619))
+* add setup preflight checks and baseline profile mismatch detection ([335064c](https://github.com/firassBenNacib/RHCSA-Simulator/commit/335064c392f14756641401e47026e839e81cdbb4), [cf8d59b](https://github.com/firassBenNacib/RHCSA-Simulator/commit/cf8d59b4a6ce568e95778200d38a6d78a35ea166))
+* add explicit scenario target metadata and balance auditing ([fdc6804](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fdc680449cd53d30f8af2e69734991109c7d9e32), [e9d5140](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e9d5140cc356bd453cfeea0037e5373026302a37))
+* rebalance RHCSA9 and RHCSA10 lab and exam coverage ([fe00667](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fe006671e14a5769b22a95212a6b4d6d0b73329a), [39bc85c](https://github.com/firassBenNacib/RHCSA-Simulator/commit/39bc85cb78d530c8d03ed111a8f39fc63ff581b9), [423d3dd](https://github.com/firassBenNacib/RHCSA-Simulator/commit/423d3dd540f2aa03f7b2f1a5a28a17798a1e4726), [8bfd707](https://github.com/firassBenNacib/RHCSA-Simulator/commit/8bfd70795a83f5a7fe824d1464c8196d5652325d))
+* diversify RHCSA10 mock exams across storage, services, networking, Flatpak, and two-system administration work ([aef25e0](https://github.com/firassBenNacib/RHCSA-Simulator/commit/aef25e0be8751738b7b0f68242771343d5fc4faa), [08b3157](https://github.com/firassBenNacib/RHCSA-Simulator/commit/08b315701bfa08115a19cce195229620b62f714e), [8a9663f](https://github.com/firassBenNacib/RHCSA-Simulator/commit/8a9663ff1ca78a35bcac74f22b5d925b2e7532c7))
+
+### Bug Fixes
+
+* attach and bootstrap newer RHEL 10 DVD media correctly ([612bc89](https://github.com/firassBenNacib/RHCSA-Simulator/commit/612bc8987df0d4b6463920b7d7ed089731f2755f), [efd2a4f](https://github.com/firassBenNacib/RHCSA-Simulator/commit/efd2a4f3c0a54c41ac713a035ed6cfcc79b21b3f))
+* clarify RHCSA10 exam task targets ([fae9480](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fae94807b2a307ae01014eb465e0d2b9c888a3fb))
+* fix RHCSA10 lab and replay failures in setup, Flatpak, server resets, and at jobs ([1b23bbe](https://github.com/firassBenNacib/RHCSA-Simulator/commit/1b23bbe232f0e25949df73edfeac5cd067ec2fc0), [01fff8e](https://github.com/firassBenNacib/RHCSA-Simulator/commit/01fff8e33b40aeaf84a03e62ebc48c8081ab3d6b), [59bec23](https://github.com/firassBenNacib/RHCSA-Simulator/commit/59bec238c8ce63eebdb3e6e617e141f4436d353e), [ffe4c65](https://github.com/firassBenNacib/RHCSA-Simulator/commit/ffe4c6562f07c8f6655f02614f859b6dc641ff7d), [621afa2](https://github.com/firassBenNacib/RHCSA-Simulator/commit/621afa208ba64f7cfcb36fbd5f0176ea39fc17a1))
+* harden scenario grading for final-state checks, task coverage, persistent mounts, cron, at, journald, and swap ([c73071d](https://github.com/firassBenNacib/RHCSA-Simulator/commit/c73071ddb3b4221abf9e5fae9e09dfa72803729c), [e3b1635](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e3b16359f77f25dc2dbf60de2eb492e015697fb9), [feb7a18](https://github.com/firassBenNacib/RHCSA-Simulator/commit/feb7a188135a6e62ac38a7a00690d0658d1aeab0), [02ab1fc](https://github.com/firassBenNacib/RHCSA-Simulator/commit/02ab1fc54fe4eff7eca5239fcc1e8762703e0eff))
+* prefer UUID swap persistence ([b27e7f1](https://github.com/firassBenNacib/RHCSA-Simulator/commit/b27e7f1e417acd4d309d8eaffc478769ba97e2ee))
+* restrict automatic recovery cleanup to project-owned VirtualBox and Vagrant processes ([9cee615](https://github.com/firassBenNacib/RHCSA-Simulator/commit/9cee61575d0790457308050b6a07f6ef29d6a5c9))
+* validate persistent journald configuration ([#58](https://github.com/firassBenNacib/RHCSA-Simulator/issues/58)) ([02ab1fc](https://github.com/firassBenNacib/RHCSA-Simulator/commit/02ab1fc54fe4eff7eca5239fcc1e8762703e0eff))
+* verify installer checksums while preserving legacy installer assets ([af55e95](https://github.com/firassBenNacib/RHCSA-Simulator/commit/af55e958c9d2aecdfc0d7143df6427df4c5a9196), [1c0cb7e](https://github.com/firassBenNacib/RHCSA-Simulator/commit/1c0cb7e5e52c52b1d543845710ad125d4d65178e))
+
+### Documentation
+
+* refresh default workflow docs, scenario wording, validation guidance, and README branding ([f7169e9](https://github.com/firassBenNacib/RHCSA-Simulator/commit/f7169e97b360ac6de3791312bb7c49f58f19233a), [7aeca50](https://github.com/firassBenNacib/RHCSA-Simulator/commit/7aeca50f2a97dcaef396e8bb5a95354e9516409a), [fadae06](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fadae062fa7f508a14cd55ff3a2a29550cfcc36e), [ffa2c4a](https://github.com/firassBenNacib/RHCSA-Simulator/commit/ffa2c4abf602f6723ff8772b920066602921293a))
+
+### Chores
+
+* update CI filters, workflow action pins, and development test requirements ([3e02896](https://github.com/firassBenNacib/RHCSA-Simulator/commit/3e028960a7156d3e17194f4ddd15a961b65cdb0f), [506740b](https://github.com/firassBenNacib/RHCSA-Simulator/commit/506740b8a6d0d4d7eea7aa1fb7e887cd3d5fed86), [35fc23c](https://github.com/firassBenNacib/RHCSA-Simulator/commit/35fc23c82785ee25085006cfc4fc85e878a26d22), [03bb545](https://github.com/firassBenNacib/RHCSA-Simulator/commit/03bb545e30afba2155cb4f3396b73cd793916478))
+
 ## [2.1.2](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.1...v2.1.2) (2026-06-11)
 
 
