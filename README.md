@@ -416,9 +416,12 @@ Windows equivalents:
 go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
-python -m unittest discover tools/scenarios/tests
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+<python> -m unittest discover tools/scenarios/tests
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
 ```
+
+Replace `<python>` with the Python launcher available on your machine, such as `python`, `python3.13.exe`, or `py -3.13`.
 
 Build the TUI from source:
 
@@ -451,8 +454,18 @@ make test
 For scenario changes, also run:
 
 ```powershell
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
 ```
+
+`--audit-only` checks replay metadata without starting VMs. For one changed scenario, use `--track` and `--only` to limit validation:
+
+```powershell
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote --audit-only
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote
+```
+
+Run live replay when scenario setup, checks, provisioning, or solution commands change.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for coding rules, scenario rules, and the expected workflow.
 

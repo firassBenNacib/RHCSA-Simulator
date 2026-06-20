@@ -58,17 +58,25 @@ RHCSA 9 keeps Podman/container practice in this track. RHCSA 10-specific topics 
 
 ## Verification
 
-Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment:
+Run live replay from Windows PowerShell because the verifier talks to the Windows Vagrant and VirtualBox environment:
 
 ```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
-python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
 ```
 
-For a fast metadata-only check:
+For fast static checks:
 
 ```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind all --track RHCSA9 --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
+<python> .\host\verify_scenario_solutions.py --kind all --track RHCSA9 --audit-only
+```
+
+Replace `<python>` with the Python launcher available on your machine, such as `python`, `python3.13.exe`, or `py -3.13`. Use `--only <scenario-id>` for focused checks, for example:
+
+```powershell
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA9 --only lab-15-lvm-create-mount --audit-only
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA9 --only lab-15-lvm-create-mount
 ```
 
 Live replay is the source of truth after changes to:

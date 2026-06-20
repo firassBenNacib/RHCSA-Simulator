@@ -61,17 +61,25 @@ The mock exams are client/server exams. Individual questions may target the clie
 
 ## Verification
 
-Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment:
+Run live replay from Windows PowerShell because the verifier talks to the Windows Vagrant and VirtualBox environment:
 
 ```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
-python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
 ```
 
-For a fast metadata-only check:
+For fast static checks:
 
 ```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind all --track RHCSA10 --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
+<python> .\host\verify_scenario_solutions.py --kind all --track RHCSA10 --audit-only
+```
+
+Replace `<python>` with the Python launcher available on your machine, such as `python`, `python3.13.exe`, or `py -3.13`. Use `--only <scenario-id>` for focused checks, for example:
+
+```powershell
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote --audit-only
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote
 ```
 
 Live replay is the source of truth after changes to:
