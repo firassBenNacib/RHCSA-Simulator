@@ -70,7 +70,7 @@ On client, create /srv/opsg9 owned by root:opsg9 with permissions 2770 and a def
 
 ## Question 08 - Client Report Script (client) - 5 pts
 
-On client, create executable script /usr/local/bin/report-g9 that writes the active state of sshd, chronyd, and firewalld to /root/report-g9.txt.
+On client, create executable script /usr/local/bin/report-g9 that writes glacier iris report and the active state of sshd, chronyd, and firewalld to /root/report-g9.txt.
 
 ---
 
@@ -117,7 +117,7 @@ On server, create group srvg9, create user svcg9 with password cinder9, add svcg
 
 ## Question 15 - Server Web Service (server) - 4 pts
 
-On server, publish /var/www/html/exam-g.html containing RHCSA9-G, configure httpd to listen on TCP port 8306, label the port for httpd, and open it permanently in firewalld.
+On server, publish /var/www/html/exam-g.html containing glacier status web, configure httpd to listen on TCP port 8306, label the port for httpd, and open it permanently in firewalld.
 
 ---
 
@@ -129,7 +129,7 @@ On server, enable persistent systemd journal storage and restart systemd-journal
 
 ## Question 17 - Server Cron Schedule (server) - 4 pts
 
-On server, schedule a root cron job that runs every 11 minutes and appends server-g to /var/log/auditg9.log.
+On server, schedule a root cron job that runs every 11 minutes and appends glacier monitor cron to /var/log/auditg9.log.
 
 ---
 
@@ -141,7 +141,7 @@ On server, set the default boot target to multi-user.target and create /srv/serv
 
 ## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
-On server, export /exports/rhcsa9-g to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-g persistently at /mnt/rhcsa9-g.
+On server, export /exports/rhcsa9-g to 192.168.122.0/24 with a README containing glacier project export. On client, mount server:/exports/rhcsa9-g persistently at /mnt/rhcsa9-g.
 
 ---
 
@@ -153,7 +153,7 @@ On server, create user copyg9 with password cinder9. On client, configure key-ba
 
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
-On client, create /root/exam-g-copy.txt containing RHCSA9-G and copy it to server:/home/copyg9/exam-g-copy.txt.
+On client, create /root/exam-g-copy.txt containing glacier courier transfer and copy it to server:/home/copyg9/exam-g-copy.txt.
 
 ---
 

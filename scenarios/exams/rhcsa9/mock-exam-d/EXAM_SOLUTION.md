@@ -115,7 +115,7 @@ setfacl -m d:g:opsd9:rwx /srv/opsd9
 ```bash
 cat > /usr/local/bin/report-d9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-d9.txt
+echo 'drift ember report' > /root/report-d9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-d9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srvd9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-D > /var/www/html/exam-d.html
+echo 'drift portal web' > /var/www/html/exam-d.html
 restorecon -v /var/www/html/exam-d.html || true
 cat > /etc/httpd/conf.d/exam-d.conf <<'EOF'
 Listen 8303
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/auditd9.sh <<'EOF'
 #!/bin/bash
-echo server-d >> /var/log/auditd9.log
+echo 'drift watch cron' >> /var/log/auditd9.log
 EOF
 chmod +x /usr/local/sbin/auditd9.sh
 cat > /etc/cron.d/auditd9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-d9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-d
-echo exam-d > /exports/rhcsa9-d/README
+echo 'drift team export' > /exports/rhcsa9-d/README
 cat > /etc/exports.d/rhcsa9-d.exports <<'EOF'
 /exports/rhcsa9-d 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyd9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-D > /root/exam-d-copy.txt
+echo 'drift packet transfer' > /root/exam-d-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-d-copy.txt copyd9@server:/home/copyd9/exam-d-copy.txt
 ```
 

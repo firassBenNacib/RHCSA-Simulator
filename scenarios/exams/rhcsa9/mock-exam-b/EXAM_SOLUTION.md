@@ -115,7 +115,7 @@ setfacl -m d:g:opsb9:rwx /srv/opsb9
 ```bash
 cat > /usr/local/bin/report-b9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-b9.txt
+echo 'birch beacon report' > /root/report-b9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-b9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srvb9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-B > /var/www/html/exam-b.html
+echo 'birch delta web' > /var/www/html/exam-b.html
 restorecon -v /var/www/html/exam-b.html || true
 cat > /etc/httpd/conf.d/exam-b.conf <<'EOF'
 Listen 8301
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/auditb9.sh <<'EOF'
 #!/bin/bash
-echo server-b >> /var/log/auditb9.log
+echo 'birch relay cron' >> /var/log/auditb9.log
 EOF
 chmod +x /usr/local/sbin/auditb9.sh
 cat > /etc/cron.d/auditb9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-b9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-b
-echo exam-b > /exports/rhcsa9-b/README
+echo 'birch storage export' > /exports/rhcsa9-b/README
 cat > /etc/exports.d/rhcsa9-b.exports <<'EOF'
 /exports/rhcsa9-b 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyb9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-B > /root/exam-b-copy.txt
+echo 'birch archive transfer' > /root/exam-b-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-b-copy.txt copyb9@server:/home/copyb9/exam-b-copy.txt
 ```
 

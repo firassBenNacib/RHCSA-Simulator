@@ -70,7 +70,7 @@ On client, create /srv/opsh9 owned by root:opsh9 with permissions 2770 and a def
 
 ## Question 08 - Client Report Script (client) - 5 pts
 
-On client, create executable script /usr/local/bin/report-h9 that writes the active state of sshd, chronyd, and firewalld to /root/report-h9.txt.
+On client, create executable script /usr/local/bin/report-h9 that writes harbor jasper report and the active state of sshd, chronyd, and firewalld to /root/report-h9.txt.
 
 ---
 
@@ -117,7 +117,7 @@ On server, create group srvh9, create user svch9 with password cinder9, add svch
 
 ## Question 15 - Server Web Service (server) - 4 pts
 
-On server, publish /var/www/html/exam-h.html containing RHCSA9-H, configure httpd to listen on TCP port 8307, label the port for httpd, and open it permanently in firewalld.
+On server, publish /var/www/html/exam-h.html containing harbor landing web, configure httpd to listen on TCP port 8307, label the port for httpd, and open it permanently in firewalld.
 
 ---
 
@@ -129,7 +129,7 @@ On server, enable persistent systemd journal storage and restart systemd-journal
 
 ## Question 17 - Server Cron Schedule (server) - 4 pts
 
-On server, schedule a root cron job that runs every 12 minutes and appends server-h to /var/log/audith9.log.
+On server, schedule a root cron job that runs every 12 minutes and appends harbor cycle cron to /var/log/audith9.log.
 
 ---
 
@@ -141,7 +141,7 @@ On server, set the default boot target to multi-user.target and create /srv/serv
 
 ## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
-On server, export /exports/rhcsa9-h to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-h persistently at /mnt/rhcsa9-h.
+On server, export /exports/rhcsa9-h to 192.168.122.0/24 with a README containing harbor data export. On client, mount server:/exports/rhcsa9-h persistently at /mnt/rhcsa9-h.
 
 ---
 
@@ -153,7 +153,7 @@ On server, create user copyh9 with password cinder9. On client, configure key-ba
 
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
-On client, create /root/exam-h-copy.txt containing RHCSA9-H and copy it to server:/home/copyh9/exam-h-copy.txt.
+On client, create /root/exam-h-copy.txt containing harbor mirror transfer and copy it to server:/home/copyh9/exam-h-copy.txt.
 
 ---
 

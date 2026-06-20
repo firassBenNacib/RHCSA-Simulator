@@ -70,7 +70,7 @@ On client, create /srv/opse9 owned by root:opse9 with permissions 2770 and a def
 
 ## Question 08 - Client Report Script (client) - 5 pts
 
-On client, create executable script /usr/local/bin/report-e9 that writes the active state of sshd, chronyd, and firewalld to /root/report-e9.txt.
+On client, create executable script /usr/local/bin/report-e9 that writes ember frost report and the active state of sshd, chronyd, and firewalld to /root/report-e9.txt.
 
 ---
 
@@ -117,7 +117,7 @@ On server, create group srve9, create user svce9 with password cinder9, add svce
 
 ## Question 15 - Server Web Service (server) - 4 pts
 
-On server, publish /var/www/html/exam-e.html containing RHCSA9-E, configure httpd to listen on TCP port 8304, label the port for httpd, and open it permanently in firewalld.
+On server, publish /var/www/html/exam-e.html containing ember service web, configure httpd to listen on TCP port 8304, label the port for httpd, and open it permanently in firewalld.
 
 ---
 
@@ -129,7 +129,7 @@ On server, enable persistent systemd journal storage and restart systemd-journal
 
 ## Question 17 - Server Cron Schedule (server) - 4 pts
 
-On server, schedule a root cron job that runs every 9 minutes and appends server-e to /var/log/audite9.log.
+On server, schedule a root cron job that runs every 9 minutes and appends ember audit cron to /var/log/audite9.log.
 
 ---
 
@@ -141,7 +141,7 @@ On server, set the default boot target to multi-user.target and create /srv/serv
 
 ## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
-On server, export /exports/rhcsa9-e to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-e persistently at /mnt/rhcsa9-e.
+On server, export /exports/rhcsa9-e to 192.168.122.0/24 with a README containing ember depot export. On client, mount server:/exports/rhcsa9-e persistently at /mnt/rhcsa9-e.
 
 ---
 
@@ -153,7 +153,7 @@ On server, create user copye9 with password cinder9. On client, configure key-ba
 
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
-On client, create /root/exam-e-copy.txt containing RHCSA9-E and copy it to server:/home/copye9/exam-e-copy.txt.
+On client, create /root/exam-e-copy.txt containing ember vault transfer and copy it to server:/home/copye9/exam-e-copy.txt.
 
 ---
 

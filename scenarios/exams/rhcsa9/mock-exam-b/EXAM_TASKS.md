@@ -70,7 +70,7 @@ On client, create /srv/opsb9 owned by root:opsb9 with permissions 2770 and a def
 
 ## Question 08 - Client Report Script (client) - 5 pts
 
-On client, create executable script /usr/local/bin/report-b9 that writes the active state of sshd, chronyd, and firewalld to /root/report-b9.txt.
+On client, create executable script /usr/local/bin/report-b9 that writes birch beacon report and the active state of sshd, chronyd, and firewalld to /root/report-b9.txt.
 
 ---
 
@@ -117,7 +117,7 @@ On server, create group srvb9, create user svcb9 with password cinder9, add svcb
 
 ## Question 15 - Server Web Service (server) - 4 pts
 
-On server, publish /var/www/html/exam-b.html containing RHCSA9-B, configure httpd to listen on TCP port 8301, label the port for httpd, and open it permanently in firewalld.
+On server, publish /var/www/html/exam-b.html containing birch delta web, configure httpd to listen on TCP port 8301, label the port for httpd, and open it permanently in firewalld.
 
 ---
 
@@ -129,7 +129,7 @@ On server, enable persistent systemd journal storage and restart systemd-journal
 
 ## Question 17 - Server Cron Schedule (server) - 4 pts
 
-On server, schedule a root cron job that runs every 6 minutes and appends server-b to /var/log/auditb9.log.
+On server, schedule a root cron job that runs every 6 minutes and appends birch relay cron to /var/log/auditb9.log.
 
 ---
 
@@ -141,7 +141,7 @@ On server, set the default boot target to multi-user.target and create /srv/serv
 
 ## Question 19 - Client Server NFS Mount (client + server) - 4 pts
 
-On server, export /exports/rhcsa9-b to 192.168.122.0/24. On client, mount server:/exports/rhcsa9-b persistently at /mnt/rhcsa9-b.
+On server, export /exports/rhcsa9-b to 192.168.122.0/24 with a README containing birch storage export. On client, mount server:/exports/rhcsa9-b persistently at /mnt/rhcsa9-b.
 
 ---
 
@@ -153,7 +153,7 @@ On server, create user copyb9 with password cinder9. On client, configure key-ba
 
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
-On client, create /root/exam-b-copy.txt containing RHCSA9-B and copy it to server:/home/copyb9/exam-b-copy.txt.
+On client, create /root/exam-b-copy.txt containing birch archive transfer and copy it to server:/home/copyb9/exam-b-copy.txt.
 
 ---
 

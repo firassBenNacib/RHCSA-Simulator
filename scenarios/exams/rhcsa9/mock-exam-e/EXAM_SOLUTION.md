@@ -115,7 +115,7 @@ setfacl -m d:g:opse9:rwx /srv/opse9
 ```bash
 cat > /usr/local/bin/report-e9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-e9.txt
+echo 'ember frost report' > /root/report-e9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-e9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srve9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-E > /var/www/html/exam-e.html
+echo 'ember service web' > /var/www/html/exam-e.html
 restorecon -v /var/www/html/exam-e.html || true
 cat > /etc/httpd/conf.d/exam-e.conf <<'EOF'
 Listen 8304
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/audite9.sh <<'EOF'
 #!/bin/bash
-echo server-e >> /var/log/audite9.log
+echo 'ember audit cron' >> /var/log/audite9.log
 EOF
 chmod +x /usr/local/sbin/audite9.sh
 cat > /etc/cron.d/audite9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-e9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-e
-echo exam-e > /exports/rhcsa9-e/README
+echo 'ember depot export' > /exports/rhcsa9-e/README
 cat > /etc/exports.d/rhcsa9-e.exports <<'EOF'
 /exports/rhcsa9-e 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copye9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-E > /root/exam-e-copy.txt
+echo 'ember vault transfer' > /root/exam-e-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-e-copy.txt copye9@server:/home/copye9/exam-e-copy.txt
 ```
 

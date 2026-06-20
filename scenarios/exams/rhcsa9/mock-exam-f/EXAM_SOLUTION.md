@@ -115,7 +115,7 @@ setfacl -m d:g:opsf9:rwx /srv/opsf9
 ```bash
 cat > /usr/local/bin/report-f9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-f9.txt
+echo 'falcon grove report' > /root/report-f9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-f9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srvf9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-F > /var/www/html/exam-f.html
+echo 'falcon console web' > /var/www/html/exam-f.html
 restorecon -v /var/www/html/exam-f.html || true
 cat > /etc/httpd/conf.d/exam-f.conf <<'EOF'
 Listen 8305
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/auditf9.sh <<'EOF'
 #!/bin/bash
-echo server-f >> /var/log/auditf9.log
+echo 'falcon keeper cron' >> /var/log/auditf9.log
 EOF
 chmod +x /usr/local/sbin/auditf9.sh
 cat > /etc/cron.d/auditf9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-f9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-f
-echo exam-f > /exports/rhcsa9-f/README
+echo 'falcon share export' > /exports/rhcsa9-f/README
 cat > /etc/exports.d/rhcsa9-f.exports <<'EOF'
 /exports/rhcsa9-f 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyf9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-F > /root/exam-f-copy.txt
+echo 'falcon route transfer' > /root/exam-f-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-f-copy.txt copyf9@server:/home/copyf9/exam-f-copy.txt
 ```
 

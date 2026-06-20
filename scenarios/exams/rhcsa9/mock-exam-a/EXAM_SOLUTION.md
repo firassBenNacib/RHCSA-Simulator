@@ -115,7 +115,7 @@ setfacl -m d:g:opsa9:rwx /srv/opsa9
 ```bash
 cat > /usr/local/bin/report-a9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-a9.txt
+echo 'atlas anchor report' > /root/report-a9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-a9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srva9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-A > /var/www/html/exam-a.html
+echo 'atlas signal web' > /var/www/html/exam-a.html
 restorecon -v /var/www/html/exam-a.html || true
 cat > /etc/httpd/conf.d/exam-a.conf <<'EOF'
 Listen 8300
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/audita9.sh <<'EOF'
 #!/bin/bash
-echo server-a >> /var/log/audita9.log
+echo 'atlas harbor cron' >> /var/log/audita9.log
 EOF
 chmod +x /usr/local/sbin/audita9.sh
 cat > /etc/cron.d/audita9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-a9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-a
-echo exam-a > /exports/rhcsa9-a/README
+echo 'atlas shared export' > /exports/rhcsa9-a/README
 cat > /etc/exports.d/rhcsa9-a.exports <<'EOF'
 /exports/rhcsa9-a 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copya9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-A > /root/exam-a-copy.txt
+echo 'atlas ledger transfer' > /root/exam-a-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-a-copy.txt copya9@server:/home/copya9/exam-a-copy.txt
 ```
 
