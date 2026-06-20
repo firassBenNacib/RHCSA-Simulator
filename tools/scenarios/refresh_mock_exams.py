@@ -323,16 +323,76 @@ def rhcsa9_shared_dir_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
-def rhcsa9_script_step(letter: str) -> tuple[str, str, list[str]]:
+RHCSA9_EXAM_MARKERS = {
+    "a": {
+        "script": "atlas anchor report",
+        "web": "atlas signal web",
+        "cron": "atlas harbor cron",
+        "nfs": "atlas shared export",
+        "copy": "atlas ledger transfer",
+    },
+    "b": {
+        "script": "birch beacon report",
+        "web": "birch delta web",
+        "cron": "birch relay cron",
+        "nfs": "birch storage export",
+        "copy": "birch archive transfer",
+    },
+    "c": {
+        "script": "cedar cobalt report",
+        "web": "cedar pulse web",
+        "cron": "cedar timer cron",
+        "nfs": "cedar files export",
+        "copy": "cedar bridge transfer",
+    },
+    "d": {
+        "script": "drift ember report",
+        "web": "drift portal web",
+        "cron": "drift watch cron",
+        "nfs": "drift team export",
+        "copy": "drift packet transfer",
+    },
+    "e": {
+        "script": "ember frost report",
+        "web": "ember service web",
+        "cron": "ember audit cron",
+        "nfs": "ember depot export",
+        "copy": "ember vault transfer",
+    },
+    "f": {
+        "script": "falcon grove report",
+        "web": "falcon console web",
+        "cron": "falcon keeper cron",
+        "nfs": "falcon share export",
+        "copy": "falcon route transfer",
+    },
+    "g": {
+        "script": "glacier iris report",
+        "web": "glacier status web",
+        "cron": "glacier monitor cron",
+        "nfs": "glacier project export",
+        "copy": "glacier courier transfer",
+    },
+    "h": {
+        "script": "harbor jasper report",
+        "web": "harbor landing web",
+        "cron": "harbor cycle cron",
+        "nfs": "harbor data export",
+        "copy": "harbor mirror transfer",
+    },
+}
+
+
+def rhcsa9_script_step(letter: str, marker: str) -> tuple[str, str, list[str]]:
     script = f"/usr/local/bin/report-{letter}9"
     output = f"/root/report-{letter}9.txt"
     return block(
         "Client Report Script",
-        f"On client, create executable script {script} that writes the active state of sshd, chronyd, and firewalld to {output}.",
+        f"On client, create executable script {script} that writes {marker} and the active state of sshd, chronyd, and firewalld to {output}.",
         [
             f"cat > {script} <<'SCRIPT'",
             "#!/bin/bash",
-            f": > {output}",
+            f"echo '{marker}' > {output}",
             "for service in sshd chronyd firewalld; do",
             f"  systemctl is-active \"$service\" >> {output} || true",
             "done",
@@ -427,14 +487,14 @@ def rhcsa9_server_user_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
-def rhcsa9_server_http_step(letter: str, port: int) -> tuple[str, str, list[str]]:
+def rhcsa9_server_http_step(letter: str, port: int, marker: str) -> tuple[str, str, list[str]]:
     return block(
         "Server Web Service",
-        f"On server, publish /var/www/html/exam-{letter}.html containing RHCSA9-{letter.upper()}, configure httpd to listen on TCP port {port}, label the port for httpd, and open it permanently in firewalld.",
+        f"On server, publish /var/www/html/exam-{letter}.html containing {marker}, configure httpd to listen on TCP port {port}, label the port for httpd, and open it permanently in firewalld.",
         [
             "# On server:",
             "mkdir -p /var/www/html",
-            f"echo RHCSA9-{letter.upper()} > /var/www/html/exam-{letter}.html",
+            f"echo '{marker}' > /var/www/html/exam-{letter}.html",
             f"restorecon -v /var/www/html/exam-{letter}.html || true",
             f"cat > /etc/httpd/conf.d/exam-{letter}.conf <<'EOF'\nListen {port}\nEOF",
             f"semanage port -a -t http_port_t -p tcp {port} 2>/dev/null || semanage port -m -t http_port_t -p tcp {port}",
@@ -463,16 +523,16 @@ def rhcsa9_server_journal_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
-def rhcsa9_server_schedule_step(letter: str, minutes: int) -> tuple[str, str, list[str]]:
+def rhcsa9_server_schedule_step(letter: str, minutes: int, marker: str) -> tuple[str, str, list[str]]:
     job = f"audit{letter}9"
     return block(
         "Server Cron Schedule",
-        f"On server, schedule a root cron job that runs every {minutes} minutes and appends server-{letter} to /var/log/{job}.log.",
+        f"On server, schedule a root cron job that runs every {minutes} minutes and appends {marker} to /var/log/{job}.log.",
         [
             "# On server:",
             f"cat > /usr/local/sbin/{job}.sh <<'EOF'",
             "#!/bin/bash",
-            f"echo server-{letter} >> /var/log/{job}.log",
+            f"echo '{marker}' >> /var/log/{job}.log",
             "EOF",
             f"chmod +x /usr/local/sbin/{job}.sh",
             f"cat > /etc/cron.d/{job} <<'EOF'",
@@ -501,16 +561,16 @@ def rhcsa9_server_policy_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
-def rhcsa9_both_nfs_step(letter: str) -> tuple[str, str, list[str]]:
+def rhcsa9_both_nfs_step(letter: str, marker: str) -> tuple[str, str, list[str]]:
     export_path = f"/exports/rhcsa9-{letter}"
     mountpoint = f"/mnt/rhcsa9-{letter}"
     return block(
         "Client Server NFS Mount",
-        f"On server, export {export_path} to 192.168.122.0/24. On client, mount server:{export_path} persistently at {mountpoint}.",
+        f"On server, export {export_path} to 192.168.122.0/24 with a README containing {marker}. On client, mount server:{export_path} persistently at {mountpoint}.",
         [
             "# On server:",
             f"mkdir -p {export_path}",
-            f"echo exam-{letter} > {export_path}/README",
+            f"echo '{marker}' > {export_path}/README",
             f"cat > /etc/exports.d/rhcsa9-{letter}.exports <<'EOF'",
             f"{export_path} 192.168.122.0/24(rw,sync,no_root_squash)",
             "EOF",
@@ -544,13 +604,13 @@ def rhcsa9_both_ssh_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
-def rhcsa9_both_copy_step(letter: str) -> tuple[str, str, list[str]]:
+def rhcsa9_both_copy_step(letter: str, marker: str) -> tuple[str, str, list[str]]:
     user = f"copy{letter}9"
     return block(
         "Client Server Secure Copy",
-        f"On client, create /root/exam-{letter}-copy.txt containing RHCSA9-{letter.upper()} and copy it to server:/home/{user}/exam-{letter}-copy.txt.",
+        f"On client, create /root/exam-{letter}-copy.txt containing {marker} and copy it to server:/home/{user}/exam-{letter}-copy.txt.",
         [
-            f"echo RHCSA9-{letter.upper()} > /root/exam-{letter}-copy.txt",
+            f"echo '{marker}' > /root/exam-{letter}-copy.txt",
             f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-{letter}-copy.txt {user}@server:/home/{user}/exam-{letter}-copy.txt",
         ],
     )
@@ -597,6 +657,7 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
     server_dir = f"/srv/server-{letter}9"
     script = f"/usr/local/bin/report-{letter}9"
     output = f"/root/report-{letter}9.txt"
+    markers = RHCSA9_EXAM_MARKERS[letter]
 
     blocks = [
         rhcsa9_root_step(letter),
@@ -606,20 +667,20 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
         rhcsa9_users_step(letter),
         rhcsa9_password_sudo_step(letter),
         rhcsa9_shared_dir_step(letter),
-        rhcsa9_script_step(letter),
+        rhcsa9_script_step(letter, markers["script"]),
         rhcsa9_swap_step(letter),
         rhcsa9_lvm_step(letter),
         rhcsa9_container_step(letter),
         rhcsa9_server_network_step(letter),
         rhcsa9_server_repo_step(letter),
         rhcsa9_server_user_step(letter),
-        rhcsa9_server_http_step(letter, port),
+        rhcsa9_server_http_step(letter, port, markers["web"]),
         rhcsa9_server_journal_step(letter),
-        rhcsa9_server_schedule_step(letter, minutes),
+        rhcsa9_server_schedule_step(letter, minutes, markers["cron"]),
         rhcsa9_server_policy_step(letter),
-        rhcsa9_both_nfs_step(letter),
+        rhcsa9_both_nfs_step(letter, markers["nfs"]),
         rhcsa9_both_ssh_step(letter),
-        rhcsa9_both_copy_step(letter),
+        rhcsa9_both_copy_step(letter, markers["copy"]),
         rhcsa9_both_chrony_step(letter),
     ]
     checks = [
@@ -630,20 +691,20 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
         f"getent group {group} >/dev/null && id -nG ana{letter}9 | tr ' ' '\\n' | grep -qx {group} && id -nG dev{letter}9 | tr ' ' '\\n' | grep -qx {group} && getent passwd audit{letter}9 | awk -F: '$7 == \"/sbin/nologin\" {{found=1}} END {{exit !found}}'",
         f"chage -l ana{letter}9 | grep -Eq 'Maximum.*60' && chage -l ana{letter}9 | grep -Eq 'warning.*7' && grep -Eq '^%{group}[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/{group}-systemctl",
         f"stat -c '%U:%G:%a' /srv/{group} | grep -qx root:{group}:2770 && getfacl -p /srv/{group} | grep -Eq '^default:group:{group}:rwx$'",
-        f"test -x {script} && {script} >/dev/null && test -s {output}",
+        f"test -x {script} && {script} >/dev/null && grep -Fxq '{markers['script']}' {output}",
         f"swapon --show=NAME --noheadings | grep -qx '/swap{letter}9' && awk '$1 == \"/swap{letter}9\" && $2 == \"swap\" && $3 == \"swap\" {{found=1}} END {{exit !found}}' /etc/fstab",
         f"lvs /dev/{vg}/{lv} >/dev/null 2>&1 && findmnt -no TARGET /mnt/{lv} | grep -qx /mnt/{lv} && awk '$2 == \"/mnt/{lv}\" && $3 == \"xfs\" {{found=1}} END {{exit !found}}' /etc/fstab",
         f"runuser -l {user} -c 'podman ps --format {{{{.Names}}}}' | grep -qx {container} && loginctl show-user {user} | grep -Eq '^Linger=yes$'",
         ssh_server_check(rhcsa9_network_check("192.168.122.3", f"server-{letter}.exam9.lab")),
         ssh_server_check(STRICT_RHCSA9_REPO_CHECK),
         ssh_server_check(f"getent group {server_group} >/dev/null && id -nG {server_user} | tr ' ' '\\n' | grep -qx {server_group} && grep -Eq '^%{server_group}[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/{server_group}-systemctl"),
-        ssh_server_check(f"grep -Fxq RHCSA9-{letter.upper()} /var/www/html/exam-{letter}.html && grep -Eq '^Listen[[:space:]]+{port}$' /etc/httpd/conf.d/exam-{letter}.conf && semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,]){port}([, ]|$)/ {{found=1}} END {{exit !found}}' && firewall-cmd --permanent --query-port={port}/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"),
+        ssh_server_check(f"grep -Fxq '{markers['web']}' /var/www/html/exam-{letter}.html && grep -Eq '^Listen[[:space:]]+{port}$' /etc/httpd/conf.d/exam-{letter}.conf && semanage port -l | awk '$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,]){port}([, ]|$)/ {{found=1}} END {{exit !found}}' && firewall-cmd --permanent --query-port={port}/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active"),
         ssh_server_check(JOURNALD_PERSISTENT_CHECK),
-        ssh_server_check(f"test -x /usr/local/sbin/{job}.sh && grep -Fxq '*/{minutes} * * * * root /usr/local/sbin/{job}.sh' /etc/cron.d/{job} && grep -Fxq 'echo server-{letter} >> /var/log/{job}.log' /usr/local/sbin/{job}.sh && systemctl is-enabled crond | grep -qx enabled"),
+        ssh_server_check(f"test -x /usr/local/sbin/{job}.sh && grep -Fxq '*/{minutes} * * * * root /usr/local/sbin/{job}.sh' /etc/cron.d/{job} && grep -Fxq \"echo '{markers['cron']}' >> /var/log/{job}.log\" /usr/local/sbin/{job}.sh && systemctl is-enabled crond | grep -qx enabled"),
         ssh_server_check(f"systemctl get-default | grep -qx multi-user.target && stat -c '%U:%G:%a' {server_dir} | grep -qx root:{server_group}:2770"),
-        f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx 'server:{export_path} {mountpoint}' && grep -Eq '^server:{export_path}[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && {ssh_server_check(f'grep -Eq \"^{export_path}[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/rhcsa9-{letter}.exports && systemctl is-active nfs-server | grep -qx active')}",
+        f"findmnt -no SOURCE,TARGET {mountpoint} | grep -qx 'server:{export_path} {mountpoint}' && grep -Eq '^server:{export_path}[[:space:]]+{mountpoint}[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && {ssh_server_check(f'grep -Fxq \"{markers['nfs']}\" {export_path}/README && grep -Eq \"^{export_path}[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/rhcsa9-{letter}.exports && systemctl is-active nfs-server | grep -qx active')}",
         f"runuser -l root -c 'ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {copy_user}@server true'",
-        ssh_server_check(f"grep -Fxq RHCSA9-{letter.upper()} /home/{copy_user}/exam-{letter}-copy.txt"),
+        ssh_server_check(f"grep -Fxq '{markers['copy']}' /home/{copy_user}/exam-{letter}-copy.txt"),
         f"grep -Eq '^server[[:space:]]+server[[:space:]]+iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && {ssh_server_check('systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active')}",
     ]
     return blocks, checks, True
