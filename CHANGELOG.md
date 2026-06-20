@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.3.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.2.0...v2.3.0) (2026-06-20)
+
+
+### Features
+
+* use composite track/id keys in progress system ([e19a821](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e19a821eab1115b215e2ac0faf32656bffe76e33))
+
+
+### Bug Fixes
+
+* accept stable LVM fstab sources ([#56](https://github.com/firassBenNacib/RHCSA-Simulator/issues/56)) ([d429299](https://github.com/firassBenNacib/RHCSA-Simulator/commit/d429299f8ddbac3896e0ab493843edb50094801d))
+* add go mod tidy before govulncheck in security workflow ([6964043](https://github.com/firassBenNacib/RHCSA-Simulator/commit/6964043428f7294b42516bccb1c4ce15043d6d42))
+* add missing progress import, remove unused imports, fix go.mod version ([0b155c9](https://github.com/firassBenNacib/RHCSA-Simulator/commit/0b155c9987ec2b38d9b436c9b07d3efe26fdbbe6))
+* align CI security checks ([a0a0a0f](https://github.com/firassBenNacib/RHCSA-Simulator/commit/a0a0a0fb80c1286610063433c5bde5d44090228d))
+* align verifier profile and scenario metadata ([85e7277](https://github.com/firassBenNacib/RHCSA-Simulator/commit/85e7277269add71e28667557161871455c5b5d17))
+* clarify RHCSA10 exam task targets ([fae9480](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fae94807b2a307ae01014eb465e0d2b9c888a3fb))
+* clear CI blockers for dual-track branch ([771d5e0](https://github.com/firassBenNacib/RHCSA-Simulator/commit/771d5e02e52123a29466a188b0db72b6efccb5bf))
+* correct go.mod version to 1.25, allow toolchain auto-download in security workflow ([bcd8b12](https://github.com/firassBenNacib/RHCSA-Simulator/commit/bcd8b12cd1b79d0341f403337bf6987be2cd0d5d))
+* harden replay authentication setup ([dc52c5f](https://github.com/firassBenNacib/RHCSA-Simulator/commit/dc52c5fd848c8c09fab2110f7e96dcb3e13eae90))
+* harden replay cleanup after VirtualBox crash ([39d98fd](https://github.com/firassBenNacib/RHCSA-Simulator/commit/39d98fd480548db67fc00869dbf90bd15fcb3b38))
+* harden replay cleanup and rhcsa9 checks ([1f28b29](https://github.com/firassBenNacib/RHCSA-Simulator/commit/1f28b29995771a3b5bcc3dbd803b5fe7e9bf7230))
+* harden RHCSA10 exam checks ([#54](https://github.com/firassBenNacib/RHCSA-Simulator/issues/54)) ([dda8e4d](https://github.com/firassBenNacib/RHCSA-Simulator/commit/dda8e4d79742565b9b8c02b26b8305ad08eb1b18))
+* keep baseline progress on one line ([996788c](https://github.com/firassBenNacib/RHCSA-Simulator/commit/996788cd8d998875efb3a6a74378575f3a237241))
+* keep colored verifier output and avoid rebuild fallback ([fabbf13](https://github.com/firassBenNacib/RHCSA-Simulator/commit/fabbf1359abc5aa8cddbcb85e20059e96c0338ab))
+* land RHCSA10 exam ordering on main ([aead7a1](https://github.com/firassBenNacib/RHCSA-Simulator/commit/aead7a1d4f2a22845d18023163faff49c2f61660))
+* move GOTOOLCHAIN env to job level in security workflow ([e646bc2](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e646bc20bcf5c4ba9aa7e1e588e5be60c60aa879))
+* polish CLI and RHCSA10 grading ([7dae663](https://github.com/firassBenNacib/RHCSA-Simulator/commit/7dae6633be7e0f220994d1b994181ad5b0713d62))
+* prefer UUID swap persistence ([b27e7f1](https://github.com/firassBenNacib/RHCSA-Simulator/commit/b27e7f1e417acd4d309d8eaffc478769ba97e2ee))
+* regenerate mock exams a/b/d with correct unique tasks ([4cecfb7](https://github.com/firassBenNacib/RHCSA-Simulator/commit/4cecfb7f7c7eac1a8a09319fec5c40bbd3313bc8))
+* repair CLI state handling and release dispatch ([e7e9b28](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e7e9b284c6b5411c04df4c3a14cad133537ea370))
+* restore CLI colors and release dispatch ([1c94002](https://github.com/firassBenNacib/RHCSA-Simulator/commit/1c940023d653c2d6f6c3e7ab09de1cc01c5edb7c))
+* restore colored CLI output and release dispatch ([2604a89](https://github.com/firassBenNacib/RHCSA-Simulator/commit/2604a895f3e9365dc4d2d1681f41f1f6efe9e657))
+* satisfy RHCSA10 scenario audit ([9fb529a](https://github.com/firassBenNacib/RHCSA-Simulator/commit/9fb529a813daf2c017564dbb0d14166ec760c241))
+* satisfy scenario audit for exam group replay ([4033157](https://github.com/firassBenNacib/RHCSA-Simulator/commit/4033157336caba4d1f0ab19d7992b3847a6fe7ea))
+* stabilize replay cleanup and rhcsa9 exams ([a25c053](https://github.com/firassBenNacib/RHCSA-Simulator/commit/a25c053638e41a7f7dc40d866998398a852163c7))
+* stabilize RHCSA9 and RHCSA10 simulator tracks ([8edd73b](https://github.com/firassBenNacib/RHCSA-Simulator/commit/8edd73b998558c6c4f649a4f1360052dad391616))
+* use patched Go toolchain directive ([6e76874](https://github.com/firassBenNacib/RHCSA-Simulator/commit/6e768747a4da67b47aea62baed941aa86784b9e5))
+* validate persistent journald configuration ([#58](https://github.com/firassBenNacib/RHCSA-Simulator/issues/58)) ([02ab1fc](https://github.com/firassBenNacib/RHCSA-Simulator/commit/02ab1fc54fe4eff7eca5239fcc1e8762703e0eff))
+
 ## [2.2.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.2...v2.2.0) (2026-06-20)
 
 
