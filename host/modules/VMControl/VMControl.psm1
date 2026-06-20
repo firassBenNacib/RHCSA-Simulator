@@ -136,10 +136,10 @@ function Get-VagrantUpTimeoutSeconds {
             }
         }
         catch {
-            return 900
+            return 1800
         }
 
-        return 900
+        return 1800
     }
 
     return 300
@@ -1480,7 +1480,14 @@ function Get-BaselineStatus {
         }
 
         $actualBoxName = Get-VagrantMachineBoxName -MachineName $machineName -ProjectRoot $ProjectRoot
-        if ([string]::IsNullOrWhiteSpace($actualBoxName) -or [string]$actualBoxName -ne [string]$expectedBoxName) {
+        $machineCurrentStatus = @($machineStatus | Where-Object { [string]$_.Name -eq $machineName } | Select-Object -First 1)
+        $machineRunning = ($machineCurrentStatus.Count -gt 0 -and [string]$machineCurrentStatus[0].StateHuman -eq 'running')
+        $missingBoxMetaButGuestMatches = (
+            [string]::IsNullOrWhiteSpace($actualBoxName) -and
+            $machineRunning -and
+            (Test-GuestBaselineMarker -MachineName $machineName -ProjectRoot $ProjectRoot)
+        )
+        if ((-not $missingBoxMetaButGuestMatches) -and ([string]::IsNullOrWhiteSpace($actualBoxName) -or [string]$actualBoxName -ne [string]$expectedBoxName)) {
             $boxCompatible[$machineName] = $false
             $allCreatedMachinesUseCurrentProfile = $false
         }
@@ -1712,7 +1719,7 @@ fi
         Start-Sleep -Seconds 10
         Clear-VmSshConnectionCache -ProjectRoot $ProjectRoot -MachineNames @('server', 'client')
         foreach ($machine in @('server', 'client')) {
-            Wait-VagrantGuestSshReady -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 90 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3
+            Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 90 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3
         }
     }
 
@@ -1772,7 +1779,7 @@ getenforce
 
     Clear-VmSshConnectionCache -ProjectRoot $ProjectRoot -MachineNames @('server', 'client')
     foreach ($machine in @('server', 'client')) {
-        Wait-VagrantGuestSshReady -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 24 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2
+        Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 24 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2
     }
 }
 
@@ -1859,7 +1866,7 @@ function Invoke-BaseSnapshotInitialization {
         }
 
         foreach ($machine in @('server', 'client')) {
-            Wait-VagrantGuestSshReady -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 60 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3
+            Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 60 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3
         }
     }
     finally {
@@ -1950,10 +1957,12 @@ function Wait-VagrantGuestSshReady {
     )
 
     $consecutiveSuccesses = 0
-    $didRhel10BootReset = $false
     $powerStateStartAttempts = 0
     $missingRegistrationAttempts = 0
-    $rhel10BootResetAttempt = [Math]::Min(6, [Math]::Max(1, $MaxAttempts - 2))
+    $allowRhel10BootReset = $env:RHCSA_DISABLE_RHEL10_BOOT_RESET -notmatch '^(1|true|yes|on)$'
+    $didRhel10BootReset = $false
+    # RHEL10 can pause during early boot/relabel; reset only after a real stall.
+    $rhel10BootResetAttempt = [Math]::Min(36, [Math]::Max(1, $MaxAttempts - 2))
     $hostCleanupParameters = @{ ProjectRoot = $ProjectRoot }
     if (Test-ForceHostCleanupEnabled) {
         $hostCleanupParameters['ForceHostCleanup'] = $true
@@ -2017,6 +2026,7 @@ function Wait-VagrantGuestSshReady {
 
         if (
             -not $didRhel10BootReset -and
+            $allowRhel10BootReset -and
             (Get-ProjectProfile -ProjectRoot $ProjectRoot) -eq 'rhel10' -and
             $attempt -ge $rhel10BootResetAttempt -and
             $attempt -lt $MaxAttempts
@@ -2137,6 +2147,53 @@ function Confirm-VagrantGuestProvisionReadiness {
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
             -StabilizationDelaySeconds $StabilizationDelaySeconds
+    }
+}
+
+function Confirm-BaselineGuestReadiness {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('server', 'client')]
+        [string]$MachineName,
+        [string]$ProjectRoot = (Get-ProjectRoot),
+        [string]$Area = 'baseline',
+        [int]$MaxAttempts = 60,
+        [int]$DelaySeconds = 5,
+        [int]$RequiredSuccesses = 1,
+        [int]$StabilizationDelaySeconds = 3
+    )
+
+    try {
+        Wait-VagrantGuestSshReady `
+            -MachineName $MachineName `
+            -ProjectRoot $ProjectRoot `
+            -Area $Area `
+            -MaxAttempts $MaxAttempts `
+            -DelaySeconds $DelaySeconds `
+            -RequiredSuccesses $RequiredSuccesses `
+            -StabilizationDelaySeconds $StabilizationDelaySeconds
+        return
+    }
+    catch {
+        if ((Get-ProjectProfile -ProjectRoot $ProjectRoot) -ne 'rhel10') {
+            throw
+        }
+
+        $message = $_.ToString()
+        if ($message -notmatch 'Failed to confirm SSH readiness|still reported as not created after startup') {
+            throw
+        }
+
+        Write-WorkflowStatus -Area $Area -Message "Extending $MachineName SSH readiness wait after RHCSA10 startup"
+        Confirm-VagrantGuestProvisionReadiness `
+            -MachineName $MachineName `
+            -ProjectRoot $ProjectRoot `
+            -Area $Area `
+            -MaxAttempts ([Math]::Max($MaxAttempts, 60)) `
+            -DelaySeconds $DelaySeconds `
+            -RequiredSuccesses $RequiredSuccesses `
+            -StabilizationDelaySeconds $StabilizationDelaySeconds `
+            -AllowStartupRetry
     }
 }
 
