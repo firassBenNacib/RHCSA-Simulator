@@ -465,11 +465,17 @@ function Get-RhcsaCpuX8664V3Status {
     }
 
     $required = @(
+        [PSCustomObject]@{ Name = 'sse3'; Leaf = '1/0'; Register = 'ecx'; Bit = 0 }
+        [PSCustomObject]@{ Name = 'ssse3'; Leaf = '1/0'; Register = 'ecx'; Bit = 9 }
+        [PSCustomObject]@{ Name = 'cx16'; Leaf = '1/0'; Register = 'ecx'; Bit = 13 }
+        [PSCustomObject]@{ Name = 'sse4_1'; Leaf = '1/0'; Register = 'ecx'; Bit = 19 }
+        [PSCustomObject]@{ Name = 'sse4_2'; Leaf = '1/0'; Register = 'ecx'; Bit = 20 }
+        [PSCustomObject]@{ Name = 'popcnt'; Leaf = '1/0'; Register = 'ecx'; Bit = 23 }
+        [PSCustomObject]@{ Name = 'osxsave'; Leaf = '1/0'; Register = 'ecx'; Bit = 27 }
         [PSCustomObject]@{ Name = 'avx'; Leaf = '1/0'; Register = 'ecx'; Bit = 28 }
         [PSCustomObject]@{ Name = 'f16c'; Leaf = '1/0'; Register = 'ecx'; Bit = 29 }
         [PSCustomObject]@{ Name = 'fma'; Leaf = '1/0'; Register = 'ecx'; Bit = 12 }
         [PSCustomObject]@{ Name = 'movbe'; Leaf = '1/0'; Register = 'ecx'; Bit = 22 }
-        [PSCustomObject]@{ Name = 'osxsave'; Leaf = '1/0'; Register = 'ecx'; Bit = 27 }
         [PSCustomObject]@{ Name = 'avx2'; Leaf = '7/0'; Register = 'ebx'; Bit = 5 }
         [PSCustomObject]@{ Name = 'bmi1'; Leaf = '7/0'; Register = 'ebx'; Bit = 3 }
         [PSCustomObject]@{ Name = 'bmi2'; Leaf = '7/0'; Register = 'ebx'; Bit = 8 }
@@ -488,6 +494,14 @@ function Get-RhcsaCpuX8664V3Status {
     }
     if (-not $hasLzcnt) {
         $missing += 'lzcnt'
+    }
+
+    $hasLahfLm = $false
+    if ($leafData.ContainsKey('80000001/0')) {
+        $hasLahfLm = Test-CpuBit -Data $leafData -Leaf '80000001/0' -Register 'ecx' -Bit 0
+    }
+    if (-not $hasLahfLm) {
+        $missing += 'lahf_lm'
     }
 
     if ($missing.Count -gt 0) {
@@ -1142,7 +1156,8 @@ function ConvertTo-VmSshConfigLines {
     )
 
     foreach ($identityFile in @($ConnectionInfo.IdentityFiles | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf })) {
-        $lines += ('  IdentityFile {0}' -f ([string]$identityFile -replace '\\', '/'))
+        $identityPath = ([string]$identityFile -replace '\\', '/') -replace '"', '\"'
+        $lines += ('  IdentityFile "{0}"' -f $identityPath)
     }
 
     return $lines
@@ -2092,7 +2107,38 @@ function Copy-RhcsaRepoCacheToServer {
     $cachePath = Get-RhcsaRepoCachePath -ProjectRoot $ProjectRoot -Profile $projectProfile
     $baseOsPath = Join-Path $cachePath 'BaseOS'
     $appStreamPath = Join-Path $cachePath 'AppStream'
+    $manifestPath = Join-Path $cachePath 'rhcsa-repo-cache.json'
     $remoteStage = '/tmp/rhcsa-repo-cache-upload'
+    $localManifest = ''
+    if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+        $localManifest = (Get-Content -LiteralPath $manifestPath -Raw).Trim()
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($localManifest)) {
+        $remoteManifestCheck = @'
+set -euo pipefail
+test -f /var/www/html/repo/BaseOS/repodata/repomd.xml
+test -f /var/www/html/repo/AppStream/repodata/repomd.xml
+test -f /var/www/html/repo/rhcsa-repo-cache.json
+cat /var/www/html/repo/rhcsa-repo-cache.json
+'@
+        try {
+            $remoteManifestResult = Invoke-VagrantVmShellCommandCapture `
+                -MachineName 'server' `
+                -ProjectRoot $ProjectRoot `
+                -Command $remoteManifestCheck `
+                -RetryCount 0 `
+                -SkipConnectivityCheck `
+                -SkipVagrantFallback
+            $remoteManifest = ((@($remoteManifestResult.StdOut) -join [Environment]::NewLine).Trim())
+            if ([int]$remoteManifestResult.ExitCode -eq 0 -and $remoteManifest -eq $localManifest) {
+                return $true
+            }
+        }
+        catch {
+            $null = $_
+        }
+    }
 
     $prepareResult = Invoke-VagrantVmShellCommandCapture `
         -MachineName 'server' `

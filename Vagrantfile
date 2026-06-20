@@ -84,8 +84,9 @@ def host_supports_x86_64_v3?
   return true unless File.file?("/proc/cpuinfo")
 
   flags = File.read("/proc/cpuinfo", encoding: "UTF-8", invalid: :replace, undef: :replace).lines.grep(/^flags\s*:/).first.to_s
-  required = %w[avx avx2 bmi1 bmi2 f16c fma movbe osxsave]
+  required = %w[avx avx2 bmi1 bmi2 cx16 f16c fma lahf_lm movbe osxsave popcnt sse4_1 sse4_2 ssse3]
   required.all? { |flag| flags.include?(" #{flag} ") } &&
+    (flags.include?(" sse3 ") || flags.include?(" pni ")) &&
     (flags.include?(" lzcnt ") || flags.include?(" abm "))
 end
 
