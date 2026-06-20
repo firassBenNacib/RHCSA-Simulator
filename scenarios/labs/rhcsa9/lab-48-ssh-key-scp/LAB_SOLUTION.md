@@ -59,7 +59,7 @@ ssh-copy-id -i ~/.ssh/id_ed25519.pub bridge48@server
 
 ---
 
-## Task 04 - Copy the payload with scp (client + server) - 10 pts
+## Task 04 - Copy the payload with SCP (client + server) - 10 pts
 
 ```bash
 # On client

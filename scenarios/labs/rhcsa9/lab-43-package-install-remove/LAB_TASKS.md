@@ -21,12 +21,12 @@ Install packages from the prepared local repositories and remove the one that is
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Client Package Install and Remove (client) - 10 pts
+## Task 01 - Client package install and remove (client) - 10 pts
 
 On client, use the prepared local repositories to install tree, then remove dos2unix so tree remains installed.
 
 ---
 
-## Task 02 - Server Package Install and Remove (server) - 10 pts
+## Task 02 - Server package install and remove (server) - 10 pts
 
 On server, use the prepared local repositories to install lsof, then remove dos2unix so lsof remains installed.

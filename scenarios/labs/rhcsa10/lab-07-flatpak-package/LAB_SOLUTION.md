@@ -41,7 +41,7 @@ flatpak remote-add --system --if-not-exists --no-gpg-verify rhcsa10 file:///opt/
 
 ---
 
-## Task 03 - Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system (client) - 10 pts
+## Task 03 - Install Flatpak application org.RHCSA.tools from rhcsa10 for the system (client) - 10 pts
 
 ```bash
 flatpak install --system -y rhcsa10 org.rhcsa.Tools

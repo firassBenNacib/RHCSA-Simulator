@@ -27,7 +27,7 @@ On server, configure enabled BaseOS and AppStream repositories with GPG checks d
 
 ---
 
-## Task 02 - Install the flatpak package if it is not already installed (client) - 10 pts
+## Task 02 - Install the Flatpak package if it is not already installed (client) - 10 pts
 
 On client, install the flatpak package if it is not already installed.
 

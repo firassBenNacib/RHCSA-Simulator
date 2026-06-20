@@ -38,7 +38,7 @@ systemctl enable --now atd
 
 ---
 
-## Task 03 - schedule a one-time at job that appends the text (client) - 10 pts
+## Task 03 - Schedule a one-time at job that appends the text (client) - 10 pts
 
 ```bash
 su - queue27

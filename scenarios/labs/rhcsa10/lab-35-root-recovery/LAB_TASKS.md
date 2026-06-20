@@ -20,7 +20,7 @@ Practice the root password recovery workflow.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - from the console, interrupt boot and enter emergency recovery mode (client) - 10 pts
+## Task 01 - From the console, interrupt boot and enter emergency recovery mode (client) - 10 pts
 
 On client, from the console, interrupt boot and enter emergency recovery mode.
 

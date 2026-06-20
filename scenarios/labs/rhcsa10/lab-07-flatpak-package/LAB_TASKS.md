@@ -33,6 +33,6 @@ On client, ensure the system Flatpak remote rhcsa10 exists and points to file://
 
 ---
 
-## Task 03 - Install Flatpak application org.rhcsa.Tools from rhcsa10 for the system (client) - 10 pts
+## Task 03 - Install Flatpak application org.RHCSA.tools from rhcsa10 for the system (client) - 10 pts
 
 On client, install Flatpak application org.rhcsa.Tools from rhcsa10 for the system installation.

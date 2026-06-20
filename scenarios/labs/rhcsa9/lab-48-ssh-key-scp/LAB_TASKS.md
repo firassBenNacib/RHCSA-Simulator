@@ -39,6 +39,6 @@ On client, configure passwordless SSH access for bridge48 from client to server 
 
 ---
 
-## Task 04 - Copy the payload with scp (client + server) - 10 pts
+## Task 04 - Copy the payload with SCP (client + server) - 10 pts
 
 On client, using scp over SSH, copy /home/bridge48/payload.txt from client to /home/bridge48/inbox/ on server.

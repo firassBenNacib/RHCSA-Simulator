@@ -20,7 +20,7 @@ Create a new volume group and logical volume and mount it persistently.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - on /dev/sdb, create an LVM partition, then create (client) - 10 pts
+## Task 01 - On /dev/sdb, create an LVM partition, then create (client) - 10 pts
 
 On client, on /dev/sdb, create an LVM partition, then create volume group wgroupx with physical extent size 8 MiB.
 

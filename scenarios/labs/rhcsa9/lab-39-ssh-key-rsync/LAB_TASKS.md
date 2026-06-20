@@ -27,7 +27,7 @@ On client, ensure the user mesh39 exists on both client and server, and set the 
 
 ---
 
-## Task 02 - generate an ED25519 SSH key pair with no passphrase (client) - 10 pts
+## Task 02 - Generate an ED25519 SSH key pair with no passphrase (client) - 10 pts
 
 On client, as user mesh39, generate an ED25519 SSH key pair with no passphrase.
 

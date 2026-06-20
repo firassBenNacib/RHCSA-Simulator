@@ -21,7 +21,7 @@ Configure persistent client networking and a matching server hostname for RHCSA 
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Client Network Configuration (client) - 10 pts
+## Task 01 - Client network configuration (client) - 10 pts
 
 ```bash
 nmcli device status
@@ -34,7 +34,7 @@ hostnamectl set-hostname client.netlab.local
 
 ---
 
-## Task 02 - Server Hostname (server) - 10 pts
+## Task 02 - Server hostname (server) - 10 pts
 
 ```bash
 hostnamectl set-hostname repo.netlab.local
@@ -42,7 +42,7 @@ hostnamectl set-hostname repo.netlab.local
 
 ---
 
-## Task 03 - Client Static Host Entry (client) - 10 pts
+## Task 03 - Client static host entry (client) - 10 pts
 
 ```bash
 vim /etc/hosts

@@ -21,7 +21,7 @@ Configure persistent journal storage and a custom rsyslog drop-in for authentica
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Client Journald Persistence (client) - 10 pts
+## Task 01 - Client journald persistence (client) - 10 pts
 
 ```bash
 mkdir -p /var/log/journal /etc/systemd/journald.conf.d
@@ -35,7 +35,7 @@ journalctl --flush
 
 ---
 
-## Task 02 - Server Rsyslog Authpriv Rule (server) - 10 pts
+## Task 02 - Server rsyslog authpriv rule (server) - 10 pts
 
 ```bash
 vim /etc/rsyslog.d/10-auth34.conf
@@ -44,7 +44,7 @@ authpriv.warning    /var/log/auth34.log
 
 ---
 
-## Task 03 - Server Rsyslog Service (server) - 10 pts
+## Task 03 - Server rsyslog service (server) - 10 pts
 
 ```bash
 systemctl restart rsyslog

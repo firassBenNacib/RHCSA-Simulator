@@ -26,13 +26,13 @@ On client, create user scope46 and set the password to cinder9.
 
 ---
 
-## Task 02 - load the image archive /opt/rhcsa/container- (client) - 10 pts
+## Task 02 - Load the image archive /opt/RHCSA/container- (client) - 10 pts
 
 On client, as user scope46, load the image archive /opt/rhcsa/container-assets/rhcsa-httpd-base.tar into local storage.
 
 ---
 
-## Task 03 - inspect localhost/rhcsa-httpd-base:latest and write (client) - 10 pts
+## Task 03 - Inspect localhost/RHCSA-httpd-base:latest and write (client) - 10 pts
 
 On client, as user scope46, inspect localhost/rhcsa-httpd-base:latest and write the configured working directory to /home/scope46/workdir.txt.
 

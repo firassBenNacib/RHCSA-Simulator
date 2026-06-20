@@ -21,7 +21,7 @@ Configure offline BaseOS and AppStream repositories on both systems.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Client Repositories (client) - 10 pts
+## Task 01 - Client repositories (client) - 10 pts
 
 On client, configure a persistent repository file with the following settings:
 
@@ -32,6 +32,6 @@ On client, configure a persistent repository file with the following settings:
 
 ---
 
-## Task 02 - Server Repositories (server) - 10 pts
+## Task 02 - Server repositories (server) - 10 pts
 
 On server, configure the same repository file with the same settings.
