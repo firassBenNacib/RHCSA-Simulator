@@ -22,16 +22,16 @@ Manage default permissions.
 
 ## Task 01 - Set root's shell umask to 027 using /root/.bashrc (client) - 10 pts
 
-Set root's shell umask to 027 using /root/.bashrc.
+On client, set root's shell umask to 027 using /root/.bashrc.
 
 ---
 
 ## Task 02 - Create /srv/rhcsa10-private with owner root and group root (client) - 10 pts
 
-Create /srv/rhcsa10-private with owner root and group root.
+On client, create /srv/rhcsa10-private with owner root and group root.
 
 ---
 
 ## Task 03 - Set directory permissions to 750 (client) - 10 pts
 
-Set directory permissions to 750.
+On client, set directory permissions to 750.

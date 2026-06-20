@@ -22,4 +22,4 @@ Restore default SELinux file contexts.
 
 ## Task 01 - Restore the default SELinux context on /var/www/html/rhcsa10.html (client) - 10 pts
 
-Restore the default SELinux context on /var/www/html/rhcsa10.html.
+On client, restore the default SELinux context on /var/www/html/rhcsa10.html.

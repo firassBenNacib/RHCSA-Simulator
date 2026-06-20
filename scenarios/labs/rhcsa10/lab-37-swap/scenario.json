@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create a 512 MiB swap partition on /dev/sdb.",
-        "Enable the swap immediately.",
-        "Make the swap persistent across reboots."
+        "On client, create a 512 MiB swap partition on /dev/sdb.",
+        "On client, enable the swap immediately.",
+        "On client, make the swap persistent across reboots."
       ],
       "hints": [
         "Use mkswap.",

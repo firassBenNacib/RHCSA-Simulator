@@ -20,7 +20,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation."
+        "On client, write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation."
       ],
       "hints": [
         "Use man useradd.",

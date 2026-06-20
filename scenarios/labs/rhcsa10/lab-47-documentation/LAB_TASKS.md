@@ -22,4 +22,4 @@ Locate and use local documentation.
 
 ## Task 01 - Write the first usage summary for useradd to /root/rhcsa10-man.txt using (client) - 10 pts
 
-Write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation.
+On client, write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation.

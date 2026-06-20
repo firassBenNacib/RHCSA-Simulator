@@ -22,16 +22,16 @@ Create a labeled filesystem and mount persistently.
 
 ## Task 01 - Create an XFS filesystem on /dev/sdb1 labeled RHCSA10DATA (client) - 10 pts
 
-Create an XFS filesystem on /dev/sdb1 labeled RHCSA10DATA.
+On client, create an XFS filesystem on /dev/sdb1 labeled RHCSA10DATA.
 
 ---
 
 ## Task 02 - Create mount point /mnt/rhcsa10data (client) - 10 pts
 
-Create mount point /mnt/rhcsa10data.
+On client, create mount point /mnt/rhcsa10data.
 
 ---
 
 ## Task 03 - Mount it persistently by label with default options (client) - 10 pts
 
-Mount it persistently by label with default options.
+On client, mount it persistently by label with default options.

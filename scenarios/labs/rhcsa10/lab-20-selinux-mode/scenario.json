@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Set SELinux to enforcing mode immediately.",
-        "Configure SELinux to boot in enforcing mode."
+        "On client, set SELinux to enforcing mode immediately.",
+        "On client, configure SELinux to boot in enforcing mode."
       ],
       "hints": [
         "Use setenforce for runtime state.",

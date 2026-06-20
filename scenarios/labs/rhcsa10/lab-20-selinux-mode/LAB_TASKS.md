@@ -22,10 +22,10 @@ Set SELinux enforcing mode persistently.
 
 ## Task 01 - Set SELinux to enforcing mode immediately (client) - 10 pts
 
-Set SELinux to enforcing mode immediately.
+On client, set SELinux to enforcing mode immediately.
 
 ---
 
 ## Task 02 - Configure SELinux to boot in enforcing mode (client) - 20 pts
 
-Configure SELinux to boot in enforcing mode.
+On client, configure SELinux to boot in enforcing mode.

@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create user aging10 and set password cinder9.",
-        "Set maximum password age to 60 days.",
-        "Set password warning period to 7 days."
+        "On client, create user aging10 and set password cinder9.",
+        "On client, set maximum password age to 60 days.",
+        "On client, set password warning period to 7 days."
       ],
       "hints": [
         "Use chage.",

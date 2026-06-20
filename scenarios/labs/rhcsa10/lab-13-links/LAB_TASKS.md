@@ -22,16 +22,16 @@ Create hard and symbolic links.
 
 ## Task 01 - Create /root/rhcsa10-original with the text link source (client) - 10 pts
 
-Create /root/rhcsa10-original with the text link source.
+On client, create /root/rhcsa10-original with the text link source.
 
 ---
 
 ## Task 02 - Create hard link /root/rhcsa10-hard pointing to the original file (client) - 10 pts
 
-Create hard link /root/rhcsa10-hard pointing to the original file.
+On client, create hard link /root/rhcsa10-hard pointing to the original file.
 
 ---
 
 ## Task 03 - Create symbolic link (client) - 10 pts
 
-Create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-original.
+On client, create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-original.

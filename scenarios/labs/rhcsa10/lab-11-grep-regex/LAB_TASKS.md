@@ -22,10 +22,10 @@ Filter text with grep and regular expressions.
 
 ## Task 01 - Create /root/rhcsa10-shell-users.txt (client) - 10 pts
 
-Create /root/rhcsa10-shell-users.txt.
+On client, create /root/rhcsa10-shell-users.txt.
 
 ---
 
 ## Task 02 - Populate it with account names from /etc/passwd whose shell ends in sh (client) - 10 pts
 
-Populate it with account names from /etc/passwd whose shell ends in sh, sorted alphabetically.
+On client, populate it with account names from /etc/passwd whose shell ends in sh, sorted alphabetically.

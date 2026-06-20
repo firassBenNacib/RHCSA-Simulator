@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Set root's shell umask to 027 using /root/.bashrc.",
-        "Create /srv/rhcsa10-private with owner root and group root.",
-        "Set directory permissions to 750."
+        "On client, set root's shell umask to 027 using /root/.bashrc.",
+        "On client, create /srv/rhcsa10-private with owner root and group root.",
+        "On client, set directory permissions to 750."
       ],
       "hints": [
         "Use umask 027 in the shell startup file.",

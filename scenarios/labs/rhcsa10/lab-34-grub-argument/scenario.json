@@ -20,7 +20,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Add kernel argument audit_backlog_limit=8192 persistently and regenerate the GRUB configuration."
+        "On client, add kernel argument audit_backlog_limit=8192 persistently and regenerate the GRUB configuration."
       ],
       "hints": [
         "Use grubby --update-kernel=ALL.",

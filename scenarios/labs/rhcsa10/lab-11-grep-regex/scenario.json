@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /root/rhcsa10-shell-users.txt.",
-        "Populate it with account names from /etc/passwd whose shell ends in sh, sorted alphabetically."
+        "On client, create /root/rhcsa10-shell-users.txt.",
+        "On client, populate it with account names from /etc/passwd whose shell ends in sh, sorted alphabetically."
       ],
       "hints": [
         "Use grep or awk.",

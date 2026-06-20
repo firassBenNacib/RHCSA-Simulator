@@ -22,10 +22,10 @@ Find files and preserve metadata.
 
 ## Task 01 - Create /root/rhcsa10-found (client) - 10 pts
 
-Create /root/rhcsa10-found.
+On client, create /root/rhcsa10-found.
 
 ---
 
 ## Task 02 - Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found (client) - 10 pts
 
-Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps.
+On client, copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps.

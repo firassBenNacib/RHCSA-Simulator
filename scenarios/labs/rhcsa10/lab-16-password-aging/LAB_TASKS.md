@@ -22,16 +22,16 @@ Adjust password aging for a local user.
 
 ## Task 01 - Create user aging10 and set password cinder9 (client) - 10 pts
 
-Create user aging10 and set password cinder9.
+On client, create user aging10 and set password cinder9.
 
 ---
 
 ## Task 02 - Configure password aging (client) - 10 pts
 
-Set maximum password age to 60 days.
+On client, set maximum password age to 60 days.
 
 ---
 
 ## Task 03 - Set password warning period to 7 days (client) - 10 pts
 
-Set password warning period to 7 days.
+On client, set password warning period to 7 days.

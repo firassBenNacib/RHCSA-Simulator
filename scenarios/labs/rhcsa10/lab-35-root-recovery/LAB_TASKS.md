@@ -22,16 +22,16 @@ Practice the root password recovery workflow.
 
 ## Task 01 - from the console, interrupt boot and enter emergency recovery mode (client) - 10 pts
 
-From the console, interrupt boot and enter emergency recovery mode.
+On client, from the console, interrupt boot and enter emergency recovery mode.
 
 ---
 
 ## Task 02 - Set the root password to cinder9 (client) - 10 pts
 
-Set the root password to cinder9.
+On client, set the root password to cinder9.
 
 ---
 
 ## Task 03 - Relabel the system if SELinux requires it (client) - 10 pts
 
-Relabel the system if SELinux requires it.
+On client, relabel the system if SELinux requires it.

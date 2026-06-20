@@ -22,10 +22,10 @@ Configure default useradd settings.
 
 ## Task 01 - Set default inactive password period for new users to 14 days (client) - 10 pts
 
-Set default inactive password period for new users to 14 days.
+On client, set default inactive password period for new users to 14 days.
 
 ---
 
 ## Task 02 - Set default account expiration date to 2030-12-31 (client) - 20 pts
 
-Set default account expiration date to 2030-12-31.
+On client, set default account expiration date to 2030-12-31.

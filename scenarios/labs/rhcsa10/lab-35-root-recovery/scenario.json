@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "From the console, interrupt boot and enter emergency recovery mode.",
-        "Set the root password to cinder9.",
-        "Relabel the system if SELinux requires it."
+        "On client, from the console, interrupt boot and enter emergency recovery mode.",
+        "On client, set the root password to cinder9.",
+        "On client, relabel the system if SELinux requires it."
       ],
       "hints": [
         "This is a console workflow.",
