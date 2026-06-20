@@ -255,10 +255,10 @@ def audit_target_metadata(path: Path, scenario: dict[str, Any], findings: list[F
                 if scope != expected_scope:
                     findings.append(Finding(path, f"lab scope should be {expected_scope}, not {scope}"))
 
-        if mode == "exam":
+        if mode in {"lab", "exam"}:
             for index, task in enumerate(tasks, start=1):
                 if not re.match(r"^\s*On\s+(client|server)\b", str(task)):
-                    findings.append(Finding(path, f"exam task {index} must begin with 'On client' or 'On server'"))
+                    findings.append(Finding(path, f"{mode} task {index} must begin with 'On client' or 'On server'"))
 
 
 def audit_wording_style(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
@@ -330,6 +330,27 @@ def audit_rhcsa10_exam_strictness(path: Path, scenario: dict[str, Any], findings
                 findings.append(Finding(path, f"{label} Flatpak installed final state is not checked"))
             if "not installed" in task_lower and "! flatpak list" not in check_lower:
                 findings.append(Finding(path, f"{label} Flatpak absent final state is not checked"))
+
+
+def audit_rhcsa10_at_job_checks(path: Path, scenario: dict[str, Any], findings: list[Finding]) -> None:
+    if "rhcsa10" not in scenario_tracks(scenario):
+        return
+
+    content = scenario.get("content", {})
+    for mode in ("lab", "exam"):
+        block = content.get(mode)
+        if not isinstance(block, dict):
+            continue
+        for index, (task, check) in enumerate(zip(block.get("tasks", []), block.get("checks", [])), start=1):
+            task_text = str(task)
+            if not re.search(r"\bat job\b|\bqueued at\b|\bschedule\b[\s\S]{0,80}\bat\b", task_text, re.I):
+                continue
+            label = f"{mode} task {index}"
+            if re.search(r"\b(two|[0-9]+)\s+(minute|hour)s?\b", task_text, re.I):
+                findings.append(Finding(path, f"{label} uses timing wording that final-state checks cannot prove"))
+            check_text = str(check)
+            if "at -c" not in check_text or "expected_command" not in check_text:
+                findings.append(Finding(path, f"{label} at-job check must validate the queued command content"))
 
 
 def _explicit_client_target(task_text: str) -> bool:
@@ -739,6 +760,7 @@ def main() -> int:
         audit_rhcsa10_timer_calendar(path, scenario, findings)
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
+        audit_rhcsa10_at_job_checks(path, scenario, findings)
 
     for path in sorted(SCENARIOS_DIR.glob("exams/*/*/scenario.json")):
         scenario = load_json(path)
@@ -758,6 +780,7 @@ def main() -> int:
         audit_rhcsa10_swap_persistence(path, scenario, findings)
         audit_persistent_journald(path, scenario, findings)
         audit_rhcsa10_exam_strictness(path, scenario, findings)
+        audit_rhcsa10_at_job_checks(path, scenario, findings)
 
     server_labs = [scenario["id"] for _, scenario in labs if scenario["flags"]["requires_server"]]
     if len(server_labs) < 12:

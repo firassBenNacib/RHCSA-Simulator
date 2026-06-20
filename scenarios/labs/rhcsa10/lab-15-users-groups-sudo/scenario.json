@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create local group ops10.",
-        "Create user relay10, set the password to cinder9, and make ops10 the user's supplementary group.",
-        "Allow members of ops10 to run /usr/bin/systemctl with sudo without a password."
+        "On client, create local group ops10.",
+        "On client, create user relay10, set the password to cinder9, and make ops10 the user's supplementary group.",
+        "On client, allow members of ops10 to run /usr/bin/systemctl with sudo without a password."
       ],
       "hints": [
         "Use a file under /etc/sudoers.d.",

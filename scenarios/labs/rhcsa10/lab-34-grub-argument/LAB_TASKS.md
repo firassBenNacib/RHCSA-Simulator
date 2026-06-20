@@ -22,4 +22,4 @@ Persistently modify bootloader kernel arguments.
 
 ## Task 01 - Add kernel argument audit_backlog_limit=8192 persistently and regenerate (client) - 10 pts
 
-Add kernel argument audit_backlog_limit=8192 persistently and regenerate the GRUB configuration.
+On client, add kernel argument audit_backlog_limit=8192 persistently and regenerate the GRUB configuration.

@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /root/rhcsa10-found.",
-        "Copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps."
+        "On client, create /root/rhcsa10-found.",
+        "On client, copy every file smaller than 1 KiB from /etc/skel to /root/rhcsa10-found while preserving mode and timestamps."
       ],
       "hints": [
         "Use find -size -1k.",

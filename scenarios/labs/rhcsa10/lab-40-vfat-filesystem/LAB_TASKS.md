@@ -22,16 +22,16 @@ Create and mount a VFAT filesystem.
 
 ## Task 01 - Create a 256 MiB partition on /dev/sdb (client) - 10 pts
 
-Create a 256 MiB partition on /dev/sdb.
+On client, create a 256 MiB partition on /dev/sdb.
 
 ---
 
 ## Task 02 - Format it as VFAT with label RHCSA10VFAT (client) - 10 pts
 
-Format it as VFAT with label RHCSA10VFAT.
+On client, format it as VFAT with label RHCSA10VFAT.
 
 ---
 
 ## Task 03 - Mount it persistently at /mnt/vfat10 (client) - 10 pts
 
-Mount it persistently at /mnt/vfat10.
+On client, mount it persistently at /mnt/vfat10.

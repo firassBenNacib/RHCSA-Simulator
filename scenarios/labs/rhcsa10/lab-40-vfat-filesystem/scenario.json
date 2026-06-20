@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create a 256 MiB partition on /dev/sdb.",
-        "Format it as VFAT with label RHCSA10VFAT.",
-        "Mount it persistently at /mnt/vfat10."
+        "On client, create a 256 MiB partition on /dev/sdb.",
+        "On client, format it as VFAT with label RHCSA10VFAT.",
+        "On client, mount it persistently at /mnt/vfat10."
       ],
       "hints": [
         "Use mkfs.vfat -n.",

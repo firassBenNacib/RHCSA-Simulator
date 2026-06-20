@@ -28,7 +28,7 @@
         "Use the server hostname from /etc/hosts."
       ],
       "checks": [
-        "test -f /root/rhcsa10-transfer.txt",
+        "grep -Fxq TRANSFER10 /root/rhcsa10-transfer.txt",
         "# server test \"$(cat /root/rhcsa10-transfer.txt)\" = TRANSFER10"
       ],
       "solution_outline": [

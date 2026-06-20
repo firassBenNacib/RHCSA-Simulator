@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Set default inactive password period for new users to 14 days.",
-        "Set default account expiration date to 2030-12-31."
+        "On client, set default inactive password period for new users to 14 days.",
+        "On client, set default account expiration date to 2030-12-31."
       ],
       "hints": [
         "Use useradd -D.",

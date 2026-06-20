@@ -22,4 +22,4 @@ Create and inspect compressed archives.
 
 ## Task 01 - Create gzip archive (client) - 10 pts
 
-Create /root/rhcsa10-etc.tar.gz as a gzip archive containing /etc/hosts and /etc/fstab.
+On client, create /root/rhcsa10-etc.tar.gz as a gzip archive containing /etc/hosts and /etc/fstab.

@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create an XFS filesystem on /dev/sdb1 labeled RHCSA10DATA.",
-        "Create mount point /mnt/rhcsa10data.",
-        "Mount it persistently by label with default options."
+        "On client, create an XFS filesystem on /dev/sdb1 labeled RHCSA10DATA.",
+        "On client, create mount point /mnt/rhcsa10data.",
+        "On client, mount it persistently by label with default options."
       ],
       "hints": [
         "Use mkfs.xfs -L.",

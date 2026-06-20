@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /usr/local/bin/rhcsa10-lines.",
-        "Make the script executable, read /etc/passwd, and overwrite /root/rhcsa10-lines.txt with every account name that starts with r."
+        "On client, create /usr/local/bin/rhcsa10-lines.",
+        "On client, make the script executable, read /etc/passwd, and overwrite /root/rhcsa10-lines.txt with every account name that starts with r."
       ],
       "hints": [
         "Use a while read loop or awk.",

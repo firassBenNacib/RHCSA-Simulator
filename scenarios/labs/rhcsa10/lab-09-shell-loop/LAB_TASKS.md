@@ -22,10 +22,10 @@ Create a shell script that loops over input.
 
 ## Task 01 - Create user lookup script (client) - 10 pts
 
-Create /usr/local/bin/rhcsa10-lines.
+On client, create /usr/local/bin/rhcsa10-lines.
 
 ---
 
 ## Task 02 - Make the script executable, read /etc/passwd, and overwrite (client) - 10 pts
 
-Make the script executable, read /etc/passwd, and overwrite /root/rhcsa10-lines.txt with every account name that starts with r.
+On client, make the script executable, read /etc/passwd, and overwrite /root/rhcsa10-lines.txt with every account name that starts with r.

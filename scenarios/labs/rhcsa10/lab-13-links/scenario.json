@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /root/rhcsa10-original with the text link source.",
-        "Create hard link /root/rhcsa10-hard pointing to the original file.",
-        "Create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-original."
+        "On client, create /root/rhcsa10-original with the text link source.",
+        "On client, create hard link /root/rhcsa10-hard pointing to the original file.",
+        "On client, create symbolic link /root/rhcsa10-soft pointing to /root/rhcsa10-original."
       ],
       "hints": [
         "Hard links share an inode.",

@@ -20,8 +20,8 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create /usr/local/bin/rhcsa10-user-report with the required argument handling.",
-        "Make the script executable and confirm it prints a supplied user's primary group."
+        "On client, create /usr/local/bin/rhcsa10-user-report with the required argument handling.",
+        "On client, make the script executable and confirm it prints a supplied user's primary group."
       ],
       "hints": [
         "Use id -gn USER.",

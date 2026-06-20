@@ -22,10 +22,10 @@ Create a shell script that processes command-line arguments.
 
 ## Task 01 - Create user lookup script (client) - 10 pts
 
-Create /usr/local/bin/rhcsa10-user-report with the required argument handling.
+On client, create /usr/local/bin/rhcsa10-user-report with the required argument handling.
 
 ---
 
 ## Task 02 - Make the script executable and confirm it prints a supplied user's (client) - 10 pts
 
-Make the script executable and confirm it prints a supplied user's primary group.
+On client, make the script executable and confirm it prints a supplied user's primary group.

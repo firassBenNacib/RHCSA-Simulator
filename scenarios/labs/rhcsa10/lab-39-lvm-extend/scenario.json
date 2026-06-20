@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create volume group grow10 on /dev/sdb.",
-        "Create logical volume growlv with size 384 MiB and XFS filesystem mounted at /mnt/grow10.",
-        "Extend the logical volume and filesystem to at least 512 MiB."
+        "On client, create volume group grow10 on /dev/sdb.",
+        "On client, create logical volume growlv with size 384 MiB and XFS filesystem mounted at /mnt/grow10.",
+        "On client, extend the logical volume and filesystem to at least 512 MiB."
       ],
       "hints": [
         "Use lvextend -r to resize the filesystem with the LV.",

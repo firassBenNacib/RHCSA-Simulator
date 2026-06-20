@@ -20,7 +20,7 @@
   "content": {
     "lab": {
       "tasks": [
-        "Restore the default SELinux context on /var/www/html/rhcsa10.html."
+        "On client, restore the default SELinux context on /var/www/html/rhcsa10.html."
       ],
       "hints": [
         "Use chcon to simulate a bad label.",

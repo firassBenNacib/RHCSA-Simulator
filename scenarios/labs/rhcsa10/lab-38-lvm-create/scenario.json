@@ -20,9 +20,9 @@
   "content": {
     "lab": {
       "tasks": [
-        "Create physical volume /dev/sdb.",
-        "Create volume group vg10.",
-        "Create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently."
+        "On client, create physical volume /dev/sdb.",
+        "On client, create volume group vg10.",
+        "On client, create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently."
       ],
       "hints": [
         "Use pvcreate, vgcreate, and lvcreate.",

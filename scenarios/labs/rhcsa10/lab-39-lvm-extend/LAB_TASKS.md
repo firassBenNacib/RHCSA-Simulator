@@ -22,16 +22,16 @@ Extend an existing logical volume and filesystem.
 
 ## Task 01 - Create volume group (client) - 10 pts
 
-Create volume group grow10 on /dev/sdb.
+On client, create volume group grow10 on /dev/sdb.
 
 ---
 
 ## Task 02 - Configure LVM storage (client) - 10 pts
 
-Create logical volume growlv with size 384 MiB and XFS filesystem mounted at /mnt/grow10.
+On client, create logical volume growlv with size 384 MiB and XFS filesystem mounted at /mnt/grow10.
 
 ---
 
 ## Task 03 - Configure LVM storage (client) - 10 pts
 
-Extend the logical volume and filesystem to at least 512 MiB.
+On client, extend the logical volume and filesystem to at least 512 MiB.

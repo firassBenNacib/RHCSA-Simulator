@@ -105,7 +105,7 @@ On client, as copy10, generate an SSH key pair (no passphrase) and distribute th
 
 ## Question 14 - Schedule at job (client) - 4 pts
 
-On client, schedule an at job for user hazel10 to run two hours from now. The job must run: echo "exam-g task" >> /home/hazel10/at-result.txt.
+On client, schedule a queued at job for user hazel10. The job must run: echo "exam-g task" >> /home/hazel10/at-result.txt.
 
 ---
 

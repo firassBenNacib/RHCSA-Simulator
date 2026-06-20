@@ -22,16 +22,16 @@ Add persistent swap space.
 
 ## Task 01 - Configure persistent swap (client) - 10 pts
 
-Create a 512 MiB swap partition on /dev/sdb.
+On client, create a 512 MiB swap partition on /dev/sdb.
 
 ---
 
 ## Task 02 - Enable the swap immediately (client) - 10 pts
 
-Enable the swap immediately.
+On client, enable the swap immediately.
 
 ---
 
 ## Task 03 - Make the swap persistent across reboots (client) - 10 pts
 
-Make the swap persistent across reboots.
+On client, make the swap persistent across reboots.

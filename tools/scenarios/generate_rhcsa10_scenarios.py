@@ -2623,7 +2623,7 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                 "On client, copy the file to server:/root/rhcsa10-transfer.txt.",
             ],
             [
-                "test -f /root/rhcsa10-transfer.txt",
+                "grep -Fxq TRANSFER10 /root/rhcsa10-transfer.txt",
                 "# server test \"$(cat /root/rhcsa10-transfer.txt)\" = TRANSFER10",
             ],
             [
@@ -2637,6 +2637,31 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             ],
             points=[10, 20],
         )
+
+    if lab_id == "lab-33-at-job":
+        updated = _replace_lab_progression(
+            block,
+            [
+                "On server, create user at10 and set password cinder9.",
+                "On server, enable and start atd.",
+                "On server, as at10, schedule a queued at job that appends AT10 to /home/at10/at10.log.",
+            ],
+            [
+                "# server getent passwd at10 >/dev/null",
+                "# server systemctl is-enabled atd | grep -qx enabled && systemctl is-active atd | grep -qx active",
+                "# server " + _at_job_check("at10", "echo AT10 >> /home/at10/at10.log"),
+            ],
+            [
+                ["useradd at10", "passwd at10", "# enter: cinder9"],
+                ["systemctl enable --now atd"],
+                [
+                    "su - at10",
+                    "echo 'echo AT10 >> /home/at10/at10.log' | at now + 2 minutes",
+                    "atq",
+                ],
+            ],
+        )
+        return _retarget_lab_to_server(updated)
 
     if lab_id == "lab-46-package-file-install":
         updated = _replace_lab_progression(
@@ -2700,7 +2725,6 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
         "lab-25-tuned-profile",
         "lab-27-rsyslog-logger",
         "lab-32-cron",
-        "lab-33-at-job",
         "lab-43-sticky-directory",
         "lab-44-permission-repair",
     }:
@@ -2764,6 +2788,14 @@ def _update_lab_manifest(manifest_path: Path, client_scripts: dict[str, str], se
         or has_server_task
     )
     _apply_target_metadata(manifest["content"]["lab"], requires_server=bool(manifest["flags"]["requires_server"]))
+    manifest["content"]["lab"]["tasks"] = [
+        prefix_task_target(task, manifest["content"]["lab"]["task_targets"][index])
+        for index, task in enumerate(manifest["content"]["lab"].get("tasks", []))
+    ]
+    manifest["content"]["lab"]["task_titles"] = [
+        task_title(task)
+        for task in manifest["content"]["lab"].get("tasks", [])
+    ]
     manifest["scope"] = _lab_scope(manifest["content"]["lab"], bool(manifest["flags"]["requires_server"]))
 
     write_json(manifest_path, manifest)
@@ -2823,6 +2855,12 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
                     ]
 
             if "as copy10" in task_text.lower() and "server-hostname" in task_text:
+                if index < len(checks):
+                    checks[index] = (
+                        "expected=\"$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null server cat /etc/hostname 2>/dev/null | tr -d '\\r\\n')\"; "
+                        "actual=\"$(tr -d '\\r\\n' < /home/copy10/server-hostname 2>/dev/null)\"; "
+                        "test -n \"$expected\" && test \"$actual\" = \"$expected\""
+                    )
                 if index < len(commands):
                     commands[index] = [
                         "# On client:",
@@ -2836,7 +2874,7 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
 
             if "schedule an at job for user hazel10" in task_text.lower():
                 tasks[index] = (
-                    'On client, schedule an at job for user hazel10 to run two hours from now. '
+                    'On client, schedule a queued at job for user hazel10. '
                     'The job must run: echo "exam-g task" >> /home/hazel10/at-result.txt'
                 )
                 if index < len(checks):
