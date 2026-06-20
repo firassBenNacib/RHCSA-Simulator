@@ -21,12 +21,12 @@ Mount a remote NFS export persistently using /etc/fstab.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Server NFS Export (server) - 10 pts
+## Task 01 - Server NFS export (server) - 10 pts
 
 On server, create /exports/direct36, place nfs36.txt in it, export it read-only to 192.168.122.0/24, and enable nfs-server.
 
 ---
 
-## Task 02 - Client Persistent NFS Mount (client) - 10 pts
+## Task 02 - Client persistent NFS mount (client) - 10 pts
 
 On client, mount 192.168.122.3:/exports/direct36 persistently at /mnt/direct36 with ro,sync options and verify nfs36.txt is readable.

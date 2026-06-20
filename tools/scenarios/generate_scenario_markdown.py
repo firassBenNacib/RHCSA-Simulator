@@ -81,10 +81,10 @@ def _is_key_value_line(line: str) -> bool:
 def _title_case_label(label: str) -> str:
     cleaned = re.sub(r"\s+", " ", label.strip())
     replacements = {
-        "Ip ": "IP ",
         "Ipv4": "IPv4",
         "Ipv6": "IPv6",
-        "Dns ": "DNS ",
+        "Ip": "IP",
+        "Dns": "DNS",
         "Url": "URL",
         "Uid": "UID",
         "Gid": "GID",
@@ -97,8 +97,51 @@ def _title_case_label(label: str) -> str:
     if cleaned.isupper() or cleaned.islower():
         cleaned = cleaned.title()
     for old, new in replacements.items():
-        cleaned = cleaned.replace(old, new)
+        cleaned = re.sub(rf"\b{re.escape(old)}\b", new, cleaned)
     return cleaned
+
+
+def _sentence_style_title(title: str) -> str:
+    normalized = normalize_title_capitalization(title)
+    technical_terms = {
+        "acl": "ACL",
+        "appstream": "AppStream",
+        "baseos": "BaseOS",
+        "dns": "DNS",
+        "flatpak": "Flatpak",
+        "gpg": "GPG",
+        "grub": "GRUB",
+        "ip": "IP",
+        "ipv4": "IPv4",
+        "ipv6": "IPv6",
+        "lv": "LV",
+        "lvm": "LVM",
+        "nfs": "NFS",
+        "rhcsa": "RHCSA",
+        "rpm": "RPM",
+        "scp": "SCP",
+        "selinux": "SELinux",
+        "ssh": "SSH",
+        "uid": "UID",
+        "url": "URL",
+        "vfat": "VFAT",
+        "xfs": "XFS",
+    }
+
+    def replace_word(match: re.Match[str]) -> str:
+        word = match.group(0)
+        lower = word.lower()
+        if lower in technical_terms:
+            return technical_terms[lower]
+        if match.start() == 0:
+            return word[:1].upper() + word[1:].lower()
+        if word.isupper() and len(word) > 1:
+            return word
+        if re.fullmatch(r"[A-Z][a-z]+", word):
+            return lower
+        return word
+
+    return re.sub(r"\b[A-Za-z][A-Za-z0-9]*\b", replace_word, normalized)
 
 
 def render_task_body(value: str) -> str:
@@ -201,8 +244,8 @@ def get_task_title(task_titles: list[str], index: int, task_text: str) -> str:
     if index < len(task_titles):
         candidate = normalize_title_capitalization(clean_text(task_titles[index]).rstrip("."))
         if candidate and not _generic_title(candidate) and not candidate.endswith(("...", "…")):
-            return candidate
-    return normalize_title_capitalization(infer_title_from_task(task_text))
+            return _sentence_style_title(candidate)
+    return _sentence_style_title(infer_title_from_task(task_text))
 
 
 def get_task_points(task_points: list[int], index: int) -> int | None:

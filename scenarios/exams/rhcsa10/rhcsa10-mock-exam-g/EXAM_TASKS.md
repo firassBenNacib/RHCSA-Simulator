@@ -33,7 +33,7 @@ On client, recover root access and configure the client hostname. Set the root p
 
 ---
 
-## Question 03 - Configure the connection "System eth1" with static IPv4: address (client) - 5 pts
+## Question 03 - Configure the connection "system eth1" with static IPv4: address (client) - 5 pts
 
 On client, configure the connection "System eth1" with static IPv4: address 192.168.122.66/24, gateway 192.168.122.1, DNS 192.168.122.3. The connection must start automatically.
 
@@ -61,7 +61,7 @@ On client, add a system-level Flatpak remote named examgflatpak.
 
 ---
 
-## Question 07 - Set the server login message in /etc/motd to Authorized exam-g server (server) - 5 pts
+## Question 07 - Set the server login message in /etc/motd to authorized exam-g server (server) - 5 pts
 
 On server, set the server login message in /etc/motd to Authorized exam-g server.
 

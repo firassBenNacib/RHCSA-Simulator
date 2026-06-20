@@ -20,7 +20,7 @@ Configure persistent IPv6 networking and hostname resolution on the client syste
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - IPv6 Address Configuration (client) - 10 pts
+## Task 01 - IPv6 address configuration (client) - 10 pts
 
 ```bash
 nmcli connection show "System eth1"
@@ -31,7 +31,7 @@ nmcli connection up "System eth1"
 
 ---
 
-## Task 02 - Hostname and IPv6 Host Entry (client) - 10 pts
+## Task 02 - Hostname and IPv6 host entry (client) - 10 pts
 
 ```bash
 hostnamectl set-hostname client.ipv6lab.local

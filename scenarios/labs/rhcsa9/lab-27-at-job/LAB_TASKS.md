@@ -32,6 +32,6 @@ On client, enable and start the atd service.
 
 ---
 
-## Task 03 - schedule a one-time at job that appends the text (client) - 10 pts
+## Task 03 - Schedule a one-time at job that appends the text (client) - 10 pts
 
 On client, as user queue27, schedule a one-time at job that appends the text AT27 OK to /home/queue27/at27.log two minutes from now.

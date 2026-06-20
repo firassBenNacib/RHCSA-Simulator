@@ -29,7 +29,7 @@ echo 'scope46:cinder9' | chpasswd
 
 ---
 
-## Task 02 - load the image archive /opt/rhcsa/container- (client) - 10 pts
+## Task 02 - Load the image archive /opt/RHCSA/container- (client) - 10 pts
 
 ```bash
 runuser -l scope46 -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-base.tar'
@@ -37,7 +37,7 @@ runuser -l scope46 -c 'podman load -i /opt/rhcsa/container-assets/rhcsa-httpd-ba
 
 ---
 
-## Task 03 - inspect localhost/rhcsa-httpd-base:latest and write (client) - 10 pts
+## Task 03 - Inspect localhost/RHCSA-httpd-base:latest and write (client) - 10 pts
 
 ```bash
 runuser -l scope46 -c 'podman image inspect localhost/rhcsa-httpd-base:latest --format {{.Config.WorkingDir}} > /home/scope46/workdir.txt'

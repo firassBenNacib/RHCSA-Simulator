@@ -44,7 +44,7 @@ echo '192.168.122.3 serverg.exam10.lab' >> /etc/hosts
 
 ---
 
-## Question 03 - Configure the connection "System eth1" with static IPv4: address (client) - 5 pts
+## Question 03 - Configure the connection "system eth1" with static IPv4: address (client) - 5 pts
 
 ```bash
 nmcli connection modify "System eth1" ipv4.addresses 192.168.122.66/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.3 ipv4.method manual connection.autoconnect yes
@@ -108,7 +108,7 @@ flatpak list --system --app
 
 ---
 
-## Question 07 - Set the server login message in /etc/motd to Authorized exam-g server (server) - 5 pts
+## Question 07 - Set the server login message in /etc/motd to authorized exam-g server (server) - 5 pts
 
 ```bash
 # On server:

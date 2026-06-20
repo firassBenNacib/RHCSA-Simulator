@@ -42,7 +42,7 @@ EOF
 
 ---
 
-## Task 02 - Install the flatpak package if it is not already installed (client) - 10 pts
+## Task 02 - Install the Flatpak package if it is not already installed (client) - 10 pts
 
 ```bash
 dnf install -y flatpak

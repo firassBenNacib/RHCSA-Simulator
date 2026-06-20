@@ -33,7 +33,7 @@ echo 'mesh39:cinder9' | chpasswd
 
 ---
 
-## Task 02 - generate an ED25519 SSH key pair with no passphrase (client) - 10 pts
+## Task 02 - Generate an ED25519 SSH key pair with no passphrase (client) - 10 pts
 
 ```bash
 su - mesh39

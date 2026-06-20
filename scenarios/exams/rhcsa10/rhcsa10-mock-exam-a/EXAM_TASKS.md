@@ -41,7 +41,7 @@ On client, configure the network connection for eth1 with the following settings
 
 - **IP Address:** 192.168.122.60/24
 - **Gateway:** 192.168.122.1
-- **Dns:** 192.168.122.3
+- **DNS:** 192.168.122.3
 - **Method:** manual
 - **Autoconnect:** yes
 

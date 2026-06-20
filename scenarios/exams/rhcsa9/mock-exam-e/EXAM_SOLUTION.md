@@ -21,7 +21,7 @@ A 22-task RHCSA9 mock exam covering persistent networking, repositories, users, 
 3. Use the exact scenario variables shown in each question.
 4. Keep SELinux enforcing unless a question explicitly directs otherwise.
 
-## Question 01 - Root Recovery (client) - 5 pts
+## Question 01 - Root recovery (client) - 5 pts
 
 ```bash
 # At the boot menu, edit the selected kernel entry.
@@ -34,7 +34,7 @@ exec /sbin/init
 
 ---
 
-## Question 02 - Client IPv4 Networking (client) - 5 pts
+## Question 02 - Client IPv4 networking (client) - 5 pts
 
 ```bash
 CONN="System eth1"
@@ -44,7 +44,7 @@ hostnamectl set-hostname client-e.exam9.lab
 
 ---
 
-## Question 03 - Client RPM Repositories (client) - 5 pts
+## Question 03 - Client RPM repositories (client) - 5 pts
 
 ```bash
 cat > /etc/yum.repos.d/rhcsa9-exam.repo <<'EOF'
@@ -64,7 +64,7 @@ dnf clean all
 
 ---
 
-## Question 04 - Client Package Management (client) - 5 pts
+## Question 04 - Client package management (client) - 5 pts
 
 ```bash
 dnf install -y lsof
@@ -73,7 +73,7 @@ dnf remove -y dos2unix || true
 
 ---
 
-## Question 05 - Client Users and Group (client) - 5 pts
+## Question 05 - Client users and group (client) - 5 pts
 
 ```bash
 getent group opse9 >/dev/null || groupadd opse9
@@ -88,7 +88,7 @@ gpasswd -a deve9 opse9
 
 ---
 
-## Question 06 - Client Password Aging and Sudo (client) - 5 pts
+## Question 06 - Client password aging and sudo (client) - 5 pts
 
 ```bash
 chage -M 60 -W 7 anae9
@@ -99,7 +99,7 @@ bash -c 'visudo -cf /etc/sudoers.d/opse9-systemctl >/dev/null'
 
 ---
 
-## Question 07 - Client Shared Directory (client) - 5 pts
+## Question 07 - Client shared directory (client) - 5 pts
 
 ```bash
 mkdir -p /srv/opse9
@@ -110,7 +110,7 @@ setfacl -m d:g:opse9:rwx /srv/opse9
 
 ---
 
-## Question 08 - Client Report Script (client) - 5 pts
+## Question 08 - Client report script (client) - 5 pts
 
 ```bash
 cat > /usr/local/bin/report-e9 <<'SCRIPT'
@@ -126,7 +126,7 @@ chmod +x /usr/local/bin/report-e9
 
 ---
 
-## Question 09 - Client Swap Persistence (client) - 5 pts
+## Question 09 - Client swap persistence (client) - 5 pts
 
 ```bash
 swapoff /swape9 >/dev/null 2>&1 || true
@@ -141,7 +141,7 @@ swapon /swape9
 
 ---
 
-## Question 10 - Client LVM Mount (client) - 5 pts
+## Question 10 - Client LVM mount (client) - 5 pts
 
 ```bash
 umount /mnt/datae9 >/dev/null 2>&1 || true
@@ -166,7 +166,7 @@ mount -a
 
 ---
 
-## Question 11 - Client Rootless Container (client) - 5 pts
+## Question 11 - Client rootless container (client) - 5 pts
 
 ```bash
 id pode9 >/dev/null 2>&1 || useradd -m pode9
@@ -180,7 +180,7 @@ podman run -d --name webe9 localhost/rhcsa-httpd-base:latest
 
 ---
 
-## Question 12 - Server IPv4 Networking (server) - 5 pts
+## Question 12 - Server IPv4 networking (server) - 5 pts
 
 ```bash
 # On server:
@@ -191,7 +191,7 @@ hostnamectl set-hostname server-e.exam9.lab
 
 ---
 
-## Question 13 - Server RPM Repositories (server) - 4 pts
+## Question 13 - Server RPM repositories (server) - 4 pts
 
 ```bash
 # On server:
@@ -212,7 +212,7 @@ dnf clean all
 
 ---
 
-## Question 14 - Server User and Sudo (server) - 4 pts
+## Question 14 - Server user and sudo (server) - 4 pts
 
 ```bash
 # On server:
@@ -227,7 +227,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srve9-systemctl >/dev/null'
 
 ---
 
-## Question 15 - Server Web Service (server) - 4 pts
+## Question 15 - Server web service (server) - 4 pts
 
 ```bash
 # On server:
@@ -246,7 +246,7 @@ systemctl restart httpd
 
 ---
 
-## Question 16 - Server Persistent Journal (server) - 4 pts
+## Question 16 - Server persistent journal (server) - 4 pts
 
 ```bash
 # On server:
@@ -261,7 +261,7 @@ journalctl --flush
 
 ---
 
-## Question 17 - Server Cron Schedule (server) - 4 pts
+## Question 17 - Server cron schedule (server) - 4 pts
 
 ```bash
 # On server:
@@ -279,7 +279,7 @@ systemctl enable --now crond
 
 ---
 
-## Question 18 - Server Boot Target and Directory (server) - 4 pts
+## Question 18 - Server boot target and directory (server) - 4 pts
 
 ```bash
 # On server:
@@ -292,7 +292,7 @@ chmod 2770 /srv/server-e9
 
 ---
 
-## Question 19 - Client Server NFS Mount (client + server) - 4 pts
+## Question 19 - Client server NFS mount (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -315,7 +315,7 @@ mount -a
 
 ---
 
-## Question 20 - Client Server SSH Key (client + server) - 4 pts
+## Question 20 - Client server SSH key (client + server) - 4 pts
 
 ```bash
 # On server:
@@ -328,7 +328,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copye9@server
 
 ---
 
-## Question 21 - Client Server Secure Copy (client + server) - 4 pts
+## Question 21 - Client server secure copy (client + server) - 4 pts
 
 ```bash
 echo 'ember vault transfer' > /root/exam-e-copy.txt
@@ -337,7 +337,7 @@ scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnl
 
 ---
 
-## Question 22 - Client Server Time Sync (client + server) - 4 pts
+## Question 22 - Client server time sync (client + server) - 4 pts
 
 ```bash
 # On server:
