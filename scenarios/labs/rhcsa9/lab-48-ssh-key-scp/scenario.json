@@ -37,7 +37,7 @@
         "getent passwd bridge48 >/dev/null && getent shadow bridge48 | awk -F: 'length($2)>0 && $2 !~ /^(!!?|\\*|LK|NP)$/ {ok=1} END {exit !ok}'",
         "test -d /home/bridge48/.ssh && test -f /home/bridge48/.ssh/id_ed25519 && test -f /home/bridge48/.ssh/id_ed25519.pub",
         "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server true'",
-        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server grep -Fxq \"bridge48 payload\" /home/bridge48/inbox/payload.txt'"
+        "runuser -l bridge48 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no bridge48@server \"grep -Fxq '\\''bridge48 payload'\\'' /home/bridge48/inbox/payload.txt\"'"
       ],
       "solution_outline": [
         "Create bridge48 on both systems and set the password.",
