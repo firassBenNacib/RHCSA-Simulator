@@ -64,7 +64,7 @@ function Get-ReleaseChecksumAsset {
         Select-Object -First 1
 
     if (-not $checksumAsset) {
-        throw "Release '$($Release.tag_name)' does not include a checksums.txt asset."
+        return $null
     }
 
     return $checksumAsset
@@ -106,6 +106,11 @@ function Assert-ReleaseAssetChecksum {
     )
 
     $checksumAsset = Get-ReleaseChecksumAsset -Release $Release
+    if (-not $checksumAsset) {
+        Write-InstallLine "No checksum manifest found for $($Release.tag_name); installing $($Asset.name) without checksum verification."
+        return
+    }
+
     $checksumPath = Join-Path $TempRoot $checksumAsset.name
     Save-ReleaseAsset -Asset $checksumAsset -Destination $checksumPath -Headers $Headers
     $expected = Get-ExpectedSha256 -ChecksumText (Get-Content -Path $checksumPath -Raw) -AssetName $Asset.name
