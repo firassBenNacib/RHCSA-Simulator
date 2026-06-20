@@ -115,7 +115,7 @@ setfacl -m d:g:opsg9:rwx /srv/opsg9
 ```bash
 cat > /usr/local/bin/report-g9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-g9.txt
+echo 'glacier iris report' > /root/report-g9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-g9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srvg9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-G > /var/www/html/exam-g.html
+echo 'glacier status web' > /var/www/html/exam-g.html
 restorecon -v /var/www/html/exam-g.html || true
 cat > /etc/httpd/conf.d/exam-g.conf <<'EOF'
 Listen 8306
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/auditg9.sh <<'EOF'
 #!/bin/bash
-echo server-g >> /var/log/auditg9.log
+echo 'glacier monitor cron' >> /var/log/auditg9.log
 EOF
 chmod +x /usr/local/sbin/auditg9.sh
 cat > /etc/cron.d/auditg9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-g9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-g
-echo exam-g > /exports/rhcsa9-g/README
+echo 'glacier project export' > /exports/rhcsa9-g/README
 cat > /etc/exports.d/rhcsa9-g.exports <<'EOF'
 /exports/rhcsa9-g 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyg9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-G > /root/exam-g-copy.txt
+echo 'glacier courier transfer' > /root/exam-g-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-g-copy.txt copyg9@server:/home/copyg9/exam-g-copy.txt
 ```
 

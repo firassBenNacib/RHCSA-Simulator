@@ -115,7 +115,7 @@ setfacl -m d:g:opsh9:rwx /srv/opsh9
 ```bash
 cat > /usr/local/bin/report-h9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-h9.txt
+echo 'harbor jasper report' > /root/report-h9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-h9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srvh9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-H > /var/www/html/exam-h.html
+echo 'harbor landing web' > /var/www/html/exam-h.html
 restorecon -v /var/www/html/exam-h.html || true
 cat > /etc/httpd/conf.d/exam-h.conf <<'EOF'
 Listen 8307
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/audith9.sh <<'EOF'
 #!/bin/bash
-echo server-h >> /var/log/audith9.log
+echo 'harbor cycle cron' >> /var/log/audith9.log
 EOF
 chmod +x /usr/local/sbin/audith9.sh
 cat > /etc/cron.d/audith9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-h9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-h
-echo exam-h > /exports/rhcsa9-h/README
+echo 'harbor data export' > /exports/rhcsa9-h/README
 cat > /etc/exports.d/rhcsa9-h.exports <<'EOF'
 /exports/rhcsa9-h 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyh9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-H > /root/exam-h-copy.txt
+echo 'harbor mirror transfer' > /root/exam-h-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-h-copy.txt copyh9@server:/home/copyh9/exam-h-copy.txt
 ```
 

@@ -115,7 +115,7 @@ setfacl -m d:g:opsc9:rwx /srv/opsc9
 ```bash
 cat > /usr/local/bin/report-c9 <<'SCRIPT'
 #!/bin/bash
-: > /root/report-c9.txt
+echo 'cedar cobalt report' > /root/report-c9.txt
 for service in sshd chronyd firewalld; do
   systemctl is-active "$service" >> /root/report-c9.txt || true
 done
@@ -232,7 +232,7 @@ bash -c 'visudo -cf /etc/sudoers.d/srvc9-systemctl >/dev/null'
 ```bash
 # On server:
 mkdir -p /var/www/html
-echo RHCSA9-C > /var/www/html/exam-c.html
+echo 'cedar pulse web' > /var/www/html/exam-c.html
 restorecon -v /var/www/html/exam-c.html || true
 cat > /etc/httpd/conf.d/exam-c.conf <<'EOF'
 Listen 8302
@@ -267,7 +267,7 @@ journalctl --flush
 # On server:
 cat > /usr/local/sbin/auditc9.sh <<'EOF'
 #!/bin/bash
-echo server-c >> /var/log/auditc9.log
+echo 'cedar timer cron' >> /var/log/auditc9.log
 EOF
 chmod +x /usr/local/sbin/auditc9.sh
 cat > /etc/cron.d/auditc9 <<'EOF'
@@ -297,7 +297,7 @@ chmod 2770 /srv/server-c9
 ```bash
 # On server:
 mkdir -p /exports/rhcsa9-c
-echo exam-c > /exports/rhcsa9-c/README
+echo 'cedar files export' > /exports/rhcsa9-c/README
 cat > /etc/exports.d/rhcsa9-c.exports <<'EOF'
 /exports/rhcsa9-c 192.168.122.0/24(rw,sync,no_root_squash)
 EOF
@@ -331,7 +331,7 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyc9@server
 ## Question 21 - Client Server Secure Copy (client + server) - 4 pts
 
 ```bash
-echo RHCSA9-C > /root/exam-c-copy.txt
+echo 'cedar bridge transfer' > /root/exam-c-copy.txt
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-c-copy.txt copyc9@server:/home/copyc9/exam-c-copy.txt
 ```
 
