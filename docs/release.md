@@ -40,7 +40,7 @@ Merging the Release Please pull request creates:
 - the GitHub Release
 - the release changelog
 
-The tag then starts the GoReleaser workflow, which builds and uploads the TUI archives.
+The release workflow then dispatches `release-tui.yml` for the new tag, which builds and uploads the TUI archives.
 
 ## Manual Release
 
@@ -60,7 +60,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The `release-tui` workflow runs automatically on tag pushes.
+The `release-tui` workflow runs automatically on tag pushes and can also be dispatched manually for an existing tag.
 
 It builds release archives for:
 
@@ -167,7 +167,7 @@ Also run the main Windows checks when changing PowerShell, scenarios, or release
 go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
-<python> -m unittest discover tools/scenarios/tests
+<python> -m pytest tools/scenarios/tests -q
 <python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
 <python> .\tools\scenarios\audit_scenarios.py
 ```
