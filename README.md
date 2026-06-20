@@ -416,7 +416,7 @@ Windows equivalents:
 go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
-<python> -m unittest discover tools/scenarios/tests
+<python> -m pytest tools/scenarios/tests -q
 <python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
 <python> .\tools\scenarios\audit_scenarios.py
 ```
