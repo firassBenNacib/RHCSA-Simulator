@@ -129,21 +129,25 @@ Validation is split into two levels:
 
 | Validation type | Purpose |
 |---|---|
-| Audit-only validation | Checks scenario metadata, generated Markdown, and replay command structure |
+| Scenario audit | Checks scenario metadata, target balance, generated Markdown consistency, and scenario quality guardrails |
+| Audit-only validation | Checks replay command structure without starting scenarios |
 | Live replay validation | Proves the scenario works against the real VM baseline |
 
-Audit-only validation is useful for fast local checks:
+Run both fast checks after scenario edits:
 
 ```powershell
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
 ```
 
 Track-specific audit checks:
 
 ```powershell
-python host/verify_scenario_solutions.py --kind all --track RHCSA9 --audit-only
-python host/verify_scenario_solutions.py --kind all --track RHCSA10 --audit-only
+<python> .\host\verify_scenario_solutions.py --kind all --track RHCSA9 --audit-only
+<python> .\host\verify_scenario_solutions.py --kind all --track RHCSA10 --audit-only
 ```
+
+Replace `<python>` with the Python launcher available on your machine, such as `python`, `python3.13.exe`, or `py -3.13`.
 
 Live replay is the source of truth for VM behavior because it validates:
 
@@ -160,25 +164,32 @@ Live replay is the source of truth for VM behavior because it validates:
 
 ## Live Replay Commands
 
-Use Windows Python for live replay because the verifier talks to the Windows Vagrant and VirtualBox environment.
+Run live replay from Windows PowerShell because the verifier talks to the Windows Vagrant and VirtualBox environment.
 
 RHCSA 9:
 
 ```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
-python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA9
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA9
 ```
 
 RHCSA 10:
 
 ```powershell
-python3.13.exe .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
-python3.13.exe .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
+```
+
+Focused replay for one changed scenario:
+
+```powershell
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA9 --only mock-exam-a
 ```
 
 ## When to Re-Run Validation
 
-Run audit-only validation after:
+Run scenario audit and audit-only validation after:
 
 - editing `scenario.json`
 - regenerating scenario Markdown

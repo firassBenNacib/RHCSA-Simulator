@@ -5,8 +5,11 @@ This project is a Windows-first RHCSA lab simulator with portable source builds 
 ```powershell
 .\RHCSA.ps1 up
 .\RHCSA.ps1 tui
-python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
 ```
+
+In commands, replace `<python>` with the Python launcher that works on your machine, such as `python`, `python3.13.exe`, or `py -3.13`.
 
 ## Repository Layout
 
@@ -36,14 +39,29 @@ On Windows PowerShell, run the equivalent commands directly:
 go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
-python tools/scenarios/verify_scenario_solutions.py --kind all --audit-only
-python tools/scenarios/verify_scenario_solutions.py --kind all --track all --audit-only
-python tools/scenarios/audit_scenarios.py
-python -m unittest discover tools/scenarios/tests
+<python> -m unittest discover tools/scenarios/tests
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
 vagrant validate
 ```
 
 PowerShell files should parse cleanly and should not introduce PSScriptAnalyzer warnings.
+
+`--audit-only` only checks whether scenarios are replayable without starting VMs. It does not replace `audit_scenarios.py`, and it does not prove the scenario works against a real baseline. Run live replay after changes to provisioning, checks, setup scripts, or solution commands:
+
+```powershell
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA10
+```
+
+For a focused scenario change, target only the affected scenario and track:
+
+```powershell
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote --audit-only
+<python> .\host\verify_scenario_solutions.py --kind lab --track RHCSA10 --only lab-06-flatpak-remote
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA9 --only mock-exam-a --audit-only
+<python> .\host\verify_scenario_solutions.py --kind exam --track RHCSA9 --only mock-exam-a
+```
 
 Release packaging is handled by GoReleaser. Use `goreleaser release --snapshot --clean` for a local snapshot build when GoReleaser is installed.
 
@@ -73,4 +91,4 @@ RHCSA 10-specific scenarios must use:
 }
 ```
 
-Only mark a scenario as dual-track after audit-only validation and runtime replay pass on both baselines.
+Only mark a scenario as dual-track after static scenario audit, audit-only replay validation, and runtime replay on both baselines.

@@ -179,13 +179,16 @@ Host-side replay and verification helpers live under:
 host/
 ```
 
-Use audit-only validation for fast local checks:
+Use audit-only validation plus the scenario audit for fast local checks:
 
 ```powershell
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
 ```
 
-Live replay should be used after changes that affect provisioning, checks, runtime behavior, or scenario solutions.
+Replace `<python>` with the Python launcher available on your machine, such as `python`, `python3.13.exe`, or `py -3.13`.
+
+Live replay should be used after changes that affect provisioning, checks, runtime behavior, or scenario solutions. For a focused change, pass `--track` and `--only` to replay only the affected lab or exam.
 
 ## Runtime State
 

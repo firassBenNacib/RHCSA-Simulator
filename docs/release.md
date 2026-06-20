@@ -167,9 +167,12 @@ Also run the main Windows checks when changing PowerShell, scenarios, or release
 go test ./...
 go vet ./...
 go build ./cmd/rhcsa-tui
-python -m unittest discover tools/scenarios/tests
-python host/verify_scenario_solutions.py --kind all --track all --audit-only
+<python> -m unittest discover tools/scenarios/tests
+<python> .\host\verify_scenario_solutions.py --kind all --track all --audit-only
+<python> .\tools\scenarios\audit_scenarios.py
 ```
+
+Replace `<python>` with the Python launcher available on your machine, such as `python`, `python3.13.exe`, or `py -3.13`.
 
 For runtime, provisioning, or scenario solution changes, run live replay locally before publishing a release.
 
