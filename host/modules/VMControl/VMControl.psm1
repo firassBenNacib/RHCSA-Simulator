@@ -781,6 +781,8 @@ function Invoke-BaselineGuestProvisioning {
         RHCSA_PROFILE = (Get-ProjectProfile -ProjectRoot $ProjectRoot)
         RHCSA_NODE_NAME = $MachineName
     }
+    $directProvisionRetryCount = if ($baselineEnvironment.RHCSA_PROFILE -eq 'rhel10') { 4 } else { 1 }
+    $directProvisionRetryDelaySeconds = if ($baselineEnvironment.RHCSA_PROFILE -eq 'rhel10') { 12 } else { 10 }
 
     try {
         Write-WorkflowStatus -Area $RetryArea -Message "Configuring $MachineName private network"
@@ -802,8 +804,8 @@ function Invoke-BaselineGuestProvisioning {
                 -ScriptPath $scriptPath `
                 -ProvisionerName '' `
                 -ProjectRoot $ProjectRoot `
-                -RetryCount 1 `
-                -RetryDelaySeconds 10 `
+                -RetryCount $directProvisionRetryCount `
+                -RetryDelaySeconds $directProvisionRetryDelaySeconds `
                 -TimeoutSeconds 900 `
                 -RetryArea $RetryArea `
                 -RetryMessage "Retrying direct guest provisioning on $MachineName after a transient SSH failure" `
@@ -1686,7 +1688,6 @@ if command -v grubby >/dev/null 2>&1; then
 fi
 current="$(getenforce 2>/dev/null || echo unknown)"
 if [ "$current" = "Disabled" ]; then
-  fixfiles -F onboot >/dev/null 2>&1 || touch /.autorelabel
   echo reboot-required
 else
   echo no-reboot
@@ -1708,18 +1709,22 @@ fi
 
     if ($needsReboot) {
         Write-WorkflowStatus -Area 'baseline' -Message 'Preparing system policy' -Index 7
+        $vboxManage = Get-VBoxManagePath
         foreach ($machine in @('server', 'client')) {
-            Invoke-VagrantVmShellCommandCapture `
-                -MachineName $machine `
-                -Command "nohup sh -c 'sleep 1; systemctl reboot || reboot' >/dev/null 2>&1 & exit 0" `
-                -ProjectRoot $ProjectRoot `
-                -RetryCount 0 | Out-Null
+            Invoke-VagrantVmShellCommandCapture -MachineName $machine -Command 'sync' -ProjectRoot $ProjectRoot -RetryCount 0 | Out-Null
+            $vmId = Get-VagrantMachineId -MachineName $machine -ProjectRoot $ProjectRoot
+            Invoke-ExternalCommand `
+                -FilePath $vboxManage `
+                -ArgumentList @('controlvm', $vmId, 'reset') `
+                -FailureMessage "Failed to restart $machine after preparing RHCSA10 system policy." `
+                -SuppressOutput `
+                -TimeoutSeconds 30
         }
 
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 15
         Clear-VmSshConnectionCache -ProjectRoot $ProjectRoot -MachineNames @('server', 'client')
         foreach ($machine in @('server', 'client')) {
-            Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 90 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3
+            Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 60 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3 -Rhel10BootResetAttempt 12
         }
     }
 
@@ -1779,7 +1784,7 @@ getenforce
 
     Clear-VmSshConnectionCache -ProjectRoot $ProjectRoot -MachineNames @('server', 'client')
     foreach ($machine in @('server', 'client')) {
-        Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 24 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2
+        Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 24 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 2 -Rhel10BootResetAttempt 6
     }
 }
 
@@ -1866,7 +1871,7 @@ function Invoke-BaseSnapshotInitialization {
         }
 
         foreach ($machine in @('server', 'client')) {
-            Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 60 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3
+            Confirm-BaselineGuestReadiness -MachineName $machine -ProjectRoot $ProjectRoot -Area 'baseline' -MaxAttempts 60 -DelaySeconds 5 -RequiredSuccesses 1 -StabilizationDelaySeconds 3 -Rhel10BootResetAttempt 12
         }
     }
     finally {
@@ -1953,7 +1958,8 @@ function Wait-VagrantGuestSshReady {
         [int]$MaxAttempts = 18,
         [int]$DelaySeconds = 10,
         [int]$RequiredSuccesses = 1,
-        [int]$StabilizationDelaySeconds = 3
+        [int]$StabilizationDelaySeconds = 3,
+        [int]$Rhel10BootResetAttempt = 36
     )
 
     $consecutiveSuccesses = 0
@@ -1961,8 +1967,8 @@ function Wait-VagrantGuestSshReady {
     $missingRegistrationAttempts = 0
     $allowRhel10BootReset = $env:RHCSA_DISABLE_RHEL10_BOOT_RESET -notmatch '^(1|true|yes|on)$'
     $didRhel10BootReset = $false
-    # RHEL10 can pause during early boot/relabel; reset only after a real stall.
-    $rhel10BootResetAttempt = [Math]::Min(36, [Math]::Max(1, $MaxAttempts - 2))
+    # RHEL10 can pause during early boot; callers choose how early a reset is safe.
+    $rhel10BootResetAttempt = [Math]::Min([Math]::Max(1, $Rhel10BootResetAttempt), [Math]::Max(1, $MaxAttempts - 2))
     $hostCleanupParameters = @{ ProjectRoot = $ProjectRoot }
     if (Test-ForceHostCleanupEnabled) {
         $hostCleanupParameters['ForceHostCleanup'] = $true
@@ -2071,6 +2077,7 @@ function Confirm-VagrantGuestProvisionReadiness {
         [int]$DelaySeconds = 10,
         [int]$RequiredSuccesses = 1,
         [int]$StabilizationDelaySeconds = 3,
+        [int]$Rhel10BootResetAttempt = 36,
         [switch]$AllowStartupRetry
     )
 
@@ -2082,7 +2089,8 @@ function Confirm-VagrantGuestProvisionReadiness {
             -MaxAttempts $MaxAttempts `
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
-            -StabilizationDelaySeconds $StabilizationDelaySeconds
+            -StabilizationDelaySeconds $StabilizationDelaySeconds `
+            -Rhel10BootResetAttempt $Rhel10BootResetAttempt
         return
     }
     catch {
@@ -2103,7 +2111,8 @@ function Confirm-VagrantGuestProvisionReadiness {
                     -MaxAttempts ([Math]::Max([int][Math]::Ceiling($MaxAttempts / 2.0), 8)) `
                     -DelaySeconds $DelaySeconds `
                     -RequiredSuccesses $RequiredSuccesses `
-                    -StabilizationDelaySeconds $StabilizationDelaySeconds
+                    -StabilizationDelaySeconds $StabilizationDelaySeconds `
+                    -Rhel10BootResetAttempt $Rhel10BootResetAttempt
                 return
             }
 
@@ -2118,7 +2127,8 @@ function Confirm-VagrantGuestProvisionReadiness {
                     -MaxAttempts ([Math]::Max([int][Math]::Ceiling($MaxAttempts / 2.0), 8)) `
                     -DelaySeconds $DelaySeconds `
                     -RequiredSuccesses $RequiredSuccesses `
-                    -StabilizationDelaySeconds $StabilizationDelaySeconds
+                    -StabilizationDelaySeconds $StabilizationDelaySeconds `
+                    -Rhel10BootResetAttempt $Rhel10BootResetAttempt
                 return
             }
         }
@@ -2133,7 +2143,8 @@ function Confirm-VagrantGuestProvisionReadiness {
                 -MaxAttempts ([Math]::Max([int][Math]::Ceiling($MaxAttempts / 2.0), 8)) `
                 -DelaySeconds $DelaySeconds `
                 -RequiredSuccesses $RequiredSuccesses `
-                -StabilizationDelaySeconds $StabilizationDelaySeconds
+                -StabilizationDelaySeconds $StabilizationDelaySeconds `
+                -Rhel10BootResetAttempt $Rhel10BootResetAttempt
             return
         }
 
@@ -2146,7 +2157,8 @@ function Confirm-VagrantGuestProvisionReadiness {
             -MaxAttempts ([Math]::Max($MaxAttempts / 2, 8)) `
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
-            -StabilizationDelaySeconds $StabilizationDelaySeconds
+            -StabilizationDelaySeconds $StabilizationDelaySeconds `
+            -Rhel10BootResetAttempt $Rhel10BootResetAttempt
     }
 }
 
@@ -2160,7 +2172,8 @@ function Confirm-BaselineGuestReadiness {
         [int]$MaxAttempts = 60,
         [int]$DelaySeconds = 5,
         [int]$RequiredSuccesses = 1,
-        [int]$StabilizationDelaySeconds = 3
+        [int]$StabilizationDelaySeconds = 3,
+        [int]$Rhel10BootResetAttempt = 36
     )
 
     try {
@@ -2171,7 +2184,8 @@ function Confirm-BaselineGuestReadiness {
             -MaxAttempts $MaxAttempts `
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
-            -StabilizationDelaySeconds $StabilizationDelaySeconds
+            -StabilizationDelaySeconds $StabilizationDelaySeconds `
+            -Rhel10BootResetAttempt $Rhel10BootResetAttempt
         return
     }
     catch {
@@ -2193,6 +2207,7 @@ function Confirm-BaselineGuestReadiness {
             -DelaySeconds $DelaySeconds `
             -RequiredSuccesses $RequiredSuccesses `
             -StabilizationDelaySeconds $StabilizationDelaySeconds `
+            -Rhel10BootResetAttempt $Rhel10BootResetAttempt `
             -AllowStartupRetry
     }
 }

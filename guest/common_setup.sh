@@ -239,8 +239,8 @@ configure_selinux_boot_policy() {
   [[ "$RHCSA_PROFILE" == "rhel10" ]] || return 0
 
   if [[ -f /etc/selinux/config ]]; then
-    # RHCSA10 boxes that ship with SELinux disabled must relabel once before
-    # enforcing mode is safe. The host workflow flips to enforcing after reboot.
+    # RHCSA10 boxes can ship with SELinux disabled. Enable permissive mode for
+    # the next boot; the host workflow restarts once and validates key contexts.
     sed -ri 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
     grep -q '^SELINUXTYPE=' /etc/selinux/config || echo 'SELINUXTYPE=targeted' >> /etc/selinux/config
   fi
