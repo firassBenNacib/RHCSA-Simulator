@@ -68,9 +68,9 @@ On client, create /srv/opsb9 owned by root:opsb9 with permissions 2770 and a def
 
 ---
 
-## Question 08 - Client report script (client) - 5 pts
+## Question 08 - Client archive and filter (client) - 5 pts
 
-On client, create executable script /usr/local/bin/report-b9 that writes birch beacon report and the active state of sshd, chronyd, and firewalld to /root/report-b9.txt.
+On client, collect passwd and profile configuration files into /root/review-b9, create bzip2 archive /root/review-b9.tar.bz2, and write the root passwd entry plus birch beacon report to /root/passwd-root-b9.txt.
 
 ---
 
@@ -151,9 +151,9 @@ On server, create user copyb9 with password cinder9. On client, configure key-ba
 
 ---
 
-## Question 21 - Client server secure copy (client + server) - 4 pts
+## Question 21 - Client server rsync transfer (client + server) - 4 pts
 
-On client, create /root/exam-b-copy.txt containing birch archive transfer and copy it to server:/home/copyb9/exam-b-copy.txt.
+On client, create /root/exam-b-rsync.txt containing birch archive transfer and use rsync over SSH to copy it to server:/home/copyb9/inbox/exam-b-rsync.txt.
 
 ---
 

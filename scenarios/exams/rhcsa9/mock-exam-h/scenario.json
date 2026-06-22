@@ -35,7 +35,7 @@
         "On client, install lsof from the configured repositories and remove tcpdump if it is installed.",
         "On client, create group opsh9. Create users anah9, devh9, and audith9; audith9 must use /sbin/nologin. Set each password to cinder9 and add anah9 and devh9 to opsh9.",
         "On client, set maximum password age 60 days and warning period 7 days for anah9. Allow members of opsh9 to run /usr/bin/systemctl with sudo without a password.",
-        "On client, create /srv/opsh9 owned by root:opsh9 with permissions 2770 and a default ACL granting opsh9 full access.",
+        "On client, create shared drop directory /srv/drop-h9 owned by root:opsh9 with setgid and sticky bits enabled and permissions 3770.",
         "On client, create executable script /usr/local/bin/report-h9 that writes harbor jasper report and the active state of sshd, chronyd, and firewalld to /root/report-h9.txt.",
         "On client, create a 512 MiB swap file at /swaph9, activate it immediately, and make it persistent.",
         "On client, create volume group vgh9 on /dev/sdb, create logical volume datah9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datah9.",
@@ -59,7 +59,7 @@
         "Client Package Management",
         "Client Users and Group",
         "Client Password Aging and Sudo",
-        "Client Shared Directory",
+        "Client Sticky Drop Directory",
         "Client Report Script",
         "Client Swap Persistence",
         "Client LVM Mount",
@@ -150,10 +150,9 @@
           "bash -c 'visudo -cf /etc/sudoers.d/opsh9-systemctl >/dev/null'"
         ],
         [
-          "mkdir -p /srv/opsh9",
-          "chown root:opsh9 /srv/opsh9",
-          "chmod 2770 /srv/opsh9",
-          "setfacl -m d:g:opsh9:rwx /srv/opsh9"
+          "mkdir -p /srv/drop-h9",
+          "chown root:opsh9 /srv/drop-h9",
+          "chmod 3770 /srv/drop-h9"
         ],
         [
           "cat > /usr/local/bin/report-h9 <<'SCRIPT'",
@@ -332,7 +331,7 @@
         "rpm -q lsof >/dev/null",
         "getent group opsh9 >/dev/null && id -nG anah9 | tr ' ' '\\n' | grep -qx opsh9 && id -nG devh9 | tr ' ' '\\n' | grep -qx opsh9 && getent passwd audith9 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l anah9 | grep -Eq 'Maximum.*60' && chage -l anah9 | grep -Eq 'warning.*7' && grep -Eq '^%opsh9[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/opsh9-systemctl",
-        "stat -c '%U:%G:%a' /srv/opsh9 | grep -qx root:opsh9:2770 && getfacl -p /srv/opsh9 | grep -Eq '^default:group:opsh9:rwx$'",
+        "stat -c '%U:%G:%a' /srv/drop-h9 | grep -qx root:opsh9:3770",
         "test -x /usr/local/bin/report-h9 && /usr/local/bin/report-h9 >/dev/null && grep -Fxq 'harbor jasper report' /root/report-h9.txt",
         "swapon --show=NAME --noheadings | grep -qx '/swaph9' && awk '$1 == \"/swaph9\" && $2 == \"swap\" && $3 == \"swap\" {found=1} END {exit !found}' /etc/fstab",
         "lvs /dev/vgh9/datah9 >/dev/null 2>&1 && findmnt -no TARGET /mnt/datah9 | grep -qx /mnt/datah9 && awk '$2 == \"/mnt/datah9\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",

@@ -110,18 +110,15 @@ setfacl -m d:g:opsg9:rwx /srv/opsg9
 
 ---
 
-## Question 08 - Client report script (client) - 5 pts
+## Question 08 - Client archive and filter (client) - 5 pts
 
 ```bash
-cat > /usr/local/bin/report-g9 <<'SCRIPT'
-#!/bin/bash
-echo 'glacier iris report' > /root/report-g9.txt
-for service in sshd chronyd firewalld; do
-  systemctl is-active "$service" >> /root/report-g9.txt || true
-done
-SCRIPT
-chmod +x /usr/local/bin/report-g9
-/usr/local/bin/report-g9
+rm -rf /root/review-g9 /root/review-g9.tar.bz2 /root/passwd-root-g9.txt
+mkdir -p /root/review-g9
+cp /etc/passwd /etc/profile /root/review-g9/
+tar -cjf /root/review-g9.tar.bz2 -C /root review-g9
+grep '^root:' /etc/passwd > /root/passwd-root-g9.txt
+echo 'glacier iris report' >> /root/passwd-root-g9.txt
 ```
 
 ---

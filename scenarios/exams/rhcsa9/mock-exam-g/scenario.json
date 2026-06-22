@@ -36,7 +36,7 @@
         "On client, create group opsg9. Create users anag9, devg9, and auditg9; auditg9 must use /sbin/nologin. Set each password to cinder9 and add anag9 and devg9 to opsg9.",
         "On client, set maximum password age 60 days and warning period 7 days for anag9. Allow members of opsg9 to run /usr/bin/systemctl with sudo without a password.",
         "On client, create /srv/opsg9 owned by root:opsg9 with permissions 2770 and a default ACL granting opsg9 full access.",
-        "On client, create executable script /usr/local/bin/report-g9 that writes glacier iris report and the active state of sshd, chronyd, and firewalld to /root/report-g9.txt.",
+        "On client, collect passwd and profile configuration files into /root/review-g9, create bzip2 archive /root/review-g9.tar.bz2, and write the root passwd entry plus glacier iris report to /root/passwd-root-g9.txt.",
         "On client, create a 512 MiB swap file at /swapg9, activate it immediately, and make it persistent.",
         "On client, create volume group vgg9 on /dev/sdb, create logical volume datag9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datag9.",
         "On client, create user podg9, enable lingering for that user, and run a rootless container named webg9 from localhost/rhcsa-httpd-base:latest.",
@@ -60,7 +60,7 @@
         "Client Users and Group",
         "Client Password Aging and Sudo",
         "Client Shared Directory",
-        "Client Report Script",
+        "Client Archive and Filter",
         "Client Swap Persistence",
         "Client LVM Mount",
         "Client Rootless Container",
@@ -156,15 +156,12 @@
           "setfacl -m d:g:opsg9:rwx /srv/opsg9"
         ],
         [
-          "cat > /usr/local/bin/report-g9 <<'SCRIPT'",
-          "#!/bin/bash",
-          "echo 'glacier iris report' > /root/report-g9.txt",
-          "for service in sshd chronyd firewalld; do",
-          "  systemctl is-active \"$service\" >> /root/report-g9.txt || true",
-          "done",
-          "SCRIPT",
-          "chmod +x /usr/local/bin/report-g9",
-          "/usr/local/bin/report-g9"
+          "rm -rf /root/review-g9 /root/review-g9.tar.bz2 /root/passwd-root-g9.txt",
+          "mkdir -p /root/review-g9",
+          "cp /etc/passwd /etc/profile /root/review-g9/",
+          "tar -cjf /root/review-g9.tar.bz2 -C /root review-g9",
+          "grep '^root:' /etc/passwd > /root/passwd-root-g9.txt",
+          "echo 'glacier iris report' >> /root/passwd-root-g9.txt"
         ],
         [
           "swapoff /swapg9 >/dev/null 2>&1 || true",
@@ -333,7 +330,7 @@
         "getent group opsg9 >/dev/null && id -nG anag9 | tr ' ' '\\n' | grep -qx opsg9 && id -nG devg9 | tr ' ' '\\n' | grep -qx opsg9 && getent passwd auditg9 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l anag9 | grep -Eq 'Maximum.*60' && chage -l anag9 | grep -Eq 'warning.*7' && grep -Eq '^%opsg9[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/opsg9-systemctl",
         "stat -c '%U:%G:%a' /srv/opsg9 | grep -qx root:opsg9:2770 && getfacl -p /srv/opsg9 | grep -Eq '^default:group:opsg9:rwx$'",
-        "test -x /usr/local/bin/report-g9 && /usr/local/bin/report-g9 >/dev/null && grep -Fxq 'glacier iris report' /root/report-g9.txt",
+        "test -s /root/review-g9.tar.bz2 && tar -tjf /root/review-g9.tar.bz2 | grep -qx 'review-g9/passwd' && tar -tjf /root/review-g9.tar.bz2 | grep -qx 'review-g9/profile' && grep -Fxq 'glacier iris report' /root/passwd-root-g9.txt && grep -Eq '^root:' /root/passwd-root-g9.txt",
         "swapon --show=NAME --noheadings | grep -qx '/swapg9' && awk '$1 == \"/swapg9\" && $2 == \"swap\" && $3 == \"swap\" {found=1} END {exit !found}' /etc/fstab",
         "lvs /dev/vgg9/datag9 >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag9 | grep -qx /mnt/datag9 && awk '$2 == \"/mnt/datag9\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",
         "runuser -l podg9 -c 'podman ps --format {{.Names}}' | grep -qx webg9 && loginctl show-user podg9 | grep -Eq '^Linger=yes$'",

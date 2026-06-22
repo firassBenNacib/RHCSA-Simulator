@@ -35,7 +35,7 @@
         "On client, install lsof from the configured repositories and remove dos2unix if it is installed.",
         "On client, create group opse9. Create users anae9, deve9, and audite9; audite9 must use /sbin/nologin. Set each password to cinder9 and add anae9 and deve9 to opse9.",
         "On client, set maximum password age 60 days and warning period 7 days for anae9. Allow members of opse9 to run /usr/bin/systemctl with sudo without a password.",
-        "On client, create /srv/opse9 owned by root:opse9 with permissions 2770 and a default ACL granting opse9 full access.",
+        "On client, create shared drop directory /srv/drop-e9 owned by root:opse9 with setgid and sticky bits enabled and permissions 3770.",
         "On client, create executable script /usr/local/bin/report-e9 that writes ember frost report and the active state of sshd, chronyd, and firewalld to /root/report-e9.txt.",
         "On client, create a 512 MiB swap file at /swape9, activate it immediately, and make it persistent.",
         "On client, create volume group vge9 on /dev/sdb, create logical volume datae9 with size 320 MiB, format it as XFS, and mount it persistently at /mnt/datae9.",
@@ -59,7 +59,7 @@
         "Client Package Management",
         "Client Users and Group",
         "Client Password Aging and Sudo",
-        "Client Shared Directory",
+        "Client Sticky Drop Directory",
         "Client Report Script",
         "Client Swap Persistence",
         "Client LVM Mount",
@@ -150,10 +150,9 @@
           "bash -c 'visudo -cf /etc/sudoers.d/opse9-systemctl >/dev/null'"
         ],
         [
-          "mkdir -p /srv/opse9",
-          "chown root:opse9 /srv/opse9",
-          "chmod 2770 /srv/opse9",
-          "setfacl -m d:g:opse9:rwx /srv/opse9"
+          "mkdir -p /srv/drop-e9",
+          "chown root:opse9 /srv/drop-e9",
+          "chmod 3770 /srv/drop-e9"
         ],
         [
           "cat > /usr/local/bin/report-e9 <<'SCRIPT'",
@@ -332,7 +331,7 @@
         "rpm -q lsof >/dev/null",
         "getent group opse9 >/dev/null && id -nG anae9 | tr ' ' '\\n' | grep -qx opse9 && id -nG deve9 | tr ' ' '\\n' | grep -qx opse9 && getent passwd audite9 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l anae9 | grep -Eq 'Maximum.*60' && chage -l anae9 | grep -Eq 'warning.*7' && grep -Eq '^%opse9[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/opse9-systemctl",
-        "stat -c '%U:%G:%a' /srv/opse9 | grep -qx root:opse9:2770 && getfacl -p /srv/opse9 | grep -Eq '^default:group:opse9:rwx$'",
+        "stat -c '%U:%G:%a' /srv/drop-e9 | grep -qx root:opse9:3770",
         "test -x /usr/local/bin/report-e9 && /usr/local/bin/report-e9 >/dev/null && grep -Fxq 'ember frost report' /root/report-e9.txt",
         "swapon --show=NAME --noheadings | grep -qx '/swape9' && awk '$1 == \"/swape9\" && $2 == \"swap\" && $3 == \"swap\" {found=1} END {exit !found}' /etc/fstab",
         "lvs /dev/vge9/datae9 >/dev/null 2>&1 && findmnt -no TARGET /mnt/datae9 | grep -qx /mnt/datae9 && awk '$2 == \"/mnt/datae9\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",

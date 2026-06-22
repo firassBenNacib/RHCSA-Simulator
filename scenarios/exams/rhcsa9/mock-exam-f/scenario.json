@@ -46,7 +46,7 @@
         "On server, publish /var/www/html/exam-f.html containing falcon console web, configure httpd to listen on TCP port 8305, label the port for httpd, and open it permanently in firewalld.",
         "On server, enable persistent systemd journal storage and restart systemd-journald.",
         "On server, schedule a root cron job that runs every 10 minutes and appends falcon keeper cron to /var/log/auditf9.log.",
-        "On server, set the default boot target to multi-user.target and create /srv/server-f9 owned by root:srvf9 with permissions 2770.",
+        "On server, enable tuned, activate the virtual-guest profile, and create /etc/motd.d/tuned-f9 containing tuned-f9.",
         "On server, export /exports/rhcsa9-f to 192.168.122.0/24 with a README containing falcon share export. On client, mount server:/exports/rhcsa9-f persistently at /mnt/rhcsa9-f.",
         "On server, create user copyf9 with password cinder9. On client, configure key-based SSH login for root to copyf9@server.",
         "On client, create /root/exam-f-copy.txt containing falcon route transfer and copy it to server:/home/copyf9/exam-f-copy.txt.",
@@ -70,7 +70,7 @@
         "Server Web Service",
         "Server Persistent Journal",
         "Server Cron Schedule",
-        "Server Boot Target and Directory",
+        "Server Tuned Profile",
         "Client Server NFS Mount",
         "Client Server SSH Key",
         "Client Server Secure Copy",
@@ -276,11 +276,11 @@
         ],
         [
           "# On server:",
-          "systemctl set-default multi-user.target",
-          "getent group srvf9 >/dev/null || groupadd srvf9",
-          "mkdir -p /srv/server-f9",
-          "chown root:srvf9 /srv/server-f9",
-          "chmod 2770 /srv/server-f9"
+          "dnf install -y tuned >/dev/null 2>&1 || true",
+          "systemctl enable --now tuned",
+          "tuned-adm profile virtual-guest",
+          "mkdir -p /etc/motd.d",
+          "echo 'tuned-f9' > /etc/motd.d/tuned-f9"
         ],
         [
           "# On server:",
@@ -343,7 +343,7 @@
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq '\"'\"'falcon console web'\"'\"' /var/www/html/exam-f.html && grep -Eq '\"'\"'^Listen[[:space:]]+8305$'\"'\"' /etc/httpd/conf.d/exam-f.conf && semanage port -l | awk '\"'\"'$1 == \"http_port_t\" && $2 == \"tcp\" && $0 ~ /(^|[ ,])8305([, ]|$)/ {found=1} END {exit !found}'\"'\"' && firewall-cmd --permanent --query-port=8305/tcp && systemctl is-enabled httpd | grep -qx enabled && systemctl is-active httpd | grep -qx active'",
         "ssh server bash -lc 'set -euo pipefail; files=\"\"; test -d /var/log/journal && systemctl is-active systemd-journald | grep -qx active && files=$(find /etc/systemd -maxdepth 2 \\( -path /etc/systemd/journald.conf -o -path '\"'\"'/etc/systemd/journald.conf.d/*.conf'\"'\"' \\) -type f 2>/dev/null); test -n \"$files\" && awk '\"'\"'FNR == 1 {in_journal=0} /^[[:space:]]*\\[Journal\\][[:space:]]*($|#)/ {in_journal=1; next} /^[[:space:]]*\\[/ {in_journal=0} in_journal && /^[[:space:]]*Storage[[:space:]]*=[[:space:]]*persistent[[:space:]]*($|#)/ {found=1} END {exit !found}'\"'\"' $files'",
         "ssh server bash -lc 'set -euo pipefail; test -x /usr/local/sbin/auditf9.sh && grep -Fxq '\"'\"'*/10 * * * * root /usr/local/sbin/auditf9.sh'\"'\"' /etc/cron.d/auditf9 && grep -Fxq \"echo '\"'\"'falcon keeper cron'\"'\"' >> /var/log/auditf9.log\" /usr/local/sbin/auditf9.sh && systemctl is-enabled crond | grep -qx enabled'",
-        "ssh server bash -lc 'set -euo pipefail; systemctl get-default | grep -qx multi-user.target && stat -c '\"'\"'%U:%G:%a'\"'\"' /srv/server-f9 | grep -qx root:srvf9:2770'",
+        "ssh server bash -lc 'set -euo pipefail; systemctl is-enabled tuned | grep -qx enabled && tuned-adm active | grep -q '\"'\"'virtual-guest'\"'\"' && grep -Fxq '\"'\"'tuned-f9'\"'\"' /etc/motd.d/tuned-f9'",
         "findmnt -no SOURCE,TARGET /mnt/rhcsa9-f | grep -qx 'server:/exports/rhcsa9-f /mnt/rhcsa9-f' && grep -Eq '^server:/exports/rhcsa9-f[[:space:]]+/mnt/rhcsa9-f[[:space:]]+nfs([[:space:]]|$)' /etc/fstab && ssh server bash -lc 'set -euo pipefail; grep -Fxq \"falcon share export\" /exports/rhcsa9-f/README && grep -Eq \"^/exports/rhcsa9-f[[:space:]]+192\\\\.168\\\\.122\\\\.0/24\" /etc/exports.d/rhcsa9-f.exports && systemctl is-active nfs-server | grep -qx active'",
         "runuser -l root -c 'ssh -o BatchMode=yes -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null copyf9@server true'",
         "ssh server bash -lc 'set -euo pipefail; grep -Fxq '\"'\"'falcon route transfer'\"'\"' /home/copyf9/exam-f-copy.txt'",

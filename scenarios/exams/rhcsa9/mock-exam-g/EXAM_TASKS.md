@@ -68,9 +68,9 @@ On client, create /srv/opsg9 owned by root:opsg9 with permissions 2770 and a def
 
 ---
 
-## Question 08 - Client report script (client) - 5 pts
+## Question 08 - Client archive and filter (client) - 5 pts
 
-On client, create executable script /usr/local/bin/report-g9 that writes glacier iris report and the active state of sshd, chronyd, and firewalld to /root/report-g9.txt.
+On client, collect passwd and profile configuration files into /root/review-g9, create bzip2 archive /root/review-g9.tar.bz2, and write the root passwd entry plus glacier iris report to /root/passwd-root-g9.txt.
 
 ---
 

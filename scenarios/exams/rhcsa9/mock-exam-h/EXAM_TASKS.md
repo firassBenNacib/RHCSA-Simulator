@@ -62,9 +62,9 @@ On client, set maximum password age 60 days and warning period 7 days for anah9.
 
 ---
 
-## Question 07 - Client shared directory (client) - 5 pts
+## Question 07 - Client sticky drop directory (client) - 5 pts
 
-On client, create /srv/opsh9 owned by root:opsh9 with permissions 2770 and a default ACL granting opsh9 full access.
+On client, create shared drop directory /srv/drop-h9 owned by root:opsh9 with setgid and sticky bits enabled and permissions 3770.
 
 ---
 

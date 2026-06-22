@@ -323,6 +323,23 @@ def rhcsa9_shared_dir_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
+def rhcsa9_sticky_drop_dir_variant(letter: str) -> tuple[tuple[str, str, list[str]], str]:
+    group = f"ops{letter}9"
+    path = f"/srv/drop-{letter}9"
+    return (
+        block(
+            "Client Sticky Drop Directory",
+            f"On client, create shared drop directory {path} owned by root:{group} with setgid and sticky bits enabled and permissions 3770.",
+            [
+                f"mkdir -p {path}",
+                f"chown root:{group} {path}",
+                f"chmod 3770 {path}",
+            ],
+        ),
+        f"stat -c '%U:%G:%a' {path} | grep -qx root:{group}:3770",
+    )
+
+
 RHCSA9_EXAM_MARKERS = {
     "a": {
         "script": "atlas anchor report",
@@ -400,6 +417,27 @@ def rhcsa9_script_step(letter: str, marker: str) -> tuple[str, str, list[str]]:
             f"chmod +x {script}",
             script,
         ],
+    )
+
+
+def rhcsa9_archive_filter_variant(letter: str, marker: str) -> tuple[tuple[str, str, list[str]], str]:
+    workdir = f"/root/review-{letter}9"
+    archive = f"/root/review-{letter}9.tar.bz2"
+    report = f"/root/passwd-root-{letter}9.txt"
+    return (
+        block(
+            "Client Archive and Filter",
+            f"On client, collect passwd and profile configuration files into {workdir}, create bzip2 archive {archive}, and write the root passwd entry plus {marker} to {report}.",
+            [
+                f"rm -rf {workdir} {archive} {report}",
+                f"mkdir -p {workdir}",
+                f"cp /etc/passwd /etc/profile {workdir}/",
+                f"tar -cjf {archive} -C /root review-{letter}9",
+                f"grep '^root:' /etc/passwd > {report}",
+                f"echo '{marker}' >> {report}",
+            ],
+        ),
+        f"test -s {archive} && tar -tjf {archive} | grep -qx 'review-{letter}9/passwd' && tar -tjf {archive} | grep -qx 'review-{letter}9/profile' && grep -Fxq '{marker}' {report} && grep -Eq '^root:' {report}",
     )
 
 
@@ -561,6 +599,25 @@ def rhcsa9_server_policy_step(letter: str) -> tuple[str, str, list[str]]:
     )
 
 
+def rhcsa9_server_tuned_variant(letter: str) -> tuple[tuple[str, str, list[str]], str]:
+    note = f"/etc/motd.d/tuned-{letter}9"
+    return (
+        block(
+            "Server Tuned Profile",
+            f"On server, enable tuned, activate the virtual-guest profile, and create {note} containing tuned-{letter}9.",
+            [
+                "# On server:",
+                "dnf install -y tuned >/dev/null 2>&1 || true",
+                "systemctl enable --now tuned",
+                "tuned-adm profile virtual-guest",
+                "mkdir -p /etc/motd.d",
+                f"echo 'tuned-{letter}9' > {note}",
+            ],
+        ),
+        ssh_server_check(f"systemctl is-enabled tuned | grep -qx enabled && tuned-adm active | grep -q 'virtual-guest' && grep -Fxq 'tuned-{letter}9' {note}"),
+    )
+
+
 def rhcsa9_both_nfs_step(letter: str, marker: str) -> tuple[str, str, list[str]]:
     export_path = f"/exports/rhcsa9-{letter}"
     mountpoint = f"/mnt/rhcsa9-{letter}"
@@ -613,6 +670,25 @@ def rhcsa9_both_copy_step(letter: str, marker: str) -> tuple[str, str, list[str]
             f"echo '{marker}' > /root/exam-{letter}-copy.txt",
             f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-{letter}-copy.txt {user}@server:/home/{user}/exam-{letter}-copy.txt",
         ],
+    )
+
+
+def rhcsa9_both_rsync_variant(letter: str, marker: str) -> tuple[tuple[str, str, list[str]], str]:
+    user = f"copy{letter}9"
+    source = f"/root/exam-{letter}-rsync.txt"
+    dest = f"/home/{user}/inbox/exam-{letter}-rsync.txt"
+    return (
+        block(
+            "Client Server Rsync Transfer",
+            f"On client, create {source} containing {marker} and use rsync over SSH to copy it to server:{dest}.",
+            [
+                "dnf install -y rsync >/dev/null 2>&1 || true",
+                f"echo '{marker}' > {source}",
+                f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 {user}@server 'mkdir -p /home/{user}/inbox'",
+                f"rsync -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519' {source} {user}@server:{dest}",
+            ],
+        ),
+        ssh_server_check(f"grep -Fxq '{marker}' {dest}"),
     )
 
 
@@ -707,6 +783,19 @@ def rhcsa9_balanced_exam(exam_id: str) -> tuple[list[tuple[str, str, list[str]]]
         ssh_server_check(f"grep -Fxq '{markers['copy']}' /home/{copy_user}/exam-{letter}-copy.txt"),
         f"grep -Eq '^server[[:space:]]+server[[:space:]]+iburst$' /etc/chrony.conf && systemctl is-enabled chronyd | grep -qx enabled && {ssh_server_check('systemctl is-enabled chronyd | grep -qx enabled && systemctl is-active chronyd | grep -qx active')}",
     ]
+
+    if letter == "b":
+        blocks[7], checks[7] = rhcsa9_archive_filter_variant(letter, markers["script"])
+        blocks[20], checks[20] = rhcsa9_both_rsync_variant(letter, markers["copy"])
+    elif letter == "e":
+        blocks[6], checks[6] = rhcsa9_sticky_drop_dir_variant(letter)
+    elif letter == "f":
+        blocks[17], checks[17] = rhcsa9_server_tuned_variant(letter)
+    elif letter == "g":
+        blocks[7], checks[7] = rhcsa9_archive_filter_variant(letter, markers["script"])
+    elif letter == "h":
+        blocks[6], checks[6] = rhcsa9_sticky_drop_dir_variant(letter)
+
     return blocks, checks, True
 
 
