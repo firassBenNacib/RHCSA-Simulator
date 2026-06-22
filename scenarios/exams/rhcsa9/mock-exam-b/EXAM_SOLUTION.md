@@ -110,18 +110,15 @@ setfacl -m d:g:opsb9:rwx /srv/opsb9
 
 ---
 
-## Question 08 - Client report script (client) - 5 pts
+## Question 08 - Client archive and filter (client) - 5 pts
 
 ```bash
-cat > /usr/local/bin/report-b9 <<'SCRIPT'
-#!/bin/bash
-echo 'birch beacon report' > /root/report-b9.txt
-for service in sshd chronyd firewalld; do
-  systemctl is-active "$service" >> /root/report-b9.txt || true
-done
-SCRIPT
-chmod +x /usr/local/bin/report-b9
-/usr/local/bin/report-b9
+rm -rf /root/review-b9 /root/review-b9.tar.bz2 /root/passwd-root-b9.txt
+mkdir -p /root/review-b9
+cp /etc/passwd /etc/profile /root/review-b9/
+tar -cjf /root/review-b9.tar.bz2 -C /root review-b9
+grep '^root:' /etc/passwd > /root/passwd-root-b9.txt
+echo 'birch beacon report' >> /root/passwd-root-b9.txt
 ```
 
 ---
@@ -328,11 +325,13 @@ ssh-copy-id -i /root/.ssh/id_ed25519.pub copyb9@server
 
 ---
 
-## Question 21 - Client server secure copy (client + server) - 4 pts
+## Question 21 - Client server rsync transfer (client + server) - 4 pts
 
 ```bash
-echo 'birch archive transfer' > /root/exam-b-copy.txt
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 /root/exam-b-copy.txt copyb9@server:/home/copyb9/exam-b-copy.txt
+dnf install -y rsync >/dev/null 2>&1 || true
+echo 'birch archive transfer' > /root/exam-b-rsync.txt
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519 copyb9@server 'mkdir -p /home/copyb9/inbox'
+rsync -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i /root/.ssh/id_ed25519' /root/exam-b-rsync.txt copyb9@server:/home/copyb9/inbox/exam-b-rsync.txt
 ```
 
 ---

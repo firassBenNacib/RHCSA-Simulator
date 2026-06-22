@@ -437,7 +437,7 @@ def rhcsa9_archive_filter_variant(letter: str, marker: str) -> tuple[tuple[str, 
                 f"echo '{marker}' >> {report}",
             ],
         ),
-        f"test -s {archive} && tar -tjf {archive} | grep -qx 'review-{letter}9/passwd' && grep -Fxq '{marker}' {report} && grep -Eq '^root:' {report}",
+        f"test -s {archive} && tar -tjf {archive} | grep -qx 'review-{letter}9/passwd' && tar -tjf {archive} | grep -qx 'review-{letter}9/profile' && grep -Fxq '{marker}' {report} && grep -Eq '^root:' {report}",
     )
 
 

@@ -279,15 +279,15 @@ systemctl enable --now crond
 
 ---
 
-## Question 18 - Server boot target and directory (server) - 4 pts
+## Question 18 - Server tuned profile (server) - 4 pts
 
 ```bash
 # On server:
-systemctl set-default multi-user.target
-getent group srvf9 >/dev/null || groupadd srvf9
-mkdir -p /srv/server-f9
-chown root:srvf9 /srv/server-f9
-chmod 2770 /srv/server-f9
+dnf install -y tuned >/dev/null 2>&1 || true
+systemctl enable --now tuned
+tuned-adm profile virtual-guest
+mkdir -p /etc/motd.d
+echo 'tuned-f9' > /etc/motd.d/tuned-f9
 ```
 
 ---

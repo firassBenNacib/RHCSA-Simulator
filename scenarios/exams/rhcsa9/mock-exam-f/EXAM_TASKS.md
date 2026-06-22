@@ -133,9 +133,9 @@ On server, schedule a root cron job that runs every 10 minutes and appends falco
 
 ---
 
-## Question 18 - Server boot target and directory (server) - 4 pts
+## Question 18 - Server tuned profile (server) - 4 pts
 
-On server, set the default boot target to multi-user.target and create /srv/server-f9 owned by root:srvf9 with permissions 2770.
+On server, enable tuned, activate the virtual-guest profile, and create /etc/motd.d/tuned-f9 containing tuned-f9.
 
 ---
 

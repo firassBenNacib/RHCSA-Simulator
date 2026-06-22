@@ -99,13 +99,12 @@ bash -c 'visudo -cf /etc/sudoers.d/opsh9-systemctl >/dev/null'
 
 ---
 
-## Question 07 - Client shared directory (client) - 5 pts
+## Question 07 - Client sticky drop directory (client) - 5 pts
 
 ```bash
-mkdir -p /srv/opsh9
-chown root:opsh9 /srv/opsh9
-chmod 2770 /srv/opsh9
-setfacl -m d:g:opsh9:rwx /srv/opsh9
+mkdir -p /srv/drop-h9
+chown root:opsh9 /srv/drop-h9
+chmod 3770 /srv/drop-h9
 ```
 
 ---
