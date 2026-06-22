@@ -234,7 +234,7 @@ systemctl enable --now serveratimer.timer
 
 ---
 
-## Question 16 - Create volume group (client) - 4 pts
+## Question 16 - Configure LVM storage (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -242,7 +242,8 @@ vgcreate vga10 /dev/sdb
 lvcreate -L 384M -n dataa vga10
 mkfs.xfs /dev/vga10/dataa
 mkdir -p /mnt/dataa10
-echo '/dev/vga10/dataa /mnt/dataa10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vga10/dataa)
+test -n "$uuid" && echo "UUID=$uuid /mnt/dataa10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 

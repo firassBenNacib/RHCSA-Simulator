@@ -77,7 +77,7 @@ dnf clean all
 
 ---
 
-## Question 04 - Create a labeled XFS filesystem on /dev/sdc1 and mount it persistently (client) - 5 pts
+## Question 04 - Configure labeled filesystem mount (client) - 5 pts
 
 ```bash
 parted -s /dev/sdc -- mklabel gpt mkpart primary xfs 1MiB 513MiB
@@ -209,7 +209,7 @@ systemctl enable --now serveretimer.timer
 
 ---
 
-## Question 14 - Create VG vge10 and LV datae mounted at /mnt/datae10 (client) - 4 pts
+## Question 14 - Configure LVM storage (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -217,7 +217,8 @@ vgcreate vge10 /dev/sdb
 lvcreate -L 384M -n datae vge10
 mkfs.xfs -f /dev/vge10/datae
 mkdir -p /mnt/datae10
-echo '/dev/vge10/datae /mnt/datae10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vge10/datae)
+test -n "$uuid" && echo "UUID=$uuid /mnt/datae10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 

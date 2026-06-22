@@ -39,7 +39,7 @@
       "task_titles": [
         "Create an XFS filesystem on /dev/sdb1 labeled RHCSA10DATA",
         "Create mount point /mnt/rhcsa10data",
-        "Mount it persistently by label with default options"
+        "Configure labeled filesystem mount"
       ],
       "task_points": [
         10,

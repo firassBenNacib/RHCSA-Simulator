@@ -216,7 +216,7 @@ systemctl enable --now serverbtimer.timer
 
 ---
 
-## Question 14 - Create VG vgb10 and LV datab mounted at /mnt/datab10 (client) - 4 pts
+## Question 14 - Configure LVM storage (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -224,7 +224,8 @@ vgcreate vgb10 /dev/sdb
 lvcreate -L 384M -n datab vgb10
 mkfs.xfs -f /dev/vgb10/datab
 mkdir -p /mnt/datab10
-echo '/dev/vgb10/datab /mnt/datab10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vgb10/datab)
+test -n "$uuid" && echo "UUID=$uuid /mnt/datab10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 

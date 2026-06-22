@@ -99,9 +99,9 @@ On server, create and enable serverbtimer.timer so it appends SERVER-B to /var/l
 
 ---
 
-## Question 14 - Create VG vgb10 and LV datab mounted at /mnt/datab10 (client) - 4 pts
+## Question 14 - Configure LVM storage (client) - 4 pts
 
-On client, create VG vgb10 and LV datab mounted at /mnt/datab10.
+On client, create physical volume on /dev/sdb, volume group vgb10, logical volume datab of 384 MiB, format it with XFS, and mount it persistently at /mnt/datab10.
 
 ---
 

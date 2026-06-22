@@ -85,7 +85,7 @@ systemctl enable --now serverdtimer.timer
 
 ---
 
-## Question 05 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (client) - 5 pts
+## Question 05 - Configure LVM storage (client) - 5 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -93,7 +93,8 @@ vgcreate vgd10 /dev/sdb
 lvcreate -L 384M -n datad vgd10
 mkfs.xfs -f /dev/vgd10/datad
 mkdir -p /mnt/datad10
-echo '/dev/vgd10/datad /mnt/datad10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vgd10/datad)
+test -n "$uuid" && echo "UUID=$uuid /mnt/datad10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 

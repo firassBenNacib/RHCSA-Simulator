@@ -34,4 +34,4 @@ On client, create volume group vg10.
 
 ## Task 03 - Configure LVM storage (client) - 10 pts
 
-On client, create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently.
+On client, using volume group vg10 on /dev/sdb, create a 384 MiB logical volume lvdata, format it with XFS, and mount it persistently at /mnt/lvdata10.

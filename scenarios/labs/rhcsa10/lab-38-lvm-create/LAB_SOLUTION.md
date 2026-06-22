@@ -44,6 +44,7 @@ vgcreate vg10 /dev/sdb
 lvcreate -L 384M -n lvdata vg10
 mkfs.xfs -f /dev/vg10/lvdata
 mkdir -p /mnt/lvdata10
-echo '/dev/vg10/lvdata /mnt/lvdata10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vg10/lvdata)
+test -n "$uuid" && echo "UUID=$uuid /mnt/lvdata10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```

@@ -20,6 +20,6 @@ Locate and use local documentation.
 2. Use only persistent configuration methods.
 3. Use vim, visudo, crontab -e, and the normal RHCSA command flow when editing files.
 
-## Task 01 - Write the first usage summary for useradd to /root/rhcsa10-man.txt using (client) - 10 pts
+## Task 01 - Write the first usage summary for useradd to /root/rhcsa10-man.txt (client) - 10 pts
 
 On client, write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation.

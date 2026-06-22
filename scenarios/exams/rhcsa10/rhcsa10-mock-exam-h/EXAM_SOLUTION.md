@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Administration integration focus: boot recovery, networking, Flatpak remote setup, systemd timers, LVM storage, chrony, repositories, users, security, and services.
 
 ### Systems
 - client
@@ -123,7 +123,7 @@ setsebool -P httpd_can_network_connect on
 
 ---
 
-## Question 09 - Write users whose shell ends with sh to /root/h-shell-users.txt (client) - 5 pts
+## Question 09 - Write users whose shell ends with sh to /root/h-shell-users.txt (client) - 4 pts
 
 ```bash
 awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt
@@ -131,7 +131,7 @@ awk -F: '$7 ~ /sh$/ {print $1}' /etc/passwd | sort > /root/h-shell-users.txt
 
 ---
 
-## Question 10 - Enable persistent journal (server) - 5 pts
+## Question 10 - Enable persistent journal (server) - 4 pts
 
 ```bash
 # On server:
@@ -146,7 +146,7 @@ journalctl --flush
 
 ---
 
-## Question 11 - Create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 5 pts
+## Question 11 - Create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 4 pts
 
 ```bash
 # On server:
@@ -158,7 +158,7 @@ chmod 2770 /srv/serverh10
 
 ---
 
-## Question 12 - Schedule cron job (client) - 5 pts
+## Question 12 - Schedule cron job (client) - 4 pts
 
 ```bash
 echo '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log' | crontab -u userh10 -
@@ -166,7 +166,7 @@ echo '*/15 * * * * echo EXAM10 >> /home/userh10/exam10.log' | crontab -u userh10
 
 ---
 
-## Question 13 - Create VG vgh10 and LV datah mounted at /mnt/datah10 (client) - 4 pts
+## Question 13 - Configure LVM storage (client) - 4 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -174,7 +174,8 @@ vgcreate vgh10 /dev/sdb
 lvcreate -L 384M -n datah vgh10
 mkfs.xfs -f /dev/vgh10/datah
 mkdir -p /mnt/datah10
-echo '/dev/vgh10/datah /mnt/datah10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vgh10/datah)
+test -n "$uuid" && echo "UUID=$uuid /mnt/datah10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
@@ -354,4 +355,13 @@ chmod 0440 /etc/sudoers.d/serverh10-systemctl
 ```bash
 tar -czf /root/h-etc.tar.gz /etc/hosts /etc/fstab
 tar -tzf /root/h-etc.tar.gz
+```
+
+---
+
+## Question 23 - Configure Flatpak remote examhflatpak (client) - 4 pts
+
+```bash
+flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo
+flatpak remotes --system
 ```

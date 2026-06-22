@@ -148,7 +148,7 @@ def task_title(task: str) -> str:
         line = first_sentence
     line = textwrap.shorten(line, width=72, placeholder="", break_long_words=False, break_on_hyphens=False)
     words = line.rstrip(" ,;:-_/.").split()
-    weak_endings = {"to", "with", "and", "the", "following", "from", "at", "for", "of", "in"}
+    weak_endings = {"to", "with", "and", "the", "following", "from", "at", "for", "of", "in", "by", "as", "using", "via"}
     while len(words) > 3 and words[-1].strip(" ,;:-_/.").lower() in weak_endings:
         words.pop()
     line = " ".join(words)
@@ -159,6 +159,10 @@ def task_title(task: str) -> str:
 
 def specific_task_title(line: str) -> str:
     lowered = line.lower()
+    httpd_port_match = re.search(r"configure httpd to listen on tcp port\s+([0-9]+).*make the port usable", lowered)
+    if httpd_port_match:
+        return f"Configure httpd TCP port {httpd_port_match.group(1)}"
+
     patterns = [
         (r"recover root access", "Recover root password"),
         (r"set the hostname|set hostname", "Set hostname"),
@@ -197,6 +201,7 @@ def specific_task_title(line: str) -> str:
         (r"at job", "Schedule at job"),
         (r"swap partition", "Configure persistent swap"),
         (r"physical volume.*logical volume|logical volume", "Configure LVM storage"),
+        (r"labeled xfs filesystem|mount it persistently by label", "Configure labeled filesystem mount"),
         (r"route local[0-9]", "Route rsyslog messages"),
     ]
     for pattern, title in patterns:
@@ -939,6 +944,17 @@ def _flatpak_absent_check() -> str:
     return "! flatpak list --system --app --columns=application 2>/dev/null | grep -qx org.rhcsa.Tools"
 
 
+def _flatpak_remote_step(remote: str) -> tuple[str, str, list[str]]:
+    return (
+        f"On client, configure a system Flatpak remote named {remote} pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.",
+        _flatpak_remote_check(remote),
+        [
+            f"flatpak remote-add --system --if-not-exists --no-gpg-verify {remote} file:///opt/rhcsa/flatpak/repo",
+            "flatpak remotes --system",
+        ],
+    )
+
+
 def _lvm_mount_check(letter: str) -> str:
     return (
         f"lv_path=/dev/vg{letter}10/data{letter}; "
@@ -951,6 +967,52 @@ def _lvm_mount_check(letter: str) -> str:
         '\'$1 !~ /^#/ && $2 == target && $3 == "xfs" && '
         '($1 == dev || $1 == mapper || $1 == "UUID=" uuid || $1 == "/dev/disk/by-uuid/" uuid) '
         "{found=1} END {exit !found}' /etc/fstab"
+    )
+
+
+def _uuid_fstab_commands(device: str, mountpoint: str, filesystem: str, options: str = "defaults") -> list[str]:
+    return [
+        f"uuid=$(blkid -s UUID -o value {device})",
+        f"test -n \"$uuid\" && echo \"UUID=$uuid {mountpoint} {filesystem} {options} 0 0\" >> /etc/fstab",
+    ]
+
+
+def _prefer_uuid_fstab_commands(command_group: list[str]) -> list[str]:
+    updated: list[str] = []
+    for command in command_group:
+        match = re.fullmatch(
+            r"echo '(/dev/[A-Za-z0-9_./-]+)\s+(/mnt/[A-Za-z0-9_./-]+)\s+([A-Za-z0-9._-]+)\s+([^']+)'\s+>>\s+/etc/fstab",
+            str(command),
+        )
+        if match:
+            device, mountpoint, filesystem, options = match.groups()
+            updated.extend(_uuid_fstab_commands(device, mountpoint, filesystem, options.rsplit(" ", 2)[0]))
+            continue
+        updated.append(command)
+    return updated
+
+
+def _lvm_storage_task_wording(task: str, command_group: list[str]) -> str | None:
+    command_text = "\n".join(str(command) for command in command_group)
+    vg_match = re.search(r"\bvg([a-h])10\b", task, re.I)
+    lv_match = re.search(r"\bdata([a-h])\b", task, re.I)
+    if not (vg_match and lv_match and vg_match.group(1).lower() == lv_match.group(1).lower()):
+        return None
+
+    pv_match = re.search(r"\bpvcreate(?:\s+-\S+)*\s+(/dev/[a-z0-9]+)\b", command_text, re.I)
+    size_match = re.search(r"\blvcreate\s+-L\s+([0-9]+[MG])\s+-n\s+([a-z0-9_-]+)\s+([a-z0-9_-]+)", command_text, re.I)
+    mount_match = re.search(r"\s(/mnt/[A-Za-z0-9_./-]+)\s+xfs\s", command_text, re.I)
+    if not (pv_match and size_match and mount_match and "mkfs.xfs" in command_text):
+        return None
+
+    device = pv_match.group(1)
+    size = size_match.group(1).replace("M", " MiB").replace("G", " GiB")
+    lv_name = size_match.group(2)
+    vg_name = size_match.group(3)
+    mountpoint = mount_match.group(1)
+    return (
+        f"Create physical volume on {device}, volume group {vg_name}, logical volume {lv_name} "
+        f"of {size}, format it with XFS, and mount it persistently at {mountpoint}."
     )
 
 
@@ -1921,6 +1983,7 @@ def _apply_rhcsa10_exam_target_balance(
         _replace_step_from_factory(tasks, checks, commands, 17, _server_http_step(letter, server_web_port))
         _replace_step_from_factory(tasks, checks, commands, 18, _both_repo_step(letter))
         _replace_step_from_factory(tasks, checks, commands, 20, _server_sudo_step(letter))
+        _insert_step_from_factory(tasks, checks, commands, len(tasks), _flatpak_remote_step("examhflatpak"))
 
 
 def _reorder_parallel(values: list[Any], order: list[int]) -> list[Any]:
@@ -2498,12 +2561,20 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             [
                 "Create physical volume /dev/sdb.",
                 "Create volume group vg10.",
-                "Create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently.",
+                "Using volume group vg10 on /dev/sdb, create a 384 MiB logical volume lvdata, format it with XFS, and mount it persistently at /mnt/lvdata10.",
             ],
             [
                 "pvs /dev/sdb >/dev/null",
                 "vgs vg10 >/dev/null",
-                "lvs /dev/vg10/lvdata >/dev/null && findmnt -no TARGET /mnt/lvdata10 | grep -qx /mnt/lvdata10 && grep -Eq '/dev/vg10/lvdata[[:space:]]+/mnt/lvdata10[[:space:]]+xfs' /etc/fstab",
+                (
+                    "lv_uuid=\"$(blkid -s UUID -o value /dev/vg10/lvdata)\"; "
+                    "lvs /dev/vg10/lvdata >/dev/null && "
+                    "findmnt -no TARGET /mnt/lvdata10 | grep -qx /mnt/lvdata10 && "
+                    "awk -v dev=\"/dev/vg10/lvdata\" -v mapper=\"/dev/mapper/vg10-lvdata\" -v uuid=\"$lv_uuid\" "
+                    "'$1 !~ /^#/ && $2 == \"/mnt/lvdata10\" && $3 == \"xfs\" && "
+                    "($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) "
+                    "{found=1} END {exit !found}' /etc/fstab"
+                ),
             ],
             [
                 [
@@ -2516,7 +2587,7 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
                     "lvcreate -L 384M -n lvdata vg10",
                     "mkfs.xfs -f /dev/vg10/lvdata",
                     "mkdir -p /mnt/lvdata10",
-                    "echo '/dev/vg10/lvdata /mnt/lvdata10 xfs defaults 0 0' >> /etc/fstab",
+                    *_uuid_fstab_commands("/dev/vg10/lvdata", "/mnt/lvdata10", "xfs"),
                     "mount -a",
                 ],
             ],
@@ -2694,7 +2765,7 @@ def _repair_lab_progression(lab_id: str, block: dict[str, Any]) -> dict[str, Any
             ["Write the first usage summary for useradd to /root/rhcsa10-man.txt using local documentation."],
             ["test -s /root/rhcsa10-man.txt && grep -Eqi 'SYNOPSIS|Usage:.*useradd' /root/rhcsa10-man.txt"],
             [[
-                "if man useradd >/tmp/rhcsa10-useradd-man.txt 2>/dev/null; then man useradd | col -b | grep -m1 -A1 '^SYNOPSIS' > /root/rhcsa10-man.txt; else useradd --help | grep -m1 -A1 '^Usage' > /root/rhcsa10-man.txt; fi",
+                "if man useradd 2>/dev/null | col -b | awk 'BEGIN{found=0} /^SYNOPSIS/{found=1} found{print; count++} count>=2{exit}' > /root/rhcsa10-man.txt && test -s /root/rhcsa10-man.txt; then :; else useradd --help | grep -m1 -A1 '^Usage' > /root/rhcsa10-man.txt; fi",
                 "cat /root/rhcsa10-man.txt",
             ]],
         )
@@ -2956,6 +3027,7 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         for command_index, command in enumerate(command_group):
             if str(command).startswith("lvcreate -L 256M -n data"):
                 command_group[command_index] = str(command).replace("-L 256M", "-L 384M", 1)
+        command_group[:] = _prefer_uuid_fstab_commands(command_group)
 
     exam_repo_commands = [
         "cat > /etc/yum.repos.d/rhcsa10-exam.repo <<'EOF'\n"
@@ -3010,6 +3082,11 @@ def _repair_exam_progression(exam_id: str, block: dict[str, Any]) -> dict[str, A
         lvm_vg_match = re.search(r"\bvg([a-h])10\b", task_lower)
         lvm_lv_match = re.search(r"\bdata([a-h])\b", task_lower)
         if lvm_vg_match and lvm_lv_match and "mount" in task_lower and lvm_vg_match.group(1) == lvm_lv_match.group(1):
+            polished_lvm_task = _lvm_storage_task_wording(task_text, commands[index] if index < len(commands) else [])
+            if polished_lvm_task:
+                tasks[index] = polished_lvm_task
+                task_text = str(tasks[index])
+                task_lower = task_text.lower()
             checks[index] = _lvm_mount_check(lvm_vg_match.group(1))
 
         nfs_match = re.search(r"mount\s+server:/exports/direct\s+at\s+(/mnt/[a-z0-9._/-]+)\s+persistently", task_lower)
@@ -3175,6 +3252,11 @@ def _update_exam_manifest(manifest_path: Path) -> None:
         manifest["description"] = (
             "Recovery + server administration focus: root password recovery, server-side login policy, "
             "process management, file search, systemd timers, swap, and LVM storage."
+        )
+    if str(manifest["id"]) == "rhcsa10-mock-exam-h":
+        manifest["description"] = (
+            "Administration integration focus: boot recovery, networking, Flatpak remote setup, "
+            "systemd timers, LVM storage, chrony, repositories, users, security, and services."
         )
     manifest.setdefault("flags", {})
     manifest["flags"]["requires_server"] = True

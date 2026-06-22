@@ -22,7 +22,7 @@
       "tasks": [
         "On client, create physical volume /dev/sdb.",
         "On client, create volume group vg10.",
-        "On client, create a 384 MiB logical volume lvdata formatted with XFS and mounted at /mnt/lvdata10 persistently."
+        "On client, using volume group vg10 on /dev/sdb, create a 384 MiB logical volume lvdata, format it with XFS, and mount it persistently at /mnt/lvdata10."
       ],
       "hints": [
         "Use pvcreate, vgcreate, and lvcreate.",
@@ -31,7 +31,7 @@
       "checks": [
         "pvs /dev/sdb >/dev/null",
         "vgs vg10 >/dev/null",
-        "lvs /dev/vg10/lvdata >/dev/null && findmnt -no TARGET /mnt/lvdata10 | grep -qx /mnt/lvdata10 && grep -Eq '/dev/vg10/lvdata[[:space:]]+/mnt/lvdata10[[:space:]]+xfs' /etc/fstab"
+        "lv_uuid=\"$(blkid -s UUID -o value /dev/vg10/lvdata)\"; lvs /dev/vg10/lvdata >/dev/null && findmnt -no TARGET /mnt/lvdata10 | grep -qx /mnt/lvdata10 && awk -v dev=\"/dev/vg10/lvdata\" -v mapper=\"/dev/mapper/vg10-lvdata\" -v uuid=\"$lv_uuid\" '$1 !~ /^#/ && $2 == \"/mnt/lvdata10\" && $3 == \"xfs\" && ($1 == dev || $1 == mapper || $1 == \"UUID=\" uuid || $1 == \"/dev/disk/by-uuid/\" uuid) {found=1} END {exit !found}' /etc/fstab"
       ],
       "solution_outline": [
         "Make the requested configuration persistent and verify it before finishing."
@@ -59,7 +59,8 @@
           "lvcreate -L 384M -n lvdata vg10",
           "mkfs.xfs -f /dev/vg10/lvdata",
           "mkdir -p /mnt/lvdata10",
-          "echo '/dev/vg10/lvdata /mnt/lvdata10 xfs defaults 0 0' >> /etc/fstab",
+          "uuid=$(blkid -s UUID -o value /dev/vg10/lvdata)",
+          "test -n \"$uuid\" && echo \"UUID=$uuid /mnt/lvdata10 xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ]
       ],

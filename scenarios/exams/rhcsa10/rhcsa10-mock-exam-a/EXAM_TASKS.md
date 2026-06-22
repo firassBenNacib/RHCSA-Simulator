@@ -133,9 +133,9 @@ On server, create and enable serveratimer.timer so it appends SERVER-A to /var/l
 
 ---
 
-## Question 16 - Create volume group (client) - 4 pts
+## Question 16 - Configure LVM storage (client) - 4 pts
 
-On client, create volume group vga10 from /dev/sdb. Create logical volume dataa of at least 384 MiB inside vga10. Format it with XFS and mount it persistently at /mnt/dataa10.
+On client, create physical volume on /dev/sdb, volume group vga10, logical volume dataa of 384 MiB, format it with XFS, and mount it persistently at /mnt/dataa10.
 
 ---
 

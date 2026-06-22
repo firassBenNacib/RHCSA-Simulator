@@ -319,7 +319,8 @@ vgcreate vgg10 /dev/sdc
 lvcreate -L 300M -n datag vgg10
 mkfs.xfs /dev/vgg10/datag
 mkdir -p /mnt/datag10
-echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vgg10/datag)
+test -n "$uuid" && echo "UUID=$uuid /mnt/datag10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 

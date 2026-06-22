@@ -52,7 +52,7 @@ systemctl enable --now httpd
 
 ---
 
-## Question 04 - Configure httpd to listen on TCP port 8102 and make the port usable by (client) - 5 pts
+## Question 04 - Configure httpd TCP port 8102 (client) - 5 pts
 
 ```bash
 cat > /etc/httpd/conf.d/examc-port.conf <<'EOF'
@@ -116,7 +116,7 @@ systemctl enable --now examctimer.timer
 
 ---
 
-## Question 08 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 5 pts
+## Question 08 - Configure LVM storage (client) - 5 pts
 
 ```bash
 pvcreate /dev/sdb
@@ -124,7 +124,8 @@ vgcreate vgc10 /dev/sdb
 lvcreate -L 384M -n datac vgc10
 mkfs.xfs -f /dev/vgc10/datac
 mkdir -p /mnt/datac10
-echo '/dev/vgc10/datac /mnt/datac10 xfs defaults 0 0' >> /etc/fstab
+uuid=$(blkid -s UUID -o value /dev/vgc10/datac)
+test -n "$uuid" && echo "UUID=$uuid /mnt/datac10 xfs defaults 0 0" >> /etc/fstab
 mount -a
 ```
 
