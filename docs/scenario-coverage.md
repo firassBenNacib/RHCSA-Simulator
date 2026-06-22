@@ -4,6 +4,8 @@ This document summarizes the RHCSA Simulator scenario coverage, track separation
 
 The project uses original scenario wording. Public RHCSA objectives may guide coverage planning, but exam dumps, copied exam questions, and commercial-course text must not be copied into this repository.
 
+Included solutions are valid final-state solution paths for the simulator checks. They are not official Red Hat answers and should not be described as the way the real exam is answered.
+
 ## Current Scenario Tracks
 
 | Track | Labs | Mock exams | Total scenarios | Runtime status |
