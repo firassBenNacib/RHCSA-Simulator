@@ -332,7 +332,7 @@
         "getent group opsb9 >/dev/null && id -nG anab9 | tr ' ' '\\n' | grep -qx opsb9 && id -nG devb9 | tr ' ' '\\n' | grep -qx opsb9 && getent passwd auditb9 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l anab9 | grep -Eq 'Maximum.*60' && chage -l anab9 | grep -Eq 'warning.*7' && grep -Eq '^%opsb9[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/opsb9-systemctl",
         "stat -c '%U:%G:%a' /srv/opsb9 | grep -qx root:opsb9:2770 && getfacl -p /srv/opsb9 | grep -Eq '^default:group:opsb9:rwx$'",
-        "test -s /root/review-b9.tar.bz2 && tar -tjf /root/review-b9.tar.bz2 | grep -qx 'review-b9/passwd' && tar -tjf /root/review-b9.tar.bz2 | grep -qx 'review-b9/profile' && grep -Fxq 'birch beacon report' /root/passwd-root-b9.txt && grep -Eq '^root:' /root/passwd-root-b9.txt",
+        "test -s /root/review-b9/passwd && test -s /root/review-b9/profile && test -s /root/review-b9.tar.bz2 && tar -tjf /root/review-b9.tar.bz2 | sed 's#^\\./##' | awk -F/ '$NF == \"passwd\" {passwd=1} $NF == \"profile\" {profile=1} END {exit !(passwd && profile)}' && grep -Fxq 'birch beacon report' /root/passwd-root-b9.txt && grep -Eq '^root:' /root/passwd-root-b9.txt",
         "swapon --show=NAME --noheadings | grep -qx '/swapb9' && awk '$1 == \"/swapb9\" && $2 == \"swap\" && $3 == \"swap\" {found=1} END {exit !found}' /etc/fstab",
         "lvs /dev/vgb9/datab9 >/dev/null 2>&1 && findmnt -no TARGET /mnt/datab9 | grep -qx /mnt/datab9 && awk '$2 == \"/mnt/datab9\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",
         "runuser -l podb9 -c 'podman ps --format {{.Names}}' | grep -qx webb9 && loginctl show-user podb9 | grep -Eq '^Linger=yes$'",
