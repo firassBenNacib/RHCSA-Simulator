@@ -23,7 +23,7 @@ class AuditScenarioTests(unittest.TestCase):
         self.assertIn("rhcsa10-mock-exam-a and rhcsa10-mock-exam-b are too similar", findings[0].message)
         self.assertIn("max 0.90", findings[0].message)
 
-    def test_rhcsa9_keeps_existing_stricter_threshold(self) -> None:
+    def test_rhcsa9_similarity_threshold_is_enforced(self) -> None:
         findings = audit_exam_similarity_limits(
             [
                 ("rhcsa9", "mock-exam-a", "mock-exam-b", 0.91),
@@ -31,9 +31,9 @@ class AuditScenarioTests(unittest.TestCase):
             ]
         )
 
-        self.assertEqual(len(findings), 1)
-        self.assertIn("mock-exam-c and mock-exam-d are too similar", findings[0].message)
-        self.assertIn("max 0.95", findings[0].message)
+        self.assertEqual(len(findings), 2)
+        self.assertIn("mock-exam-a and mock-exam-b are too similar", findings[0].message)
+        self.assertIn("max 0.90", findings[0].message)
 
 
 if __name__ == "__main__":
