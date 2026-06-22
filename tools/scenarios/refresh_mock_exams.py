@@ -424,6 +424,10 @@ def rhcsa9_archive_filter_variant(letter: str, marker: str) -> tuple[tuple[str, 
     workdir = f"/root/review-{letter}9"
     archive = f"/root/review-{letter}9.tar.bz2"
     report = f"/root/passwd-root-{letter}9.txt"
+    archive_members_check = (
+        f"tar -tjf {archive} | sed 's#^\\./##' | "
+        "awk -F/ '$NF == \"passwd\" {passwd=1} $NF == \"profile\" {profile=1} END {exit !(passwd && profile)}'"
+    )
     return (
         block(
             "Client Archive and Filter",
@@ -437,7 +441,7 @@ def rhcsa9_archive_filter_variant(letter: str, marker: str) -> tuple[tuple[str, 
                 f"echo '{marker}' >> {report}",
             ],
         ),
-        f"test -s {archive} && tar -tjf {archive} | grep -qx 'review-{letter}9/passwd' && tar -tjf {archive} | grep -qx 'review-{letter}9/profile' && grep -Fxq '{marker}' {report} && grep -Eq '^root:' {report}",
+        f"test -s {workdir}/passwd && test -s {workdir}/profile && test -s {archive} && {archive_members_check} && grep -Fxq '{marker}' {report} && grep -Eq '^root:' {report}",
     )
 
 

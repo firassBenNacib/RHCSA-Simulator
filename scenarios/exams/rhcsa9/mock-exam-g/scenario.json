@@ -330,7 +330,7 @@
         "getent group opsg9 >/dev/null && id -nG anag9 | tr ' ' '\\n' | grep -qx opsg9 && id -nG devg9 | tr ' ' '\\n' | grep -qx opsg9 && getent passwd auditg9 | awk -F: '$7 == \"/sbin/nologin\" {found=1} END {exit !found}'",
         "chage -l anag9 | grep -Eq 'Maximum.*60' && chage -l anag9 | grep -Eq 'warning.*7' && grep -Eq '^%opsg9[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d/opsg9-systemctl",
         "stat -c '%U:%G:%a' /srv/opsg9 | grep -qx root:opsg9:2770 && getfacl -p /srv/opsg9 | grep -Eq '^default:group:opsg9:rwx$'",
-        "test -s /root/review-g9.tar.bz2 && tar -tjf /root/review-g9.tar.bz2 | grep -qx 'review-g9/passwd' && tar -tjf /root/review-g9.tar.bz2 | grep -qx 'review-g9/profile' && grep -Fxq 'glacier iris report' /root/passwd-root-g9.txt && grep -Eq '^root:' /root/passwd-root-g9.txt",
+        "test -s /root/review-g9/passwd && test -s /root/review-g9/profile && test -s /root/review-g9.tar.bz2 && tar -tjf /root/review-g9.tar.bz2 | sed 's#^\\./##' | awk -F/ '$NF == \"passwd\" {passwd=1} $NF == \"profile\" {profile=1} END {exit !(passwd && profile)}' && grep -Fxq 'glacier iris report' /root/passwd-root-g9.txt && grep -Eq '^root:' /root/passwd-root-g9.txt",
         "swapon --show=NAME --noheadings | grep -qx '/swapg9' && awk '$1 == \"/swapg9\" && $2 == \"swap\" && $3 == \"swap\" {found=1} END {exit !found}' /etc/fstab",
         "lvs /dev/vgg9/datag9 >/dev/null 2>&1 && findmnt -no TARGET /mnt/datag9 | grep -qx /mnt/datag9 && awk '$2 == \"/mnt/datag9\" && $3 == \"xfs\" {found=1} END {exit !found}' /etc/fstab",
         "runuser -l podg9 -c 'podman ps --format {{.Names}}' | grep -qx webg9 && loginctl show-user podg9 | grep -Eq '^Linger=yes$'",
