@@ -68,22 +68,22 @@ Scenarios are original practice content aligned with public RHCSA objectives. In
 - [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 - Hardware virtualization enabled in BIOS/UEFI
 - At least 20 GB of free disk space
-- RHEL x86_64 DVD ISO for the selected track:
+- RHEL x86_64 DVD ISO for the track you use:
   - RHCSA 9 accepts `rhel-9.*-x86_64-dvd.iso`, such as `rhel-9.8-x86_64-dvd.iso`
   - RHCSA 10 accepts `rhel-10.*-x86_64-dvd.iso`, such as `rhel-10.2-x86_64-dvd.iso`
 - Go 1.25+ only if you want to build the TUI from source
 
 RHEL ISO downloads require a Red Hat account. Use the official [Red Hat Developer downloads by release](https://developers.redhat.com/products/rhel/download#downloadsbyrelease) page and choose the x86_64 DVD ISO, not the boot ISO.
 
-If multiple same-major DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` to a filename or full path when you want to force a specific ISO.
+Download only the ISO for the track you plan to run. If multiple same-major DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` to a filename or full path when you want to keep the ISO outside the project folder or force a specific ISO.
 
-You can also cache the offline package repositories from an ISO path:
+Recommended: import the offline package repositories once from an ISO path:
 
 ```powershell
 .\RHCSA.ps1 repo import .\rhel-10.2-x86_64-dvd.iso
 ```
 
-This creates `.rhcsa-repo/` with the selected track's `BaseOS` and `AppStream` content, so future baseline builds can use the cache when no matching ISO is present in the project root.
+This creates `.rhcsa-repo/` with the selected track's `BaseOS` and `AppStream` content, so future baseline builds can use the cache when no matching ISO is present in the project root. The ISO can be in the project folder or outside it.
 
 ## Installation
 
@@ -101,16 +101,22 @@ irm https://raw.githubusercontent.com/firassBenNacib/RHCSA-Simulator/main/instal
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-Place your RHEL ISO in the project root.
+Provide the RHEL ISO for the selected track. You can either place it in the project root, set `RHCSA_ISO` to an external path, or import the repo cache once.
 
 Example:
 
 ```text
 RHCSA-Simulator/
-├── RHCSA.ps1
-├── rhel-9.8-x86_64-dvd.iso
-├── rhel-10.2-x86_64-dvd.iso
-└── ...
+|-- RHCSA.ps1
+|-- rhel-10.2-x86_64-dvd.iso
+`-- ...
+```
+
+For an ISO outside the project folder:
+
+```powershell
+$env:RHCSA_ISO = "D:\ISO\rhel-10.2-x86_64-dvd.iso"
+.\RHCSA.ps1 up
 ```
 
 ## Quick Start
@@ -367,18 +373,18 @@ Useful shortcuts:
 
 ```text
 RHCSA-Simulator/
-├── RHCSA.ps1              # Main PowerShell CLI
-├── host/                  # Host orchestration and checks
-├── guest/                 # VM provisioning scripts
-├── cmd/rhcsa-tui/         # Go terminal UI
-├── internal/              # Shared Go packages
-├── scenarios/
-│   ├── labs/              # RHCSA labs
-│   └── exams/             # RHCSA mock exams
-├── tools/scenarios/       # Scenario tooling
-├── docs/                  # Project documentation
-├── demo/                  # Screenshots and demo assets
-└── .github/               # CI, security, and release workflows
+|-- RHCSA.ps1              # Main PowerShell CLI
+|-- host/                  # Host orchestration and checks
+|-- guest/                 # VM provisioning scripts
+|-- cmd/rhcsa-tui/         # Go terminal UI
+|-- internal/              # Shared Go packages
+|-- scenarios/
+|   |-- labs/              # RHCSA labs
+|   `-- exams/             # RHCSA mock exams
+|-- tools/scenarios/       # Scenario tooling
+|-- docs/                  # Project documentation
+|-- demo/                  # Demo assets
+`-- .github/               # CI, security, and release workflows
 ```
 
 ## Scenario Content

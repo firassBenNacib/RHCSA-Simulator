@@ -44,21 +44,21 @@ This split keeps the user-facing workflow simple while allowing each part of the
 
 ```text
 RHCSA-Simulator/
-├── RHCSA.ps1              # Main PowerShell CLI
-├── rhcsa-tui.cmd          # Windows launcher for the TUI
-├── install.ps1            # Installer for the prebuilt TUI binary
-├── Vagrantfile            # VM definition
-├── host/                  # Host-side PowerShell runtime and validation logic
-├── guest/                 # Guest VM provisioning scripts
-├── cmd/rhcsa-tui/         # Go terminal UI source
-├── internal/              # Shared Go packages
-├── scenarios/             # Labs and mock exams
-├── tools/scenarios/       # Python scenario tools
-├── docs/                  # Project documentation
-├── demo/                  # Demo images and screencasts
-├── .github/               # CI, security, release, and dependency workflows
-├── Makefile               # Local development checks
-└── README.md              # Main user-facing documentation
+|-- RHCSA.ps1              # Main PowerShell CLI
+|-- rhcsa-tui.cmd          # Windows launcher for the TUI
+|-- install.ps1            # Installer for the prebuilt TUI binary
+|-- Vagrantfile            # VM definition
+|-- host/                  # Host-side PowerShell runtime and validation logic
+|-- guest/                 # Guest VM provisioning scripts
+|-- cmd/rhcsa-tui/         # Go terminal UI source
+|-- internal/              # Shared Go packages
+|-- scenarios/             # Labs and mock exams
+|-- tools/scenarios/       # Python scenario tools
+|-- docs/                  # Project documentation
+|-- demo/                  # Demo images and screencasts
+|-- .github/               # CI, security, release, and dependency workflows
+|-- Makefile               # Local development checks
+`-- README.md              # Main user-facing documentation
 ```
 
 ## Scenario Layout
@@ -67,12 +67,12 @@ Scenarios are organized by mode and RHCSA track:
 
 ```text
 scenarios/
-├── labs/
-│   ├── rhcsa9/            # RHCSA 9 labs
-│   └── rhcsa10/           # RHCSA 10 labs
-└── exams/
-    ├── rhcsa9/            # RHCSA 9 mock exams
-    └── rhcsa10/           # RHCSA 10 mock exams
+|-- labs/
+|   |-- rhcsa9/            # RHCSA 9 labs
+|   `-- rhcsa10/           # RHCSA 10 labs
+`-- exams/
+    |-- rhcsa9/            # RHCSA 9 mock exams
+    `-- rhcsa10/           # RHCSA 10 mock exams
 ```
 
 Each track contains:
@@ -92,6 +92,8 @@ optional provisioning scripts
 ```
 
 Scenario IDs should stay globally unique so tooling can resolve scenarios without ambiguity.
+
+Scenario solutions are maintained as valid ways to reach the checked final state. They are not official Red Hat answers and should not be written or described as exact exam solutions.
 
 ## Scenario Metadata
 

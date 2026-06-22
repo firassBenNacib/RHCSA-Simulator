@@ -11,7 +11,7 @@ Use the RHCSA 10 profile when training against the RHEL 10 objective set:
 .\RHCSA.ps1 up
 ```
 
-Place an x86_64 RHEL 10 DVD ISO in the project root. The simulator accepts same-major DVD ISO filenames that match `rhel-10.*-x86_64-dvd.iso`, such as `rhel-10.2-x86_64-dvd.iso`.
+Provide an x86_64 RHEL 10 DVD ISO for this track. The simulator accepts same-major DVD ISO filenames that match `rhel-10.*-x86_64-dvd.iso`, such as `rhel-10.2-x86_64-dvd.iso`.
 
 RHEL ISO downloads require a Red Hat account. Use the official Red Hat Developer downloads page and choose the x86_64 DVD ISO, not the boot ISO:
 
@@ -19,10 +19,17 @@ RHEL ISO downloads require a Red Hat account. Use the official Red Hat Developer
 https://developers.redhat.com/products/rhel/download#downloadsbyrelease
 ```
 
-If multiple RHEL 10 DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` when you want to force a specific ISO:
+If multiple RHEL 10 DVD ISOs are present, the simulator uses the newest matching file. Set `RHCSA_ISO` when you want to keep the ISO outside the project folder or force a specific ISO:
 
 ```powershell
 $env:RHCSA_ISO = "C:\path\to\rhel-10.2-x86_64-dvd.iso"
+.\RHCSA.ps1 up
+```
+
+Recommended: import the package repository cache once, then run future baselines from `.rhcsa-repo/` without keeping the ISO in the project root:
+
+```powershell
+.\RHCSA.ps1 repo import C:\path\to\rhel-10.2-x86_64-dvd.iso
 .\RHCSA.ps1 up
 ```
 
