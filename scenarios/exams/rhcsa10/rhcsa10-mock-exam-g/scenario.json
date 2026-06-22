@@ -49,7 +49,7 @@
         "On server, publish /var/www/html/server-g.html containing RHCSA10-G and serve httpd on TCP port 8206.",
         "On server, create and enable servergtimer.timer so it appends SERVER-G to /var/log/servergtimer.log every 12 minutes.",
         "On client, create a 500 MiB swap partition on /dev/sdb, format it as swap, and enable it persistently via /etc/fstab.",
-        "On client, create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10.",
+        "On client, create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format it with XFS, and mount it persistently at /mnt/datag10.",
         "On server, export /exports/exam-g to the 192.168.122.0/24 network. On client, mount server:/exports/exam-g persistently at /mnt/gprojects."
       ],
       "hints": [
@@ -281,7 +281,8 @@
           "lvcreate -L 300M -n datag vgg10",
           "mkfs.xfs /dev/vgg10/datag",
           "mkdir -p /mnt/datag10",
-          "echo '/dev/vgg10/datag /mnt/datag10 xfs defaults 0 0' >> /etc/fstab",
+          "uuid=$(blkid -s UUID -o value /dev/vgg10/datag)",
+          "test -n \"$uuid\" && echo \"UUID=$uuid /mnt/datag10 xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ],
         [

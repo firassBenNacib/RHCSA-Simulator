@@ -39,7 +39,7 @@ On client, publish a web page /var/www/html/examc.html containing EXAMC and enab
 
 ---
 
-## Question 04 - Configure httpd to listen on TCP port 8102 and make the port usable by (client) - 5 pts
+## Question 04 - Configure httpd TCP port 8102 (client) - 5 pts
 
 On client, configure httpd to listen on TCP port 8102 and make the port usable by the web service.
 
@@ -69,9 +69,9 @@ On client, create and enable examctimer.timer that runs every 10 minutes.
 
 ---
 
-## Question 08 - Create VG vgc10 and LV datac mounted at /mnt/datac10 (client) - 5 pts
+## Question 08 - Configure LVM storage (client) - 5 pts
 
-On client, create VG vgc10 and LV datac mounted at /mnt/datac10.
+On client, create physical volume on /dev/sdb, volume group vgc10, logical volume datac of 384 MiB, format it with XFS, and mount it persistently at /mnt/datac10.
 
 ---
 

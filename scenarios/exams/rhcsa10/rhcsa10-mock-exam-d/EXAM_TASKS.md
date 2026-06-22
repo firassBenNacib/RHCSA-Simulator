@@ -45,9 +45,9 @@ On server, create and enable serverdtimer.timer so it appends SERVER-D to /var/l
 
 ---
 
-## Question 05 - Create VG vgd10 and LV datad mounted at /mnt/datad10 (client) - 5 pts
+## Question 05 - Configure LVM storage (client) - 5 pts
 
-On client, create VG vgd10 and LV datad mounted at /mnt/datad10.
+On client, create physical volume on /dev/sdb, volume group vgd10, logical volume datad of 384 MiB, format it with XFS, and mount it persistently at /mnt/datad10.
 
 ---
 

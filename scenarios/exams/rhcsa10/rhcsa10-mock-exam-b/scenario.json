@@ -43,7 +43,7 @@
         "On client, create gzip archive /root/b-etc.tar.gz containing /etc/hosts and /etc/fstab.",
         "On client, create /root/b-original, hard link /root/b-hard, and symlink /root/b-soft.",
         "On server, create and enable serverbtimer.timer so it appends SERVER-B to /var/log/serverbtimer.log every 10 minutes.",
-        "On client, create VG vgb10 and LV datab mounted at /mnt/datab10.",
+        "On client, create physical volume on /dev/sdb, volume group vgb10, logical volume datab of 384 MiB, format it with XFS, and mount it persistently at /mnt/datab10.",
         "On server, publish /var/www/html/server-b.html containing RHCSA10-B and serve httpd on TCP port 8201.",
         "On server, create group serverb10 and user srvb10 with password cinder9, then add the user to serverb10.",
         "On server, allow members of serverb10 to run /usr/bin/systemctl with sudo without a password.",
@@ -99,7 +99,7 @@
         "Create gzip archive",
         "Create /root/b-original, hard link /root/b-hard, and symlink",
         "Configure systemd timer",
-        "Create VG vgb10 and LV datab mounted at /mnt/datab10",
+        "Configure LVM storage",
         "Publish web content",
         "Create user and group",
         "Configure sudo access",
@@ -214,7 +214,8 @@
           "lvcreate -L 384M -n datab vgb10",
           "mkfs.xfs -f /dev/vgb10/datab",
           "mkdir -p /mnt/datab10",
-          "echo '/dev/vgb10/datab /mnt/datab10 xfs defaults 0 0' >> /etc/fstab",
+          "uuid=$(blkid -s UUID -o value /dev/vgb10/datab)",
+          "test -n \"$uuid\" && echo \"UUID=$uuid /mnt/datab10 xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ],
         [

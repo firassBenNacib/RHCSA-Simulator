@@ -32,6 +32,6 @@ On client, create mount point /mnt/rhcsa10data.
 
 ---
 
-## Task 03 - Mount it persistently by label with default options (client) - 10 pts
+## Task 03 - Configure labeled filesystem mount (client) - 10 pts
 
 On client, mount it persistently by label with default options.

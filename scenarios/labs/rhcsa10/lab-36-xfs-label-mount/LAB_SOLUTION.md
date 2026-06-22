@@ -39,7 +39,7 @@ mkdir -p /mnt/rhcsa10data
 
 ---
 
-## Task 03 - Mount it persistently by label with default options (client) - 10 pts
+## Task 03 - Configure labeled filesystem mount (client) - 10 pts
 
 ```bash
 echo 'LABEL=RHCSA10DATA /mnt/rhcsa10data xfs defaults 0 0' >> /etc/fstab

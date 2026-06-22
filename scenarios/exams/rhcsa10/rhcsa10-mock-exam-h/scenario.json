@@ -1,7 +1,7 @@
 {
   "id": "rhcsa10-mock-exam-h",
   "title": "RHCSA 10 Mock Exam H",
-  "description": "A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.",
+  "description": "Administration integration focus: boot recovery, networking, Flatpak remote setup, systemd timers, LVM storage, chrony, repositories, users, security, and services.",
   "objective_tags": [
     "boot-and-recovery",
     "essential-tools",
@@ -41,7 +41,7 @@
         "On server, configure persistent systemd journal storage.",
         "On server, create /srv/serverh10 owned by root:serverh10 with mode 2770.",
         "On client, create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.",
-        "On client, create VG vgh10 and LV datah mounted at /mnt/datah10.",
+        "On client, create physical volume on /dev/sdb, volume group vgh10, logical volume datah of 384 MiB, format it with XFS, and mount it persistently at /mnt/datah10.",
         "On client, set the default target to multi-user.target without rebooting.",
         "On server, route local6 log messages to /var/log/examh-local6.log and write a test message.",
         "On client, install lsof and ensure tcpdump is removed.",
@@ -50,7 +50,8 @@
         "On client and server, create enabled BaseOS and AppStream repository definitions with BaseOS at http://server/repo/BaseOS/ and AppStream at http://server/repo/AppStream/; disable GPG checks.",
         "On client, allow %teamh10 to run /usr/bin/systemctl without a password.",
         "On server, allow members of serverh10 to run /usr/bin/systemctl with sudo without a password.",
-        "On client, create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab."
+        "On client, create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab.",
+        "On client, configure a system Flatpak remote named examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled."
       ],
       "hints": [
         "Make changes persistent unless a question says otherwise.",
@@ -79,7 +80,8 @@
         "awk 'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}' /etc/yum.repos.d/*.repo && ssh server bash -lc 'set -euo pipefail; awk '\"'\"'function flush(){if(baseurl ~ /^http:\\/\\/server\\/repo\\/BaseOS\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") base=1;if(baseurl ~ /^http:\\/\\/server\\/repo\\/AppStream\\/?$/ && enabled == \"1\" && gpgcheck == \"0\") app=1}function value(){sub(/^[^=]*=/, \"\"); gsub(/^[ \\t]+|[ \\t]+$/, \"\"); return $0}/^[[:space:]]*\\[/ {flush(); baseurl=enabled=gpgcheck=\"\"; next}/^[[:space:]]*baseurl[[:space:]]*=/ {baseurl=value(); next}/^[[:space:]]*enabled[[:space:]]*=/ {enabled=value(); next}/^[[:space:]]*gpgcheck[[:space:]]*=/ {gpgcheck=value(); next}END{flush(); exit !(base && app)}'\"'\"' /etc/yum.repos.d/*.repo'",
         "grep -ERq '^%teamh10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$' /etc/sudoers.d",
         "ssh server bash -lc 'set -euo pipefail; grep -Eq '\"'\"'^%serverh10[[:space:]]+ALL=\\(ALL\\)[[:space:]]+NOPASSWD:[[:space:]]*/usr/bin/systemctl$'\"'\"' /etc/sudoers.d/serverh10-systemctl && visudo -cf /etc/sudoers.d/serverh10-systemctl >/dev/null'",
-        "test -f /root/h-etc.tar.gz && tar -tzf /root/h-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'"
+        "test -f /root/h-etc.tar.gz && tar -tzf /root/h-etc.tar.gz | grep -Eq 'etc/(hosts|fstab)'",
+        "flatpak remotes --system --columns=name,url 2>/dev/null | awk '$1 == \"examhflatpak\" && $2 == \"file:///opt/rhcsa/flatpak/repo\" {found=1} END {exit !found}'"
       ],
       "solution_outline": [
         "Work through each question independently and verify before moving on."
@@ -97,7 +99,7 @@
         "Enable persistent journal",
         "Create /srv/serverh10 owned by root:serverh10 with mode 2770",
         "Schedule cron job",
-        "Create VG vgh10 and LV datah mounted at /mnt/datah10",
+        "Configure LVM storage",
         "Set the default target to multi-user.target without rebooting",
         "Route rsyslog messages",
         "Install lsof and ensure tcpdump is removed",
@@ -106,7 +108,8 @@
         "Configure BaseOS and AppStream repositories",
         "Allow %teamh10 to run /usr/bin/systemctl without a password",
         "Configure sudo access",
-        "Create gzip archive"
+        "Create gzip archive",
+        "Configure Flatpak remote examhflatpak"
       ],
       "task_points": [
         5,
@@ -117,10 +120,11 @@
         5,
         5,
         5,
-        5,
-        5,
-        5,
-        5,
+        4,
+        4,
+        4,
+        4,
+        4,
         4,
         4,
         4,
@@ -201,7 +205,8 @@
           "lvcreate -L 384M -n datah vgh10",
           "mkfs.xfs -f /dev/vgh10/datah",
           "mkdir -p /mnt/datah10",
-          "echo '/dev/vgh10/datah /mnt/datah10 xfs defaults 0 0' >> /etc/fstab",
+          "uuid=$(blkid -s UUID -o value /dev/vgh10/datah)",
+          "test -n \"$uuid\" && echo \"UUID=$uuid /mnt/datah10 xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ],
         [
@@ -269,6 +274,10 @@
         [
           "tar -czf /root/h-etc.tar.gz /etc/hosts /etc/fstab",
           "tar -tzf /root/h-etc.tar.gz"
+        ],
+        [
+          "flatpak remote-add --system --if-not-exists --no-gpg-verify examhflatpak file:///opt/rhcsa/flatpak/repo",
+          "flatpak remotes --system"
         ]
       ],
       "task_targets": [
@@ -293,10 +302,11 @@
         "both",
         "client",
         "server",
+        "client",
         "client"
       ],
       "target_balance": {
-        "client_only": 12,
+        "client_only": 13,
         "server_only": 7,
         "client_server": 3
       },
@@ -322,6 +332,7 @@
         "both",
         "client",
         "server",
+        "client",
         "client"
       ],
       "check_targets": [
@@ -346,6 +357,7 @@
         "both",
         "client",
         "server",
+        "client",
         "client"
       ]
     }

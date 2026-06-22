@@ -153,7 +153,7 @@ On client, create a 500 MiB swap partition on /dev/sdb, format it as swap, and e
 
 ## Question 22 - Configure LVM storage (client) - 4 pts
 
-On client, create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format as XFS, and mount persistently at /mnt/datag10.
+On client, create physical volume on /dev/sdc, volume group vgg10, logical volume datag of 300 MiB, format it with XFS, and mount it persistently at /mnt/datag10.
 
 ---
 

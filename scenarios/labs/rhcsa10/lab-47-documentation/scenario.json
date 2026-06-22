@@ -33,14 +33,14 @@
         "Make the requested configuration persistent and verify it before finishing."
       ],
       "task_titles": [
-        "Write the first usage summary for useradd to /root/rhcsa10-man.txt using"
+        "Write the first usage summary for useradd to /root/rhcsa10-man.txt"
       ],
       "task_points": [
         10
       ],
       "solution_commands": [
         [
-          "if man useradd >/tmp/rhcsa10-useradd-man.txt 2>/dev/null; then man useradd | col -b | grep -m1 -A1 '^SYNOPSIS' > /root/rhcsa10-man.txt; else useradd --help | grep -m1 -A1 '^Usage' > /root/rhcsa10-man.txt; fi",
+          "if man useradd 2>/dev/null | col -b | awk 'BEGIN{found=0} /^SYNOPSIS/{found=1} found{print; count++} count>=2{exit}' > /root/rhcsa10-man.txt && test -s /root/rhcsa10-man.txt; then :; else useradd --help | grep -m1 -A1 '^Usage' > /root/rhcsa10-man.txt; fi",
           "cat /root/rhcsa10-man.txt"
         ]
       ],

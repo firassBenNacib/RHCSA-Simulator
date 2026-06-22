@@ -39,7 +39,7 @@ On client and server, create enabled BaseOS and AppStream repository definitions
 
 ---
 
-## Question 04 - Create a labeled XFS filesystem on /dev/sdc1 and mount it persistently (client) - 5 pts
+## Question 04 - Configure labeled filesystem mount (client) - 5 pts
 
 On client, create a labeled XFS filesystem on /dev/sdc1 and mount it persistently at /mnt/exame-label.
 
@@ -99,9 +99,9 @@ On server, create and enable serveretimer.timer so it appends SERVER-E to /var/l
 
 ---
 
-## Question 14 - Create VG vge10 and LV datae mounted at /mnt/datae10 (client) - 4 pts
+## Question 14 - Configure LVM storage (client) - 4 pts
 
-On client, create VG vge10 and LV datae mounted at /mnt/datae10.
+On client, create physical volume on /dev/sdb, volume group vge10, logical volume datae of 384 MiB, format it with XFS, and mount it persistently at /mnt/datae10.
 
 ---
 

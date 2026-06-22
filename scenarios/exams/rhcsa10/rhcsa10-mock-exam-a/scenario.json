@@ -43,7 +43,7 @@
         "On client, create /root/exam-a-report.txt containing REPORT-A and copy it to server:/root/exam-a-report.txt.",
         "On server, publish /var/www/html/server-a.html containing RHCSA10-A and serve httpd on TCP port 8200.",
         "On server, create and enable serveratimer.timer so it appends SERVER-A to /var/log/serveratimer.log every 10 minutes.",
-        "On client, create volume group vga10 from /dev/sdb.\nCreate logical volume dataa of at least 384 MiB inside vga10.\nFormat it with XFS and mount it persistently at /mnt/dataa10.",
+        "On client, create physical volume on /dev/sdb, volume group vga10, logical volume dataa of 384 MiB, format it with XFS, and mount it persistently at /mnt/dataa10.",
         "On server, create group servera10 and user srva10 with password cinder9, then add the user to servera10.",
         "On server, create /srv/servera10 owned by root:servera10 with mode 2770.",
         "On server, persistently enable the SELinux boolean httpd_can_network_connect.",
@@ -68,7 +68,7 @@
         "Copy exam report to server",
         "Publish web content",
         "Configure systemd timer",
-        "Create volume group",
+        "Configure LVM storage",
         "Create user and group",
         "Create /srv/servera10 owned by root:servera10 with mode 2770",
         "Persist SELinux boolean",
@@ -236,7 +236,8 @@
           "lvcreate -L 384M -n dataa vga10",
           "mkfs.xfs /dev/vga10/dataa",
           "mkdir -p /mnt/dataa10",
-          "echo '/dev/vga10/dataa /mnt/dataa10 xfs defaults 0 0' >> /etc/fstab",
+          "uuid=$(blkid -s UUID -o value /dev/vga10/dataa)",
+          "test -n \"$uuid\" && echo \"UUID=$uuid /mnt/dataa10 xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ],
         [

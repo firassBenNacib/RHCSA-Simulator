@@ -9,7 +9,7 @@
 | Time limit | 180 minutes |
 | Objectives | boot-and-recovery, essential-tools, networking-and-firewall, processes-logs-tuning, selinux-and-default-perms, shell-scripting, software-management, software-scheduling-time, storage-lvm, users-sudo-ssh |
 
-A RHCSA 10 mock exam focused on RHEL 10 administration, Flatpak, systemd timers, storage, networking, users, security, and services.
+Administration integration focus: boot recovery, networking, Flatpak remote setup, systemd timers, LVM storage, chrony, repositories, users, security, and services.
 
 ### Systems
 - client
@@ -69,33 +69,33 @@ On client, persistently enable httpd_can_network_connect.
 
 ---
 
-## Question 09 - Write users whose shell ends with sh to /root/h-shell-users.txt (client) - 5 pts
+## Question 09 - Write users whose shell ends with sh to /root/h-shell-users.txt (client) - 4 pts
 
 On client, write users whose shell ends with sh to /root/h-shell-users.txt.
 
 ---
 
-## Question 10 - Enable persistent journal (server) - 5 pts
+## Question 10 - Enable persistent journal (server) - 4 pts
 
 On server, configure persistent systemd journal storage.
 
 ---
 
-## Question 11 - Create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 5 pts
+## Question 11 - Create /srv/serverh10 owned by root:serverh10 with mode 2770 (server) - 4 pts
 
 On server, create /srv/serverh10 owned by root:serverh10 with mode 2770.
 
 ---
 
-## Question 12 - Schedule cron job (client) - 5 pts
+## Question 12 - Schedule cron job (client) - 4 pts
 
 On client, create a cron job for userh10 that writes EXAM10 to /home/userh10/exam10.log every 15 minutes.
 
 ---
 
-## Question 13 - Create VG vgh10 and LV datah mounted at /mnt/datah10 (client) - 4 pts
+## Question 13 - Configure LVM storage (client) - 4 pts
 
-On client, create VG vgh10 and LV datah mounted at /mnt/datah10.
+On client, create physical volume on /dev/sdb, volume group vgh10, logical volume datah of 384 MiB, format it with XFS, and mount it persistently at /mnt/datah10.
 
 ---
 
@@ -150,3 +150,9 @@ On server, allow members of serverh10 to run /usr/bin/systemctl with sudo withou
 ## Question 22 - Create gzip archive (client) - 4 pts
 
 On client, create gzip archive /root/h-etc.tar.gz containing /etc/hosts and /etc/fstab.
+
+---
+
+## Question 23 - Configure Flatpak remote examhflatpak (client) - 4 pts
+
+On client, configure a system Flatpak remote named examhflatpak pointing to file:///opt/rhcsa/flatpak/repo with GPG verification disabled.

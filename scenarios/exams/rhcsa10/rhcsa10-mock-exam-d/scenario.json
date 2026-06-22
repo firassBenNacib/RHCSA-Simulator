@@ -34,7 +34,7 @@
         "On client, configure System eth1 with IPv4 address 192.168.122.63/24, gateway 192.168.122.1, and DNS 192.168.122.3.",
         "On client, create /root/d-original, hard link /root/d-hard, and symlink /root/d-soft.",
         "On server, create and enable serverdtimer.timer so it appends SERVER-D to /var/log/serverdtimer.log every 10 minutes.",
-        "On client, create VG vgd10 and LV datad mounted at /mnt/datad10.",
+        "On client, create physical volume on /dev/sdb, volume group vgd10, logical volume datad of 384 MiB, format it with XFS, and mount it persistently at /mnt/datad10.",
         "On client, create /var/www/html/d.html and restore its default SELinux context.",
         "On client, persistently enable httpd_can_network_connect.",
         "On server, enable persistent systemd journal storage.",
@@ -90,7 +90,7 @@
         "Configure eth1 networking",
         "Create /root/d-original, hard link /root/d-hard, and symlink",
         "Configure systemd timer",
-        "Create VG vgd10 and LV datad mounted at /mnt/datad10",
+        "Configure LVM storage",
         "Create /var/www/html/d.html and restore its default SELinux context",
         "Persist SELinux boolean",
         "Enable persistent journal",
@@ -164,7 +164,8 @@
           "lvcreate -L 384M -n datad vgd10",
           "mkfs.xfs -f /dev/vgd10/datad",
           "mkdir -p /mnt/datad10",
-          "echo '/dev/vgd10/datad /mnt/datad10 xfs defaults 0 0' >> /etc/fstab",
+          "uuid=$(blkid -s UUID -o value /dev/vgd10/datad)",
+          "test -n \"$uuid\" && echo \"UUID=$uuid /mnt/datad10 xfs defaults 0 0\" >> /etc/fstab",
           "mount -a"
         ],
         [
