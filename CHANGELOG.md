@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.2.1](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.2.0...v2.2.1) (2026-06-23)
+
+
+### Features
+
+* add RHCSA10 similarity auditing and polish scenario wording ([e053a55](https://github.com/firassBenNacib/RHCSA-Simulator/commit/e053a55ced8e5bc0888dd6f4a535447ba1de89a9), [45f12ca](https://github.com/firassBenNacib/RHCSA-Simulator/commit/45f12ca417a93e97ed157d11d0d1ddb4cc00655f))
+* diversify RHCSA9 mock exams while preserving RHEL9 track coverage ([85811f5](https://github.com/firassBenNacib/RHCSA-Simulator/commit/85811f5921d17b58e88d00af9029fab41a3b1ec5), [04264e2](https://github.com/firassBenNacib/RHCSA-Simulator/commit/04264e20965b1410c291b02b9d2bb18441de5c91))
+
+### Bug Fixes
+
+* fix RHCSA10 baseline startup recovery and Windows preflight handling ([d880aab](https://github.com/firassBenNacib/RHCSA-Simulator/commit/d880aabf2e7b82b1e5c79620dabfea2f9d109a8f), [bb4d514](https://github.com/firassBenNacib/RHCSA-Simulator/commit/bb4d5143741e8ffce69afd5cfb89e9a4aa1e77d8), [ba0ce8b](https://github.com/firassBenNacib/RHCSA-Simulator/commit/ba0ce8bd7365469182d7c3dc97cf6068657d0a31))
+* fix generated Markdown casing and RHCSA9 archive validation ([1cebf6c](https://github.com/firassBenNacib/RHCSA-Simulator/commit/1cebf6c9c94c4f09623f58ff813d45f38cf7cacf), [1884133](https://github.com/firassBenNacib/RHCSA-Simulator/commit/18841330d1db6d05aad4961c1819a35bf37e76a0))
+* harden scenario checks, release validation docs, and project-scoped cleanup ([8ca5aa6](https://github.com/firassBenNacib/RHCSA-Simulator/commit/8ca5aa6e4136ffbb7823fdfe6ed13a0f26824a9c), [953b525](https://github.com/firassBenNacib/RHCSA-Simulator/commit/953b525db59c781513b18f3bc062c1902024aa48), [47af0bd](https://github.com/firassBenNacib/RHCSA-Simulator/commit/47af0bdd5516b8ddcdb4e1eb34a81bc4c4c86c1f))
+
+### Documentation
+
+* clarify RHEL track setup, ISO guidance, repo cache usage, and solution wording ([c0d0a39](https://github.com/firassBenNacib/RHCSA-Simulator/commit/c0d0a39c4e90c275ac6b491b1f94edfb0b7b1f25))
+
+### Chores
+
+* split VMControl helpers for maintainability ([46c44af](https://github.com/firassBenNacib/RHCSA-Simulator/commit/46c44afe53b16291f3b66c96c1f5be869b3a041e))
+
 ## [2.2.0](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.1.2...v2.2.0) (2026-06-20)
 
 
