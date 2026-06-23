@@ -26,6 +26,19 @@ jobs:
         with:
           release-type: simple
 
+      - name: Format release notes
+        if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${REPOSITORY}/releases/generate-notes" \
+            -f tag_name="${TAG_NAME}" \
+            --jq '.body' > release-notes.md
+          gh release edit "${TAG_NAME}" --repo "${REPOSITORY}" --notes-file release-notes.md
+
       - name: Build TUI release artifacts
         if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
         env:
