@@ -32,11 +32,34 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
           REPOSITORY: ${{ github.repository }}
+          RELEASE_OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
           gh api "repos/${REPOSITORY}/releases/generate-notes" \
             -f tag_name="${TAG_NAME}" \
             --jq '.body' > release-notes.md
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          owner = os.environ["RELEASE_OWNER"]
+          notes = Path("release-notes.md")
+          body = notes.read_text(encoding="utf-8")
+          body = re.sub(
+              rf" by \[@{re.escape(owner)}\]\(https://github\.com/{re.escape(owner)}\)(?= in https://github\.com/)",
+              "",
+              body,
+              flags=re.IGNORECASE,
+          )
+          body = re.sub(
+              rf" by @{re.escape(owner)}(?= in https://github\.com/)",
+              "",
+              body,
+              flags=re.IGNORECASE,
+          )
+          notes.write_text(body, encoding="utf-8")
+          PY
           gh release edit "${TAG_NAME}" --repo "${REPOSITORY}" --notes-file release-notes.md
 
       - name: Build TUI release artifacts
