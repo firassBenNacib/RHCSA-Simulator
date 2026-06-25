@@ -28,7 +28,7 @@ generate:
 	$(PYTHON) tools/scenarios/generate_scenario_markdown.py
 
 python-compile:
-	$(PYTHON) -m py_compile tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
+	$(PYTHON) -m py_compile rhcsa.py tools/scenarios/*.py tools/scenarios/rhcsa_scenarios/*.py tools/scenarios/tests/*.py
 
 python-test:
 	$(PYTHON) -m pytest tools/scenarios/tests

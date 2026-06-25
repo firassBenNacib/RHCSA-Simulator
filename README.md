@@ -261,6 +261,16 @@ Show full help:
 .\RHCSA.ps1 help
 ```
 
+Optional Python launcher:
+
+```bash
+python rhcsa.py profile
+python rhcsa.py up
+python rhcsa.py scenario replay --kind labs --track RHCSA10 --only lab-06-flatpak-remote --audit-only
+```
+
+`rhcsa.py` is a compatibility entry point. Simulator commands still delegate to `RHCSA.ps1`; scenario audit and replay helpers run through Python directly.
+
 ## Common Examples
 
 Start a specific lab:
@@ -371,6 +381,7 @@ Useful shortcuts:
 ```text
 RHCSA-Simulator/
 |-- RHCSA.ps1              # Main PowerShell CLI
+|-- rhcsa.py               # Python compatibility launcher
 |-- host/                  # Host orchestration and checks
 |-- guest/                 # VM provisioning scripts
 |-- cmd/rhcsa-tui/         # Go terminal UI
