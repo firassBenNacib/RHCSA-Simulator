@@ -62,11 +62,8 @@ Scenarios are original practice content aligned with public RHCSA objectives. In
 
 ## Requirements
 
-- Windows 10 or 11
-- PowerShell 5.1 or newer
 - [Vagrant](https://developer.hashicorp.com/vagrant/install)
 - [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-- Hardware virtualization enabled in BIOS/UEFI
 - At least 20 GB of free disk space
 - RHEL x86_64 DVD ISO for the track you use:
   - RHCSA 9 accepts `rhel-9.*-x86_64-dvd.iso`, such as `rhel-9.8-x86_64-dvd.iso`
