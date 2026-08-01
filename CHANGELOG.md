@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.2](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.2.1...v2.2.2) (2026-08-01)
+
+
+### Bug Fixes
+
+* **security:** upgrade Go to 1.25.12 ([2186a70](https://github.com/firassBenNacib/RHCSA-Simulator/commit/2186a70b9b75f78698e8cd8383893d63968c834c))
+* **security:** upgrade Go to 1.25.12 ([34db562](https://github.com/firassBenNacib/RHCSA-Simulator/commit/34db562924ebe1aa421011d91f32bb50b0cd2956))
+* stabilize Python lint defaults ([8142442](https://github.com/firassBenNacib/RHCSA-Simulator/commit/81424423746b43f527f785988013ad888877e798))
+
 ## [2.2.1](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.2.0...v2.2.1) (2026-06-23)
 
 
