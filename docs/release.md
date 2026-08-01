@@ -32,15 +32,11 @@ Generated binaries should stay outside git.
 
 ## Normal Release
 
-Release Please opens a release pull request from `main`.
+Release Please opens a preparation pull request from `main`. Its body is a changelog preview, so it is not expected to look exactly like the final GitHub Release page.
 
-Merging the Release Please pull request creates:
+Merging the Release Please pull request creates the semantic version tag and the initial GitHub Release. The workflow then replaces the release body with GitHub-generated `## What's Changed` notes, validates that the body is present, and dispatches `release-tui.yml` for the new tag. GoReleaser uploads the TUI archives and checksums with `release.mode: keep-existing`, preserving those generated notes.
 
-- the semantic version tag
-- the GitHub Release
-- the release changelog
-
-The release workflow then dispatches `release-tui.yml` for the new tag, which builds and uploads the TUI archives.
+Prefer squash merging for normal project pull requests. This keeps the conventional-commit history linear and reduces duplicate entries in generated changelogs.
 
 ## Manual Release
 

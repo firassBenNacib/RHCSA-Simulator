@@ -62,6 +62,40 @@ jobs:
           PY
           gh release edit "${TAG_NAME}" --repo "${REPOSITORY}" --notes-file release-notes.md
 
+      - name: Validate final GitHub release notes
+        if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG_NAME" \
+            --repo "$REPOSITORY" \
+            --json body,tagName,url > release-metadata.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          release = json.loads(Path("release-metadata.json").read_text(encoding="utf-8"))
+          body = release.get("body") or ""
+          if not body.strip():
+              raise SystemExit("final release body is empty")
+          if "## What's Changed" not in body:
+              raise SystemExit("final release body is missing the ## What's Changed heading")
+
+          tag = release.get("tagName") or ""
+          url = release.get("url") or ""
+          if tag != os.environ["TAG_NAME"]:
+              raise SystemExit(f"final release tag mismatch: {tag!r}")
+          if not url:
+              raise SystemExit("final release URL is empty")
+
+          print(f"Release URL: {url}")
+          print(f"Release tag: {tag}")
+          PY
+
       - name: Build TUI release artifacts
         if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
         env:
