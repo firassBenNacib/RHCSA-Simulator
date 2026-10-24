@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.3](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.2.2...v2.2.3) (2026-10-24)
+
+
+### Bug Fixes
+
+* use a patched Go toolchain for security scans ([d771e25](https://github.com/firassBenNacib/RHCSA-Simulator/commit/d771e25437f36b48a5ace992d31ae3408a10afca))
+
 ## [2.2.2](https://github.com/firassBenNacib/RHCSA-Simulator/compare/v2.2.1...v2.2.2) (2026-08-01)
 
 
